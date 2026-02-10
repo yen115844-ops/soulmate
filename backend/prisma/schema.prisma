@@ -1,0 +1,1082 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== ENUMS ====================
+
+enum UserRole {
+  USER
+  PARTNER
+  ADMIN
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum KycStatus {
+  NONE
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  PAID
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  ESCROW_HOLD
+  ESCROW_RELEASE
+  ESCROW_REFUND
+  SERVICE_FEE
+}
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum EscrowStatus {
+  HELD
+  RELEASED
+  REFUNDED
+  DISPUTED
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  VOICE
+  LOCATION
+  SYSTEM
+}
+
+enum SosStatus {
+  TRIGGERED
+  RESPONDING
+  RESOLVED
+  FALSE_ALARM
+}
+
+enum SlotStatus {
+  AVAILABLE
+  BOOKED
+  BLOCKED
+}
+
+enum ConversationStatus {
+  ACTIVE
+  ARCHIVED
+  BLOCKED
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+}
+
+enum NotificationType {
+  BOOKING
+  CHAT
+  PAYMENT
+  SYSTEM
+  SAFETY
+  REVIEW
+}
+
+// ==================== MODELS ====================
+
+// Users - Bảng người dùng chính
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  phone        String?    @unique
+  passwordHash String     @map("password_hash")
+  role         UserRole   @default(USER)
+  status       UserStatus @default(PENDING)
+  kycStatus    KycStatus  @default(NONE) @map("kyc_status")
+  
+  failedLoginAttempts Int      @default(0) @map("failed_login_attempts")
+  lockedUntil         DateTime? @map("locked_until")
+  
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  
+  // Relations
+  profile           Profile?
+  partnerProfile    PartnerProfile?
+  kycVerification   KycVerification?
+  wallet            Wallet?
+  
+  bookingsAsUser    Booking[]     @relation("UserBookings")
+  bookingsAsPartner Booking[]     @relation("PartnerBookings")
+  
+  reviewsGiven      Review[]      @relation("ReviewsGiven")
+  reviewsReceived   Review[]      @relation("ReviewsReceived")
+  
+  conversations     ConversationParticipant[]
+  messagesSent      Message[]
+  
+  blockedUsers      UserBlacklist[] @relation("BlockerUser")
+  blockedByUsers    UserBlacklist[] @relation("BlockedUser")
+  
+  emergencyContacts EmergencyContact[]
+  sosEvents         SosEvent[]
+  
+  refreshTokens     RefreshToken[]
+  notifications     Notification[]
+  deviceTokens      DeviceToken[]
+  
+  favorites         Favorite[]     @relation("UserFavorites")
+  favoritedBy       Favorite[]     @relation("FavoritePartner")
+  
+  settings          UserSettings?
+  
+  @@map("users")
+}
+
+// Profiles - Thông tin cá nhân chi tiết
+model Profile {
+  id            String   @id @default(uuid())
+  userId        String   @unique @map("user_id")
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  fullName      String   @map("full_name")
+  displayName   String?  @map("display_name")
+  avatarUrl     String?  @map("avatar_url")
+  coverPhotoUrl String?  @map("cover_photo_url")
+  bio           String?  @db.Text
+  
+  gender        Gender?
+  dateOfBirth   DateTime? @map("date_of_birth")
+  heightCm      Int?     @map("height_cm")
+  weightKg      Int?     @map("weight_kg")
+  
+  // Location
+  currentLat    Decimal? @map("current_lat") @db.Decimal(10, 8)
+  currentLng    Decimal? @map("current_lng") @db.Decimal(11, 8)
+  city          String?
+  district      String?
+  address       String?  @db.Text
+  
+  // JSON fields - Mảng lưu trữ
+  languages     Json?    @default("[]") // ["Vietnamese", "English"]
+  interests     Json?    @default("[]") // ["movies", "travel", "coffee"]
+  talents       Json?    @default("[]") // ["singing", "dancing", "cooking"]
+  photos        Json?    @default("[]") // URLs của các ảnh trong profile
+  
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  
+  @@map("profiles")
+}
+
+// User Settings - Cài đặt người dùng
+model UserSettings {
+  id                    String   @id @default(uuid())
+  userId                String   @unique @map("user_id")
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Notifications
+  pushNotificationsEnabled    Boolean @default(true) @map("push_notifications_enabled")
+  messageNotificationsEnabled Boolean @default(true) @map("message_notifications_enabled")
+  soundEnabled                Boolean @default(true) @map("sound_enabled")
+  
+  // Appearance
+  darkModeEnabled       Boolean @default(false) @map("dark_mode_enabled")
+  useSystemTheme        Boolean @default(true) @map("use_system_theme")
+  language              String  @default("vi") // "vi", "en"
+  
+  // Privacy
+  locationEnabled       Boolean @default(true) @map("location_enabled")
+  showOnlineStatus      Boolean @default(true) @map("show_online_status")
+  allowMessagesFrom     String  @default("everyone") @map("allow_messages_from") // "everyone", "verified", "none"
+  
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+  
+  @@map("user_settings")
+}
+
+// Partner Profiles - Thông tin riêng của Partner
+model PartnerProfile {
+  id               String   @id @default(uuid())
+  userId           String   @unique @map("user_id")
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Pricing
+  hourlyRate       Decimal  @map("hourly_rate") @db.Decimal(10, 2)
+  minimumHours     Int      @default(3) @map("minimum_hours")
+  currency         String   @default("VND")
+  
+  // Service Types - các loại dịch vụ partner cung cấp
+  serviceTypes     Json     @default("[]") @map("service_types") // ["walking", "movie", "party", "event", "travel"]
+  
+  // Stats - Thống kê
+  totalBookings     Int     @default(0) @map("total_bookings")
+  completedBookings Int     @default(0) @map("completed_bookings")
+  cancelledBookings Int     @default(0) @map("cancelled_bookings")
+  averageRating     Decimal @default(0) @map("average_rating") @db.Decimal(3, 2)
+  totalReviews      Int     @default(0) @map("total_reviews")
+  responseRate      Decimal @default(100) @map("response_rate") @db.Decimal(5, 2) // Tỷ lệ phản hồi (%)
+  responseTime      Int?    @map("response_time") // Thời gian phản hồi trung bình (phút)
+  
+  // Verification
+  isVerified        Boolean @default(false) @map("is_verified")
+  verificationBadge String? @map("verification_badge") // "gold", "silver", "bronze"
+  
+  // Status
+  isAvailable       Boolean  @default(true) @map("is_available")
+  lastActiveAt      DateTime? @map("last_active_at")
+  
+  // About
+  introduction      String?  @db.Text // Giới thiệu bản thân
+  experienceYears   Int?     @map("experience_years") // Số năm kinh nghiệm
+  
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  availabilitySlots AvailabilitySlot[]
+  
+  @@map("partner_profiles")
+}
+
+// Availability Slots - Lịch rảnh của Partner
+model AvailabilitySlot {
+  id          String     @id @default(uuid())
+  partnerId   String     @map("partner_id")
+  partner     PartnerProfile @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  
+  date        DateTime   @db.Date
+  startTime   DateTime   @map("start_time") @db.Time()
+  endTime     DateTime   @map("end_time") @db.Time()
+  
+  status      SlotStatus @default(AVAILABLE)
+  bookingId   String?    @map("booking_id")
+  
+  note        String?    // Ghi chú cho slot
+  
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  
+  @@unique([partnerId, date, startTime])
+  @@index([partnerId, date])
+  @@index([status])
+  @@map("availability_slots")
+}
+
+// KYC Verification - Xác thực danh tính
+model KycVerification {
+  id              String   @id @default(uuid())
+  userId          String   @unique @map("user_id")
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // CCCD/CMND
+  idCardFrontUrl  String?  @map("id_card_front_url")
+  idCardBackUrl   String?  @map("id_card_back_url")
+  idCardNumber    String?  @map("id_card_number")
+  idCardName      String?  @map("id_card_name")
+  idCardDob       DateTime? @map("id_card_dob")
+  idCardGender    Gender?  @map("id_card_gender")
+  idCardAddress   String?  @map("id_card_address") @db.Text
+  idCardExpiry    DateTime? @map("id_card_expiry")
+  
+  // Video xác thực
+  videoUrl        String?  @map("video_url")
+  
+  // Selfie xác thực
+  selfieUrl       String?  @map("selfie_url")
+  
+  // Trạng thái
+  status          KycStatus @default(PENDING)
+  rejectionReason String?  @map("rejection_reason") @db.Text
+  
+  // AI Scores
+  livenessScore   Decimal? @map("liveness_score") @db.Decimal(5, 4)
+  faceMatchScore  Decimal? @map("face_match_score") @db.Decimal(5, 4)
+  ocrConfidence   Decimal? @map("ocr_confidence") @db.Decimal(5, 4)
+  
+  // Thông tin xác nhận
+  verifiedAt      DateTime? @map("verified_at")
+  verifiedBy      String?  @map("verified_by") // Admin ID
+  
+  // Metadata
+  submittedAt     DateTime? @map("submitted_at")
+  reviewNote      String?  @map("review_note") @db.Text // Ghi chú của admin
+  
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  @@map("kyc_verifications")
+}
+
+// Bookings - Đặt lịch
+model Booking {
+  id            String        @id @default(uuid())
+  bookingCode   String        @unique @map("booking_code") // Mã đặt lịch dạng BK-XXXXXX
+  
+  userId        String        @map("user_id")
+  user          User          @relation("UserBookings", fields: [userId], references: [id])
+  
+  partnerId     String        @map("partner_id")
+  partner       User          @relation("PartnerBookings", fields: [partnerId], references: [id])
+  
+  // Thông tin dịch vụ
+  serviceType   String        @map("service_type") // "walking", "movie", "party", etc.
+  date          DateTime      @db.Date
+  startTime     DateTime      @map("start_time") @db.Time()
+  endTime       DateTime      @map("end_time") @db.Time()
+  durationHours Decimal       @map("duration_hours") @db.Decimal(4, 2)
+  
+  // Location - Địa điểm gặp
+  meetingLocation String?     @map("meeting_location") @db.Text
+  meetingLat      Decimal?    @map("meeting_lat") @db.Decimal(10, 8)
+  meetingLng      Decimal?    @map("meeting_lng") @db.Decimal(11, 8)
+  
+  // Pricing - Giá tiền
+  hourlyRate      Decimal     @map("hourly_rate") @db.Decimal(10, 2)
+  totalHours      Decimal     @map("total_hours") @db.Decimal(4, 2)
+  subtotal        Decimal     @db.Decimal(12, 2) // hourlyRate * totalHours
+  serviceFee      Decimal     @map("service_fee") @db.Decimal(12, 2) // Phí platform (15%)
+  totalAmount     Decimal     @map("total_amount") @db.Decimal(12, 2) // subtotal + serviceFee
+  
+  status          BookingStatus @default(PENDING)
+  
+  // Notes
+  userNote        String?     @map("user_note") @db.Text // Ghi chú từ user
+  partnerNote     String?     @map("partner_note") @db.Text // Ghi chú từ partner
+  cancellationReason String?  @map("cancellation_reason") @db.Text
+  cancelledBy     String?     @map("cancelled_by") // ID của người huỷ
+  
+  // Timestamps
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+  confirmedAt     DateTime?   @map("confirmed_at") // Partner xác nhận
+  paidAt          DateTime?   @map("paid_at") // User thanh toán
+  startedAt       DateTime?   @map("started_at") // Bắt đầu booking
+  completedAt     DateTime?   @map("completed_at") // Hoàn thành
+  cancelledAt     DateTime?   @map("cancelled_at") // Huỷ booking
+  
+  // Relations
+  statusHistory   BookingStatusHistory[]
+  escrow          EscrowHolding?
+  reviews         Review[]
+  conversation    Conversation?
+  sosEvents       SosEvent[]
+  locationLogs    LocationLog[]
+  
+  @@index([userId])
+  @@index([partnerId])
+  @@index([status])
+  @@index([date])
+  @@map("bookings")
+}
+
+// Booking Status History - Lịch sử trạng thái booking
+model BookingStatusHistory {
+  id          String   @id @default(uuid())
+  bookingId   String   @map("booking_id")
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  
+  fromStatus  BookingStatus? @map("from_status")
+  toStatus    BookingStatus  @map("to_status")
+  changedBy   String?  @map("changed_by") // User ID
+  reason      String?  @db.Text
+  metadata    Json?    // Thông tin bổ sung
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  @@index([bookingId])
+  @@map("booking_status_history")
+}
+
+// Wallet - Ví tiền
+model Wallet {
+  id             String   @id @default(uuid())
+  userId         String   @unique @map("user_id")
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  balance        Decimal  @default(0) @db.Decimal(15, 2) // Số dư khả dụng
+  pendingBalance Decimal  @default(0) @map("pending_balance") @db.Decimal(15, 2) // Số dư đang giữ (escrow)
+  totalEarnings  Decimal  @default(0) @map("total_earnings") @db.Decimal(15, 2) // Tổng thu nhập (Partner)
+  totalSpent     Decimal  @default(0) @map("total_spent") @db.Decimal(15, 2) // Tổng chi tiêu (User)
+  currency       String   @default("VND")
+  
+  // Bank account info cho rút tiền
+  bankName       String?  @map("bank_name")
+  bankAccountNo  String?  @map("bank_account_no")
+  bankAccountName String? @map("bank_account_name")
+  
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  transactions   Transaction[]
+  
+  @@map("wallets")
+}
+
+// Transaction - Giao dịch
+model Transaction {
+  id               String            @id @default(uuid())
+  transactionCode  String            @unique @map("transaction_code") // TXN-XXXXXX
+  
+  walletId         String            @map("wallet_id")
+  wallet           Wallet            @relation(fields: [walletId], references: [id])
+  
+  bookingId        String?           @map("booking_id")
+  
+  type             TransactionType
+  amount           Decimal           @db.Decimal(15, 2)
+  fee              Decimal           @default(0) @db.Decimal(15, 2) // Phí giao dịch
+  
+  // Balance snapshots
+  balanceBefore    Decimal?          @map("balance_before") @db.Decimal(15, 2)
+  balanceAfter     Decimal?          @map("balance_after") @db.Decimal(15, 2)
+  
+  status           TransactionStatus @default(PENDING)
+  
+  // Payment method info
+  paymentMethod    String?           @map("payment_method") // vnpay, momo, bank_transfer, zalopay
+  externalTxId     String?           @map("external_transaction_id") // ID từ payment gateway
+  
+  description      String?           @db.Text
+  metadata         Json?             // Thông tin thêm từ payment gateway
+  
+  // Timestamps
+  createdAt        DateTime          @default(now()) @map("created_at")
+  completedAt      DateTime?         @map("completed_at")
+  failedAt         DateTime?         @map("failed_at")
+  
+  @@index([walletId])
+  @@index([bookingId])
+  @@index([status])
+  @@index([type])
+  @@map("transactions")
+}
+
+// Escrow Holding - Giữ tiền trung gian
+model EscrowHolding {
+  id                  String       @id @default(uuid())
+  bookingId           String       @unique @map("booking_id")
+  booking             Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  
+  payerId             String       @map("payer_id") // User ID
+  payeeId             String       @map("payee_id") // Partner ID
+  
+  amount              Decimal      @db.Decimal(15, 2) // Số tiền Partner nhận
+  platformFee         Decimal      @map("platform_fee") @db.Decimal(15, 2) // Phí platform
+  totalAmount         Decimal      @map("total_amount") @db.Decimal(15, 2) // Tổng số tiền giữ
+  
+  status              EscrowStatus @default(HELD)
+  
+  // Scheduled release
+  releaseScheduledAt  DateTime?    @map("release_scheduled_at") // Dự kiến giải phóng (24h sau complete)
+  releasedAt          DateTime?    @map("released_at")
+  refundedAt          DateTime?    @map("refunded_at")
+  
+  // Dispute info
+  disputeReason       String?      @map("dispute_reason") @db.Text
+  disputedAt          DateTime?    @map("disputed_at")
+  disputeResolvedBy   String?      @map("dispute_resolved_by") // Admin ID
+  disputeResolution   String?      @map("dispute_resolution") @db.Text
+  
+  createdAt           DateTime     @default(now()) @map("created_at")
+  updatedAt           DateTime     @updatedAt @map("updated_at")
+  
+  @@map("escrow_holdings")
+}
+
+// Conversations - Hội thoại
+model Conversation {
+  id           String   @id @default(uuid())
+  
+  bookingId    String?  @unique @map("booking_id")
+  booking      Booking? @relation(fields: [bookingId], references: [id])
+  
+  isPhoneHidden Boolean @default(true) @map("is_phone_hidden") // Ẩn SĐT trong chat
+  status       ConversationStatus @default(ACTIVE)
+  
+  lastMessageAt DateTime? @map("last_message_at") // Tin nhắn cuối
+  lastMessagePreview String? @map("last_message_preview") // Preview tin nhắn cuối
+  
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  participants ConversationParticipant[]
+  messages     Message[]
+  
+  @@map("conversations")
+}
+
+// Conversation Participants - Thành viên hội thoại
+model ConversationParticipant {
+  id             String       @id @default(uuid())
+  conversationId String       @map("conversation_id")
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  userId         String       @map("user_id")
+  user           User         @relation(fields: [userId], references: [id])
+  
+  role           String       // "user", "partner"
+  joinedAt       DateTime     @default(now()) @map("joined_at")
+  lastReadAt     DateTime?    @map("last_read_at")
+  lastReadMessageId String?   @map("last_read_message_id")
+  
+  // Notification settings
+  isMuted        Boolean      @default(false) @map("is_muted")
+  
+  // User đã xoá/ẩn cuộc trò chuyện khỏi danh sách
+  leftAt         DateTime?    @map("left_at")
+  
+  @@unique([conversationId, userId])
+  @@map("conversation_participants")
+}
+
+// Messages - Tin nhắn
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String       @map("conversation_id")
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  senderId       String       @map("sender_id")
+  sender         User         @relation(fields: [senderId], references: [id])
+  
+  type           MessageType  @default(TEXT)
+  content        String?      @db.Text
+  
+  // Media
+  mediaUrl       String?      @map("media_url")
+  mediaType      String?      @map("media_type") // image/jpeg, audio/mp3, etc.
+  mediaDuration  Int?         @map("media_duration") // Duration in seconds (for voice)
+  mediaSize      Int?         @map("media_size") // Size in bytes
+  
+  // Location
+  locationLat    Decimal?     @map("location_lat") @db.Decimal(10, 8)
+  locationLng    Decimal?     @map("location_lng") @db.Decimal(11, 8)
+  locationAddress String?     @map("location_address")
+  
+  // Status
+  status         MessageStatus @default(SENT)
+  deliveredAt    DateTime?    @map("delivered_at")
+  readAt         DateTime?    @map("read_at")
+  
+  // Moderation
+  isFlagged      Boolean      @default(false) @map("is_flagged")
+  flaggedReason  String?      @map("flagged_reason")
+  isDeleted      Boolean      @default(false) @map("is_deleted")
+  deletedAt      DateTime?    @map("deleted_at")
+  
+  createdAt      DateTime     @default(now()) @map("created_at")
+  
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@map("messages")
+}
+
+// Reviews - Đánh giá
+model Review {
+  id             String   @id @default(uuid())
+  bookingId      String   @map("booking_id")
+  booking        Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  
+  reviewerId     String   @map("reviewer_id")
+  reviewer       User     @relation("ReviewsGiven", fields: [reviewerId], references: [id])
+  
+  revieweeId     String   @map("reviewee_id")
+  reviewee       User     @relation("ReviewsReceived", fields: [revieweeId], references: [id])
+  
+  reviewType     String   @map("review_type") // "user_to_partner", "partner_to_user"
+  
+  // Ratings (1-5 stars)
+  overallRating       Int  @map("overall_rating")
+  punctualityRating   Int? @map("punctuality_rating") // Đúng giờ
+  communicationRating Int? @map("communication_rating") // Giao tiếp
+  attitudeRating      Int? @map("attitude_rating") // Thái độ
+  appearanceRating    Int? @map("appearance_rating") // Ngoại hình
+  serviceQualityRating Int? @map("service_quality_rating") // Chất lượng dịch vụ
+  
+  comment        String?  @db.Text
+  photoUrls      Json?    @default("[]") @map("photo_urls") // Ảnh đính kèm
+  
+  // Tags - đánh giá nhanh
+  tags           Json?    @default("[]") // ["friendly", "on_time", "professional"]
+  
+  // Visibility
+  isVisible      Boolean  @default(true) @map("is_visible")
+  isAnonymous    Boolean  @default(false) @map("is_anonymous")
+  
+  // Moderation
+  isFlagged      Boolean  @default(false) @map("is_flagged")
+  flaggedReason  String?  @map("flagged_reason")
+  
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  response       ReviewResponse?
+  
+  @@unique([bookingId, reviewerId])
+  @@index([revieweeId])
+  @@index([overallRating])
+  @@map("reviews")
+}
+
+// Review Response - Phản hồi đánh giá
+model ReviewResponse {
+  id          String   @id @default(uuid())
+  reviewId    String   @unique @map("review_id")
+  review      Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  
+  responderId String   @map("responder_id")
+  response    String   @db.Text
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@map("review_responses")
+}
+
+// User Blacklist - Chặn người dùng
+model UserBlacklist {
+  id         String   @id @default(uuid())
+  
+  blockerId  String   @map("blocker_id")
+  blocker    User     @relation("BlockerUser", fields: [blockerId], references: [id], onDelete: Cascade)
+  
+  blockedId  String   @map("blocked_id")
+  blocked    User     @relation("BlockedUser", fields: [blockedId], references: [id], onDelete: Cascade)
+  
+  reason     String?  @db.Text
+  
+  createdAt  DateTime @default(now()) @map("created_at")
+  
+  @@unique([blockerId, blockedId])
+  @@map("user_blacklist")
+}
+
+// System Blacklist - Chặn bởi hệ thống
+model SystemBlacklist {
+  id            String    @id @default(uuid())
+  userId        String    @map("user_id")
+  
+  reason        String    @db.Text
+  blacklistedBy String    @map("blacklisted_by") // Admin ID
+  
+  isPermanent   Boolean   @default(false) @map("is_permanent")
+  expiresAt     DateTime? @map("expires_at")
+  
+  // Evidence/notes
+  evidence      Json?     // URLs to evidence, screenshots, etc.
+  adminNote     String?   @map("admin_note") @db.Text
+  
+  createdAt     DateTime  @default(now()) @map("created_at")
+  
+  @@index([userId])
+  @@map("system_blacklist")
+}
+
+// Emergency Contacts - Liên hệ khẩn cấp
+model EmergencyContact {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name         String
+  phone        String
+  relationship String?  // "parent", "friend", "spouse", "sibling", etc.
+  isPrimary    Boolean  @default(false) @map("is_primary")
+  
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  @@index([userId])
+  @@map("emergency_contacts")
+}
+
+// SOS Events - Sự kiện khẩn cấp
+model SosEvent {
+  id            String    @id @default(uuid())
+  
+  userId        String    @map("user_id")
+  user          User      @relation(fields: [userId], references: [id])
+  
+  bookingId     String?   @map("booking_id")
+  booking       Booking?  @relation(fields: [bookingId], references: [id])
+  
+  latitude      Decimal   @db.Decimal(10, 8)
+  longitude     Decimal   @db.Decimal(11, 8)
+  address       String?   @db.Text
+  
+  status        SosStatus @default(TRIGGERED)
+  
+  // Response info
+  respondedBy   String?   @map("responded_by") // Support team member ID
+  respondedAt   DateTime? @map("responded_at")
+  resolutionNote String?  @map("resolution_note") @db.Text
+  
+  // Notification tracking
+  notifiedContacts Json?  @map("notified_contacts") // [{name, phone, notifiedAt}]
+  notifiedSupport Boolean @default(true) @map("notified_support")
+  
+  // Location history during SOS
+  locationHistory Json?   @map("location_history") // [{lat, lng, timestamp}]
+  
+  createdAt     DateTime  @default(now()) @map("created_at")
+  resolvedAt    DateTime? @map("resolved_at")
+  
+  @@index([userId])
+  @@index([status])
+  @@map("sos_events")
+}
+
+// Location Logs - Log vị trí trong booking (safety)
+model LocationLog {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  bookingId  String   @map("booking_id")
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  
+  latitude   Decimal  @db.Decimal(10, 8)
+  longitude  Decimal  @db.Decimal(11, 8)
+  accuracy   Decimal? @db.Decimal(6, 2) // Độ chính xác (meters)
+  speed      Decimal? @db.Decimal(6, 2) // Tốc độ (m/s)
+  heading    Decimal? @db.Decimal(5, 2) // Hướng (degrees)
+  
+  recordedAt DateTime @default(now()) @map("recorded_at")
+  
+  @@index([bookingId, recordedAt])
+  @@index([userId])
+  @@map("location_logs")
+}
+
+// Refresh Tokens - Token làm mới
+model RefreshToken {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  token        String   @unique
+  deviceInfo   String?  @map("device_info") @db.Text // User-Agent, device model, etc.
+  ipAddress    String?  @map("ip_address")
+  
+  expiresAt    DateTime @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  lastUsedAt   DateTime? @map("last_used_at")
+  
+  isRevoked    Boolean  @default(false) @map("is_revoked")
+  revokedAt    DateTime? @map("revoked_at")
+  
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
+// Notifications - Thông báo
+model Notification {
+  id           String           @id @default(uuid())
+  userId       String           @map("user_id")
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type         NotificationType
+  title        String
+  body         String           @db.Text
+  imageUrl     String?          @map("image_url")
+  
+  // Deep link để navigate trong app
+  actionType   String?          @map("action_type") // "booking", "chat", "profile", etc.
+  actionId     String?          @map("action_id") // ID của resource
+  
+  data         Json?            // Additional data
+  
+  isRead       Boolean          @default(false) @map("is_read")
+  readAt       DateTime?        @map("read_at")
+  
+  createdAt    DateTime         @default(now()) @map("created_at")
+  
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// Device Tokens - FCM tokens
+model DeviceToken {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  token        String   @unique
+  platform     String   // "ios", "android", "web"
+  deviceInfo   String?  @map("device_info")
+  
+  isActive     Boolean  @default(true) @map("is_active")
+  lastUsedAt   DateTime @default(now()) @map("last_used_at")
+  
+  createdAt    DateTime @default(now()) @map("created_at")
+  
+  @@index([userId])
+  @@map("device_tokens")
+}
+
+// Favorites - Yêu thích Partner
+model Favorite {
+  id           String   @id @default(uuid())
+  
+  userId       String   @map("user_id")
+  user         User     @relation("UserFavorites", fields: [userId], references: [id], onDelete: Cascade)
+  
+  partnerId    String   @map("partner_id")
+  partner      User     @relation("FavoritePartner", fields: [partnerId], references: [id], onDelete: Cascade)
+  
+  note         String?  @db.Text // Ghi chú cá nhân
+  
+  createdAt    DateTime @default(now()) @map("created_at")
+  
+  @@unique([userId, partnerId])
+  @@map("favorites")
+}
+
+// Service Types - Loại dịch vụ (reference table)
+model ServiceType {
+  id          String   @id @default(uuid())
+  code        String   @unique // "walking", "movie", "party", etc.
+  name        String   // Tên hiển thị
+  nameVi      String   @map("name_vi") // Tên tiếng Việt
+  description String?  @db.Text
+  icon        String?  // Icon name or URL
+  isActive    Boolean  @default(true) @map("is_active")
+  sortOrder   Int      @default(0) @map("sort_order")
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@map("service_types")
+}
+
+// App Settings - Cài đặt app
+model AppSetting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String   @db.Text
+  description String?  @db.Text
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@map("app_settings")
+}
+
+// Reports - Báo cáo vi phạm
+model Report {
+  id           String   @id @default(uuid())
+  
+  reporterId   String   @map("reporter_id") // Người báo cáo
+  reportedId   String   @map("reported_id") // Người bị báo cáo
+  
+  type         String   // "user", "review", "message", "booking"
+  referenceId  String?  @map("reference_id") // ID của resource bị report
+  
+  reason       String   // Lý do chính
+  description  String?  @db.Text // Mô tả chi tiết
+  evidence     Json?    @default("[]") // URLs to evidence
+  
+  status       String   @default("pending") // "pending", "reviewing", "resolved", "rejected"
+  
+  // Admin handling
+  handledBy    String?  @map("handled_by") // Admin ID
+  handledAt    DateTime? @map("handled_at")
+  resolution   String?  @db.Text
+  
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  @@index([reportedId])
+  @@index([status])
+  @@map("reports")
+}
+
+// OTP Codes - Mã OTP
+model OtpCode {
+  id           String   @id @default(uuid())
+  
+  target       String   // Email hoặc phone
+  targetType   String   @map("target_type") // "email", "phone"
+  code         String   // Mã OTP (6 số)
+  purpose      String   // "register", "login", "reset_password", "verify_phone"
+  
+  isUsed       Boolean  @default(false) @map("is_used")
+  usedAt       DateTime? @map("used_at")
+  
+  expiresAt    DateTime @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  
+  attempts     Int      @default(0) // Số lần nhập sai
+  
+  @@index([target, purpose])
+  @@map("otp_codes")
+}
+
+// ==================== MASTER DATA ====================
+
+// Provinces/Cities - Tỉnh/Thành phố
+model Province {
+  id           String     @id @default(uuid())
+  code         String     @unique // Mã tỉnh: "HCM", "HN", "DN"
+  name         String     // Tên: "Hồ Chí Minh", "Hà Nội"
+  nameEn       String?    @map("name_en") // English name
+  sortOrder    Int        @default(0) @map("sort_order")
+  isActive     Boolean    @default(true) @map("is_active")
+  
+  districts    District[]
+  
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  
+  @@index([isActive, sortOrder])
+  @@map("provinces")
+}
+
+// Districts - Quận/Huyện
+model District {
+  id           String   @id @default(uuid())
+  provinceId   String   @map("province_id")
+  province     Province @relation(fields: [provinceId], references: [id], onDelete: Cascade)
+  
+  code         String   // Mã quận: "Q1", "Q2", "BTH"
+  name         String   // Tên: "Quận 1", "Quận Bình Thạnh"
+  nameEn       String?  @map("name_en")
+  sortOrder    Int      @default(0) @map("sort_order")
+  isActive     Boolean  @default(true) @map("is_active")
+  
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  @@unique([provinceId, code])
+  @@index([provinceId, isActive])
+  @@map("districts")
+}
+
+// Interest Categories - Danh mục sở thích
+model InterestCategory {
+  id           String     @id @default(uuid())
+  code         String     @unique // "entertainment", "sports", "music"
+  name         String     // "Giải trí", "Thể thao", "Nghệ thuật"
+  nameEn       String?    @map("name_en")
+  icon         String?    // Icon name or URL
+  color        String?    // Color hex code
+  sortOrder    Int        @default(0) @map("sort_order")
+  isActive     Boolean    @default(true) @map("is_active")
+  
+  interests    Interest[]
+  
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  
+  @@map("interest_categories")
+}
+
+// Interests - Sở thích
+model Interest {
+  id           String            @id @default(uuid())
+  categoryId   String?           @map("category_id")
+  category     InterestCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  
+  code         String            @unique // "travel", "music", "coffee"
+  name         String            // "Du lịch", "Âm nhạc", "Cafe"
+  nameEn       String?           @map("name_en")
+  icon         String?           // Icon name or URL
+  sortOrder    Int               @default(0) @map("sort_order")
+  isActive     Boolean           @default(true) @map("is_active")
+  
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+  
+  @@index([categoryId, isActive])
+  @@map("interests")
+}
+
+// Talent Categories - Danh mục tài năng
+model TalentCategory {
+  id           String    @id @default(uuid())
+  code         String    @unique // "music", "dance", "language"
+  name         String    // "Âm nhạc", "Nấu ăn", "Nghệ thuật"
+  nameEn       String?   @map("name_en")
+  icon         String?
+  sortOrder    Int       @default(0) @map("sort_order")
+  isActive     Boolean   @default(true) @map("is_active")
+  
+  talents      Talent[]
+  
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  
+  @@map("talent_categories")
+}
+
+// Talents - Tài năng
+model Talent {
+  id           String          @id @default(uuid())
+  categoryId   String?         @map("category_id")
+  category     TalentCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  
+  code         String          @unique // "singing", "guitar", "cooking"
+  name         String          // "Ca hát", "Đàn guitar", "Nấu ăn"
+  nameEn       String?         @map("name_en")
+  icon         String?
+  sortOrder    Int             @default(0) @map("sort_order")
+  isActive     Boolean         @default(true) @map("is_active")
+  
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+  
+  @@index([categoryId, isActive])
+  @@map("talents")
+}
+
+// Languages - Ngôn ngữ
+model Language {
+  id           String   @id @default(uuid())
+  code         String   @unique // "vi", "en", "zh", "ja", "ko"
+  name         String   // "Tiếng Việt", "English", "中文"
+  nativeName   String?  @map("native_name") // Tên theo ngôn ngữ gốc
+  flag         String?  // Flag emoji or URL
+  sortOrder    Int      @default(0) @map("sort_order")
+  isActive     Boolean  @default(true) @map("is_active")
+  
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  @@index([isActive, sortOrder])
+  @@map("languages")
+}
