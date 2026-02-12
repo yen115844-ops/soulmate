@@ -1,25 +1,24 @@
 import 'package:flutter/material.dart';
 
-/// App Colors - Modern Mioto-inspired Design System
-/// Primary: Teal/Green
-/// Accent: Deep Teal
+/// App Colors - Modern Design System
+/// Primary: Purple/Pink
 class AppColors {
   AppColors._();
 
   // === Primary Colors ===
-  static const Color primary = Color(0xFF00B894);
-  static const Color primaryLight = Color(0xFF55EFC4);
-  static const Color primaryDark = Color(0xFF009B77);
+  static const Color primary = Color(0xFFE1A8F0);
+  static const Color primaryLight = Color(0xFFF0D4F7);
+  static const Color primaryDark = Color(0xFFC77DD4);
 
   // Gradient
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFF00B894), Color(0xFF55EFC4)],
+    colors: [Color(0xFFE1A8F0), Color(0xFFF0D4F7)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient accentGradient = LinearGradient(
-    colors: [Color(0xFF00B894), Color(0xFF009B77)],
+    colors: [Color(0xFFE1A8F0), Color(0xFFC77DD4)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

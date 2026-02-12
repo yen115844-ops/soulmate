@@ -1,84 +1,84 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>CFBundleDevelopmentRegion</key>
-	<string>$(DEVELOPMENT_LANGUAGE)</string>
-	<key>CFBundleDisplayName</key>
-	<string>SoulMate</string>
-	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
-	<key>CFBundleName</key>
-	<string>mobile</string>
-	<key>CFBundlePackageType</key>
-	<string>APPL</string>
-	<key>CFBundleShortVersionString</key>
-	<string>$(FLUTTER_BUILD_NAME)</string>
-	<key>CFBundleSignature</key>
-	<string>????</string>
-	<key>CFBundleVersion</key>
-	<string>$(FLUTTER_BUILD_NUMBER)</string>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-	<key>NSCameraUsageDescription</key>
-	<string>Ứng dụng cần quyền truy cập camera để chụp ảnh đại diện, ảnh xác minh danh tính và chia sẻ hình ảnh.</string>
-	<key>NSFaceIDUsageDescription</key>
-	<string>Ứng dụng sử dụng Face ID để xác thực bảo mật khi đăng nhập và thực hiện các giao dịch quan trọng.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Ứng dụng cần truy cập vị trí của bạn để hiển thị bản đồ các địa điểm gần đây, cung cấp chỉ đường và gửi thông báo về dịch vụ địa phương.</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Ứng dụng cần quyền truy cập vị trí liên tục để gửi thông báo về các dịch vụ và ưu đãi tại các địa điểm gần bạn.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Ứng dụng cần quyền truy cập vị trí để hiển thị các địa điểm và dịch vụ gần bạn, cũng như cung cấp chỉ đường chính xác.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Ứng dụng cần quyền truy cập microphone để sử dụng tính năng tìm kiếm bằng giọng nói và hỗ trợ khách hàng qua cuộc gọi.</string>
-	<key>NSMotionUsageDescription</key>
-	<string>This app requires access to the barometer to provide altitude information.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Ứng dụng cần truy cập thư viện ảnh để cho phép bạn tải lên ảnh đại diện cá nhân và chia sẻ hình ảnh về địa điểm, dịch vụ.</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Ứng dụng cần quyền nhận dạng giọng nói để chuyển đổi lệnh thoại thành văn bản khi tìm kiếm địa điểm và dịch vụ.</string>
-	<key>NSUserNotificationsUsageDescription</key>
-	<string>Ứng dụng cần gửi thông báo để cập nhật cho bạn về tin tức, ưu đãi và các hoạt động quan trọng.</string>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>remote-notification</string>
-		<string>fetch</string>
-	</array>
-	<key>FirebaseAppDelegateProxyEnabled</key>
-	<false/>
-	<key>BGTaskSchedulerPermittedIdentifiers</key>
-	<array>
-		<string>com.google.firebase.messaging</string>
-	</array>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
-	<key>UIMainStoryboardFile</key>
-	<string>Main</string>
-	<key>UIStatusBarHidden</key>
-	<false/>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-</dict>
+	<dict>
+		<key>CADisableMinimumFrameDurationOnPhone</key>
+		<true/>
+		<key>CFBundleDevelopmentRegion</key>
+		<string>$(DEVELOPMENT_LANGUAGE)</string>
+		<key>CFBundleDisplayName</key>
+		<string>SoulMate</string>
+		<key>CFBundleExecutable</key>
+		<string>$(EXECUTABLE_NAME)</string>
+		<key>CFBundleIdentifier</key>
+		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+		<key>CFBundleInfoDictionaryVersion</key>
+		<string>6.0</string>
+		<key>CFBundleName</key>
+		<string>mobile</string>
+		<key>CFBundlePackageType</key>
+		<string>APPL</string>
+		<key>CFBundleShortVersionString</key>
+		<string>$(FLUTTER_BUILD_NAME)</string>
+		<key>CFBundleSignature</key>
+		<string>????</string>
+		<key>CFBundleVersion</key>
+		<string>$(FLUTTER_BUILD_NUMBER)</string>
+		<key>ITSAppUsesNonExemptEncryption</key>
+		<false/>
+		<key>LSRequiresIPhoneOS</key>
+		<true/>
+		<key>NSCameraUsageDescription</key>
+		<string>Ứng dụng cần quyền truy cập camera để chụp ảnh đại diện, ảnh xác minh danh tính và chia sẻ hình ảnh.</string>
+		<key>NSFaceIDUsageDescription</key>
+		<string>Ứng dụng sử dụng Face ID để xác thực bảo mật khi đăng nhập và thực hiện các giao dịch quan trọng.</string>
+		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+		<string>Ứng dụng cần truy cập vị trí của bạn để hiển thị bản đồ các địa điểm gần đây, cung cấp chỉ đường và gửi thông báo về dịch vụ địa phương.</string>
+		<key>NSLocationAlwaysUsageDescription</key>
+		<string>Ứng dụng cần quyền truy cập vị trí liên tục để gửi thông báo về các dịch vụ và ưu đãi tại các địa điểm gần bạn.</string>
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>Ứng dụng cần quyền truy cập vị trí để hiển thị các địa điểm và dịch vụ gần bạn, cũng như cung cấp chỉ đường chính xác.</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>Ứng dụng cần quyền truy cập microphone để sử dụng tính năng tìm kiếm bằng giọng nói và hỗ trợ khách hàng qua cuộc gọi.</string>
+		<key>NSMotionUsageDescription</key>
+		<string>This app requires access to the barometer to provide altitude information.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Ứng dụng cần truy cập thư viện ảnh để cho phép bạn tải lên ảnh đại diện cá nhân và chia sẻ hình ảnh về địa điểm, dịch vụ.</string>
+		<key>NSSpeechRecognitionUsageDescription</key>
+		<string>Ứng dụng cần quyền nhận dạng giọng nói để chuyển đổi lệnh thoại thành văn bản khi tìm kiếm địa điểm và dịch vụ.</string>
+		<key>NSUserNotificationsUsageDescription</key>
+		<string>Ứng dụng cần gửi thông báo để cập nhật cho bạn về tin tức, ưu đãi và các hoạt động quan trọng.</string>
+		<key>UIApplicationSupportsIndirectInputEvents</key>
+		<true/>
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>remote-notification</string>
+			<string>fetch</string>
+		</array>
+		<key>FirebaseAppDelegateProxyEnabled</key>
+		<false/>
+		<key>BGTaskSchedulerPermittedIdentifiers</key>
+		<array>
+			<string>com.google.firebase.messaging</string>
+		</array>
+		<key>UILaunchStoryboardName</key>
+		<string>LaunchScreen</string>
+		<key>UIMainStoryboardFile</key>
+		<string>Main</string>
+		<key>UIStatusBarHidden</key>
+		<false/>
+		<key>UISupportedInterfaceOrientations</key>
+		<array>
+			<string>UIInterfaceOrientationPortrait</string>
+			<string>UIInterfaceOrientationLandscapeLeft</string>
+			<string>UIInterfaceOrientationLandscapeRight</string>
+		</array>
+		<key>UISupportedInterfaceOrientations~ipad</key>
+		<array>
+			<string>UIInterfaceOrientationPortrait</string>
+			<string>UIInterfaceOrientationPortraitUpsideDown</string>
+			<string>UIInterfaceOrientationLandscapeLeft</string>
+			<string>UIInterfaceOrientationLandscapeRight</string>
+		</array>
+	</dict>
 </plist>
