@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/network/api_exceptions.dart';
+import '../../../auth/data/models/user_model.dart';
 import '../../data/profile_repository.dart';
 import 'profile_event.dart';
 import 'profile_state.dart';
@@ -36,7 +37,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         _profileRepository.getProfileStats(),
       ]);
 
-      final user = results[0] as dynamic;
+      final user = results[0] as UserModel;
       final stats = results[1] as ProfileStats;
 
       emit(ProfileLoaded(user: user, stats: stats));
@@ -59,7 +60,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         _profileRepository.getProfileStats(),
       ]);
 
-      final user = results[0] as dynamic;
+      final user = results[0] as UserModel;
       final stats = results[1] as ProfileStats;
 
       emit(ProfileLoaded(user: user, stats: stats));

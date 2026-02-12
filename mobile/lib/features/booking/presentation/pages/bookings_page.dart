@@ -9,6 +9,7 @@ import 'package:table_calendar/table_calendar.dart';
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/cards/booking_card.dart';
 import '../../../../shared/widgets/common/pull_to_refresh.dart';
@@ -98,10 +99,10 @@ class _BookingsPageContentState extends State<_BookingsPageContent>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.appColors.background,
       
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.appColors.surface,
         title: Text(
           'Lịch hẹn của tôi',
           style: AppTypography.titleMedium.copyWith(
@@ -125,7 +126,7 @@ class _BookingsPageContentState extends State<_BookingsPageContent>
               return TabBar(
                 controller: _tabController,
                 labelColor: AppColors.primary,
-                unselectedLabelColor: AppColors.textSecondary,
+                unselectedLabelColor: context.appColors.textSecondary,
                 indicatorColor: AppColors.primary,
                 indicatorWeight: 3,
                 labelStyle: AppTypography.labelLarge.copyWith(
@@ -395,11 +396,11 @@ class _BookingsPageContentState extends State<_BookingsPageContent>
           Container(
             margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: context.appColors.surface,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
+                  color: context.appColors.textPrimary.withValues(alpha: 0.04),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -442,35 +443,35 @@ class _BookingsPageContentState extends State<_BookingsPageContent>
                     DateFormat.yMMMM(locale).format(date),
                 titleTextStyle: AppTypography.titleSmall.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: context.appColors.textPrimary,
                 ),
-                leftChevronIcon: const Icon(
+                leftChevronIcon: Icon(
                   Ionicons.chevron_back_outline,
-                  color: AppColors.textSecondary,
+                  color: context.appColors.textSecondary,
                   size: 22,
                 ),
-                rightChevronIcon: const Icon(
+                rightChevronIcon: Icon(
                   Ionicons.chevron_forward_outline,
-                  color: AppColors.textSecondary,
+                  color: context.appColors.textSecondary,
                   size: 22,
                 ),
               ),
               daysOfWeekStyle: DaysOfWeekStyle(
                 weekdayStyle: AppTypography.labelSmall.copyWith(
-                  color: AppColors.textSecondary,
+                  color: context.appColors.textSecondary,
                   fontWeight: FontWeight.w600,
                 ),
                 weekendStyle: AppTypography.labelSmall.copyWith(
-                  color: AppColors.textSecondary,
+                  color: context.appColors.textSecondary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
               calendarStyle: CalendarStyle(
                 defaultTextStyle: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textPrimary,
+                  color: context.appColors.textPrimary,
                 ),
                 weekendTextStyle: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textPrimary,
+                  color: context.appColors.textPrimary,
                 ),
                 selectedDecoration: const BoxDecoration(
                   color: AppColors.primary,
@@ -493,7 +494,7 @@ class _BookingsPageContentState extends State<_BookingsPageContent>
                   shape: BoxShape.circle,
                 ),
                 outsideTextStyle: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textHint,
+                  color: context.appColors.textHint,
                 ),
               ),
               calendarBuilders: CalendarBuilders(
@@ -531,11 +532,11 @@ class _BookingsPageContentState extends State<_BookingsPageContent>
                     margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: context.appColors.surface,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.06),
+                          color: context.appColors.textPrimary.withValues(alpha: 0.06),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -551,7 +552,7 @@ class _BookingsPageContentState extends State<_BookingsPageContent>
                               DateFormat('dd/MM/yyyy').format(_selectedHistoryDay!),
                               style: AppTypography.titleSmall.copyWith(
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
+                                color: context.appColors.textPrimary,
                               ),
                             ),
                             const Spacer(),
@@ -559,7 +560,7 @@ class _BookingsPageContentState extends State<_BookingsPageContent>
                               icon: const Icon(Ionicons.close_circle_outline),
                               onPressed: () =>
                                   setState(() => _selectedHistoryDay = null),
-                              color: AppColors.textHint,
+                              color: context.appColors.textHint,
                               iconSize: 22,
                             ),
                           ],
@@ -570,7 +571,7 @@ class _BookingsPageContentState extends State<_BookingsPageContent>
                             child: Text(
                               'Không có lịch hẹn trong ngày này',
                               style: AppTypography.bodyMedium.copyWith(
-                                color: AppColors.textHint,
+                                color: context.appColors.textHint,
                               ),
                             ),
                           )
@@ -621,7 +622,7 @@ class _BookingsPageContentState extends State<_BookingsPageContent>
               child: Text(
                 'Chọn một ngày có dấu chấm để xem lịch hẹn',
                 style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textHint,
+                  color: context.appColors.textHint,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -669,8 +670,8 @@ class _BookingsPageContentState extends State<_BookingsPageContent>
           constraints: BoxConstraints(
             maxHeight: MediaQuery.of(builderContext).size.height * 0.75,
           ),
-          decoration: const BoxDecoration(
-            color: AppColors.surface,
+          decoration: BoxDecoration(
+            color: context.appColors.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: SingleChildScrollView(
@@ -700,7 +701,7 @@ class _BookingsPageContentState extends State<_BookingsPageContent>
                   'Trạng thái',
                   style: AppTypography.labelLarge.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -732,7 +733,7 @@ class _BookingsPageContentState extends State<_BookingsPageContent>
                   'Thời gian',
                   style: AppTypography.labelLarge.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -903,7 +904,7 @@ class _BookingsPageContentState extends State<_BookingsPageContent>
       onSelected: (_) => onSelected(),
       selectedColor: AppColors.primary.withValues(alpha: 0.2),
       labelStyle: TextStyle(
-        color: isSelected ? AppColors.primary : AppColors.textSecondary,
+        color: isSelected ? AppColors.primary : context.appColors.textSecondary,
         fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
       ),
     );
@@ -929,7 +930,7 @@ class _HistoryViewChip extends StatelessWidget {
     return Material(
       color: selected
           ? AppColors.primary.withValues(alpha: 0.15)
-          : AppColors.surface,
+          : context.appColors.surface,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,
@@ -939,7 +940,7 @@ class _HistoryViewChip extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: selected ? AppColors.primary : AppColors.border,
+              color: selected ? AppColors.primary : context.appColors.border,
               width: selected ? 1.5 : 1,
             ),
           ),
@@ -949,14 +950,14 @@ class _HistoryViewChip extends StatelessWidget {
               Icon(
                 icon,
                 size: 20,
-                color: selected ? AppColors.primary : AppColors.textSecondary,
+                color: selected ? AppColors.primary : context.appColors.textSecondary,
               ),
               const SizedBox(width: 8),
               Text(
                 label,
                 style: AppTypography.labelLarge.copyWith(
                   fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                  color: selected ? AppColors.primary : AppColors.textSecondary,
+                  color: selected ? AppColors.primary : context.appColors.textSecondary,
                 ),
               ),
             ],

@@ -7,6 +7,7 @@ import 'package:ionicons/ionicons.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../shared/data/models/notification_models.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../bloc/notification_bloc.dart';
@@ -325,7 +326,7 @@ class _NotificationItem extends StatelessWidget {
                     Text(
                       notification.body,
                       style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -334,7 +335,7 @@ class _NotificationItem extends StatelessWidget {
                     Text(
                       _formatTime(notification.createdAt),
                       style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.textHint,
+                        color: context.appColors.textHint,
                       ),
                     ),
                   ],
@@ -360,14 +361,14 @@ class _EmptyState extends StatelessWidget {
           Container(
             width: 100,
             height: 100,
-            decoration: const BoxDecoration(
-              color: AppColors.backgroundLight,
+            decoration: BoxDecoration(
+              color: context.appColors.background,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Ionicons.notifications_outline,
               size: 48,
-              color: AppColors.textHint,
+              color: context.appColors.textHint,
             ),
           ),
           const SizedBox(height: 24),
@@ -379,7 +380,7 @@ class _EmptyState extends StatelessWidget {
           Text(
             'Bạn sẽ nhận được thông báo ở đây',
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ),
         ],
@@ -411,7 +412,7 @@ class _ErrorView extends StatelessWidget {
             Text(
               message,
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),

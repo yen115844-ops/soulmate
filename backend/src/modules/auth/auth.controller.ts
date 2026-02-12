@@ -9,6 +9,7 @@ import {
     UseGuards
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -22,6 +23,7 @@ export class AuthController {
 
   @Post('register')
   @Public()
+  @Throttle({ short: { limit: 1, ttl: 1000 }, medium: { limit: 3, ttl: 60000 }, long: { limit: 5, ttl: 3600000 } })
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User registered successfully' })
   @ApiResponse({ status: 409, description: 'Email or phone already exists' })
@@ -31,6 +33,7 @@ export class AuthController {
 
   @Post('verify-otp')
   @Public()
+  @Throttle({ short: { limit: 1, ttl: 1000 }, medium: { limit: 5, ttl: 60000 }, long: { limit: 10, ttl: 3600000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Verify email OTP and activate account' })
   @ApiResponse({ status: 200, description: 'Email verified, tokens returned' })
@@ -41,6 +44,7 @@ export class AuthController {
 
   @Post('resend-otp')
   @Public()
+  @Throttle({ short: { limit: 1, ttl: 2000 }, medium: { limit: 3, ttl: 60000 }, long: { limit: 5, ttl: 3600000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Resend OTP to email (for pending registration)' })
   @ApiResponse({ status: 200, description: 'OTP sent' })
@@ -51,6 +55,7 @@ export class AuthController {
 
   @Post('forgot-password')
   @Public()
+  @Throttle({ short: { limit: 1, ttl: 2000 }, medium: { limit: 3, ttl: 60000 }, long: { limit: 5, ttl: 3600000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Request forgot password - send OTP to email' })
   @ApiResponse({ status: 200, description: 'OTP sent to email' })
@@ -61,6 +66,7 @@ export class AuthController {
 
   @Post('reset-password')
   @Public()
+  @Throttle({ short: { limit: 1, ttl: 1000 }, medium: { limit: 5, ttl: 60000 }, long: { limit: 10, ttl: 3600000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Reset password with OTP' })
   @ApiResponse({ status: 200, description: 'Password reset successfully' })
@@ -71,6 +77,7 @@ export class AuthController {
 
   @Post('login')
   @Public()
+  @Throttle({ short: { limit: 1, ttl: 1000 }, medium: { limit: 5, ttl: 60000 }, long: { limit: 10, ttl: 3600000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login with email and password' })
   @ApiResponse({ status: 200, description: 'Login successful' })

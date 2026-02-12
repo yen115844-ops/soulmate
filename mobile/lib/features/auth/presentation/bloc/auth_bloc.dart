@@ -1,11 +1,10 @@
-import 'dart:io';
-
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_exceptions.dart';
-import '../../../../shared/data/repositories/notification_repository.dart';
+import '../../../../core/services/push_notification_service.dart';
+import '../../../../core/utils/error_utils.dart';
 import '../../data/auth_repository.dart';
 import '../../data/models/auth_response_model.dart';
 import '../../data/models/user_enums.dart';
@@ -16,58 +15,35 @@ import 'auth_state.dart';
 /// Auth BLoC handles authentication logic
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
-  final NotificationRepository? _notificationRepository;
 
   AuthBloc({
     required AuthRepository authRepository,
-    NotificationRepository? notificationRepository,
   }) : _authRepository = authRepository,
-       _notificationRepository = notificationRepository,
        super(const AuthInitial()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<AuthLoginRequested>(_onLoginRequested);
     on<AuthRegisterRequested>(_onRegisterRequested);
     on<AuthLogoutRequested>(_onLogoutRequested);
     on<AuthRefreshRequested>(_onRefreshRequested);
-    on<AuthChangePasswordRequested>(_onChangePasswordRequested);
     on<AuthClearError>(_onClearError);
     on<AuthVerifyOtpRequested>(_onVerifyOtpRequested);
     on<AuthResendOtpRequested>(_onResendOtpRequested);
     on<AuthDeleteAccountRequested>(_onDeleteAccountRequested);
   }
 
-  /// Register FCM token with backend after successful authentication
+  /// Register FCM token via PushNotificationService
   Future<void> _registerFcmToken() async {
-    if (_notificationRepository == null) return;
-    
     try {
-      final token = await FirebaseMessaging.instance.getToken();
-      if (token != null) {
-        final platform = Platform.isIOS ? 'ios' : 'android';
-        final deviceInfo = '${Platform.operatingSystem} ${Platform.operatingSystemVersion}';
-        
-        await _notificationRepository.registerDeviceToken(
-          token: token,
-          platform: platform,
-          deviceInfo: deviceInfo,
-        );
-        debugPrint('FCM token registered with backend');
-      }
+      await getIt<PushNotificationService>().registerTokenWithBackend();
     } catch (e) {
       debugPrint('Failed to register FCM token: $e');
     }
   }
 
-  /// Unregister FCM token from backend before logout
+  /// Unregister FCM token via PushNotificationService
   Future<void> _unregisterFcmToken() async {
-    if (_notificationRepository == null) return;
-    
     try {
-      final token = await FirebaseMessaging.instance.getToken();
-      if (token != null) {
-        await _notificationRepository.unregisterDeviceToken(token);
-        debugPrint('FCM token unregistered from backend');
-      }
+      await getIt<PushNotificationService>().unregisterToken();
     } catch (e) {
       debugPrint('Failed to unregister FCM token: $e');
     }
@@ -157,7 +133,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } on ApiException catch (e) {
       emit(AuthError(message: e.message, errors: e.errors));
     } catch (e) {
-      emit(AuthError(message: 'Đăng nhập thất bại: ${e.toString()}'));
+      emit(AuthError(message: getErrorMessage(e)));
     }
   }
 
@@ -187,7 +163,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } on ApiException catch (e) {
       emit(AuthError(message: e.message, errors: e.errors));
     } catch (e) {
-      emit(AuthError(message: 'Đăng ký thất bại: ${e.toString()}'));
+      emit(AuthError(message: getErrorMessage(e)));
     }
   }
 
@@ -232,28 +208,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  /// Handle password change request
-  Future<void> _onChangePasswordRequested(
-    AuthChangePasswordRequested event,
-    Emitter<AuthState> emit,
-  ) async {
-    emit(const AuthLoading());
-
-    try {
-      await _authRepository.changePassword(
-        ChangePasswordRequest(
-          currentPassword: event.currentPassword,
-          newPassword: event.newPassword,
-        ),
-      );
-      emit(const AuthPasswordChanged());
-    } on ApiException catch (e) {
-      emit(AuthError(message: e.message, errors: e.errors));
-    } catch (e) {
-      emit(AuthError(message: 'Đổi mật khẩu thất bại: ${e.toString()}'));
-    }
-  }
-
   /// Clear error state
   void _onClearError(AuthClearError event, Emitter<AuthState> emit) {
     // Determine what state to return to based on auth status
@@ -290,7 +244,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthError(message: e.message, errors: e.errors));
     } catch (e) {
       debugPrint('OTP verification error: $e');
-      emit(AuthError(message: 'Xác minh OTP thất bại: ${e.toString()}'));
+      emit(AuthError(message: getErrorMessage(e)));
     }
   }
 
@@ -306,7 +260,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthError(message: e.message, errors: e.errors));
     } catch (e) {
       debugPrint('Resend OTP error: $e');
-      emit(AuthError(message: 'Gửi lại OTP thất bại: ${e.toString()}'));
+      emit(AuthError(message: getErrorMessage(e)));
     }
   }
 
@@ -325,7 +279,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthError(message: e.message, errors: e.errors));
     } catch (e) {
       debugPrint('Delete account error: $e');
-      emit(AuthError(message: 'Xóa tài khoản thất bại: ${e.toString()}'));
+      emit(AuthError(message: getErrorMessage(e)));
     }
   }
 }

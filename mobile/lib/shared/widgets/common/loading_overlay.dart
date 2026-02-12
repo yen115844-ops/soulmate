@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/theme_context.dart';
 import '../../../core/theme/app_typography.dart';
 
 /// Full Screen Loading Overlay
@@ -34,11 +35,11 @@ class LoadingOverlay extends StatelessWidget {
                   vertical: 24,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: context.appColors.surface,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: context.appColors.textPrimary.withOpacity(0.1),
                       blurRadius: 20,
                       spreadRadius: 5,
                     ),
@@ -56,7 +57,7 @@ class LoadingOverlay extends StatelessWidget {
                       Text(
                         message!,
                         style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.appColors.textSecondary,
                         ),
                       ),
                     ],
@@ -100,7 +101,7 @@ class InlineLoading extends StatelessWidget {
           Text(
             message!,
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ),
         ],
@@ -130,7 +131,7 @@ class PageLoading extends StatelessWidget {
             Text(
               message!,
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
             ),
           ],

@@ -7,6 +7,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/services/deep_link_service.dart';
 import '../../../../core/services/local_storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../auth/data/auth_repository.dart';
 import '../../../auth/data/models/user_enums.dart';
 
@@ -103,11 +104,11 @@ class _SplashPageState extends State<SplashPage> {
                       width: 120,
                       height: 120,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: context.appColors.surface,
                         borderRadius: BorderRadius.circular(30),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withAlpha(40),
+                            color: context.appColors.textPrimary.withAlpha(40),
                             blurRadius: 30,
                             offset: const Offset(0, 10),
                           ),

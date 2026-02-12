@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/theme_context.dart';
 
 /// Shimmer Loading Widget for skeleton screens
 class ShimmerLoading extends StatelessWidget {
@@ -19,8 +19,8 @@ class ShimmerLoading extends StatelessWidget {
     if (!isLoading) return child;
 
     return Shimmer.fromColors(
-      baseColor: AppColors.border,
-      highlightColor: AppColors.backgroundLight,
+      baseColor: context.appColors.border,
+      highlightColor: context.appColors.background,
       child: child,
     );
   }
@@ -45,7 +45,7 @@ class ShimmerBox extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: AppColors.border,
+        color: context.appColors.border,
         borderRadius: BorderRadius.circular(borderRadius),
       ),
     );
@@ -63,8 +63,8 @@ class ShimmerCircle extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: const BoxDecoration(
-        color: AppColors.border,
+      decoration:   BoxDecoration(
+        color: context.appColors.border,
         shape: BoxShape.circle,
       ),
     );
@@ -82,9 +82,9 @@ class PartnerCardShimmer extends StatelessWidget {
         width: 180,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.appColors.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.appColors.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,9 +117,9 @@ class PartnerListItemShimmer extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.appColors.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.appColors.border),
         ),
         child: Row(
           children: [
@@ -155,9 +155,9 @@ class BookingCardShimmer extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.appColors.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.appColors.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

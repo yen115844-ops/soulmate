@@ -5,8 +5,8 @@ import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/cards/partner_card.dart';
 import '../bloc/favorites_bloc.dart';
 import '../bloc/favorites_event.dart';
@@ -31,7 +31,7 @@ class _FavoritesView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(leading: const AppBackButton(), title: const Text('Yêu thích')),
+      appBar: AppBar(title: const Text('Yêu thích')),
       body: BlocConsumer<FavoritesBloc, FavoritesState>(
         listener: (context, state) {
           if (state.errorMessage != null) {
@@ -128,13 +128,13 @@ class _EmptyState extends StatelessWidget {
             width: 100,
             height: 100,
             decoration: BoxDecoration(
-              color: AppColors.backgroundLight,
+              color: context.appColors.background,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Ionicons.heart_outline,
               size: 48,
-              color: AppColors.textHint,
+              color: context.appColors.textHint,
             ),
           ),
           const SizedBox(height: 24),
@@ -143,7 +143,7 @@ class _EmptyState extends StatelessWidget {
           Text(
             'Bắt đầu lưu những Partner bạn thích',
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ),
         ],
@@ -169,7 +169,7 @@ class _ErrorState extends StatelessWidget {
           Text(
             message,
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
             textAlign: TextAlign.center,
           ),

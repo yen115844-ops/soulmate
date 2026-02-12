@@ -129,6 +129,18 @@ export class BookingsController {
     return this.bookingsService.confirmBooking(id, partnerId, note);
   }
 
+  @Put(':id/pay')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Pay for a confirmed booking (deducts from wallet, creates escrow)' })
+  @ApiResponse({ status: 200, description: 'Booking paid' })
+  @ApiResponse({ status: 400, description: 'Insufficient balance or invalid status' })
+  async payBooking(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.bookingsService.payBooking(id, userId);
+  }
+
   @Put(':id/cancel')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Cancel booking' })

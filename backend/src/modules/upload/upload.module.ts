@@ -22,7 +22,7 @@ import { UploadService } from './upload.service';
       },
       fileFilter: (req, file, callback) => {
         if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
-          callback(new Error('Only image files are allowed!'), false);
+          return callback(new Error('Only image files are allowed!'), false);
         }
         callback(null, true);
       },

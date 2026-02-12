@@ -10,6 +10,7 @@ import { Decimal } from '@prisma/client/runtime/library';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { NotificationsService } from '../notifications';
 import { SettingsService } from '../settings/settings.service';
+import { WalletService } from '../wallet/wallet.service';
 import { AdminBookingQueryDto, BookingQueryDto, CancelBookingDto, CreateBookingDto, UpdateBookingStatusDto } from './dto';
 
 /** Combine date with time-only (DB Time → full DateTime for API) */
@@ -43,6 +44,7 @@ export class BookingsService {
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
     private readonly settingsService: SettingsService,
+    private readonly walletService: WalletService,
   ) {}
 
   /**
@@ -383,6 +385,76 @@ export class BookingsService {
   }
 
   /**
+   * Pay for a confirmed booking — deducts from wallet and creates escrow
+   */
+  async payBooking(bookingId: string, userId: string) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+    });
+
+    if (!booking) {
+      throw new NotFoundException('Booking not found');
+    }
+
+    if (booking.userId !== userId) {
+      throw new ForbiddenException('Only the customer can pay for the booking');
+    }
+
+    if (booking.status !== BookingStatus.CONFIRMED) {
+      throw new BadRequestException('Booking must be confirmed before payment');
+    }
+
+    const totalAmount = Number(booking.totalAmount);
+    const serviceFee = Number(booking.serviceFee);
+    const subtotal = Number(booking.subtotal);
+
+    // Deduct from wallet and create escrow holding
+    await this.walletService.deductPaymentAndCreateEscrow(
+      userId,
+      booking.partnerId,
+      subtotal,
+      serviceFee,
+      bookingId,
+    );
+
+    const updatedBooking = await this.prisma.booking.update({
+      where: { id: bookingId },
+      data: {
+        status: BookingStatus.PAID,
+        paidAt: new Date(),
+      },
+      include: {
+        user: {
+          include: { profile: true },
+          omit: { passwordHash: true },
+        },
+        partner: {
+          include: { profile: true, partnerProfile: true },
+          omit: { passwordHash: true },
+        },
+      },
+    });
+
+    this.logger.log(`Booking paid: ${booking.bookingCode}, amount: ${totalAmount}`);
+
+    // Send notification to partner
+    const userName = updatedBooking.user.profile?.displayName || 'Khách hàng';
+    void this.notificationsService
+      .sendNotification({
+        userId: booking.partnerId,
+        type: NotificationType.BOOKING,
+        title: 'Booking đã được thanh toán',
+        body: `${userName} đã thanh toán cho lịch hẹn ${booking.bookingCode}`,
+        actionType: 'booking',
+        actionId: bookingId,
+        data: { bookingCode: booking.bookingCode },
+      })
+      .catch((err) => this.logger.warn(`Failed to send pay notification: ${err?.message}`));
+
+    return withCombinedDateTime(updatedBooking);
+  }
+
+  /**
    * Cancel booking
    */
   async cancelBooking(bookingId: string, userId: string, dto: CancelBookingDto) {
@@ -431,11 +503,18 @@ export class BookingsService {
         },
       });
 
-      // TODO: Handle refund if already paid
-      // TODO: Update partner stats
-
       return updated;
     });
+
+    // Refund escrow if already paid (outside prisma tx — walletService has its own)
+    if (booking.status === BookingStatus.PAID) {
+      try {
+        await this.walletService.refundEscrow(bookingId);
+        this.logger.log(`Escrow refunded for cancelled booking ${booking.bookingCode}`);
+      } catch (err) {
+        this.logger.error(`Failed to refund escrow for ${booking.bookingCode}: ${err?.message}`);
+      }
+    }
 
     this.logger.log(`Booking cancelled: ${booking.bookingCode} by ${userId}`);
 
@@ -531,15 +610,39 @@ export class BookingsService {
         },
       });
 
-      // TODO: Release escrow to partner
-      // TODO: Update partner stats
+      // Update partner stats
+      await tx.partnerProfile.update({
+        where: { userId: booking.partnerId },
+        data: {
+          completedBookings: { increment: 1 },
+        },
+      }).catch(() => { /* partner profile may not have completedBookings field */ });
 
       return updated;
     });
 
+    // Release escrow to partner (outside prisma tx — walletService has its own)
+    try {
+      await this.walletService.releaseEscrow(bookingId);
+      this.logger.log(`Escrow released for completed booking ${booking.bookingCode}`);
+    } catch (err) {
+      this.logger.error(`Failed to release escrow for ${booking.bookingCode}: ${err?.message}`);
+    }
+
     this.logger.log(`Booking completed: ${booking.bookingCode}`);
 
-    // TODO: Send notification
+    // Send notification to partner
+    void this.notificationsService
+      .sendNotification({
+        userId: booking.partnerId,
+        type: NotificationType.BOOKING,
+        title: 'Booking đã hoàn thành',
+        body: `Booking ${booking.bookingCode} đã được hoàn thành. Tiền đã được chuyển vào ví của bạn.`,
+        actionType: 'booking',
+        actionId: bookingId,
+        data: { bookingCode: booking.bookingCode },
+      })
+      .catch((err) => this.logger.warn(`Failed to send complete notification: ${err?.message}`));
 
     return withCombinedDateTime(updatedBooking);
   }

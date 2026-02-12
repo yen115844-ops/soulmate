@@ -251,6 +251,11 @@ export class SearchPartnersDto {
   @IsString()
   city?: string;
 
+  @ApiPropertyOptional({ example: 'Quận 1', description: 'District filter (case-insensitive contains)' })
+  @IsOptional()
+  @IsString()
+  district?: string;
+
   @ApiPropertyOptional({ example: 'rating', enum: ['rating', 'price_low', 'price_high', 'distance', 'newest'] })
   @IsOptional()
   @IsString()

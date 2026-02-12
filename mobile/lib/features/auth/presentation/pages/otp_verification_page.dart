@@ -7,6 +7,7 @@ import 'package:ionicons/ionicons.dart';
 
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
@@ -159,7 +160,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                   RichText(
                     text: TextSpan(
                       style: AppTypography.bodyLarge.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                       ),
                       children: [
                         const TextSpan(text: 'Nhập mã 6 số đã gửi đến\n'),
@@ -168,7 +169,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                               ? _maskedEmail
                               : _maskedPhone,
                           style: AppTypography.bodyLarge.copyWith(
-                            color: AppColors.textPrimary,
+                            color: context.appColors.textPrimary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -193,7 +194,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                         ? RichText(
                             text: TextSpan(
                               style: AppTypography.bodyMedium.copyWith(
-                                color: AppColors.textSecondary,
+                                color: context.appColors.textSecondary,
                               ),
                               children: [
                                 const TextSpan(text: 'Gửi lại mã sau '),
@@ -235,7 +236,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                       child: Text(
                         widget.email != null ? 'Đổi email' : 'Đổi số điện thoại',
                         style: AppTypography.labelLarge.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.appColors.textSecondary,
                         ),
                       ),
                     ),

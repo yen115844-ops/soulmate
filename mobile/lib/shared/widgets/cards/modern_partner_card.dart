@@ -5,6 +5,7 @@ import 'package:ionicons/ionicons.dart';
 
 import '../../../../features/partner/domain/entities/partner_entity.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/theme_context.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/image_utils.dart';
 
@@ -67,17 +68,17 @@ class _ModernPartnerCardState extends State<ModernPartnerCard> {
                 imageUrl: ImageUtils.buildImageUrl(widget.partner.avatarUrl),
                 fit: BoxFit.cover,
                 placeholder: (_, __) => Container(
-                  color: AppColors.backgroundLight,
+                  color: context.appColors.background,
                   child: const Center(
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
                 ),
                 errorWidget: (_, __, ___) => Container(
-                  color: AppColors.backgroundLight,
-                  child: const Icon(
+                  color: context.appColors.background,
+                  child: Icon(
                     Ionicons.person_outline,
                     size: 48,
-                    color: AppColors.textHint,
+                    color: context.appColors.textHint,
                   ),
                 ),
               ),
@@ -166,8 +167,8 @@ class _ModernPartnerCardState extends State<ModernPartnerCard> {
                         Container(
                           width: 6,
                           height: 6,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
+                          decoration: BoxDecoration(
+                            color: context.appColors.surface,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -195,7 +196,7 @@ class _ModernPartnerCardState extends State<ModernPartnerCard> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.3),
+                      color: context.appColors.textPrimary.withOpacity(0.3),
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white.withOpacity(0.2)),
                     ),
@@ -262,7 +263,7 @@ class _ModernPartnerCardState extends State<ModernPartnerCard> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: context.appColors.surface.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
@@ -293,7 +294,7 @@ class _ModernPartnerCardState extends State<ModernPartnerCard> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: context.appColors.surface.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
@@ -360,11 +361,11 @@ class CompactPartnerCard extends StatelessWidget {
       child: Container(
         height: height ?? 240,
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.appColors.surface,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadow.withOpacity(0.1),
+              color: context.appColors.shadow.withOpacity(0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -387,9 +388,9 @@ class CompactPartnerCard extends StatelessWidget {
                       imageUrl: ImageUtils.buildImageUrl(partner.avatarUrl),
                       fit: BoxFit.cover,
                       placeholder: (_, __) =>
-                          Container(color: AppColors.backgroundLight),
+                          Container(color: context.appColors.background),
                       errorWidget: (_, __, ___) => Container(
-                        color: AppColors.backgroundLight,
+                        color: context.appColors.background,
                         child: const Icon(Ionicons.person_outline),
                       ),
                     ),
@@ -424,7 +425,7 @@ class CompactPartnerCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: AppColors.success,
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
+                          border: Border.all(color: context.appColors.surface, width: 2),
                           boxShadow: [
                             BoxShadow(
                               color: AppColors.success.withOpacity(0.5),
@@ -444,7 +445,7 @@ class CompactPartnerCard extends StatelessWidget {
                         width: 30,
                         height: 30,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.9),
+                          color: context.appColors.surface.withOpacity(0.9),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -452,7 +453,7 @@ class CompactPartnerCard extends StatelessWidget {
                           size: 16,
                           color: isFavorite
                               ? AppColors.error
-                              : AppColors.textSecondary,
+                              : context.appColors.textSecondary,
                         ),
                       ),
                     ),
@@ -467,7 +468,7 @@ class CompactPartnerCard extends StatelessWidget {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.6),
+                        color: context.appColors.textPrimary.withOpacity(0.6),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -526,7 +527,7 @@ class CompactPartnerCard extends StatelessWidget {
                     Text(
                       '${partner.age} tuổi${partner.location != null ? ' • ${partner.location}' : ''}',
                       style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                         fontSize: 11,
                       ),
                       maxLines: 1,
@@ -547,13 +548,13 @@ class CompactPartnerCard extends StatelessWidget {
                           Icon(
                             Ionicons.location_outline,
                             size: 12,
-                            color: AppColors.textHint,
+                            color: context.appColors.textHint,
                           ),
                           const SizedBox(width: 2),
                           Text(
                             partner.formattedDistance,
                             style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.textHint,
+                              color: context.appColors.textHint,
                               fontSize: 10,
                             ),
                           ),
@@ -594,12 +595,12 @@ class ListPartnerCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.appColors.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.appColors.border),
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadow.withOpacity(0.05),
+              color: context.appColors.shadow.withOpacity(0.05),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -622,9 +623,9 @@ class ListPartnerCard extends StatelessWidget {
                       imageUrl: ImageUtils.buildImageUrl(partner.avatarUrl),
                       fit: BoxFit.cover,
                       placeholder: (_, __) =>
-                          Container(color: AppColors.backgroundLight),
+                          Container(color: context.appColors.background),
                       errorWidget: (_, __, ___) => Container(
-                        color: AppColors.backgroundLight,
+                        color: context.appColors.background,
                         child: const Icon(Ionicons.person_outline),
                       ),
                     ),
@@ -640,7 +641,7 @@ class ListPartnerCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: AppColors.success,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
+                        border: Border.all(color: context.appColors.surface, width: 2),
                       ),
                     ),
                   ),
@@ -693,21 +694,21 @@ class ListPartnerCard extends StatelessWidget {
                       Text(
                         '${partner.rating} (${partner.reviewCount})',
                         style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.appColors.textSecondary,
                         ),
                       ),
                       if (partner.distance != null) ...[
                         const SizedBox(width: 8),
-                        const Icon(
+                        Icon(
                           Ionicons.location_outline,
                           size: 12,
-                          color: AppColors.textHint,
+                          color: context.appColors.textHint,
                         ),
                         const SizedBox(width: 2),
                         Text(
                           partner.formattedDistance,
                           style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.textHint,
+                            color: context.appColors.textHint,
                           ),
                         ),
                       ],
@@ -755,7 +756,7 @@ class ListPartnerCard extends StatelessWidget {
                   child: Icon(
                     isFavorite ? Icons.favorite : Ionicons.heart_outline,
                     size: 22,
-                    color: isFavorite ? AppColors.error : AppColors.textHint,
+                    color: isFavorite ? AppColors.error : context.appColors.textHint,
                   ),
                 ),
                 const SizedBox(height: 20),

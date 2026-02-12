@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/utils/error_utils.dart';
 import '../../data/partner_repository.dart';
 import 'partner_earnings_event.dart';
 import 'partner_earnings_state.dart';
@@ -34,7 +35,7 @@ class PartnerEarningsBloc
       ));
     } catch (e) {
       debugPrint('Partner earnings load error: $e');
-      emit(PartnerEarningsError(message: 'Không thể tải thu nhập. $e'));
+      emit(PartnerEarningsError(message: getErrorMessage(e)));
     }
   }
 
@@ -95,7 +96,7 @@ class PartnerEarningsBloc
       ));
     } catch (e) {
       debugPrint('Withdraw request error: $e');
-      emit(PartnerEarningsError(message: 'Không thể gửi yêu cầu rút tiền. $e'));
+      emit(PartnerEarningsError(message: getErrorMessage(e)));
     }
   }
 }

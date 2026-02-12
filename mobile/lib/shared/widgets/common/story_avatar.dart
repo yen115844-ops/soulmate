@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/theme_context.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/image_utils.dart';
 
@@ -47,8 +48,8 @@ class StoryRingAvatar extends StatelessWidget {
                     ? (isViewed
                           ? LinearGradient(
                               colors: [
-                                Colors.grey.shade300,
-                                Colors.grey.shade400,
+                                context.appColors.border,
+                                context.appColors.textHint,
                               ],
                             )
                           : const LinearGradient(
@@ -63,14 +64,14 @@ class StoryRingAvatar extends StatelessWidget {
                             ))
                     : null,
                 border: !hasStory
-                    ? Border.all(color: AppColors.border, width: 2)
+                    ? Border.all(color: context.appColors.border, width: 2)
                     : null,
               ),
               child: Container(
                 padding: const EdgeInsets.all(2),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white,
+                  color: context.appColors.surface,
                 ),
                 child: Stack(
                   children: [
@@ -81,9 +82,9 @@ class StoryRingAvatar extends StatelessWidget {
                         height: size - 10,
                         fit: BoxFit.cover,
                         placeholder: (_, __) =>
-                            Container(color: AppColors.backgroundLight),
+                            Container(color: context.appColors.background),
                         errorWidget: (_, __, ___) => Container(
-                          color: AppColors.backgroundLight,
+                          color: context.appColors.background,
                           child: const Icon(Icons.person),
                         ),
                       ),
@@ -99,7 +100,7 @@ class StoryRingAvatar extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: AppColors.success,
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
+                            border: Border.all(color: context.appColors.surface, width: 2),
                           ),
                         ),
                       ),
@@ -113,7 +114,7 @@ class StoryRingAvatar extends StatelessWidget {
               name,
               style: AppTypography.labelSmall.copyWith(
                 fontSize: 11,
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -224,9 +225,9 @@ class _AnimatedStoryRingState extends State<AnimatedStoryRing>
                   ),
                   child: Container(
                     padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white,
+                      color: context.appColors.surface,
                     ),
                     child: Stack(
                       children: [
@@ -237,9 +238,9 @@ class _AnimatedStoryRingState extends State<AnimatedStoryRing>
                             height: widget.size - 10,
                             fit: BoxFit.cover,
                             placeholder: (_, __) =>
-                                Container(color: AppColors.backgroundLight),
+                                Container(color: context.appColors.background),
                             errorWidget: (_, __, ___) => Container(
-                              color: AppColors.backgroundLight,
+                              color: context.appColors.background,
                               child: const Icon(Icons.person),
                             ),
                           ),
@@ -255,7 +256,7 @@ class _AnimatedStoryRingState extends State<AnimatedStoryRing>
                                 color: AppColors.success,
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: Colors.white,
+                                  color: context.appColors.surface,
                                   width: 2,
                                 ),
                               ),
@@ -299,7 +300,7 @@ class _AnimatedStoryRingState extends State<AnimatedStoryRing>
               widget.name,
               style: AppTypography.labelSmall.copyWith(
                 fontSize: 11,
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

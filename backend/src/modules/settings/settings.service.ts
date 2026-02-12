@@ -2,20 +2,46 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { AppSettingsResponseDto } from './dto';
 
+interface CacheEntry {
+  value: string | null;
+  expiresAt: number;
+}
+
 @Injectable()
 export class SettingsService {
   private readonly logger = new Logger(SettingsService.name);
+  private readonly cache = new Map<string, CacheEntry>();
+  private readonly CACHE_TTL_MS = 60_000; // 1 minute
 
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Get single setting value by key. Returns null if not found.
+   * Invalidate a setting from cache (call after update)
+   */
+  invalidateCache(key?: string) {
+    if (key) {
+      this.cache.delete(key);
+    } else {
+      this.cache.clear();
+    }
+  }
+
+  /**
+   * Get single setting value by key. Returns null if not found. Cached with TTL.
    */
   async getValue(key: string): Promise<string | null> {
+    const now = Date.now();
+    const cached = this.cache.get(key);
+    if (cached && cached.expiresAt > now) {
+      return cached.value;
+    }
+
     const row = await this.prisma.appSetting.findUnique({
       where: { key },
     });
-    return row?.value ?? null;
+    const value = row?.value ?? null;
+    this.cache.set(key, { value, expiresAt: now + this.CACHE_TTL_MS });
+    return value;
   }
 
   /**

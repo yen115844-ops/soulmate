@@ -52,6 +52,7 @@ class HomeState extends Equatable {
     bool? hasMore,
     String? errorMessage,
     Set<String>? favoriteIds,
+    bool clearError = false,
   }) {
     return HomeState(
       status: status ?? this.status,
@@ -60,7 +61,7 @@ class HomeState extends Equatable {
       currentPage: currentPage ?? this.currentPage,
       totalPages: totalPages ?? this.totalPages,
       hasMore: hasMore ?? this.hasMore,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       favoriteIds: favoriteIds ?? this.favoriteIds,
     );
   }

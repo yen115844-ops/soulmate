@@ -458,7 +458,10 @@ class ChatSocketService {
     });
   }
 
-  /// Disconnect from socket
+  /// Disconnect from socket and notify listeners.
+  ///
+  /// Stream controllers are NOT closed here because they're broadcast controllers
+  /// and will be reused on reconnect. They are only closed in [dispose].
   void disconnect() {
     debugPrint('ChatSocket: Disconnecting');
     _socket?.disconnect();
@@ -466,6 +469,10 @@ class ChatSocketService {
     _socket = null;
     _isConnected = false;
     _isAuthenticated = false;
+    // Notify listeners that connection is lost
+    if (!_connectionController.isClosed) {
+      _connectionController.add(false);
+    }
   }
 
   /// Join a conversation room

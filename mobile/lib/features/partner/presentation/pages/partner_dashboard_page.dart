@@ -2,13 +2,14 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ionicons/ionicons.dart';
 import 'package:intl/intl.dart';
+import 'package:ionicons/ionicons.dart';
 
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../shared/data/repositories/notification_repository.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
@@ -253,13 +254,13 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Ionicons.alert_circle_outline, size: 64, color: AppColors.textHint),
+              Icon(Ionicons.alert_circle_outline, size: 64, color: context.appColors.textHint),
             const SizedBox(height: 16),
             Text(
               message,
               textAlign: TextAlign.center,
               style: AppTypography.bodyLarge.copyWith(
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
             ),
             const SizedBox(height: 24),
@@ -309,7 +310,7 @@ class _VerificationBanner extends StatelessWidget {
                 Text(
                   'Xác minh tài khoản để tăng độ tin cậy với khách hàng',
                   style: AppTypography.labelSmall.copyWith(
-                    color: AppColors.textSecondary,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
               ],
@@ -356,12 +357,12 @@ class _WelcomeHeader extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 28,
-              backgroundColor: AppColors.shimmerBase,
+              backgroundColor: context.appColors.shimmerBase,
               backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
                   ? CachedNetworkImageProvider(ImageUtils.buildImageUrl(avatarUrl))
                   : null,
               child: avatarUrl == null || avatarUrl.isEmpty
-                  ? const Icon(Ionicons.person_outline, color: AppColors.textHint)
+                  ?   Icon(Ionicons.person_outline, color: context.appColors.textHint)
                   : null,
             ),
             const SizedBox(width: 16),
@@ -392,7 +393,7 @@ class _WelcomeHeader extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: profile.isAvailable
                               ? AppColors.online
-                              : AppColors.textHint,
+                              : context.appColors.textHint,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -402,7 +403,7 @@ class _WelcomeHeader extends StatelessWidget {
                         style: AppTypography.labelMedium.copyWith(
                           color: profile.isAvailable
                               ? AppColors.online
-                              : AppColors.textHint,
+                              : context.appColors.textHint,
                         ),
                       ),
                       if (profile.isVerified) ...[
@@ -590,18 +591,18 @@ class _EmptyBookings extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: context.appColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.appColors.border),
       ),
       child: Column(
         children: [
-          const Icon(Ionicons.calendar_outline, size: 48, color: AppColors.textHint),
+            Icon(Ionicons.calendar_outline, size: 48, color: context.appColors.textHint),
           const SizedBox(height: 12),
           Text(
             'Không có lịch hẹn sắp tới',
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ),
         ],
@@ -632,20 +633,20 @@ class _BookingCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: context.appColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.appColors.border),
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 24,
-            backgroundColor: AppColors.shimmerBase,
+            backgroundColor: context.appColors.shimmerBase,
             backgroundImage: user?.avatarUrl != null
                 ? CachedNetworkImageProvider(user!.avatarUrl!)
                 : null,
             child: user?.avatarUrl == null
-                ? const Icon(Ionicons.person_outline, color: AppColors.textHint)
+                ?   Icon(Ionicons.person_outline, color: context.appColors.textHint)
                 : null,
           ),
           const SizedBox(width: 12),
@@ -660,16 +661,16 @@ class _BookingCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    const Icon(
+                      Icon(
                       Ionicons.time_outline,
                       size: 14,
-                      color: AppColors.textHint,
+                      color: context.appColors.textHint,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       '${booking.startTime} - ${booking.endTime}',
                       style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -694,31 +695,31 @@ class _BookingCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Ionicons.calendar_outline,
                       size: 14,
-                      color: AppColors.textHint,
+                      color: context.appColors.textHint,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       dateFormat.format(booking.date),
                       style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.textHint,
+                        color: context.appColors.textHint,
                       ),
                     ),
                     if (booking.meetingLocation != null) ...[
                       const SizedBox(width: 8),
-                      const Icon(
+                        Icon(
                         Ionicons.location_outline,
                         size: 14,
-                        color: AppColors.textHint,
+                        color: context.appColors.textHint,
                       ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           booking.meetingLocation!,
                           style: AppTypography.labelSmall.copyWith(
-                            color: AppColors.textHint,
+                            color: context.appColors.textHint,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

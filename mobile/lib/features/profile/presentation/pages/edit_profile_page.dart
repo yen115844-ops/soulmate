@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ionicons/ionicons.dart';
+import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../shared/bloc/master_data_bloc.dart';
 import '../../../../shared/data/models/master_data_models.dart';
@@ -212,8 +214,8 @@ class _EditProfileContentState extends State<_EditProfileContent> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Ionicons.alert_circle_outline,
-                      size: 64, color: AppColors.textHint),
+                    Icon(Ionicons.alert_circle_outline,
+                      size: 64, color: context.appColors.textHint),
                   const SizedBox(height: 16),
                   Text(state.message),
                   const SizedBox(height: 16),
@@ -469,14 +471,14 @@ class _EditProfileContentState extends State<_EditProfileContent> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   decoration: BoxDecoration(
-                    color: AppColors.card,
+                    color: context.appColors.card,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: context.appColors.border),
                   ),
                   child: Text(
                     'Đang tải...',
                     style: AppTypography.bodyLarge
-                        .copyWith(color: AppColors.textHint),
+                        .copyWith(color: context.appColors.textHint),
                   ),
                 ),
               ),
@@ -489,14 +491,14 @@ class _EditProfileContentState extends State<_EditProfileContent> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   decoration: BoxDecoration(
-                    color: AppColors.card,
+                    color: context.appColors.card,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: context.appColors.border),
                   ),
                   child: Text(
                     'Đang tải...',
                     style: AppTypography.bodyLarge
-                        .copyWith(color: AppColors.textHint),
+                        .copyWith(color: context.appColors.textHint),
                   ),
                 ),
               ),
@@ -519,9 +521,9 @@ class _EditProfileContentState extends State<_EditProfileContent> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: context.appColors.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.appColors.border),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -530,7 +532,7 @@ class _EditProfileContentState extends State<_EditProfileContent> {
           hint: Text(
             'Chọn tỉnh/thành',
             style:
-                AppTypography.bodyLarge.copyWith(color: AppColors.textHint),
+                AppTypography.bodyLarge.copyWith(color: context.appColors.textHint),
           ),
           items: provinces.map((province) {
             return DropdownMenuItem(
@@ -556,9 +558,9 @@ class _EditProfileContentState extends State<_EditProfileContent> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: context.appColors.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.appColors.border),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -567,7 +569,7 @@ class _EditProfileContentState extends State<_EditProfileContent> {
           hint: Text(
             _selectedProvinceId == null ? 'Chọn tỉnh trước' : 'Chọn quận/huyện',
             style:
-                AppTypography.bodyLarge.copyWith(color: AppColors.textHint),
+                AppTypography.bodyLarge.copyWith(color: context.appColors.textHint),
           ),
           items: districts.map((district) {
             return DropdownMenuItem(
@@ -608,7 +610,7 @@ class _EditProfileContentState extends State<_EditProfileContent> {
           selectedColor: AppColors.primary.withValues(alpha: 0.2),
           checkmarkColor: AppColors.primary,
           labelStyle: TextStyle(
-            color: isSelected ? AppColors.primary : AppColors.textSecondary,
+            color: isSelected ? AppColors.primary : context.appColors.textSecondary,
           ),
         );
       }).toList(),
@@ -641,7 +643,7 @@ class _EditProfileContentState extends State<_EditProfileContent> {
           selectedColor: AppColors.primary.withValues(alpha: 0.2),
           checkmarkColor: AppColors.primary,
           labelStyle: TextStyle(
-            color: isSelected ? AppColors.primary : AppColors.textSecondary,
+            color: isSelected ? AppColors.primary : context.appColors.textSecondary,
           ),
         );
       }).toList(),
@@ -674,7 +676,7 @@ class _EditProfileContentState extends State<_EditProfileContent> {
           selectedColor: AppColors.primary.withValues(alpha: 0.2),
           checkmarkColor: AppColors.primary,
           labelStyle: TextStyle(
-            color: isSelected ? AppColors.primary : AppColors.textSecondary,
+            color: isSelected ? AppColors.primary : context.appColors.textSecondary,
           ),
         );
       }).toList(),
@@ -690,7 +692,7 @@ class _EditProfileContentState extends State<_EditProfileContent> {
         (index) => Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: AppColors.shimmerBase,
+            color: context.appColors.shimmerBase,
             borderRadius: BorderRadius.circular(20),
           ),
           child: const SizedBox(width: 60, height: 16),
@@ -719,7 +721,7 @@ class _EditProfileContentState extends State<_EditProfileContent> {
                       imageUrl: ImageUtils.buildImageUrl(avatarUrl),
                       fit: BoxFit.cover,
                       placeholder: (context, url) => Container(
-                        color: AppColors.shimmerBase,
+                        color: context.appColors.shimmerBase,
                       ),
                       errorWidget: (context, url, error) =>
                           _buildAvatarPlaceholder(),
@@ -739,7 +741,7 @@ class _EditProfileContentState extends State<_EditProfileContent> {
                   color: AppColors.primary,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: AppColors.surface,
+                    color: context.appColors.surface,
                     width: 3,
                   ),
                 ),
@@ -758,11 +760,11 @@ class _EditProfileContentState extends State<_EditProfileContent> {
 
   Widget _buildAvatarPlaceholder() {
     return Container(
-      color: AppColors.backgroundLight,
-      child: const Icon(
+      color: context.appColors.background,
+      child:   Icon(
         Ionicons.person_outline,
         size: 48,
-        color: AppColors.textHint,
+        color: context.appColors.textHint,
       ),
     );
   }
@@ -783,9 +785,9 @@ class _EditProfileContentState extends State<_EditProfileContent> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
-          color: AppColors.card,
+          color: context.appColors.card,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.appColors.border),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -796,11 +798,11 @@ class _EditProfileContentState extends State<_EditProfileContent> {
                   : 'Chọn ngày sinh',
               style: AppTypography.bodyLarge.copyWith(
                 color: _birthday != null
-                    ? AppColors.textPrimary
-                    : AppColors.textHint,
+                    ? context.appColors.textPrimary
+                    : context.appColors.textHint,
               ),
             ),
-            const Icon(Ionicons.calendar_outline, color: AppColors.textHint),
+              Icon(Ionicons.calendar_outline, color: context.appColors.textHint),
           ],
         ),
       ),
@@ -826,10 +828,10 @@ class _EditProfileContentState extends State<_EditProfileContent> {
               ),
               padding: const EdgeInsets.symmetric(vertical: 16),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary : AppColors.card,
+                color: isSelected ? AppColors.primary : context.appColors.card,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: isSelected ? AppColors.primary : AppColors.border,
+                  color: isSelected ? AppColors.primary : context.appColors.border,
                 ),
               ),
               child: Center(
@@ -838,7 +840,7 @@ class _EditProfileContentState extends State<_EditProfileContent> {
                   style: AppTypography.labelLarge.copyWith(
                     color: isSelected
                         ? AppColors.textWhite
-                        : AppColors.textSecondary,
+                        : context.appColors.textSecondary,
                   ),
                 ),
               ),
@@ -862,18 +864,18 @@ class _EditProfileContentState extends State<_EditProfileContent> {
     return InputDecoration(
       hintText: hint,
       hintStyle: AppTypography.bodyLarge.copyWith(
-        color: AppColors.textHint,
+        color: context.appColors.textHint,
       ),
       filled: true,
-      fillColor: AppColors.card,
+      fillColor: context.appColors.card,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.border),
+        borderSide:   BorderSide(color: context.appColors.border),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.border),
+        borderSide:   BorderSide(color: context.appColors.border),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -883,8 +885,6 @@ class _EditProfileContentState extends State<_EditProfileContent> {
   }
 
   Future<void> _pickAvatar() async {
-    final picker = ImagePicker();
-
     showModalBottomSheet(
       context: context,
       builder: (bottomSheetContext) => SafeArea(
@@ -896,6 +896,7 @@ class _EditProfileContentState extends State<_EditProfileContent> {
               onTap: () async {
                 Navigator.pop(bottomSheetContext);
                 try {
+                  final picker = ImagePicker();
                   final image = await picker.pickImage(
                     source: ImageSource.camera,
                     maxWidth: 800,
@@ -924,16 +925,22 @@ class _EditProfileContentState extends State<_EditProfileContent> {
               onTap: () async {
                 Navigator.pop(bottomSheetContext);
                 try {
-                  final image = await picker.pickImage(
-                    source: ImageSource.gallery,
-                    maxWidth: 800,
-                    maxHeight: 800,
-                    imageQuality: 80,
+                  final List<AssetEntity>? assets = await AssetPicker.pickAssets(
+                    context,
+                    pickerConfig: AssetPickerConfig(
+                      maxAssets: 1,
+                      requestType: RequestType.image,
+                      themeColor: AppColors.primary,
+                      textDelegate: const VietnameseAssetPickerTextDelegate(),
+                    ),
                   );
-                  if (image != null && mounted) {
-                    context.read<ProfileBloc>().add(
-                          ProfileAvatarUpdateRequested(imagePath: image.path),
-                        );
+                  if (assets != null && assets.isNotEmpty && mounted) {
+                    final file = await assets.first.file;
+                    if (file != null && mounted) {
+                      context.read<ProfileBloc>().add(
+                            ProfileAvatarUpdateRequested(imagePath: file.path),
+                          );
+                    }
                   }
                 } catch (e) {
                   if (mounted) {
@@ -1023,7 +1030,7 @@ class _FormField extends StatelessWidget {
         Text(
           label,
           style: AppTypography.labelMedium.copyWith(
-            color: AppColors.textSecondary,
+            color: context.appColors.textSecondary,
           ),
         ),
         const SizedBox(height: 8),

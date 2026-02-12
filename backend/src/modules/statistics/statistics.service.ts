@@ -191,30 +191,38 @@ export class StatisticsService {
    * Revenue over time (completed bookings, service fee sum)
    */
   async getRevenueChart(from: Date, to: Date, groupBy: 'day' | 'week' | 'month') {
-    const groupFn = groupBy === 'month' ? groupByMonth : groupBy === 'week' ? groupByWeek : groupByDay;
-
-    const bookings = await this.prisma.booking.findMany({
-      where: {
-        status: BookingStatus.COMPLETED,
-        completedAt: { gte: from, lte: to },
-      },
-      select: { completedAt: true, serviceFee: true },
-    });
-
-    const map = new Map<string, { revenue: number; count: number }>();
-    for (const b of bookings) {
-      const key = b.completedAt ? groupFn(new Date(b.completedAt)) : '';
-      if (!key) continue;
-      const cur = map.get(key) ?? { revenue: 0, count: 0 };
-      cur.revenue += Number(b.serviceFee);
-      cur.count += 1;
-      map.set(key, cur);
+    // Use Prisma $queryRaw with SQL GROUP BY for efficient aggregation
+    let dateFormat: string;
+    if (groupBy === 'month') {
+      dateFormat = 'YYYY-MM';
+    } else if (groupBy === 'week') {
+      dateFormat = 'IYYY-IW'; // ISO week
+    } else {
+      dateFormat = 'YYYY-MM-DD';
     }
 
-    const sorted = Array.from(map.entries())
-      .map(([date, v]) => ({ date, revenue: v.revenue, count: v.count }))
-      .sort((a, b) => a.date.localeCompare(b.date));
-    return sorted;
+    const results = await this.prisma.$queryRawUnsafe<
+      Array<{ date: string; revenue: number; count: bigint }>
+    >(
+      `SELECT TO_CHAR(completed_at, $1) as date, 
+              COALESCE(SUM(service_fee), 0)::float as revenue, 
+              COUNT(*)::bigint as count
+       FROM bookings 
+       WHERE status = 'COMPLETED' 
+         AND completed_at >= $2 
+         AND completed_at <= $3
+       GROUP BY TO_CHAR(completed_at, $1)
+       ORDER BY date ASC`,
+      dateFormat,
+      from,
+      to,
+    );
+
+    return results.map((r) => ({
+      date: r.date,
+      revenue: Number(r.revenue),
+      count: Number(r.count),
+    }));
   }
 
   /**

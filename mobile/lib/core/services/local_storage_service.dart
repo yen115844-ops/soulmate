@@ -1,14 +1,26 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants/storage_keys.dart';
 
-/// Local Storage Service using SharedPreferences
-/// Handles all local data persistence operations
+/// Local Storage Service using SharedPreferences + FlutterSecureStorage
+/// Sensitive data (tokens) stored in secure storage; other data in SharedPreferences
 class LocalStorageService {
   LocalStorageService._();
   
   static LocalStorageService? _instance;
   static SharedPreferences? _prefs;
+  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+  );
+  
+  /// In-memory cache for tokens (avoid async read on every request)
+  String? _cachedAccessToken;
+  String? _cachedRefreshToken;
+  String? _cachedUserId;
+  String? _cachedUserProfile;
   
   /// Get singleton instance
   static LocalStorageService get instance {
@@ -16,10 +28,25 @@ class LocalStorageService {
     return _instance!;
   }
   
-  /// Initialize SharedPreferences
+  /// Initialize SharedPreferences and load cached tokens
   /// Must be called before using any storage methods
   static Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
+    // Pre-load tokens into memory for synchronous access
+    final inst = instance;
+    inst._cachedAccessToken = await _secureStorage.read(key: StorageKeys.accessToken);
+    inst._cachedRefreshToken = await _secureStorage.read(key: StorageKeys.refreshToken);
+    inst._cachedUserId = await _secureStorage.read(key: StorageKeys.userId);
+    inst._cachedUserProfile = await _secureStorage.read(key: StorageKeys.userProfile);
+    // Migrate userProfile from SharedPreferences to secure storage (one-time)
+    if (inst._cachedUserProfile == null && _prefs != null) {
+      final oldProfile = _prefs!.getString(StorageKeys.userProfile);
+      if (oldProfile != null) {
+        await _secureStorage.write(key: StorageKeys.userProfile, value: oldProfile);
+        await _prefs!.remove(StorageKeys.userProfile);
+        inst._cachedUserProfile = oldProfile;
+      }
+    }
   }
   
   /// Get SharedPreferences instance
@@ -52,7 +79,7 @@ class LocalStorageService {
     return await prefs.setBool(StorageKeys.isFirstLaunch, false);
   }
   
-  // ==================== AUTH ====================
+  // ==================== AUTH (Secure Storage) ====================
   
   /// Check if user is logged in
   bool get isLoggedIn {
@@ -64,34 +91,42 @@ class LocalStorageService {
     return await prefs.setBool(StorageKeys.isLoggedIn, value);
   }
   
-  /// Get access token
-  String? get accessToken {
-    return prefs.getString(StorageKeys.accessToken);
+  /// Get access token (synchronous from cache)
+  String? get accessToken => _cachedAccessToken;
+  
+  /// Save access token (secure storage + cache)
+  Future<void> setAccessToken(String token) async {
+    await _secureStorage.write(key: StorageKeys.accessToken, value: token);
+    _cachedAccessToken = token;
   }
   
-  /// Save access token
-  Future<bool> setAccessToken(String token) async {
-    return await prefs.setString(StorageKeys.accessToken, token);
+  /// Get refresh token (synchronous from cache)
+  String? get refreshToken => _cachedRefreshToken;
+  
+  /// Save refresh token (secure storage + cache)
+  Future<void> setRefreshToken(String token) async {
+    await _secureStorage.write(key: StorageKeys.refreshToken, value: token);
+    _cachedRefreshToken = token;
   }
   
-  /// Get refresh token
-  String? get refreshToken {
-    return prefs.getString(StorageKeys.refreshToken);
+  /// Get user ID (synchronous from cache)
+  String? get userId => _cachedUserId;
+  
+  /// Save user ID (secure storage + cache)
+  Future<void> setUserId(String id) async {
+    await _secureStorage.write(key: StorageKeys.userId, value: id);
+    _cachedUserId = id;
   }
   
-  /// Save refresh token
-  Future<bool> setRefreshToken(String token) async {
-    return await prefs.setString(StorageKeys.refreshToken, token);
-  }
+  // ==================== USER PROFILE (Secure Storage) ====================
   
-  /// Get user ID
-  String? get userId {
-    return prefs.getString(StorageKeys.userId);
-  }
+  /// Get cached user profile JSON (synchronous from cache)
+  String? get userProfileJson => _cachedUserProfile;
   
-  /// Save user ID
-  Future<bool> setUserId(String id) async {
-    return await prefs.setString(StorageKeys.userId, id);
+  /// Save user profile JSON (secure storage + cache) — PII stays encrypted
+  Future<void> setUserProfileJson(String json) async {
+    await _secureStorage.write(key: StorageKeys.userProfile, value: json);
+    _cachedUserProfile = json;
   }
   
   // ==================== SETTINGS ====================
@@ -130,12 +165,20 @@ class LocalStorageService {
   
   /// Clear all auth data (for logout)
   Future<void> clearAuthData() async {
-    await prefs.remove(StorageKeys.accessToken);
-    await prefs.remove(StorageKeys.refreshToken);
-    await prefs.remove(StorageKeys.userId);
+    // Clear secure storage
+    await _secureStorage.delete(key: StorageKeys.accessToken);
+    await _secureStorage.delete(key: StorageKeys.refreshToken);
+    await _secureStorage.delete(key: StorageKeys.userId);
+    await _secureStorage.delete(key: StorageKeys.userProfile);
+    _cachedAccessToken = null;
+    _cachedRefreshToken = null;
+    _cachedUserId = null;
+    _cachedUserProfile = null;
+    // Clear SharedPreferences auth data
     await prefs.remove(StorageKeys.userRole);
-    await prefs.remove(StorageKeys.userProfile);
+    await prefs.remove(StorageKeys.userProfile); // Remove any leftover from migration
     await prefs.setBool(StorageKeys.isLoggedIn, false);
+    debugPrint('🔐 Auth data cleared (secure + prefs)');
   }
   
   /// Clear all cached data
@@ -147,6 +190,10 @@ class LocalStorageService {
   
   /// Clear all data (for full reset)
   Future<void> clearAll() async {
+    await _secureStorage.deleteAll();
+    _cachedAccessToken = null;
+    _cachedRefreshToken = null;
+    _cachedUserId = null;
     await prefs.clear();
   }
 }

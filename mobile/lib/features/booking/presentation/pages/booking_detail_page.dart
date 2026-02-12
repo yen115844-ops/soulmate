@@ -5,6 +5,7 @@ import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
@@ -33,7 +34,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
   }
 
   Color get _statusColor {
-    if (_booking == null) return AppColors.textSecondary;
+    if (_booking == null) return context.appColors.textSecondary;
     switch (_booking!.status) {
       case 'PENDING':
         return AppColors.warning;
@@ -48,7 +49,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
       case 'REJECTED':
         return AppColors.error;
       default:
-        return AppColors.textSecondary;
+        return context.appColors.textSecondary;
     }
   }
 
@@ -155,7 +156,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
     final booking = _booking!;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.appColors.background,
       body: Stack(
         children: [
           CustomScrollView(
@@ -163,7 +164,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
               // App Bar
               SliverAppBar(
                 pinned: true,
-                backgroundColor: AppColors.surface,
+                backgroundColor: context.appColors.surface,
                 leading: const AppBackButton(),
                 title: Text(
                   'Chi tiết lịch hẹn',
@@ -252,9 +253,9 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                   margin: const EdgeInsets.symmetric(horizontal: 20),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppColors.card,
+                    color: context.appColors.card,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: context.appColors.border),
                   ),
                   child: Row(
                     children: [
@@ -311,7 +312,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                             Text(
                               'Partner',
                               style: AppTypography.labelSmall.copyWith(
-                                color: AppColors.textHint,
+                                color: context.appColors.textHint,
                               ),
                             ),
                           ],
@@ -345,9 +346,9 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                   margin: const EdgeInsets.symmetric(horizontal: 20),
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: AppColors.card,
+                    color: context.appColors.card,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: context.appColors.border),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -404,9 +405,9 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                     margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: AppColors.card,
+                      color: context.appColors.card,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: context.appColors.border),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -431,7 +432,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                         Text(
                           booking.note!,
                           style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
+                            color: context.appColors.textSecondary,
                           ),
                         ),
                       ],
@@ -445,9 +446,9 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                   margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: AppColors.card,
+                    color: context.appColors.card,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: context.appColors.border),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -518,7 +519,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                         Text(
                           booking.cancellationReason!,
                           style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
+                            color: context.appColors.textSecondary,
                           ),
                         ),
                       ],
@@ -545,10 +546,10 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                   MediaQuery.of(context).padding.bottom + 16,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: context.appColors.surface,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.shadow,
+                      color: context.appColors.shadow,
                       blurRadius: 10,
                       offset: const Offset(0, -2),
                     ),
@@ -594,10 +595,10 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                   MediaQuery.of(context).padding.bottom + 16,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: context.appColors.surface,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.shadow,
+                      color: context.appColors.shadow,
                       blurRadius: 10,
                       offset: const Offset(0, -2),
                     ),
@@ -645,10 +646,10 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                   MediaQuery.of(context).padding.bottom + 16,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: context.appColors.surface,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.shadow,
+                      color: context.appColors.shadow,
                       blurRadius: 10,
                       offset: const Offset(0, -2),
                     ),
@@ -674,7 +675,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.appColors.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Padding(
@@ -843,14 +844,14 @@ class _CircleButton extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: isPrimary ? AppColors.primary : AppColors.backgroundLight,
+          color: isPrimary ? AppColors.primary : context.appColors.background,
           borderRadius: BorderRadius.circular(12),
-          border: isPrimary ? null : Border.all(color: AppColors.border),
+          border: isPrimary ? null : Border.all(color: context.appColors.border),
         ),
         child: Icon(
           icon,
           size: 18,
-          color: isPrimary ? AppColors.textWhite : AppColors.textSecondary,
+          color: isPrimary ? AppColors.textWhite : context.appColors.textSecondary,
         ),
       ),
     );
@@ -894,7 +895,7 @@ class _DetailRow extends StatelessWidget {
               Text(
                 label,
                 style: AppTypography.labelSmall.copyWith(
-                  color: AppColors.textHint,
+                  color: context.appColors.textHint,
                 ),
               ),
               const SizedBox(height: 2),

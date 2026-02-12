@@ -5,6 +5,7 @@ import 'package:ionicons/ionicons.dart';
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/services/local_storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 
@@ -91,7 +92,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   child: Text(
                     'Bỏ qua',
                     style: AppTypography.labelLarge.copyWith(
-                      color: AppColors.textSecondary,
+                      color: context.appColors.textSecondary,
                     ),
                   ),
                 ),
@@ -125,7 +126,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     decoration: BoxDecoration(
                       color: _currentPage == index
                           ? _items[_currentPage].color
-                          : AppColors.border,
+                          : context.appColors.border,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -223,7 +224,7 @@ class _OnboardingContent extends StatelessWidget {
           Text(
             item.description,
             style: AppTypography.bodyLarge.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
             textAlign: TextAlign.center,
           ),

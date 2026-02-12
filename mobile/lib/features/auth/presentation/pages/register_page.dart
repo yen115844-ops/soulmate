@@ -6,6 +6,7 @@ import 'package:ionicons/ionicons.dart';
 
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
@@ -155,7 +156,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       Text(
                         'Điền thông tin để bắt đầu kết nối',
                         style: AppTypography.bodyLarge.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.appColors.textSecondary,
                         ),
                       ),
 
@@ -296,7 +297,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             child: RichText(
                               text: TextSpan(
                                 style: AppTypography.bodySmall.copyWith(
-                                  color: AppColors.textSecondary,
+                                  color: context.appColors.textSecondary,
                                 ),
                                 children: [
                                   const TextSpan(text: 'Tôi đồng ý với '),

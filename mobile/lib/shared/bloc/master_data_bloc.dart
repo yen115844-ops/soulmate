@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../core/utils/error_utils.dart';
 import '../data/repositories/master_data_repository.dart';
 import 'master_data_event.dart';
 import 'master_data_state.dart';
@@ -19,6 +20,14 @@ class MasterDataBloc extends Bloc<MasterDataEvent, MasterDataState> {
     on<MasterDataLoadRequested>(_onLoadRequested);
     on<PartnerMasterDataLoadRequested>(_onPartnerLoadRequested);
     on<DistrictsLoadRequested>(_onDistrictsLoadRequested);
+    on<MasterDataResetRequested>(_onResetRequested);
+  }
+
+  void _onResetRequested(
+    MasterDataResetRequested event,
+    Emitter<MasterDataState> emit,
+  ) {
+    emit(const MasterDataInitial());
   }
 
   Future<void> _onLoadRequested(
@@ -37,7 +46,7 @@ class MasterDataBloc extends Bloc<MasterDataEvent, MasterDataState> {
         languages: masterData.languages,
       ));
     } catch (e) {
-      emit(MasterDataError('Không thể tải dữ liệu: ${e.toString()}'));
+      emit(MasterDataError(getErrorMessage(e)));
     }
   }
 
@@ -55,7 +64,7 @@ class MasterDataBloc extends Bloc<MasterDataEvent, MasterDataState> {
         serviceTypes: masterData.serviceTypes,
       ));
     } catch (e) {
-      emit(MasterDataError('Không thể tải dữ liệu: ${e.toString()}'));
+      emit(MasterDataError(getErrorMessage(e)));
     }
   }
 

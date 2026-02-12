@@ -54,7 +54,7 @@ class PushNotificationService {
 
       _messaging.onTokenRefresh.listen(_onTokenRefresh);
 
-      _setupMessageHandlers();
+      await _setupMessageHandlers();
 
       _isInitialized = true;
       debugPrint('Push Notification Service initialized');
@@ -88,7 +88,7 @@ class PushNotificationService {
   }
 
   /// Setup message handlers for different app states
-  void _setupMessageHandlers() {
+  Future<void> _setupMessageHandlers() async {
     // Foreground message handler
     FirebaseMessaging.onMessage.listen(_onForegroundMessage);
 
@@ -96,7 +96,8 @@ class PushNotificationService {
     FirebaseMessaging.onMessageOpenedApp.listen(_onMessageOpenedApp);
 
     // Check for initial message (app opened from terminated state via notification)
-    _checkInitialMessage();
+    // Must await to ensure pending deep link is saved BEFORE runApp/splash processes it
+    await _checkInitialMessage();
   }
 
   /// Handle foreground messages (app đang mở).

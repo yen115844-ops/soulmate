@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/utils/error_utils.dart';
 import '../../data/favorites_repository.dart';
 import 'favorites_event.dart';
 import 'favorites_state.dart';
@@ -7,7 +8,9 @@ import 'favorites_state.dart';
 class FavoritesBloc extends Bloc<FavoritesEvent, FavoritesState> {
   final FavoritesRepository _repository;
 
-  FavoritesBloc(this._repository) : super(const FavoritesState()) {
+  FavoritesBloc({required FavoritesRepository repository})
+    : _repository = repository,
+      super(const FavoritesState()) {
     on<FavoritesLoadRequested>(_onLoadRequested);
     on<FavoritesRefreshRequested>(_onRefreshRequested);
     on<FavoriteRemoveRequested>(_onRemoveRequested);
@@ -46,7 +49,7 @@ class FavoritesBloc extends Bloc<FavoritesEvent, FavoritesState> {
     } catch (e) {
       emit(state.copyWith(
         status: FavoritesStatus.error,
-        errorMessage: e.toString(),
+        errorMessage: getErrorMessage(e),
       ));
     }
   }
@@ -79,7 +82,7 @@ class FavoritesBloc extends Bloc<FavoritesEvent, FavoritesState> {
       // Refresh on error to restore state
       add(const FavoritesRefreshRequested());
       emit(state.copyWith(
-        errorMessage: 'Không thể xóa khỏi yêu thích: ${e.toString()}',
+        errorMessage: getErrorMessage(e),
       ));
     }
   }
@@ -94,7 +97,7 @@ class FavoritesBloc extends Bloc<FavoritesEvent, FavoritesState> {
       add(const FavoritesRefreshRequested());
     } catch (e) {
       emit(state.copyWith(
-        errorMessage: 'Không thể thêm vào yêu thích: ${e.toString()}',
+        errorMessage: getErrorMessage(e),
       ));
     }
   }

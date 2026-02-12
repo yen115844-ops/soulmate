@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/utils/error_utils.dart';
 import '../../data/models/wallet_models.dart';
 import '../../data/wallet_repository.dart';
 import 'wallet_event.dart';
@@ -11,10 +12,12 @@ export 'wallet_state.dart';
 
 /// BLoC for wallet management
 class WalletBloc extends Bloc<WalletEvent, WalletState> {
-  final WalletRepository repository;
+  final WalletRepository _repository;
   static const int _pageSize = 20;
 
-  WalletBloc({required this.repository}) : super(WalletInitial()) {
+  WalletBloc({required WalletRepository repository})
+    : _repository = repository,
+      super(WalletInitial()) {
     on<LoadWallet>(_onLoadWallet);
     on<LoadTransactions>(_onLoadTransactions);
     on<RequestWithdraw>(_onRequestWithdraw);
@@ -31,8 +34,8 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       }
 
       final results = await Future.wait([
-        repository.getWallet(),
-        repository.getTransactions(page: 1, limit: _pageSize),
+        _repository.getWallet(),
+        _repository.getTransactions(page: 1, limit: _pageSize),
       ]);
 
       final wallet = results[0] as WalletModel;
@@ -46,7 +49,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
         hasMoreTransactions: transactionsResponse.hasMore,
       ));
     } catch (e) {
-      emit(WalletError('Không thể tải thông tin ví: $e'));
+      emit(WalletError(getErrorMessage(e)));
     }
   }
 
@@ -66,7 +69,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
 
       try {
         final nextPage = currentState.currentPage + 1;
-        final response = await repository.getTransactions(
+        final response = await _repository.getTransactions(
           page: nextPage,
           limit: _pageSize,
         );
@@ -84,7 +87,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     } else {
       // Refresh transactions
       try {
-        final response = await repository.getTransactions(
+        final response = await _repository.getTransactions(
           page: 1,
           limit: _pageSize,
         );
@@ -110,7 +113,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     emit(WithdrawLoading());
 
     try {
-      final response = await repository.requestWithdraw(
+      final response = await _repository.requestWithdraw(
         amount: event.amount,
         bankName: event.bankName,
         bankAccountNo: event.bankAccountNo,
@@ -134,7 +137,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
         }
       }
     } catch (e) {
-      emit(WithdrawError('Rút tiền thất bại: $e'));
+      emit(WithdrawError(getErrorMessage(e)));
 
       // Restore previous state
       if (currentState is WalletLoaded) {
@@ -152,7 +155,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     emit(const TopUpLoading());
 
     try {
-      final response = await repository.topUp(
+      final response = await _repository.topUp(
         amount: event.amount,
         paymentMethod: event.paymentMethod,
       );
@@ -174,7 +177,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
         }
       }
     } catch (e) {
-      emit(TopUpError('Nạp tiền thất bại: $e'));
+      emit(TopUpError(getErrorMessage(e)));
 
       // Restore previous state
       if (currentState is WalletLoaded) {

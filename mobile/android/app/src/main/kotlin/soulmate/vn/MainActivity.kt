@@ -1,4 +1,4 @@
-package tiendev.socialmate.vn
+package soulmate.vn
 
 import io.flutter.embedding.android.FlutterActivity
 

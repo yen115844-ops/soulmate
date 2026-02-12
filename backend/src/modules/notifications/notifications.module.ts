@@ -1,6 +1,7 @@
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
 import { PrismaModule } from '../../database/prisma/prisma.module';
 import { NotificationsController } from './notifications.controller';
 import { NotificationsGateway } from './notifications.gateway';
@@ -16,6 +17,7 @@ import { FcmService } from './services/fcm.service';
   imports: [
     PrismaModule,
     ConfigModule,
+    JwtModule.register({}), // For WebSocket JWT verification
     BullModule.registerQueue({
       name: NOTIFICATION_QUEUE,
     }),

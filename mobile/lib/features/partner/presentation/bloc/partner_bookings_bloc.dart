@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/utils/error_utils.dart';
 import '../../data/partner_repository.dart';
 import 'partner_bookings_event.dart';
 import 'partner_bookings_state.dart';
@@ -44,7 +45,7 @@ class PartnerBookingsBloc
       ));
     } catch (e) {
       debugPrint('Partner bookings load error: $e');
-      emit(PartnerBookingsError(message: 'Không thể tải danh sách. $e'));
+      emit(PartnerBookingsError(message: getErrorMessage(e)));
     }
   }
 
@@ -141,7 +142,7 @@ class PartnerBookingsBloc
       debugPrint('Confirm booking error: $e');
       emit(PartnerBookingsActionError(
         previousState: currentState,
-        message: 'Không thể xác nhận lịch hẹn. $e',
+        message: getErrorMessage(e),
       ));
     }
   }
@@ -181,7 +182,7 @@ class PartnerBookingsBloc
       debugPrint('Cancel booking error: $e');
       emit(PartnerBookingsActionError(
         previousState: currentState,
-        message: 'Không thể từ chối lịch hẹn. $e',
+        message: getErrorMessage(e),
       ));
     }
   }
@@ -220,7 +221,7 @@ class PartnerBookingsBloc
       debugPrint('Start booking error: $e');
       emit(PartnerBookingsActionError(
         previousState: currentState,
-        message: 'Không thể bắt đầu cuộc hẹn. $e',
+        message: getErrorMessage(e),
       ));
     }
   }
@@ -260,7 +261,7 @@ class PartnerBookingsBloc
       debugPrint('Complete booking error: $e');
       emit(PartnerBookingsActionError(
         previousState: currentState,
-        message: 'Không thể hoàn thành cuộc hẹn. $e',
+        message: getErrorMessage(e),
       ));
     }
   }

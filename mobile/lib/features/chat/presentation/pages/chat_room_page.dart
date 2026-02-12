@@ -10,11 +10,13 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:ionicons/ionicons.dart';
+import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/services/local_storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../auth/data/models/user_enums.dart';
@@ -100,7 +102,6 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
   final _searchController = TextEditingController();
-  final _imagePicker = ImagePicker();
   String? _currentUserId;
   bool _isSearchMode = false;
   bool _showEmojiPicker = false;
@@ -221,19 +222,96 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
     _scrollToBottom();
   }
 
-  Future<void> _pickAndSendImage(ImageSource source) async {
+  /// Lấy conversationId hiện tại (từ widget hoặc từ state sau khi tạo)
+  String? _resolveConversationId() {
+    if (widget.conversationId != null) return widget.conversationId;
     try {
-      final pickedFile = await _imagePicker.pickImage(
-        source: source,
+      return context.read<ChatBloc>().state.activeConversationId;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Mở thư viện ảnh bằng wechat_assets_picker
+  Future<void> _openGalleryPicker() async {
+    final conversationId = _resolveConversationId();
+    if (conversationId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Vui lòng gửi tin nhắn văn bản trước khi gửi ảnh.'),
+            backgroundColor: AppColors.warning,
+          ),
+        );
+      }
+      return;
+    }
+
+    try {
+      final List<AssetEntity>? assets = await AssetPicker.pickAssets(
+        context,
+        pickerConfig: AssetPickerConfig(
+          maxAssets: 5,
+          requestType: RequestType.image,
+          themeColor: AppColors.primary,
+          textDelegate: const VietnameseAssetPickerTextDelegate(),
+        ),
+      );
+
+      if (assets == null || assets.isEmpty) return;
+
+      for (final asset in assets) {
+        final file = await asset.file;
+        if (file != null && mounted) {
+          context.read<ChatBloc>().add(
+            ChatSendImage(
+              conversationId: conversationId,
+              imageFile: file,
+            ),
+          );
+        }
+      }
+      _scrollToBottom();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Không thể chọn ảnh: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Chụp ảnh từ camera
+  Future<void> _pickFromCamera() async {
+    final conversationId = _resolveConversationId();
+    if (conversationId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Vui lòng gửi tin nhắn văn bản trước khi gửi ảnh.'),
+            backgroundColor: AppColors.warning,
+          ),
+        );
+      }
+      return;
+    }
+
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: ImageSource.camera,
         maxWidth: 1920,
         maxHeight: 1080,
         imageQuality: 85,
       );
 
-      if (pickedFile != null && widget.conversationId != null) {
+      if (pickedFile != null && mounted) {
         context.read<ChatBloc>().add(
           ChatSendImage(
-            conversationId: widget.conversationId!,
+            conversationId: conversationId,
             imageFile: File(pickedFile.path),
           ),
         );
@@ -243,7 +321,7 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Không thể chọn ảnh: $e'),
+            content: Text('Không thể chụp ảnh: $e'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -502,7 +580,7 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
             }
           },
           child: Scaffold(
-            backgroundColor: AppColors.backgroundLight,
+            backgroundColor: context.appColors.background,
             body: Column(
               children: [
                 _buildHeader(otherUser, isPartnerTyping, state),
@@ -510,7 +588,7 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
                 if (state.isSearching) const LinearProgressIndicator(),
                 Expanded(
                   child: Container(
-                    decoration: BoxDecoration(color: AppColors.backgroundLight),
+                    decoration: BoxDecoration(color: context.appColors.background),
                     child: state.isLoading
                         ? const Center(child: CircularProgressIndicator())
                         : messages.isEmpty
@@ -529,9 +607,9 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
                   Container(
                     height: 280,
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: context.appColors.surface,
                       border: Border(
-                        top: BorderSide(color: AppColors.border, width: 0.5),
+                        top: BorderSide(color: context.appColors.border, width: 0.5),
                       ),
                     ),
                     child: EmojiPicker(
@@ -554,7 +632,7 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
                           verticalSpacing: 0,
                           horizontalSpacing: 0,
                           gridPadding: EdgeInsets.zero,
-                          backgroundColor: AppColors.surface,
+                          backgroundColor: context.appColors.surface,
                           recentsLimit: 28,
                           replaceEmojiOnLimitExceed: true,
                           loadingIndicator: const SizedBox.shrink(),
@@ -562,7 +640,7 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
                           noRecents: Text(
                             'Chưa có emoji gần đây',
                             style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.textHint,
+                              color: context.appColors.textHint,
                             ),
                           ),
                         ),
@@ -570,9 +648,9 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
                           initCategory: Category.RECENT,
                           recentTabBehavior: RecentTabBehavior.RECENT,
                           tabBarHeight: 46,
-                          backgroundColor: AppColors.surface,
+                          backgroundColor: context.appColors.surface,
                           indicatorColor: AppColors.primary,
-                          iconColor: AppColors.textHint,
+                          iconColor: context.appColors.textHint,
                           iconColorSelected: AppColors.primary,
                           backspaceColor: AppColors.primary,
                           extraTab: CategoryExtraTab.BACKSPACE,
@@ -582,8 +660,8 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
                         ),
                         skinToneConfig: SkinToneConfig(
                           enabled: true,
-                          dialogBackgroundColor: AppColors.surface,
-                          indicatorColor: AppColors.textHint,
+                          dialogBackgroundColor: context.appColors.surface,
+                          indicatorColor: context.appColors.textHint,
                         ),
                       ),
                     ),
@@ -657,18 +735,18 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Ionicons.chatbubble_outline, size: 64, color: AppColors.textHint),
+          Icon(Ionicons.chatbubble_outline, size: 64, color: context.appColors.textHint),
           const SizedBox(height: 16),
           Text(
             'Bắt đầu cuộc trò chuyện',
             style: AppTypography.titleMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Gửi tin nhắn đầu tiên để bắt đầu',
-            style: AppTypography.bodyMedium.copyWith(color: AppColors.textHint),
+            style: AppTypography.bodyMedium.copyWith(color: context.appColors.textHint),
           ),
         ],
       ),
@@ -700,7 +778,7 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
       statusColor = AppColors.online;
     } else {
       statusText = 'Offline';
-      statusColor = AppColors.textHint;
+      statusColor = context.appColors.textHint;
     }
 
     return Container(
@@ -711,10 +789,10 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
         right: 16,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.appColors.surface,
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadow,
+            color: context.appColors.shadow,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -731,7 +809,7 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isOnline ? AppColors.online : AppColors.border,
+                    color: isOnline ? AppColors.online : context.appColors.border,
                     width: 2,
                   ),
                 ),
@@ -741,12 +819,12 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
                           imageUrl: ImageUtils.buildImageUrl(avatar),
                           fit: BoxFit.cover,
                           errorWidget: (_, __, ___) => Container(
-                            color: AppColors.backgroundLight,
+                            color: context.appColors.background,
                             child: const Icon(Ionicons.person_outline),
                           ),
                         )
                       : Container(
-                          color: AppColors.backgroundLight,
+                          color: context.appColors.background,
                           child: const Icon(Ionicons.person_outline),
                         ),
                 ),
@@ -761,7 +839,7 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
                     decoration: BoxDecoration(
                       color: AppColors.online,
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.surface, width: 2),
+                      border: Border.all(color: context.appColors.surface, width: 2),
                     ),
                   ),
                 ),
@@ -816,10 +894,10 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
           MediaQuery.of(context).padding.bottom + 16,
         ),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.appColors.surface,
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadow,
+              color: context.appColors.shadow,
               blurRadius: 8,
               offset: const Offset(0, -2),
             ),
@@ -828,12 +906,12 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Ionicons.remove_outline, color: AppColors.textHint, size: 20),
+            Icon(Ionicons.remove_outline, color: context.appColors.textHint, size: 20),
             const SizedBox(width: 8),
             Text(
               'Không thể nhắn tin với người dùng này',
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textHint,
+                color: context.appColors.textHint,
               ),
             ),
           ],
@@ -851,10 +929,10 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
         MediaQuery.of(context).padding.bottom + 8,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.appColors.surface,
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadow.withAlpha(40),
+            color: context.appColors.shadow.withAlpha(40),
             blurRadius: 12,
             offset: const Offset(0, -4),
           ),
@@ -887,10 +965,10 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
             child: Container(
               constraints: const BoxConstraints(maxHeight: 120),
               decoration: BoxDecoration(
-                color: AppColors.card,
+                color: context.appColors.card,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: _showEmojiPicker ? AppColors.primary : AppColors.border,
+                  color: _showEmojiPicker ? AppColors.primary : context.appColors.border,
                   width: _showEmojiPicker ? 1.5 : 1,
                 ),
               ),
@@ -904,7 +982,7 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
                       decoration: InputDecoration(
                         hintText: 'Nhập tin nhắn...',
                         hintStyle: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.textHint,
+                          color: context.appColors.textHint,
                         ),
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(
@@ -951,7 +1029,7 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
                               : Ionicons.happy_outline,
                           color: _showEmojiPicker
                               ? AppColors.primary
-                              : AppColors.textHint,
+                              : context.appColors.textHint,
                           size: 22,
                         ),
                       ),
@@ -1038,7 +1116,7 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.appColors.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
         ),
         child: Padding(
@@ -1110,7 +1188,7 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.appColors.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Padding(
@@ -1133,7 +1211,7 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
                     color: AppColors.error,
                     onTap: () {
                       Navigator.pop(ctx);
-                      _pickAndSendImage(ImageSource.camera);
+                      _pickFromCamera();
                     },
                   ),
                   _AttachmentOption(
@@ -1142,7 +1220,7 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
                     color: AppColors.primary,
                     onTap: () {
                       Navigator.pop(ctx);
-                      _pickAndSendImage(ImageSource.gallery);
+                      _openGalleryPicker();
                     },
                   ),
                 ],
@@ -1159,8 +1237,8 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border(bottom: BorderSide(color: AppColors.border)),
+        color: context.appColors.surface,
+        border: Border(bottom: BorderSide(color: context.appColors.border)),
       ),
       child: Row(
         children: [
@@ -1171,11 +1249,11 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
               decoration: InputDecoration(
                 hintText: 'Tìm kiếm tin nhắn...',
                 hintStyle: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textHint,
+                  color: context.appColors.textHint,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppColors.border),
+                  borderSide: BorderSide(color: context.appColors.border),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -1237,14 +1315,14 @@ class _MessageBubble extends StatelessWidget {
                         errorWidget: (_, __, ___) => Container(
                           width: 32,
                           height: 32,
-                          color: AppColors.backgroundLight,
+                          color: context.appColors.background,
                           child: const Icon(Ionicons.person_outline, size: 16),
                         ),
                       )
                     : Container(
                         width: 32,
                         height: 32,
-                        color: AppColors.backgroundLight,
+                        color: context.appColors.background,
                         child: const Icon(Ionicons.person_outline, size: 16),
                       ),
               )
@@ -1261,14 +1339,14 @@ class _MessageBubble extends StatelessWidget {
                   ? const EdgeInsets.all(4)
                   : const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: isMe ? AppColors.primary : AppColors.card,
+                color: isMe ? AppColors.primary : context.appColors.card,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(20),
                   topRight: const Radius.circular(20),
                   bottomLeft: Radius.circular(isMe ? 20 : 6),
                   bottomRight: Radius.circular(isMe ? 6 : 20),
                 ),
-                border: isMe ? null : Border.all(color: AppColors.border),
+                border: isMe ? null : Border.all(color: context.appColors.border),
               ),
               child: Column(
                 crossAxisAlignment:
@@ -1282,7 +1360,7 @@ class _MessageBubble extends StatelessWidget {
                     style: AppTypography.labelSmall.copyWith(
                       color: isMe
                           ? AppColors.textWhite.withAlpha(200)
-                          : AppColors.textHint,
+                          : context.appColors.textHint,
                       fontSize: 11,
                     ),
                   ),
@@ -1316,13 +1394,13 @@ class _MessageBubble extends StatelessWidget {
             placeholder: (_, __) => Container(
               width: 200,
               height: 200,
-              color: AppColors.backgroundLight,
+              color: context.appColors.background,
               child: const Center(child: CircularProgressIndicator()),
             ),
             errorWidget: (_, __, ___) => Container(
               width: 200,
               height: 200,
-              color: AppColors.backgroundLight,
+              color: context.appColors.background,
               child: const Icon(Ionicons.image_outline, size: 48),
             ),
           ),
@@ -1343,7 +1421,7 @@ class _MessageBubble extends StatelessWidget {
           Text(
             'Vị trí đã chia sẻ',
             style: AppTypography.bodyLarge.copyWith(
-              color: isMe ? AppColors.textWhite : AppColors.textPrimary,
+              color: isMe ? AppColors.textWhite : context.appColors.textPrimary,
             ),
           ),
         ],
@@ -1353,7 +1431,7 @@ class _MessageBubble extends StatelessWidget {
     return Text(
       message.content,
       style: AppTypography.bodyLarge.copyWith(
-        color: isMe ? AppColors.textWhite : AppColors.textPrimary,
+        color: isMe ? AppColors.textWhite : context.appColors.textPrimary,
         height: 1.4,
       ),
       textAlign: isMe ? TextAlign.right : TextAlign.left,
@@ -1442,7 +1520,7 @@ class _ReadAvatarIndicatorState extends State<_ReadAvatarIndicator>
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withAlpha(30),
+                color: context.appColors.textPrimary.withAlpha(30),
                 blurRadius: 4,
                 offset: const Offset(0, 1),
               ),
@@ -1458,7 +1536,7 @@ class _ReadAvatarIndicatorState extends State<_ReadAvatarIndicator>
                     errorWidget: (_, __, ___) => Container(
                       width: 20,
                       height: 20,
-                      color: AppColors.card,
+                      color: context.appColors.card,
                       child: Icon(
                         Ionicons.person_outline,
                         size: 12,
@@ -1469,7 +1547,7 @@ class _ReadAvatarIndicatorState extends State<_ReadAvatarIndicator>
                 : Container(
                     width: 20,
                     height: 20,
-                    color: AppColors.card,
+                    color: context.appColors.card,
                     child: Icon(
                       Ionicons.person_outline,
                       size: 12,
@@ -1501,12 +1579,12 @@ class _OptionTile extends StatelessWidget {
     return ListTile(
       leading: Icon(
         icon,
-        color: isDestructive ? AppColors.error : AppColors.textPrimary,
+        color: isDestructive ? AppColors.error : context.appColors.textPrimary,
       ),
       title: Text(
         label,
         style: AppTypography.bodyLarge.copyWith(
-          color: isDestructive ? AppColors.error : AppColors.textPrimary,
+          color: isDestructive ? AppColors.error : context.appColors.textPrimary,
         ),
       ),
       onTap: onTap,
@@ -1546,7 +1624,7 @@ class _AttachmentOption extends StatelessWidget {
           Text(
             label,
             style: AppTypography.labelSmall.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ),
         ],
@@ -1574,7 +1652,7 @@ class _TypingBubble extends StatelessWidget {
             height: 28,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.border, width: 1),
+              border: Border.all(color: context.appColors.border, width: 1),
             ),
             child: ClipOval(
               child: avatarUrl.isNotEmpty
@@ -1582,12 +1660,12 @@ class _TypingBubble extends StatelessWidget {
                       imageUrl: ImageUtils.buildImageUrl(avatarUrl),
                       fit: BoxFit.cover,
                       errorWidget: (_, __, ___) => Container(
-                        color: AppColors.backgroundLight,
+                        color: context.appColors.background,
                         child: const Icon(Ionicons.person_outline, size: 14),
                       ),
                     )
                   : Container(
-                      color: AppColors.backgroundLight,
+                      color: context.appColors.background,
                       child: const Icon(Ionicons.person_outline, size: 14),
                     ),
             ),
@@ -1597,7 +1675,7 @@ class _TypingBubble extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: context.appColors.surface,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(20),
                 topRight: Radius.circular(20),
@@ -1606,7 +1684,7 @@ class _TypingBubble extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.shadow.withOpacity(0.1),
+                  color: context.appColors.shadow.withOpacity(0.1),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),

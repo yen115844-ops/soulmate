@@ -8,6 +8,7 @@ import 'package:ionicons/ionicons.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../data/models/kyc_model.dart';
@@ -100,7 +101,7 @@ class _KycPageContent extends StatelessWidget {
             Text(
               'Chúng tôi sẽ xác minh thông tin của bạn trong vòng 24 giờ. Bạn sẽ nhận được thông báo khi hoàn tất.',
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -161,7 +162,7 @@ class _ExistingKycStatusPage extends StatelessWidget {
               Text(
                 _getStatusMessage(),
                 style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+                  color: context.appColors.textSecondary,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -335,7 +336,7 @@ class _KycWizard extends StatelessWidget {
                   Text(
                     'Bước ${state.currentStep + 1}/${_steps.length}',
                     style: AppTypography.labelSmall.copyWith(
-                      color: AppColors.textSecondary,
+                      color: context.appColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -354,7 +355,7 @@ class _KycWizard extends StatelessWidget {
         Text(
           step['description'] as String,
           style: AppTypography.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
+            color: context.appColors.textSecondary,
           ),
         ),
 
@@ -415,8 +416,8 @@ class _KycWizard extends StatelessWidget {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (bottomContext) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
+        decoration:   BoxDecoration(
+          color: context.appColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.all(24),
@@ -521,10 +522,10 @@ class _KycWizard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.appColors.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(10),
+            color: context.appColors.textPrimary.withAlpha(10),
             offset: const Offset(0, -4),
             blurRadius: 16,
           ),
@@ -603,7 +604,7 @@ class _KycProgressIndicator extends StatelessWidget {
               child: Container(
                 height: 3,
                 decoration: BoxDecoration(
-                  color: isCompleted ? AppColors.primary : AppColors.border,
+                  color: isCompleted ? AppColors.primary : context.appColors.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -620,12 +621,12 @@ class _KycProgressIndicator extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isCompleted || isCurrent
                     ? AppColors.primary
-                    : AppColors.card,
+                    : context.appColors.card,
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: isCompleted || isCurrent
                       ? AppColors.primary
-                      : AppColors.border,
+                      : context.appColors.border,
                   width: 2,
                 ),
               ),
@@ -641,7 +642,7 @@ class _KycProgressIndicator extends StatelessWidget {
                         style: AppTypography.labelMedium.copyWith(
                           color: isCurrent
                               ? AppColors.textWhite
-                              : AppColors.textSecondary,
+                              : context.appColors.textSecondary,
                         ),
                       ),
               ),
@@ -676,10 +677,10 @@ class _ImageCaptureWidget extends StatelessWidget {
         width: double.infinity,
         height: isCircle ? 280 : 200,
         decoration: BoxDecoration(
-          color: AppColors.card,
+          color: context.appColors.card,
           borderRadius: BorderRadius.circular(isCircle ? 140 : 16),
           border: Border.all(
-            color: image != null ? AppColors.primary : AppColors.border,
+            color: image != null ? AppColors.primary : context.appColors.border,
             width: 2,
             style: image != null ? BorderStyle.solid : BorderStyle.none,
           ),
@@ -693,7 +694,7 @@ class _ImageCaptureWidget extends StatelessWidget {
                     Image.file(image!, fit: BoxFit.cover),
                     if (isUploading)
                       Container(
-                        color: Colors.black.withAlpha(128),
+                        color: context.appColors.textPrimary.withAlpha(128),
                         child: const Center(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
@@ -734,7 +735,7 @@ class _ImageCaptureWidget extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(isCircle ? 140 : 16),
                   border: Border.all(
-                    color: AppColors.border,
+                    color: context.appColors.border,
                     style: BorderStyle.solid,
                   ),
                 ),
@@ -745,12 +746,12 @@ class _ImageCaptureWidget extends StatelessWidget {
                       width: 64,
                       height: 64,
                       decoration: BoxDecoration(
-                        color: AppColors.backgroundLight,
+                        color: context.appColors.background,
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Icon(
+                      child:   Icon(
                         Ionicons.camera_outline,
-                        color: AppColors.textHint,
+                        color: context.appColors.textHint,
                         size: 28,
                       ),
                     ),
@@ -758,14 +759,14 @@ class _ImageCaptureWidget extends StatelessWidget {
                     Text(
                       'Nhấn để chụp hoặc chọn ảnh',
                       style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       label,
                       style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.textHint,
+                        color: context.appColors.textHint,
                       ),
                     ),
                   ],
@@ -830,9 +831,9 @@ class _ConfirmationStep extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.card,
+            color: context.appColors.card,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: context.appColors.border),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -871,7 +872,7 @@ class _ConfirmationStep extends StatelessWidget {
                 child: Text(
                   'Bằng việc gửi xác minh, bạn đồng ý cho phép chúng tôi xử lý dữ liệu cá nhân của bạn theo Chính sách bảo mật.',
                   style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
               ),
@@ -902,7 +903,7 @@ class _DocumentPreview extends StatelessWidget {
           width: 60,
           height: 60,
           decoration: BoxDecoration(
-            color: AppColors.backgroundLight,
+            color: context.appColors.background,
             borderRadius: BorderRadius.circular(isCircle ? 30 : 8),
           ),
           child: image != null
@@ -910,7 +911,7 @@ class _DocumentPreview extends StatelessWidget {
                   borderRadius: BorderRadius.circular(isCircle ? 30 : 8),
                   child: Image.file(image!, fit: BoxFit.cover),
                 )
-              : Icon(Ionicons.document_text_outline, color: AppColors.textHint),
+              : Icon(Ionicons.document_text_outline, color: context.appColors.textHint),
         ),
         const SizedBox(width: 16),
         Expanded(

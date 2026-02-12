@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/utils/error_utils.dart';
 import '../../../../shared/data/repositories/notification_repository.dart';
 import 'notification_event.dart';
 import 'notification_state.dart';
@@ -10,10 +12,12 @@ export 'notification_state.dart';
 
 /// BLoC for notification management
 class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
-  final NotificationRepository repository;
+  final NotificationRepository _repository;
   static const int _pageSize = 20;
 
-  NotificationBloc({required this.repository}) : super(NotificationInitial()) {
+  NotificationBloc({required NotificationRepository repository})
+    : _repository = repository,
+      super(NotificationInitial()) {
     on<LoadNotifications>(_onLoadNotifications);
     on<LoadMoreNotifications>(_onLoadMoreNotifications);
     on<MarkNotificationAsRead>(_onMarkNotificationAsRead);
@@ -32,7 +36,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
         emit(NotificationLoading());
       }
 
-      final response = await repository.getNotifications(
+      final response = await _repository.getNotifications(
         page: 1,
         limit: _pageSize,
       );
@@ -45,7 +49,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
         hasMore: response.meta.page < response.meta.totalPages,
       ));
     } catch (e) {
-      emit(NotificationError('Không thể tải thông báo: $e'));
+      emit(NotificationError(getErrorMessage(e)));
     }
   }
 
@@ -64,7 +68,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
       emit(currentState.copyWith(isLoadingMore: true));
 
       final nextPage = currentState.currentPage + 1;
-      final response = await repository.getNotifications(
+      final response = await _repository.getNotifications(
         page: nextPage,
         limit: _pageSize,
       );
@@ -90,7 +94,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     if (currentState is! NotificationLoaded) return;
 
     try {
-      await repository.markAsRead(event.notificationId);
+      await _repository.markAsRead(event.notificationId);
 
       final updatedNotifications = currentState.notifications.map((n) {
         if (n.id == event.notificationId && !n.isRead) {
@@ -108,7 +112,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
             wasUnread ? currentState.unreadCount - 1 : currentState.unreadCount,
       ));
     } catch (e) {
-      // Silently fail
+      debugPrint('Mark notification as read failed: $e');
     }
   }
 
@@ -120,7 +124,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     if (currentState is! NotificationLoaded) return;
 
     try {
-      await repository.markAllAsRead();
+      await _repository.markAllAsRead();
 
       final updatedNotifications = currentState.notifications.map((n) {
         if (!n.isRead) {
@@ -134,7 +138,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
         unreadCount: 0,
       ));
     } catch (e) {
-      // Silently fail
+      debugPrint('Mark all notifications as read failed: $e');
     }
   }
 
@@ -146,7 +150,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     if (currentState is! NotificationLoaded) return;
 
     try {
-      await repository.deleteNotification(event.notificationId);
+      await _repository.deleteNotification(event.notificationId);
 
       final deletedNotification = currentState.notifications
           .firstWhere((n) => n.id == event.notificationId);
@@ -162,7 +166,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
             wasUnread ? currentState.unreadCount - 1 : currentState.unreadCount,
       ));
     } catch (e) {
-      // Silently fail
+      debugPrint('Delete notification failed: $e');
     }
   }
 
@@ -174,7 +178,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     if (currentState is! NotificationLoaded) return;
 
     try {
-      await repository.deleteAllRead();
+      await _repository.deleteAllRead();
 
       final updatedNotifications =
           currentState.notifications.where((n) => !n.isRead).toList();
@@ -183,7 +187,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
         notifications: updatedNotifications,
       ));
     } catch (e) {
-      // Silently fail
+      debugPrint('Delete all read notifications failed: $e');
     }
   }
 
@@ -195,10 +199,10 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     if (currentState is! NotificationLoaded) return;
 
     try {
-      final unreadCount = await repository.getUnreadCount();
+      final unreadCount = await _repository.getUnreadCount();
       emit(currentState.copyWith(unreadCount: unreadCount));
     } catch (e) {
-      // Silently fail
+      debugPrint('Refresh unread count failed: $e');
     }
   }
 }

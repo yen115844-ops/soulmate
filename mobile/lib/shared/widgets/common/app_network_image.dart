@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:ionicons/ionicons.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/theme_context.dart';
 import '../../../core/utils/image_utils.dart';
 
 /// A reusable network image widget that handles:
@@ -66,7 +67,7 @@ class AppNetworkImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fullUrl = ImageUtils.buildImageUrlNullable(imageUrl);
-    final bgColor = backgroundColor ?? AppColors.backgroundLight;
+    final bgColor = backgroundColor ?? context.appColors.background;
 
     // Return placeholder if no URL
     if (fullUrl == null || fullUrl.isEmpty) {

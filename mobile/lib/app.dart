@@ -19,6 +19,7 @@ import 'features/auth/presentation/bloc/auth_state.dart' as auth_state;
 import 'features/partner/data/partner_repository.dart';
 import 'features/profile/presentation/bloc/profile_bloc.dart';
 import 'features/profile/presentation/bloc/profile_event.dart';
+import 'shared/bloc/master_data_bloc.dart';
 
 /// The main application widget
 class App extends StatefulWidget {
@@ -35,10 +36,6 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
 
     _authSubscription = getIt<AuthService>().authStateStream.listen(
       _onAuthStateChanged,
@@ -100,8 +97,9 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       child: BlocListener<AuthBloc, auth_state.AuthState>(
         listener: (context, state) {
           if (state is auth_state.AuthUnauthenticated) {
-            // Reset ProfileBloc to clear old user data in memory
+            // Reset singleton BLoCs to clear old user data in memory
             getIt<ProfileBloc>().add(const ProfileResetRequested());
+            getIt<MasterDataBloc>().add(const MasterDataResetRequested());
             ChatSocketService.instance.disconnect();
             AppRouter.router.go(RouteNames.login);
           } else if (state is auth_state.AuthAuthenticated ||
@@ -144,10 +142,13 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 
               // Builder for global configurations
               builder: (context, child) {
-                // Set system UI overlay style based on theme
+                // Configure flutter_animate default values
+                Animate.restartOnHotReload = true;
+
+                // Use AnnotatedRegion instead of imperative SystemChrome call
                 final isDark = Theme.of(context).brightness == Brightness.dark;
-                SystemChrome.setSystemUIOverlayStyle(
-                  SystemUiOverlayStyle(
+                return AnnotatedRegion<SystemUiOverlayStyle>(
+                  value: SystemUiOverlayStyle(
                     statusBarColor: Colors.transparent,
                     statusBarIconBrightness: isDark
                         ? Brightness.light
@@ -159,23 +160,19 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                         ? Brightness.light
                         : Brightness.dark,
                   ),
-                );
-
-                // Configure flutter_animate default values
-                Animate.restartOnHotReload = true;
-
-                return GestureDetector(
-                  onTap: () => FocusScope.of(context).unfocus(),
-                  child: MediaQuery(
-                    // Set max text scale factor for accessibility
-                    data: MediaQuery.of(context).copyWith(
-                      textScaler: TextScaler.linear(
-                        MediaQuery.of(
-                          context,
-                        ).textScaler.scale(1.0).clamp(0.8, 1.2),
+                  child: GestureDetector(
+                    onTap: () => FocusScope.of(context).unfocus(),
+                    child: MediaQuery(
+                      // Set max text scale factor for accessibility
+                      data: MediaQuery.of(context).copyWith(
+                        textScaler: TextScaler.linear(
+                          MediaQuery.of(
+                            context,
+                          ).textScaler.scale(1.0).clamp(0.8, 1.2),
+                        ),
                       ),
+                      child: child ?? const SizedBox.shrink(),
                     ),
-                    child: child ?? const SizedBox.shrink(),
                   ),
                 );
               },

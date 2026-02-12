@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/utils/error_utils.dart';
 import '../../data/emergency_contacts_repository.dart';
 import '../../data/models/emergency_contact_model.dart';
 import 'emergency_contacts_event.dart';
@@ -31,7 +32,7 @@ class EmergencyContactsBloc extends Bloc<EmergencyContactsEvent, EmergencyContac
     } catch (e) {
       emit(state.copyWith(
         status: EmergencyContactsStatus.error,
-        errorMessage: e.toString(),
+        errorMessage: getErrorMessage(e),
       ));
     }
   }
@@ -68,7 +69,7 @@ class EmergencyContactsBloc extends Bloc<EmergencyContactsEvent, EmergencyContac
     } catch (e) {
       emit(state.copyWith(
         status: EmergencyContactsStatus.loaded,
-        errorMessage: 'Không thể thêm liên hệ: ${e.toString()}',
+        errorMessage: getErrorMessage(e),
       ));
     }
   }
@@ -102,7 +103,7 @@ class EmergencyContactsBloc extends Bloc<EmergencyContactsEvent, EmergencyContac
     } catch (e) {
       emit(state.copyWith(
         status: EmergencyContactsStatus.loaded,
-        errorMessage: 'Không thể cập nhật liên hệ: ${e.toString()}',
+        errorMessage: getErrorMessage(e),
       ));
     }
   }
@@ -126,7 +127,7 @@ class EmergencyContactsBloc extends Bloc<EmergencyContactsEvent, EmergencyContac
       // Refresh on error
       add(const EmergencyContactsRefreshRequested());
       emit(state.copyWith(
-        errorMessage: 'Không thể xóa liên hệ: ${e.toString()}',
+        errorMessage: getErrorMessage(e),
       ));
     }
   }

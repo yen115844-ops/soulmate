@@ -2,9 +2,7 @@ import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
-import { ServeStaticModule } from '@nestjs/serve-static';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { OptionalJwtAuthGuard } from './common/guards/optional-jwt-auth.guard';
@@ -30,7 +28,9 @@ import { ChatModule } from './modules/chat';
 import { MasterDataModule } from './modules/master-data/master-data.module';
 import { NotificationsModule } from './modules/notifications';
 import { PartnersModule } from './modules/partners';
+import { ReportsModule } from './modules/reports';
 import { ReviewsModule } from './modules/reviews';
+import { SafetyModule } from './modules/safety';
 import { SettingsModule } from './modules/settings';
 import { StatisticsModule } from './modules/statistics';
 import { UploadModule } from './modules/upload';
@@ -105,12 +105,6 @@ import { WalletModule } from './modules/wallet';
       }),
     }),
 
-    // Serve static files (uploads)
-    ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'uploads'),
-      serveRoot: '/uploads',
-    }),
-
     // Feature modules
     AuthModule,
     UsersModule,
@@ -124,8 +118,9 @@ import { WalletModule } from './modules/wallet';
     ChatModule,
     SettingsModule,
     StatisticsModule,
+    SafetyModule,
+    ReportsModule,
     // PaymentModule,
-    // SafetyModule,
   ],
   controllers: [AppController],
   providers: [

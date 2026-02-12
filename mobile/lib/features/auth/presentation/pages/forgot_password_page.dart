@@ -6,6 +6,7 @@ import '../../../../config/routes/route_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_exceptions.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
@@ -87,7 +88,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 const SizedBox(height: 12),
                 Text(
                   'Chúng tôi đã gửi mã xác nhận đến ${_emailController.text.trim()}. Vui lòng kiểm tra hộp thư và nhập mã vào trang đặt lại mật khẩu.',
-                  style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+                  style: AppTypography.bodyMedium.copyWith(color: context.appColors.textSecondary),
                   textAlign: TextAlign.center,
                 ),
                 const Spacer(),
@@ -122,7 +123,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               children: [
                 Text(
                   'Nhập email đăng ký tài khoản, chúng tôi sẽ gửi mã xác nhận để đặt lại mật khẩu.',
-                  style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+                  style: AppTypography.bodyMedium.copyWith(color: context.appColors.textSecondary),
                 ),
                 const SizedBox(height: 32),
                 AppTextField(

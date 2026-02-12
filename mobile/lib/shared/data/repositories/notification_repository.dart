@@ -1,19 +1,13 @@
 import '../../../core/network/api_client.dart';
+import '../../../core/network/base_repository.dart';
 import '../models/notification_models.dart';
 
-class NotificationRepository {
+class NotificationRepository with BaseRepositoryMixin {
   final ApiClient _apiClient;
 
   NotificationRepository({required ApiClient apiClient})
       : _apiClient = apiClient;
 
-  /// Extract data from wrapped response {success, data, ...}
-  dynamic _extractData(dynamic response) {
-    if (response is Map<String, dynamic>) {
-      return response['data'] ?? response;
-    }
-    return response;
-  }
 
   /// Get notifications with pagination
   Future<NotificationsResponse> getNotifications({

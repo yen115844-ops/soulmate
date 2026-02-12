@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/theme_context.dart';
 
 /// Glassmorphism Container - Frosted glass effect
 class GlassContainer extends StatelessWidget {
@@ -142,7 +142,7 @@ class NeumorphicContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = backgroundColor ?? AppColors.backgroundLight;
+    final bgColor = backgroundColor ?? context.appColors.background;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
@@ -157,7 +157,7 @@ class NeumorphicContainer extends StatelessWidget {
           boxShadow: isPressed
               ? [
                   BoxShadow(
-                    color: (isDark ? Colors.black : Colors.grey.shade400)
+                    color: (isDark ? Colors.black : context.appColors.textHint)
                         .withOpacity(0.15 * intensity),
                     offset: const Offset(2, 2),
                     blurRadius: 4,
@@ -171,7 +171,7 @@ class NeumorphicContainer extends StatelessWidget {
                 ]
               : [
                   BoxShadow(
-                    color: (isDark ? Colors.black : Colors.grey.shade400)
+                    color: (isDark ? Colors.black : context.appColors.textHint)
                         .withOpacity(0.2 * intensity),
                     offset: const Offset(4, 4),
                     blurRadius: 8,
@@ -220,7 +220,7 @@ class GradientBorderContainer extends StatelessWidget {
         margin: EdgeInsets.all(borderWidth),
         padding: padding ?? const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: backgroundColor ?? AppColors.surface,
+          color: backgroundColor ?? context.appColors.surface,
           borderRadius: BorderRadius.circular(borderRadius - borderWidth),
         ),
         child: child,
@@ -307,16 +307,16 @@ class _AnimatedGradientContainerState extends State<AnimatedGradientContainer>
 class ShimmerContainer extends StatefulWidget {
   final Widget child;
   final bool isLoading;
-  final Color baseColor;
-  final Color highlightColor;
+  final Color? baseColor;
+  final Color? highlightColor;
   final Duration duration;
 
-  const ShimmerContainer({
+  ShimmerContainer({
     super.key,
     required this.child,
     this.isLoading = true,
-    this.baseColor = const Color(0xFFE5E7EB),
-    this.highlightColor = const Color(0xFFF3F4F6),
+    this.baseColor,
+    this.highlightColor,
     this.duration = const Duration(milliseconds: 1500),
   });
 
@@ -347,6 +347,9 @@ class _ShimmerContainerState extends State<ShimmerContainer>
   Widget build(BuildContext context) {
     if (!widget.isLoading) return widget.child;
 
+    final base = widget.baseColor ?? context.appColors.border;
+    final highlight = widget.highlightColor ?? context.appColors.divider;
+
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -354,9 +357,9 @@ class _ShimmerContainerState extends State<ShimmerContainer>
           shaderCallback: (bounds) {
             return LinearGradient(
               colors: [
-                widget.baseColor,
-                widget.highlightColor,
-                widget.baseColor,
+                base,
+                highlight,
+                base,
               ],
               stops: const [0.0, 0.5, 1.0],
               begin: Alignment(-1.0 + 2 * _controller.value, 0),

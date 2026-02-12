@@ -39,21 +39,3 @@ class AppConstants {
   static const double maxRating = 5.0;
   static const int minReviewLength = 10;
 }
-
-// Service Types
-enum ServiceType {
-  walking('Đi dạo', 'walking'),
-  movie('Xem phim', 'movie'),
-  cafe('Cà phê', 'cafe'),
-  dinner('Ăn tối', 'dinner'),
-  party('Dự tiệc', 'party'),
-  shopping('Mua sắm', 'shopping'),
-  travel('Du lịch', 'travel'),
-  event('Sự kiện', 'event'),
-  gym('Tập gym', 'gym'),
-  other('Khác', 'other');
-
-  const ServiceType(this.label, this.value);
-  final String label;
-  final String value;
-}

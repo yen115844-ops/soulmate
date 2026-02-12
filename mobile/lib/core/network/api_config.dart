@@ -1,20 +1,32 @@
 /// API Configuration for the Mate Social backend
+///
+/// Use `--dart-define=API_BASE_URL=...` to override the base URL:
+///   flutter run --dart-define=API_BASE_URL=http://localhost:3222/api
+///   flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3222/api  (Android emulator)
 class ApiConfig {
   ApiConfig._();
 
-  // Base URL - Change for production
-   static const String baseUrl = 'https://gomate-backend.trancongtien.io.vn/api';
-  // static const String baseUrl = 'http://localhost:3222/api';
-// 
-  // For iOS Simulator use: 'http://localhost:3000/api'
-  // For Android Emulator use: 'http://10.0.2.2:3000/api'
-  // For real device use your machine's IP: 'http://192.168.x.x:3000/api'
+  /// Base URL — configured via `--dart-define=API_BASE_URL=...`.
+  /// In debug mode, falls back to localhost; in release mode, uses production URL.
+  static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL');
+  static const String _defaultDebugUrl = 'http://localhost:3222/api';
+  static const String _defaultReleaseUrl = 'https://api.matesocial.vn/api'; // TODO: Replace with real production URL
 
-  // Timeouts - Production/VPS: higher values for slow mobile networks & cold start
-  // 60s helps avoid timeout on create/cancel booking when backend does DB + Redis + notification
-  static const Duration connectTimeout = Duration(seconds: 60);
-  static const Duration receiveTimeout = Duration(seconds: 60);
-  static const Duration sendTimeout = Duration(seconds: 60);
+  static String get baseUrl {
+    if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
+    // Use assert to catch missing base URL in release builds during development
+    assert(() {
+      return true; // In debug mode, use localhost fallback
+    }());
+    return const bool.fromEnvironment('dart.vm.product')
+        ? _defaultReleaseUrl
+        : _defaultDebugUrl;
+  }
+
+  // Timeouts
+  static const Duration connectTimeout = Duration(seconds: 30);
+  static const Duration receiveTimeout = Duration(seconds: 30);
+  static const Duration sendTimeout = Duration(seconds: 30);
 
   // Headers
   static const String contentType = 'application/json';

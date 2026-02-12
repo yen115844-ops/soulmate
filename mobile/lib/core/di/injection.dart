@@ -14,7 +14,13 @@ import '../../features/home/data/home_repository.dart';
 import '../../features/home/presentation/bloc/home_bloc.dart';
 import '../../features/notification/presentation/bloc/notification_bloc.dart';
 import '../../features/partner/data/partner_repository.dart';
+import '../../features/partner/presentation/bloc/partner_bookings_bloc.dart';
+import '../../features/partner/presentation/bloc/partner_dashboard_bloc.dart';
+import '../../features/partner/presentation/bloc/partner_earnings_bloc.dart';
+import '../../features/partner/presentation/bloc/partner_profile_bloc.dart';
 import '../../features/partner/presentation/bloc/partner_registration_bloc.dart';
+import '../../features/partner/presentation/bloc/partner_reviews_bloc.dart';
+import '../../features/partner/presentation/bloc/schedule_settings_bloc.dart';
 import '../../features/profile/data/profile_repository.dart';
 import '../../features/profile/presentation/bloc/profile_bloc.dart';
 import '../../features/rating/data/reviews_repository.dart';
@@ -157,7 +163,6 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton<AuthBloc>(
     () => AuthBloc(
       authRepository: getIt<AuthRepository>(),
-      notificationRepository: getIt<NotificationRepository>(),
     ),
   );
 
@@ -174,6 +179,39 @@ Future<void> setupDependencies() async {
   // Partner Registration BLoC
   getIt.registerFactory<PartnerRegistrationBloc>(
     () => PartnerRegistrationBloc(repository: getIt<PartnerRepository>()),
+  );
+
+  // Partner Dashboard BLoC
+  getIt.registerFactory<PartnerDashboardBloc>(
+    () => PartnerDashboardBloc(
+      partnerRepository: getIt<PartnerRepository>(),
+      notificationRepository: getIt<NotificationRepository>(),
+    ),
+  );
+
+  // Partner Profile BLoC
+  getIt.registerFactory<PartnerProfileBloc>(
+    () => PartnerProfileBloc(partnerRepository: getIt<PartnerRepository>()),
+  );
+
+  // Partner Bookings BLoC
+  getIt.registerFactory<PartnerBookingsBloc>(
+    () => PartnerBookingsBloc(partnerRepository: getIt<PartnerRepository>()),
+  );
+
+  // Partner Reviews BLoC
+  getIt.registerFactory<PartnerReviewsBloc>(
+    () => PartnerReviewsBloc(partnerRepository: getIt<PartnerRepository>()),
+  );
+
+  // Partner Earnings BLoC
+  getIt.registerFactory<PartnerEarningsBloc>(
+    () => PartnerEarningsBloc(partnerRepository: getIt<PartnerRepository>()),
+  );
+
+  // Schedule Settings BLoC
+  getIt.registerFactory<ScheduleSettingsBloc>(
+    () => ScheduleSettingsBloc(partnerRepository: getIt<PartnerRepository>()),
   );
 
   // Notification BLoC
@@ -196,7 +234,7 @@ Future<void> setupDependencies() async {
 
   // Favorites BLoC
   getIt.registerFactory<FavoritesBloc>(
-    () => FavoritesBloc(getIt<FavoritesRepository>()),
+    () => FavoritesBloc(repository: getIt<FavoritesRepository>()),
   );
 
   // My Reviews BLoC
@@ -219,7 +257,10 @@ Future<void> setupDependencies() async {
 
   // Home BLoC
   getIt.registerFactory<HomeBloc>(
-    () => HomeBloc(repository: getIt<HomeRepository>()),
+    () => HomeBloc(
+      repository: getIt<HomeRepository>(),
+      favoritesRepository: getIt<FavoritesRepository>(),
+    ),
   );
 
   // Chat BLoC

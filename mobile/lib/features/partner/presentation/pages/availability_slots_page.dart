@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../data/partner_repository.dart';
 import '../bloc/schedule_settings_bloc.dart';
@@ -178,8 +179,8 @@ class _AvailabilitySlotsContentState extends State<_AvailabilitySlotsContent> {
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) => Container(
-          decoration: const BoxDecoration(
-            color: AppColors.surface,
+          decoration: BoxDecoration(
+            color: context.appColors.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           padding: EdgeInsets.only(
@@ -200,7 +201,7 @@ class _AvailabilitySlotsContentState extends State<_AvailabilitySlotsContent> {
               Text(
                 DateFormat('EEEE, dd/MM/yyyy', 'vi_VN').format(date),
                 style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+                  color: context.appColors.textSecondary,
                 ),
               ),
               const SizedBox(height: 24),
@@ -218,7 +219,7 @@ class _AvailabilitySlotsContentState extends State<_AvailabilitySlotsContent> {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  const Icon(Ionicons.chevron_forward_outline, color: AppColors.textHint),
+                  Icon(Ionicons.chevron_forward_outline, color: context.appColors.textHint),
                   const SizedBox(width: 16),
                   Expanded(
                     child: _TimePickerField(
@@ -388,8 +389,8 @@ class _MonthNavigator extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.card,
-        border: Border(bottom: BorderSide(color: AppColors.border)),
+        color: context.appColors.card,
+        border: Border(bottom: BorderSide(color: context.appColors.border)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -458,7 +459,7 @@ class _CalendarView extends StatelessWidget {
                   child: Text(
                     day,
                     style: AppTypography.labelMedium.copyWith(
-                      color: isWeekend ? AppColors.error : AppColors.textSecondary,
+                      color: isWeekend ? AppColors.error : context.appColors.textSecondary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -513,7 +514,7 @@ class _CalendarView extends StatelessWidget {
                         : hasSlots
                             ? AppColors.primary.withAlpha(30)
                             : isPast
-                                ? AppColors.shimmerBase
+                                ? context.appColors.shimmerBase
                                 : null,
                     borderRadius: BorderRadius.circular(8),
                     border: isToday
@@ -529,10 +530,10 @@ class _CalendarView extends StatelessWidget {
                           color: isSelected
                               ? AppColors.textWhite
                               : isPast
-                                  ? AppColors.textHint
+                                  ? context.appColors.textHint
                                   : hasSlots
                                       ? AppColors.primary
-                                      : AppColors.textPrimary,
+                                      : context.appColors.textPrimary,
                           fontWeight: isToday || isSelected
                               ? FontWeight.bold
                               : FontWeight.normal,
@@ -599,7 +600,7 @@ class _SlotsListView extends StatelessWidget {
               Text(
                 '${slots.length} khung giờ',
                 style: AppTypography.labelMedium.copyWith(
-                  color: AppColors.textSecondary,
+                  color: context.appColors.textSecondary,
                 ),
               ),
             ],
@@ -614,13 +615,13 @@ class _SlotsListView extends StatelessWidget {
                       Icon(
                         Ionicons.calendar_outline,
                         size: 48,
-                        color: AppColors.textHint,
+                        color: context.appColors.textHint,
                       ),
                       const SizedBox(height: 12),
                       Text(
                         'Chưa có lịch rảnh',
                         style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.appColors.textSecondary,
                         ),
                       ),
                     ],
@@ -733,7 +734,7 @@ class _SlotCard extends StatelessWidget {
                   Text(
                     slot.note!,
                     style: AppTypography.labelSmall.copyWith(
-                      color: AppColors.textSecondary,
+                      color: context.appColors.textSecondary,
                     ),
                   ),
                 ],
@@ -774,13 +775,13 @@ class _NoDateSelectedView extends StatelessWidget {
           Icon(
             Ionicons.calendar_outline,
             size: 48,
-            color: AppColors.textHint,
+            color: context.appColors.textHint,
           ),
           const SizedBox(height: 12),
           Text(
             'Chọn một ngày để xem lịch rảnh',
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ),
         ],
@@ -822,7 +823,7 @@ class _TimePickerField extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.appColors.border),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -831,7 +832,7 @@ class _TimePickerField extends StatelessWidget {
             Text(
               label,
               style: AppTypography.labelSmall.copyWith(
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
             ),
             const SizedBox(height: 4),

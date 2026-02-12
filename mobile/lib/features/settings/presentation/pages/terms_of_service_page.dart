@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 
@@ -27,7 +28,7 @@ class TermsOfServicePage extends StatelessWidget {
             Text(
               'Cập nhật lần cuối: 01/01/2026',
               style: AppTypography.labelSmall.copyWith(
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
             ),
             const SizedBox(height: 24),
@@ -160,7 +161,7 @@ class _TermsSection extends StatelessWidget {
           Text(
             content.trim(),
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
               height: 1.6,
             ),
           ),

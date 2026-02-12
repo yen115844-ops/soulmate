@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/theme_context.dart';
 import '../../../core/theme/app_typography.dart';
 
 /// Service Category Chip - Modern styled service chip
@@ -34,10 +35,10 @@ class ServiceCategoryChip extends StatelessWidget {
         width: width,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? color : AppColors.surface,
+          color: isSelected ? color : context.appColors.surface,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isSelected ? color : AppColors.border,
+            color: isSelected ? color : context.appColors.border,
             width: isSelected ? 0 : 1,
           ),
           boxShadow: showShadow || isSelected
@@ -45,7 +46,7 @@ class ServiceCategoryChip extends StatelessWidget {
                   BoxShadow(
                     color: isSelected
                         ? color.withOpacity(0.3)
-                        : AppColors.shadow.withOpacity(0.08),
+                        : context.appColors.shadow.withOpacity(0.08),
                     blurRadius: isSelected ? 12 : 8,
                     offset: const Offset(0, 4),
                   ),
@@ -64,7 +65,7 @@ class ServiceCategoryChip extends StatelessWidget {
             Text(
               name,
               style: AppTypography.labelMedium.copyWith(
-                color: isSelected ? Colors.white : AppColors.textPrimary,
+                color: isSelected ? Colors.white : context.appColors.textPrimary,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               ),
             ),
@@ -115,7 +116,7 @@ class ServiceCategoryCard extends StatelessWidget {
             Text(
               name,
               style: AppTypography.labelSmall.copyWith(
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
               textAlign: TextAlign.center,
               maxLines: 1,
@@ -153,7 +154,7 @@ class ServiceCategoryCard extends StatelessWidget {
             Text(
               name,
               style: AppTypography.labelMedium.copyWith(
-                color: AppColors.textPrimary,
+                color: context.appColors.textPrimary,
                 fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,

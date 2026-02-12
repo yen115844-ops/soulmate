@@ -27,3 +27,8 @@ class DistrictsLoadRequested extends MasterDataEvent {
   @override
   List<Object?> get props => [provinceId];
 }
+
+/// Reset master data state (on logout)
+class MasterDataResetRequested extends MasterDataEvent {
+  const MasterDataResetRequested();
+}

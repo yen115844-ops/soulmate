@@ -1,13 +1,15 @@
 import { Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import {
-  ConnectedSocket,
-  MessageBody,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
-  OnGatewayInit,
-  SubscribeMessage,
-  WebSocketGateway,
-  WebSocketServer,
+    ConnectedSocket,
+    MessageBody,
+    OnGatewayConnection,
+    OnGatewayDisconnect,
+    OnGatewayInit,
+    SubscribeMessage,
+    WebSocketGateway,
+    WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
@@ -145,7 +147,11 @@ export class ChatGateway
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+  ) {}
 
   // ==================== LIFECYCLE ====================
 
@@ -200,14 +206,25 @@ export class ChatGateway
     @MessageBody() payload: AuthenticatePayload,
   ) {
     try {
-      const { userId, token } = payload;
+      const { token } = payload;
       
-      // TODO: Validate JWT token
-      // For now, we trust the userId from payload
-      // In production, verify token and extract userId from it
-      
+      if (!token) {
+        return { success: false, error: 'Authentication token is required' };
+      }
+
+      // Verify JWT token and extract userId
+      let jwtPayload: { sub: string; email: string; role: string };
+      try {
+        jwtPayload = await this.jwtService.verifyAsync(token, {
+          secret: this.configService.get<string>('jwt.accessSecret'),
+        });
+      } catch {
+        return { success: false, error: 'Invalid or expired token' };
+      }
+
+      const userId = jwtPayload.sub;
       if (!userId) {
-        return { success: false, error: 'User ID is required' };
+        return { success: false, error: 'Invalid token payload' };
       }
       
       // Store user info on socket

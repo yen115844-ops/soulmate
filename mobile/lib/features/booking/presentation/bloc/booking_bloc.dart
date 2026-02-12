@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/utils/error_utils.dart';
 import '../../data/booking_repository.dart';
 import 'booking_event.dart';
 import 'booking_state.dart';
@@ -9,7 +11,7 @@ import 'booking_state.dart';
 /// Booking BLoC - Manages user bookings
 class BookingBloc extends Bloc<BookingEvent, BookingState> {
   final BookingRepository _bookingRepository;
-  static const int _pageSize = 50;
+  static const int _pageSize = AppConstants.defaultPageSize;
 
   BookingBloc({required BookingRepository bookingRepository})
     : _bookingRepository = bookingRepository,
@@ -160,7 +162,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
       add(const BookingRefreshRequested());
     } catch (e) {
       debugPrint('Booking cancel error: $e');
-      emit(BookingError(message: 'Không thể hủy lịch hẹn: $e'));
+      emit(BookingError(message: getErrorMessage(e)));
       emit(currentState);
     }
   }

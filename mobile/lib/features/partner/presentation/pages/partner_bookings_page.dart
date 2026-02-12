@@ -2,12 +2,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ionicons/ionicons.dart';
 import 'package:intl/intl.dart';
+import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../data/partner_repository.dart';
 import '../bloc/partner_bookings_bloc.dart';
 import '../bloc/partner_bookings_event.dart';
@@ -227,13 +228,13 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Ionicons.alert_circle_outline, size: 64, color: AppColors.textHint),
+              Icon(Ionicons.alert_circle_outline, size: 64, color: context.appColors.textHint),
             const SizedBox(height: 16),
             Text(
               message,
               textAlign: TextAlign.center,
               style: AppTypography.bodyLarge.copyWith(
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
             ),
             const SizedBox(height: 24),
@@ -277,12 +278,12 @@ class _BookingsList extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Ionicons.calendar_outline, size: 64, color: AppColors.textHint),
+                    Icon(Ionicons.calendar_outline, size: 64, color: context.appColors.textHint),
                   const SizedBox(height: 16),
                   Text(
                     emptyMessage,
                     style: AppTypography.bodyLarge.copyWith(
-                      color: AppColors.textSecondary,
+                      color: context.appColors.textSecondary,
                     ),
                   ),
                 ],
@@ -360,9 +361,9 @@ class _PartnerBookingCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: context.appColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.appColors.border),
       ),
       child: Column(
         children: [
@@ -376,12 +377,12 @@ class _PartnerBookingCard extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 24,
-                      backgroundColor: AppColors.shimmerBase,
+                      backgroundColor: context.appColors.shimmerBase,
                       backgroundImage: user?.avatarUrl != null
                           ? CachedNetworkImageProvider(user!.avatarUrl!)
                           : null,
                       child: user?.avatarUrl == null
-                          ? const Icon(Ionicons.person_outline, color: AppColors.textHint)
+                          ?   Icon(Ionicons.person_outline, color: context.appColors.textHint)
                           : null,
                     ),
                     const SizedBox(width: 12),
@@ -489,8 +490,8 @@ class _PartnerBookingCard extends StatelessWidget {
           if (showActions)
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                color: AppColors.backgroundLight,
+              decoration:   BoxDecoration(
+                color: context.appColors.background,
                 borderRadius: BorderRadius.vertical(
                   bottom: Radius.circular(16),
                 ),
@@ -539,8 +540,8 @@ class _PartnerBookingCard extends StatelessWidget {
           if (booking.status == 'CONFIRMED' || booking.status == 'PAID')
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                color: AppColors.backgroundLight,
+              decoration:   BoxDecoration(
+                color: context.appColors.background,
                 borderRadius: BorderRadius.vertical(
                   bottom: Radius.circular(16),
                 ),
@@ -571,8 +572,8 @@ class _PartnerBookingCard extends StatelessWidget {
           if (booking.status == 'IN_PROGRESS')
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                color: AppColors.backgroundLight,
+              decoration:   BoxDecoration(
+                color: context.appColors.background,
                 borderRadius: BorderRadius.vertical(
                   bottom: Radius.circular(16),
                 ),
@@ -749,14 +750,14 @@ class _DetailRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: AppColors.textHint),
+        Icon(icon, size: 16, color: context.appColors.textHint),
         const SizedBox(width: 8),
         SizedBox(
           width: 80,
           child: Text(
             label,
             style: AppTypography.labelSmall.copyWith(
-              color: AppColors.textHint,
+              color: context.appColors.textHint,
             ),
           ),
         ),

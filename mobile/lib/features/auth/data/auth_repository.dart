@@ -89,15 +89,10 @@ class AuthRepository {
     final userData = data['user'] as Map<String, dynamic>? ?? data;
     final user = UserModel.fromJson(userData);
 
-    // Update cached user
-    await _storage.prefs.setString('user_profile', json.encode(user.toJson()));
+    // Update cached user (secure storage)
+    await _storage.setUserProfileJson(json.encode(user.toJson()));
 
     return user;
-  }
-
-  /// Change password
-  Future<void> changePassword(ChangePasswordRequest request) async {
-    await _apiClient.post(AuthEndpoints.changePassword, data: request.toJson());
   }
 
   /// Logout from current device
@@ -147,9 +142,9 @@ class AuthRepository {
         refreshToken.isNotEmpty;
   }
 
-  /// Get cached user from local storage
+  /// Get cached user from local storage (now from secure storage)
   UserModel? getCachedUser() {
-    final userJson = _storage.prefs.getString('user_profile');
+    final userJson = _storage.userProfileJson;
     if (userJson == null) return null;
 
     try {
@@ -168,8 +163,7 @@ class AuthRepository {
       _storage.setRefreshToken(authResponse.refreshToken!),
       _storage.setUserId(authResponse.user.id),
       _storage.setLoggedIn(true),
-      _storage.prefs.setString(
-        'user_profile',
+      _storage.setUserProfileJson(
         json.encode(authResponse.user.toJson()),
       ),
     ]);

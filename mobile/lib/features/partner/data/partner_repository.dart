@@ -3,15 +3,16 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
-import '../../../core/network/api_config.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/network/api_config.dart';
+import '../../../core/network/base_repository.dart';
 import 'models/partner_models.dart';
 
 // Re-export models for backward compatibility
 export 'models/partner_models.dart';
 
 /// Partner Repository - Handles all partner-related API calls
-class PartnerRepository {
+class PartnerRepository with BaseRepositoryMixin {
   final ApiClient _apiClient;
 
   PartnerRepository({required ApiClient apiClient}) : _apiClient = apiClient;
@@ -34,9 +35,9 @@ class PartnerRepository {
         _apiClient.get('/bookings/partner-bookings?limit=5'),
       ]);
 
-      final profileData = _extractData(results[0].data) as Map<String, dynamic>;
-      final statsData = _extractData(results[1].data);
-      final bookingsData = _extractData(results[2].data);
+      final profileData = extractRawData(results[0].data) as Map<String, dynamic>;
+      final statsData = extractRawData(results[1].data);
+      final bookingsData = extractRawData(results[2].data);
 
       debugPrint('Profile data keys: ${profileData.keys}');
 
@@ -104,7 +105,7 @@ class PartnerRepository {
       queryParameters: queryParams,
     );
 
-    return PartnerBookingsResponse.fromJson(_extractData(response.data));
+    return PartnerBookingsResponse.fromJson(extractRawData(response.data));
   }
 
   /// Confirm a booking
@@ -117,7 +118,7 @@ class PartnerRepository {
       data: {if (note != null) 'note': note},
     );
 
-    return PartnerBooking.fromJson(_extractData(response.data));
+    return PartnerBooking.fromJson(extractRawData(response.data));
   }
 
   /// Reject/Cancel a booking
@@ -127,13 +128,13 @@ class PartnerRepository {
       data: {'reason': reason, 'cancelledBy': 'PARTNER'},
     );
 
-    return PartnerBooking.fromJson(_extractData(response.data));
+    return PartnerBooking.fromJson(extractRawData(response.data));
   }
 
   /// Start a booking (begin meeting)
   Future<PartnerBooking> startBooking(String bookingId) async {
     final response = await _apiClient.put('/bookings/$bookingId/start');
-    return PartnerBooking.fromJson(_extractData(response.data));
+    return PartnerBooking.fromJson(extractRawData(response.data));
   }
 
   /// Complete a booking
@@ -142,7 +143,7 @@ class PartnerRepository {
       '/bookings/$bookingId/complete',
       data: {if (note != null) 'note': note},
     );
-    return PartnerBooking.fromJson(_extractData(response.data));
+    return PartnerBooking.fromJson(extractRawData(response.data));
   }
 
   /// Toggle partner availability
@@ -152,7 +153,7 @@ class PartnerRepository {
       data: {'isAvailable': isAvailable},
     );
 
-    return PartnerProfileResponse.fromJson(_extractData(response.data));
+    return PartnerProfileResponse.fromJson(extractRawData(response.data));
   }
 
   /// Get partner earnings/transactions
@@ -172,9 +173,9 @@ class PartnerRepository {
         ),
       ]);
 
-      final statsData = _extractData(results[0].data);
-      final walletData = _extractData(results[1].data);
-      final transactionsData = _extractData(results[2].data);
+      final statsData = extractRawData(results[0].data);
+      final walletData = extractRawData(results[1].data);
+      final transactionsData = extractRawData(results[2].data);
 
       return PartnerEarningsData(
         stats: PartnerStats.fromJson(statsData),
@@ -247,7 +248,7 @@ class PartnerRepository {
         },
       );
 
-      return PartnerProfileResponse.fromJson(_extractData(response.data));
+      return PartnerProfileResponse.fromJson(extractRawData(response.data));
     } on DioException catch (e) {
       if (e.response?.statusCode == 409) {
         throw PartnerAlreadyExistsException();
@@ -273,7 +274,7 @@ class PartnerRepository {
 
     final response = await _apiClient.post('/upload/images', data: formData);
 
-    final data = _extractData(response.data);
+    final data = extractRawData(response.data);
     if (data['urls'] != null) {
       return List<String>.from(data['urls']);
     }
@@ -286,13 +287,13 @@ class PartnerRepository {
   /// Get my partner profile
   Future<PartnerProfileResponse> getMyPartnerProfile() async {
     final response = await _apiClient.get('/partners/me/profile');
-    return PartnerProfileResponse.fromJson(_extractData(response.data));
+    return PartnerProfileResponse.fromJson(extractRawData(response.data));
   }
 
   /// Get my partner profile with full user info (photos, bio, etc)
   Future<PartnerProfileFullResponse> getMyPartnerProfileFull() async {
     final response = await _apiClient.get('/partners/me/profile');
-    final data = _extractData(response.data) as Map<String, dynamic>;
+    final data = extractRawData(response.data) as Map<String, dynamic>;
 
     final profile = PartnerProfileResponse.fromJson(data);
 
@@ -332,7 +333,7 @@ class PartnerRepository {
       },
     );
 
-    return PartnerProfileResponse.fromJson(_extractData(response.data));
+    return PartnerProfileResponse.fromJson(extractRawData(response.data));
   }
 
   /// Update bank account information
@@ -381,7 +382,7 @@ class PartnerRepository {
   Future<BankAccountInfo?> getBankAccountInfo() async {
     try {
       final response = await _apiClient.get('/wallet');
-      final data = _extractData(response.data) as Map<String, dynamic>;
+      final data = extractRawData(response.data) as Map<String, dynamic>;
 
       if (data['bankName'] != null || data['bankAccountNo'] != null) {
         return BankAccountInfo(
@@ -425,20 +426,20 @@ class PartnerRepository {
       },
     );
 
-    return PartnerSearchResponse.fromJson(_extractData(response.data));
+    return PartnerSearchResponse.fromJson(extractRawData(response.data));
   }
 
   /// Get partner by ID
   Future<PartnerProfileResponse> getPartnerById(String partnerId) async {
     final response = await _apiClient.get('/partners/$partnerId');
-    return PartnerProfileResponse.fromJson(_extractData(response.data));
+    return PartnerProfileResponse.fromJson(extractRawData(response.data));
   }
 
   /// Get partner by ID with full user info
   Future<PartnerDetailResponse> getPartnerByIdWithUser(String partnerId) async {
     final response = await _apiClient.get('/partners/$partnerId');
     return PartnerDetailResponse.fromJson(
-      _extractData(response.data) as Map<String, dynamic>,
+      extractRawData(response.data) as Map<String, dynamic>,
     );
   }
 
@@ -459,7 +460,7 @@ class PartnerRepository {
       queryParameters: queryParams,
     );
 
-    return AvailabilitySlotsResponse.fromJson(_extractData(response.data));
+    return AvailabilitySlotsResponse.fromJson(extractRawData(response.data));
   }
 
   /// Create availability slot
@@ -479,7 +480,7 @@ class PartnerRepository {
       },
     );
 
-    return AvailabilitySlot.fromJson(_extractData(response.data));
+    return AvailabilitySlot.fromJson(extractRawData(response.data));
   }
 
   /// Update availability slot
@@ -498,7 +499,7 @@ class PartnerRepository {
       },
     );
 
-    return AvailabilitySlot.fromJson(_extractData(response.data));
+    return AvailabilitySlot.fromJson(extractRawData(response.data));
   }
 
   /// Delete availability slot
@@ -527,7 +528,7 @@ class PartnerRepository {
         },
       );
 
-      final data = _extractData(response.data);
+      final data = extractRawData(response.data);
       return PartnerReviewsResponse.fromJson(data);
     } catch (e) {
       debugPrint('Reviews API error, falling back to partner profile: $e');
@@ -537,7 +538,7 @@ class PartnerRepository {
 
       final response = await _apiClient.get('/partners/${profile.userId}');
 
-      final data = _extractData(response.data);
+      final data = extractRawData(response.data);
       var reviewsResponse = PartnerReviewsResponse.fromPartnerData(data);
 
       // Filter reviews by minRating on client side
@@ -564,7 +565,7 @@ class PartnerRepository {
     try {
       // Try dedicated stats API
       final response = await _apiClient.get('/reviews/stats');
-      final data = _extractData(response.data);
+      final data = extractRawData(response.data);
 
       return ReviewStats(
         averageRating: PartnerStats.parseDouble(data['averageRating']),
@@ -594,15 +595,4 @@ class PartnerRepository {
   }
 
   // ==================== Helper Methods ====================
-
-  /// Extract data from API response
-  dynamic _extractData(dynamic responseData) {
-    if (responseData is Map<String, dynamic>) {
-      // Handle wrapped response {success, data, ...}
-      if (responseData.containsKey('data')) {
-        return responseData['data'];
-      }
-    }
-    return responseData;
-  }
 }

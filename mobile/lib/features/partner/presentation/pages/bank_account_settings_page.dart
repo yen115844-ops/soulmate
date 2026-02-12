@@ -5,6 +5,7 @@ import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
@@ -139,7 +140,7 @@ class _BankAccountSettingsPageState extends State<BankAccountSettingsPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.appColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -181,7 +182,7 @@ class _BankAccountSettingsPageState extends State<BankAccountSettingsPage> {
                       bank,
                       style: AppTypography.bodyLarge.copyWith(
                         fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                        color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                        color: isSelected ? AppColors.primary : context.appColors.textPrimary,
                       ),
                     ),
                     trailing: isSelected
@@ -257,7 +258,7 @@ class _BankAccountSettingsPageState extends State<BankAccountSettingsPage> {
                         prefixIcon: const Icon(Ionicons.business_outline),
                         suffixIcon: const Icon(Ionicons.chevron_down_outline),
                         filled: true,
-                        fillColor: AppColors.backgroundLight,
+                        fillColor: context.appColors.background,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -297,7 +298,7 @@ class _BankAccountSettingsPageState extends State<BankAccountSettingsPage> {
                         hintText: 'Nhập số tài khoản',
                         prefixIcon: const Icon(Ionicons.card_outline),
                         filled: true,
-                        fillColor: AppColors.backgroundLight,
+                        fillColor: context.appColors.background,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -344,7 +345,7 @@ class _BankAccountSettingsPageState extends State<BankAccountSettingsPage> {
                         hintText: 'VD: NGUYEN VAN A',
                         prefixIcon: const Icon(Ionicons.person_outline),
                         filled: true,
-                        fillColor: AppColors.backgroundLight,
+                        fillColor: context.appColors.background,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -372,7 +373,7 @@ class _BankAccountSettingsPageState extends State<BankAccountSettingsPage> {
                     Text(
                       'Tên phải trùng khớp với tên đăng ký trên ngân hàng',
                       style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 32),

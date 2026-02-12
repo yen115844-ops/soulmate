@@ -1,4 +1,6 @@
 import { Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import {
     ConnectedSocket,
     MessageBody,
@@ -47,6 +49,11 @@ export class NotificationsGateway
   @WebSocketServer()
   server: Server;
 
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+  ) {}
+
   afterInit(server: Server) {
     this.logger.log('Notifications WebSocket Gateway initialized');
   }
@@ -73,14 +80,30 @@ export class NotificationsGateway
    * Subscribe to user's notification channel
    */
   @SubscribeMessage(NOTIFICATION_CLIENT_EVENTS.SUBSCRIBE)
-  handleSubscribe(
+  async handleSubscribe(
     @ConnectedSocket() client: Socket,
     @MessageBody() payload: SubscribePayload,
   ) {
-    const { userId, token } = payload;
+    const { token } = payload;
 
-    // TODO: Validate token/user
-    // For now, just join the room
+    // Verify JWT token
+    if (!token) {
+      return { success: false, error: 'Authentication token is required' };
+    }
+
+    let jwtPayload: { sub: string };
+    try {
+      jwtPayload = await this.jwtService.verifyAsync(token, {
+        secret: this.configService.get<string>('jwt.accessSecret'),
+      });
+    } catch {
+      return { success: false, error: 'Invalid or expired token' };
+    }
+
+    const userId = jwtPayload.sub;
+    if (!userId) {
+      return { success: false, error: 'Invalid token payload' };
+    }
 
     const roomName = this.getUserRoom(userId);
     client.join(roomName);

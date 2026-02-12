@@ -9,6 +9,7 @@ import '../../../../config/routes/route_names.dart';
 import '../../../../core/constants/service_type_emoji.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
@@ -140,7 +141,7 @@ class _PartnerProfileContent extends StatelessWidget {
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: AppColors.backgroundLight,
+                          color: context.appColors.background,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Column(
@@ -149,7 +150,7 @@ class _PartnerProfileContent extends StatelessWidget {
                             Text(
                               'Giới thiệu',
                               style: AppTypography.labelMedium.copyWith(
-                                color: AppColors.textSecondary,
+                                color: context.appColors.textSecondary,
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -256,7 +257,7 @@ class _PartnerProfileContent extends StatelessWidget {
   void _showSettingsMenu(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.appColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -354,8 +355,8 @@ class _PartnerProfileContent extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
+        decoration: BoxDecoration(
+          color: context.appColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: EdgeInsets.only(
@@ -432,8 +433,8 @@ class _PartnerProfileContent extends StatelessWidget {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setModalState) => Container(
           height: MediaQuery.of(context).size.height * 0.7,
-          decoration: const BoxDecoration(
-            color: AppColors.surface,
+          decoration: BoxDecoration(
+            color: context.appColors.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           padding: const EdgeInsets.all(24),
@@ -445,7 +446,7 @@ class _PartnerProfileContent extends StatelessWidget {
               Text(
                 'Chọn các dịch vụ bạn muốn cung cấp',
                 style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+                  color: context.appColors.textSecondary,
                 ),
               ),
               const SizedBox(height: 24),
@@ -475,12 +476,12 @@ class _PartnerProfileContent extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: isSelected
                               ? AppColors.primary.withAlpha(25)
-                              : AppColors.backgroundLight,
+                              : context.appColors.background,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: isSelected
                                 ? AppColors.primary
-                                : AppColors.border,
+                                : context.appColors.border,
                           ),
                         ),
                         child: Row(
@@ -492,7 +493,7 @@ class _PartnerProfileContent extends StatelessWidget {
                                 fontSize: 20,
                                 color: isSelected
                                     ? AppColors.primary
-                                    : AppColors.textSecondary,
+                                    : context.appColors.textSecondary,
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -501,7 +502,7 @@ class _PartnerProfileContent extends StatelessWidget {
                               style: AppTypography.labelMedium.copyWith(
                                 color: isSelected
                                     ? AppColors.primary
-                                    : AppColors.textPrimary,
+                                    : context.appColors.textPrimary,
                               ),
                             ),
                           ],
@@ -567,13 +568,13 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Ionicons.alert_circle_outline, size: 64, color: AppColors.textHint),
+            Icon(Ionicons.alert_circle_outline, size: 64, color: context.appColors.textHint),
             const SizedBox(height: 16),
             Text(
               message,
               textAlign: TextAlign.center,
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
             ),
             const SizedBox(height: 24),
@@ -648,9 +649,9 @@ class _ProfileHeader extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: profile.isAvailable
                         ? AppColors.success
-                        : AppColors.textHint,
+                        : context.appColors.textHint,
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
+                    border: Border.all(color: context.appColors.surface, width: 2),
                   ),
                 ),
               ),
@@ -687,7 +688,7 @@ class _ProfileHeader extends StatelessWidget {
                   style: AppTypography.bodyMedium.copyWith(
                     color: profile.isAvailable
                         ? AppColors.success
-                        : AppColors.textSecondary,
+                        : context.appColors.textSecondary,
                   ),
                 ),
               ],
@@ -727,9 +728,9 @@ class _StatsSection extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: context.appColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.appColors.border),
       ),
       child: Row(
         children: [
@@ -739,7 +740,7 @@ class _StatsSection extends StatelessWidget {
               label: 'Đơn hàng',
             ),
           ),
-          Container(width: 1, height: 40, color: AppColors.border),
+          Container(width: 1, height: 40, color: context.appColors.border),
           Expanded(
             child: _StatItem(
               value: profile.averageRating.toStringAsFixed(1),
@@ -748,7 +749,7 @@ class _StatsSection extends StatelessWidget {
               iconColor: Colors.amber,
             ),
           ),
-          Container(width: 1, height: 40, color: AppColors.border),
+          Container(width: 1, height: 40, color: context.appColors.border),
           Expanded(
             child: _StatItem(
               value: '${profile.totalReviews}',
@@ -796,7 +797,7 @@ class _StatItem extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           label,
-          style: AppTypography.labelSmall.copyWith(color: AppColors.textHint),
+          style: AppTypography.labelSmall.copyWith(color: context.appColors.textHint),
         ),
       ],
     );
@@ -816,20 +817,20 @@ class _PhotosGrid extends StatelessWidget {
         child: Container(
           height: 120,
           decoration: BoxDecoration(
-            color: AppColors.backgroundLight,
+            color: context.appColors.background,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: context.appColors.border),
           ),
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Ionicons.image_outline, color: AppColors.textHint, size: 32),
+                Icon(Ionicons.image_outline, color: context.appColors.textHint, size: 32),
                 const SizedBox(height: 8),
                 Text(
                   'Chưa có ảnh nào',
                   style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textHint,
+                    color: context.appColors.textHint,
                   ),
                 ),
               ],
@@ -861,13 +862,13 @@ class _PhotosGrid extends StatelessWidget {
                 placeholder: (context, url) => Container(
                   width: 100,
                   height: 120,
-                  color: AppColors.backgroundLight,
+                  color: context.appColors.background,
                   child: const Center(child: CircularProgressIndicator()),
                 ),
                 errorWidget: (context, url, error) => Container(
                   width: 100,
                   height: 120,
-                  color: AppColors.backgroundLight,
+                  color: context.appColors.background,
                   child: const Icon(Ionicons.image_outline),
                 ),
               ),
@@ -893,7 +894,7 @@ class _ServicesGrid extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Text(
           'Chưa chọn dịch vụ nào',
-          style: AppTypography.bodyMedium.copyWith(color: AppColors.textHint),
+          style: AppTypography.bodyMedium.copyWith(color: context.appColors.textHint),
         ),
       );
     }
@@ -978,12 +979,12 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: AppColors.textSecondary),
+        Icon(icon, size: 20, color: context.appColors.textSecondary),
         const SizedBox(width: 12),
         Text(
           '$label:',
           style: AppTypography.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
+            color: context.appColors.textSecondary,
           ),
         ),
         const SizedBox(width: 8),
@@ -1019,9 +1020,9 @@ class _MenuCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.card,
+          color: context.appColors.card,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.appColors.border),
         ),
         child: Row(
           children: [
@@ -1044,15 +1045,15 @@ class _MenuCard extends StatelessWidget {
                   Text(
                     subtitle,
                     style: AppTypography.labelSmall.copyWith(
-                      color: AppColors.textHint,
+                      color: context.appColors.textHint,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Ionicons.chevron_forward_outline,
-              color: AppColors.textHint,
+              color: context.appColors.textHint,
               size: 20,
             ),
           ],

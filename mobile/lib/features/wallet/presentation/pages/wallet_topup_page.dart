@@ -5,6 +5,7 @@ import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
@@ -104,12 +105,12 @@ class _WalletTopUpPageState extends State<WalletTopUpPage> {
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? AppColors.primary
-                                : AppColors.card,
+                                : context.appColors.card,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: isSelected
                                   ? AppColors.primary
-                                  : AppColors.border,
+                                  : context.appColors.border,
                             ),
                           ),
                           child: Center(
@@ -118,7 +119,7 @@ class _WalletTopUpPageState extends State<WalletTopUpPage> {
                               style: AppTypography.titleMedium.copyWith(
                                 color: isSelected
                                     ? AppColors.textWhite
-                                    : AppColors.textPrimary,
+                                    : context.appColors.textPrimary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -138,9 +139,9 @@ class _WalletTopUpPageState extends State<WalletTopUpPage> {
                   const SizedBox(height: 16),
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColors.card,
+                      color: context.appColors.card,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: context.appColors.border),
                     ),
                     child: Column(
                       children: _paymentMethods.asMap().entries.map((entry) {
@@ -158,7 +159,7 @@ class _WalletTopUpPageState extends State<WalletTopUpPage> {
                                 width: 48,
                                 height: 48,
                                 decoration: BoxDecoration(
-                                  color: AppColors.backgroundLight,
+                                  color: context.appColors.background,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(
@@ -178,7 +179,7 @@ class _WalletTopUpPageState extends State<WalletTopUpPage> {
                                   border: Border.all(
                                     color: isSelected
                                         ? AppColors.primary
-                                        : AppColors.border,
+                                        : context.appColors.border,
                                     width: 2,
                                   ),
                                 ),
@@ -211,7 +212,7 @@ class _WalletTopUpPageState extends State<WalletTopUpPage> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.backgroundLight,
+                        color: context.appColors.background,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Column(
@@ -222,7 +223,7 @@ class _WalletTopUpPageState extends State<WalletTopUpPage> {
                               Text(
                                 'Số tiền nạp',
                                 style: AppTypography.bodyLarge.copyWith(
-                                  color: AppColors.textSecondary,
+                                  color: context.appColors.textSecondary,
                                 ),
                               ),
                               Text(
@@ -238,7 +239,7 @@ class _WalletTopUpPageState extends State<WalletTopUpPage> {
                               Text(
                                 'Phí giao dịch',
                                 style: AppTypography.bodyLarge.copyWith(
-                                  color: AppColors.textSecondary,
+                                  color: context.appColors.textSecondary,
                                 ),
                               ),
                               Text(

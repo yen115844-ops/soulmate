@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/utils/error_utils.dart';
 import '../../data/kyc_repository.dart';
 import '../../data/models/kyc_model.dart';
 import 'kyc_event.dart';
@@ -55,7 +56,7 @@ class KycBloc extends Bloc<KycEvent, KycState> {
     } catch (e) {
       emit(state.copyWith(
         status: KycPageStatus.loaded,
-        errorMessage: 'Không thể tải ảnh lên: ${e.toString()}',
+        errorMessage: getErrorMessage(e),
       ));
     }
   }
@@ -78,7 +79,7 @@ class KycBloc extends Bloc<KycEvent, KycState> {
     } catch (e) {
       emit(state.copyWith(
         status: KycPageStatus.loaded,
-        errorMessage: 'Không thể tải ảnh lên: ${e.toString()}',
+        errorMessage: getErrorMessage(e),
       ));
     }
   }
@@ -101,7 +102,7 @@ class KycBloc extends Bloc<KycEvent, KycState> {
     } catch (e) {
       emit(state.copyWith(
         status: KycPageStatus.loaded,
-        errorMessage: 'Không thể tải ảnh lên: ${e.toString()}',
+        errorMessage: getErrorMessage(e),
       ));
     }
   }
@@ -134,7 +135,7 @@ class KycBloc extends Bloc<KycEvent, KycState> {
     } catch (e) {
       emit(state.copyWith(
         status: KycPageStatus.error,
-        errorMessage: 'Không thể gửi yêu cầu: ${e.toString()}',
+        errorMessage: getErrorMessage(e),
       ));
     }
   }

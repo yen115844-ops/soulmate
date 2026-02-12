@@ -22,6 +22,7 @@ enum UserStatus {
   ACTIVE
   SUSPENDED
   BANNED
+  DELETED
 }
 
 enum KycStatus {
@@ -482,6 +483,7 @@ model Transaction {
   @@index([bookingId])
   @@index([status])
   @@index([type])
+  @@index([createdAt])
   @@map("transactions")
 }
 
@@ -537,6 +539,8 @@ model Conversation {
   participants ConversationParticipant[]
   messages     Message[]
   
+  @@index([status])
+  @@index([lastMessageAt])
   @@map("conversations")
 }
 
@@ -602,6 +606,7 @@ model Message {
   
   @@index([conversationId, createdAt])
   @@index([senderId])
+  @@index([status])
   @@map("messages")
 }
 
@@ -922,6 +927,7 @@ model Report {
   updatedAt    DateTime @updatedAt @map("updated_at")
   
   @@index([reportedId])
+  @@index([reporterId])
   @@index([status])
   @@map("reports")
 }
@@ -944,6 +950,7 @@ model OtpCode {
   attempts     Int      @default(0) // Số lần nhập sai
   
   @@index([target, purpose])
+  @@index([expiresAt])
   @@map("otp_codes")
 }
 

@@ -6,6 +6,7 @@ import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
@@ -109,7 +110,7 @@ class _WalletWithdrawPageState extends State<WalletWithdrawPage> {
                         Text(
                           'Số dư có thể rút',
                           style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
+                            color: context.appColors.textSecondary,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -137,7 +138,7 @@ class _WalletWithdrawPageState extends State<WalletWithdrawPage> {
                     suffix: Text(
                       'đ',
                       style: AppTypography.titleMedium.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                       ),
                     ),
                   ),
@@ -145,7 +146,7 @@ class _WalletWithdrawPageState extends State<WalletWithdrawPage> {
                   Text(
                     'Số tiền tối thiểu: 100.000đ',
                     style: AppTypography.labelSmall.copyWith(
-                      color: AppColors.textHint,
+                      color: context.appColors.textHint,
                     ),
                   ),
 
@@ -215,7 +216,7 @@ class _WalletWithdrawPageState extends State<WalletWithdrawPage> {
                               Text(
                                 '• Thời gian xử lý: 1-3 ngày làm việc\n• Phí rút tiền: 0đ (miễn phí)\n• Vui lòng kiểm tra kỹ thông tin ngân hàng',
                                 style: AppTypography.bodySmall.copyWith(
-                                  color: AppColors.textSecondary,
+                                  color: context.appColors.textSecondary,
                                 ),
                               ),
                             ],

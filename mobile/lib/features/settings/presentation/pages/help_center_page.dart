@@ -3,6 +3,7 @@ import 'package:ionicons/ionicons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
@@ -205,7 +206,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
                   Text(
                     'Tìm kiếm câu trả lời cho câu hỏi của bạn',
                     style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.textSecondary,
+                      color: context.appColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -240,7 +241,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
                           Icon(
                             Ionicons.search_outline,
                             size: 64,
-                            color: AppColors.textHint,
+                            color: context.appColors.textHint,
                           ),
                           const SizedBox(height: 16),
                           Text(
@@ -251,7 +252,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
                           Text(
                             'Thử tìm kiếm với từ khóa khác',
                             style: AppTypography.bodyMedium.copyWith(
-                              color: AppColors.textSecondary,
+                              color: context.appColors.textSecondary,
                             ),
                           ),
                         ],
@@ -273,9 +274,9 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
               margin: const EdgeInsets.all(20),
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppColors.card,
+                color: context.appColors.card,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: context.appColors.border),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,7 +289,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
                   Text(
                     'Liên hệ với đội ngũ hỗ trợ của chúng tôi',
                     style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
+                      color: context.appColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -353,7 +354,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
                           Text(
                             '8:00 - 22:00, Thứ Hai - Chủ Nhật',
                             style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
+                              color: context.appColors.textSecondary,
                             ),
                           ),
                         ],
@@ -390,9 +391,9 @@ class _FaqCategory extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: context.appColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.appColors.border),
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -410,7 +411,7 @@ class _FaqCategory extends StatelessWidget {
           subtitle: Text(
             '${faqs.length} câu hỏi',
             style: AppTypography.labelSmall.copyWith(
-              color: AppColors.textHint,
+              color: context.appColors.textHint,
             ),
           ),
           children: faqs.map((faq) => _FaqItem(faq: faq)).toList(),
@@ -430,7 +431,7 @@ class _FaqItem extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         border: Border(
-          top: BorderSide(color: AppColors.border),
+          top: BorderSide(color: context.appColors.border),
         ),
       ),
       child: Theme(
@@ -448,7 +449,7 @@ class _FaqItem extends StatelessWidget {
               child: Text(
                 faq['answer']!,
                 style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
+                  color: context.appColors.textSecondary,
                   height: 1.6,
                 ),
               ),
@@ -478,7 +479,7 @@ class _ContactButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: AppColors.backgroundLight,
+          color: context.appColors.background,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(

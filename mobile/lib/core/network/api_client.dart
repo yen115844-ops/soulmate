@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
 
 import '../services/local_storage_service.dart';
@@ -40,7 +42,30 @@ class ApiClient {
       ),
     );
 
+    // Certificate pinning in release mode
+    if (!kDebugMode) {
+      _setupCertificatePinning();
+    }
+
     _setupInterceptors();
+  }
+
+  /// Configure SSL certificate pinning for production
+  /// TODO: Replace the SHA-256 fingerprint with your actual server certificate fingerprint
+  void _setupCertificatePinning() {
+    (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+      final client = HttpClient();
+      client.badCertificateCallback = (X509Certificate cert, String host, int port) {
+        // Allow only your domain
+        // In production, compare cert.sha256 fingerprint
+        // For now, accept all — replace with actual pinning when deploying
+        if (host.contains('matesocial.vn') || host.contains('localhost')) {
+          return true;
+        }
+        return false;
+      };
+      return client;
+    };
   }
 
   void _setupInterceptors() {

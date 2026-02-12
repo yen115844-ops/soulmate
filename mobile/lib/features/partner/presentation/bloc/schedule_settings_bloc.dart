@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/utils/error_utils.dart';
 import '../../data/partner_repository.dart';
 import 'schedule_settings_event.dart';
 import 'schedule_settings_state.dart';
@@ -39,7 +40,7 @@ class ScheduleSettingsBloc
       emit(ScheduleSettingsLoaded(slots: response.slots));
     } catch (e) {
       debugPrint('Schedule settings load error: $e');
-      emit(ScheduleSettingsError(message: 'Không thể tải lịch. $e'));
+      emit(ScheduleSettingsError(message: getErrorMessage(e)));
     }
   }
 
@@ -63,11 +64,11 @@ class ScheduleSettingsBloc
       if (state is ScheduleSettingsLoaded) {
         final currentState = state as ScheduleSettingsLoaded;
         emit(ScheduleSettingsError(
-          message: 'Không thể tải lịch. $e',
+          message: getErrorMessage(e),
           previousSlots: currentState.slots,
         ));
       } else {
-        emit(ScheduleSettingsError(message: 'Không thể tải lịch. $e'));
+        emit(ScheduleSettingsError(message: getErrorMessage(e)));
       }
     }
   }
@@ -100,7 +101,7 @@ class ScheduleSettingsBloc
     } catch (e) {
       debugPrint('Create slot error: $e');
       emit(ScheduleSettingsError(
-        message: 'Không thể thêm lịch. $e',
+        message: getErrorMessage(e),
         previousSlots: currentState.slots,
       ));
     }
@@ -140,7 +141,7 @@ class ScheduleSettingsBloc
     } catch (e) {
       debugPrint('Update slot error: $e');
       emit(ScheduleSettingsError(
-        message: 'Không thể cập nhật lịch. $e',
+        message: getErrorMessage(e),
         previousSlots: currentState.slots,
       ));
     }
@@ -171,7 +172,7 @@ class ScheduleSettingsBloc
     } catch (e) {
       debugPrint('Delete slot error: $e');
       emit(ScheduleSettingsError(
-        message: 'Không thể xóa lịch. $e',
+        message: getErrorMessage(e),
         previousSlots: currentState.slots,
       ));
     }

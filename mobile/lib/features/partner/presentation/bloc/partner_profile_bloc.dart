@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/utils/error_utils.dart';
 import '../../data/partner_repository.dart';
 import 'partner_profile_event.dart';
 import 'partner_profile_state.dart';
@@ -31,7 +32,7 @@ class PartnerProfileBloc extends Bloc<PartnerProfileEvent, PartnerProfileState> 
       ));
     } catch (e) {
       debugPrint('Partner profile load error: $e');
-      emit(PartnerProfileError(message: 'Không thể tải hồ sơ. $e'));
+      emit(PartnerProfileError(message: getErrorMessage(e)));
     }
   }
 
@@ -50,7 +51,7 @@ class PartnerProfileBloc extends Bloc<PartnerProfileEvent, PartnerProfileState> 
       if (state is PartnerProfileLoaded) {
         return; // Keep current state on refresh error
       }
-      emit(PartnerProfileError(message: 'Không thể cập nhật hồ sơ. $e'));
+      emit(PartnerProfileError(message: getErrorMessage(e)));
     }
   }
 

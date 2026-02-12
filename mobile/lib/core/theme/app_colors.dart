@@ -1,38 +1,38 @@
 import 'package:flutter/material.dart';
 
-/// App Colors - Modern & Vibrant Design System
-/// Primary: Pink
-/// Accent: Deep Purple
+/// App Colors - Modern Mioto-inspired Design System
+/// Primary: Teal/Green
+/// Accent: Deep Teal
 class AppColors {
   AppColors._();
 
   // === Primary Colors ===
-  static const Color primary = Color(0xFFD76BE0);
-  static const Color primaryLight = Color(0xFFE1A8F0);
-  static const Color primaryDark = Color(0xFFB84DC4);
-  
+  static const Color primary = Color(0xFF00B894);
+  static const Color primaryLight = Color(0xFF55EFC4);
+  static const Color primaryDark = Color(0xFF009B77);
+
   // Gradient
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFFD76BE0), Color(0xFFE1A8F0)],
+    colors: [Color(0xFF00B894), Color(0xFF55EFC4)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-  
+
   static const LinearGradient accentGradient = LinearGradient(
-    colors: [Color(0xFFD76BE0), Color(0xFFC045D0)],
+    colors: [Color(0xFF00B894), Color(0xFF009B77)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   // === Secondary Colors ===
-  static const Color secondary = Color(0xFFC045D0);
-  static const Color secondaryLight = Color(0xFFD76BE0);
-  static const Color secondaryDark = Color(0xFFA030B0);
+  static const Color secondary = Color(0xFF0984E3);
+  static const Color secondaryLight = Color(0xFF74B9FF);
+  static const Color secondaryDark = Color(0xFF0652DD);
 
   // === Accent Colors ===
-  static const Color accent = Color(0xFFB030C0);
-  static const Color accentLight = Color(0xFFD76BE0);
-  static const Color accentDark = Color(0xFF9020A0);
+  static const Color accent = Color(0xFF6C5CE7);
+  static const Color accentLight = Color(0xFFA29BFE);
+  static const Color accentDark = Color(0xFF4834D4);
 
   // === Background Colors ===
   static const Color backgroundLight = Color(0xFFF8F9FE);

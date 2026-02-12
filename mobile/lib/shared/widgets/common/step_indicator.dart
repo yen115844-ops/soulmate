@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:ionicons/ionicons.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/theme_context.dart';
 import '../../../core/theme/app_typography.dart';
 
 /// Step Indicator for multi-step flows (Booking, KYC, etc.)
@@ -35,7 +36,7 @@ class StepIndicator extends StatelessWidget {
                   duration: const Duration(milliseconds: 300),
                   height: 3,
                   decoration: BoxDecoration(
-                    color: isCompleted ? AppColors.primary : AppColors.border,
+                    color: isCompleted ? AppColors.primary : context.appColors.border,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -65,8 +66,8 @@ class StepIndicator extends StatelessWidget {
                   stepLabels.length > index ? stepLabels[index] : '',
                   style: AppTypography.labelSmall.copyWith(
                     color: isActive
-                        ? AppColors.textPrimary
-                        : AppColors.textHint,
+                        ? context.appColors.textPrimary
+                        : context.appColors.textHint,
                     fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
                   ),
                   textAlign: TextAlign.center,
@@ -104,12 +105,12 @@ class _StepCircle extends StatelessWidget {
         color: isCompleted
             ? AppColors.primary
             : isCurrent
-                ? AppColors.primary.withOpacity(0.1)
-                : AppColors.surface,
+                ? AppColors.primary.withAlpha(25)
+                : context.appColors.surface,
         border: Border.all(
           color: isCompleted || isCurrent
               ? AppColors.primary
-              : AppColors.border,
+              : context.appColors.border,
           width: 2,
         ),
       ),
@@ -125,7 +126,7 @@ class _StepCircle extends StatelessWidget {
                 style: AppTypography.labelLarge.copyWith(
                   color: isCurrent
                       ? AppColors.primary
-                      : AppColors.textSecondary,
+                      : context.appColors.textSecondary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -152,7 +153,7 @@ class LinearStepIndicator extends StatelessWidget {
     return Container(
       height: height,
       decoration: BoxDecoration(
-        color: AppColors.border,
+        color: context.appColors.border,
         borderRadius: BorderRadius.circular(height / 2),
       ),
       child: LayoutBuilder(
@@ -203,15 +204,15 @@ class StepCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isActive
-              ? AppColors.primary.withOpacity(0.05)
-              : AppColors.surface,
+              ? AppColors.primary.withAlpha(13)
+              : context.appColors.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isActive
                 ? AppColors.primary
                 : isCompleted
-                    ? AppColors.success.withOpacity(0.3)
-                    : AppColors.border,
+                    ? AppColors.success.withAlpha(77)
+                    : context.appColors.border,
             width: isActive ? 2 : 1,
           ),
         ),
@@ -223,10 +224,10 @@ class StepCard extends StatelessWidget {
               height: 48,
               decoration: BoxDecoration(
                 color: isCompleted
-                    ? AppColors.success.withOpacity(0.1)
+                    ? AppColors.success.withAlpha(25)
                     : isActive
-                        ? AppColors.primary.withOpacity(0.1)
-                        : AppColors.backgroundLight,
+                        ? AppColors.primary.withAlpha(25)
+                        : context.appColors.background,
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -240,7 +241,7 @@ class StepCard extends StatelessWidget {
                         icon,
                         color: isActive
                             ? AppColors.primary
-                            : AppColors.textSecondary,
+                            : context.appColors.textSecondary,
                         size: 24,
                       ),
               ),
@@ -259,7 +260,7 @@ class StepCard extends StatelessWidget {
                         style: AppTypography.labelSmall.copyWith(
                           color: isActive
                               ? AppColors.primary
-                              : AppColors.textHint,
+                              : context.appColors.textHint,
                         ),
                       ),
                       if (isCompleted) ...[
@@ -270,7 +271,7 @@ class StepCard extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.success.withOpacity(0.1),
+                            color: AppColors.success.withAlpha(25),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -295,7 +296,7 @@ class StepCard extends StatelessWidget {
                     Text(
                       subtitle!,
                       style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                       ),
                     ),
                   ],
@@ -308,7 +309,7 @@ class StepCard extends StatelessWidget {
             if (trailing == null && onTap != null)
               Icon(
                 Ionicons.chevron_forward_outline,
-                color: AppColors.textHint,
+                color: context.appColors.textHint,
                 size: 20,
               ),
           ],

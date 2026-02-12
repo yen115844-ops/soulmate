@@ -1,7 +1,10 @@
 import {
     BadRequestException,
     Controller,
+    Get,
+    Param,
     Post,
+    Res,
     UploadedFile,
     UploadedFiles,
     UseGuards,
@@ -9,6 +12,8 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
+import { Public } from '../../common/decorators';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { UploadService } from './upload.service';
 
@@ -39,6 +44,9 @@ export class UploadController {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
+
+    // Validate magic bytes
+    this.uploadService.validateMagicBytes(file);
 
     const url = this.uploadService.getFileUrl(file.filename);
     return {
@@ -88,5 +96,17 @@ export class UploadController {
         mimetype: file.mimetype,
       })),
     };
+  }
+
+  @Get('files/:filename')
+  @Public()
+  @ApiOperation({ summary: 'Serve uploaded file (public - files are protected by UUID filenames)' })
+  @ApiResponse({ status: 200, description: 'File served' })
+  @ApiResponse({ status: 404, description: 'File not found' })
+  async serveFile(@Param('filename') filename: string, @Res() res: Response) {
+    const filePath = this.uploadService.getFilePath(filename);
+    // Cache for 30 days — files are immutable (UUID filenames)
+    res.set('Cache-Control', 'public, max-age=2592000, immutable');
+    res.sendFile(filePath);
   }
 }

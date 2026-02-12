@@ -7,6 +7,7 @@ import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../data/partner_repository.dart';
@@ -54,9 +55,9 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.appColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.appColors.surface,
         elevation: 0,
         leading: const AppBackButton(),
         title: Row(
@@ -105,7 +106,7 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
                   Text(
                     state.message,
                     style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.textSecondary,
+                      color: context.appColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -162,7 +163,7 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
                               Text(
                                 'Đang lọc đánh giá...',
                                 style: AppTypography.labelMedium.copyWith(
-                                  color: AppColors.textHint,
+                                  color: context.appColors.textHint,
                                 ),
                               ),
                             ],
@@ -193,7 +194,7 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
                             Text(
                               'Chưa có đánh giá nào',
                               style: AppTypography.bodyMedium.copyWith(
-                                color: AppColors.textSecondary,
+                                color: context.appColors.textSecondary,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -230,11 +231,11 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appColors.surface,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: context.appColors.textPrimary.withOpacity(0.06),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -260,7 +261,7 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
                       stats.averageRating.toStringAsFixed(1),
                       style: AppTypography.displaySmall.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                        color: context.appColors.textPrimary,
                       ),
                     ),
                     const SizedBox(width: 4),
@@ -289,7 +290,7 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
                 Text(
                   '${stats.totalReviews} đánh giá',
                   style: AppTypography.labelSmall.copyWith(
-                    color: AppColors.textHint,
+                    color: context.appColors.textHint,
                   ),
                 ),
               ],
@@ -319,7 +320,7 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
                 child: Text(
                   '${ratings[index]}',
                   style: AppTypography.labelMedium.copyWith(
-                    color: AppColors.textSecondary,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
               ),
@@ -335,7 +336,7 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
                     Container(
                       height: 8,
                       decoration: BoxDecoration(
-                        color: AppColors.border,
+                        color: context.appColors.border,
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
@@ -358,7 +359,7 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
                 child: Text(
                   '$percentage%',
                   style: AppTypography.labelSmall.copyWith(
-                    color: AppColors.textSecondary,
+                    color: context.appColors.textSecondary,
                   ),
                   textAlign: TextAlign.end,
                 ),
@@ -404,7 +405,7 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
                 color: isSelected ? AppColors.primary : Colors.white,
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(
-                  color: isSelected ? AppColors.primary : AppColors.border,
+                  color: isSelected ? AppColors.primary : context.appColors.border,
                   width: 1.2,
                 ),
                 boxShadow: isSelected
@@ -417,7 +418,7 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
                       ]
                     : [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
+                          color: context.appColors.textPrimary.withOpacity(0.04),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -429,7 +430,7 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
                   Text(
                     filter['label'] as String,
                     style: AppTypography.labelMedium.copyWith(
-                      color: isSelected ? Colors.white : AppColors.textPrimary,
+                      color: isSelected ? Colors.white : context.appColors.textPrimary,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                     ),
                   ),
@@ -457,11 +458,11 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appColors.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: context.appColors.textPrimary.withOpacity(0.05),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -493,18 +494,18 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
                       review.reviewer.name,
                       style: AppTypography.titleSmall.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        color: context.appColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        Icon(Ionicons.time_outline, size: 12, color: AppColors.textHint),
+                        Icon(Ionicons.time_outline, size: 12, color: context.appColors.textHint),
                         const SizedBox(width: 4),
                         Text(
                           dateStr,
                           style: AppTypography.labelSmall.copyWith(
-                            color: AppColors.textHint,
+                            color: context.appColors.textHint,
                             fontSize: 12,
                           ),
                         ),
@@ -532,7 +533,7 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
                     Text(
                       '${review.overallRating.toInt()}',
                       style: AppTypography.labelMedium.copyWith(
-                        color: AppColors.textPrimary,
+                        color: context.appColors.textPrimary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -549,20 +550,20 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
               review.comment!,
               style: AppTypography.bodyMedium.copyWith(
                 height: 1.55,
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
             )
           else
             Row(
               children: [
-                Icon(Ionicons.chatbubble_outline, size: 16, color: AppColors.textHint),
+                Icon(Ionicons.chatbubble_outline, size: 16, color: context.appColors.textHint),
                 const SizedBox(width: 6),
                 Text(
                   'Không có nhận xét',
                   style: AppTypography.bodyMedium.copyWith(
                     height: 1.55,
                     fontStyle: FontStyle.italic,
-                    color: AppColors.textHint,
+                    color: context.appColors.textHint,
                   ),
                 ),
               ],
@@ -595,19 +596,19 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.backgroundLight,
+        color: context.appColors.background,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border.withOpacity(0.6)),
+        border: Border.all(color: context.appColors.border.withOpacity(0.6)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: AppColors.textSecondary),
+          Icon(icon, size: 14, color: context.appColors.textSecondary),
           const SizedBox(width: 6),
           Text(
             label,
             style: AppTypography.labelSmall.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ),
           const SizedBox(width: 4),
@@ -617,7 +618,7 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
             rating.toStringAsFixed(1),
             style: AppTypography.labelSmall.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: context.appColors.textPrimary,
             ),
           ),
         ],

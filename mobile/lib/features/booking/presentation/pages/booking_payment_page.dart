@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
@@ -112,20 +113,20 @@ class _BookingPaymentPageState extends State<BookingPaymentPage> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: context.appColors.surface,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: context.appColors.border),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(b.partnerName, style: AppTypography.titleMedium),
                   const SizedBox(height: 8),
-                  Text(b.serviceType, style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary)),
+                  Text(b.serviceType, style: AppTypography.bodyMedium.copyWith(color: context.appColors.textSecondary)),
                   const SizedBox(height: 8),
                   Text(
                     '${dateFormat.format(b.startTime)} • ${timeFormat.format(b.startTime)} - ${timeFormat.format(b.endTime)}',
-                    style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                    style: AppTypography.bodySmall.copyWith(color: context.appColors.textSecondary),
                   ),
                 ],
               ),

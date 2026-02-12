@@ -9,7 +9,7 @@ class AppTypography {
 
   // === Base Font ===
   static final TextStyle _baseStyle = GoogleFonts.plusJakartaSans();
-  static String? get _fontFamily => _baseStyle.fontFamily;
+  static final String? _fontFamily = _baseStyle.fontFamily;
 
   // === Display Styles ===
   static TextStyle displayLarge = TextStyle(

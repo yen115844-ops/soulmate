@@ -3,10 +3,10 @@ import { ConversationStatus, MessageStatus, MessageType, NotificationType } from
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { NotificationsService } from '../notifications';
 import {
-  CreateConversationDto,
-  QueryConversationsDto,
-  QueryMessagesDto,
-  SendMessageWithMediaDto
+    CreateConversationDto,
+    QueryConversationsDto,
+    QueryMessagesDto,
+    SendMessageWithMediaDto
 } from './dto';
 
 // Online users tracking (in-memory, consider Redis for production with multiple instances)
@@ -177,46 +177,90 @@ export class ChatService {
     // Also filter out blocked users
     const blockedUserIds = await this.getBlockedUserIds(userId);
     
-    const transformedConversations = await Promise.all(
-      conversations
-        .filter((conv) => {
-          // Filter out conversations with blocked users
-          const otherParticipant = conv.participants.find((p) => p.userId !== userId);
-          return otherParticipant && !blockedUserIds.includes(otherParticipant.userId);
-        })
-        .map(async (conv) => {
-          const currentParticipant = conv.participants.find((p) => p.userId === userId);
-          const otherParticipant = conv.participants.find((p) => p.userId !== userId);
+    const filteredConversations = conversations.filter((conv) => {
+      const otherParticipant = conv.participants.find((p) => p.userId !== userId);
+      return otherParticipant && !blockedUserIds.includes(otherParticipant.userId);
+    });
 
-          // Calculate unread count
-          const unreadCount = await this.getUnreadCountForConversation(
-            conv.id,
-            userId,
-            currentParticipant?.lastReadAt,
-          );
+    // Batch fetch unread counts in a single query to avoid N+1
+    const unreadCountsRaw = await this.prisma.message.groupBy({
+      by: ['conversationId'],
+      where: {
+        conversationId: { in: filteredConversations.map((c) => c.id) },
+        senderId: { not: userId },
+        isDeleted: false,
+      },
+      _count: { id: true },
+    });
 
-          return {
-            id: conv.id,
-            lastMessage: conv.messages[0] || null,
-            lastMessageAt: conv.lastMessageAt,
-            lastMessagePreview: conv.lastMessagePreview,
-            createdAt: conv.createdAt,
-            otherUser: otherParticipant
-              ? {
-                  id: otherParticipant.userId,
-                  name:
-                    otherParticipant.user.profile?.displayName ||
-                    otherParticipant.user.profile?.fullName ||
-                    otherParticipant.user.email.split('@')[0],
-                  avatarUrl: otherParticipant.user.profile?.avatarUrl,
-                  isOnline: this.isUserOnline(otherParticipant.userId),
-                }
-              : null,
-            unreadCount,
-            isMuted: currentParticipant?.isMuted || false,
-          };
-        }),
+    // Build a map: conversationId -> total messages not from user
+    const totalMsgMap = new Map(unreadCountsRaw.map((r) => [r.conversationId, r._count.id]));
+
+    // For conversations with lastReadAt, we need to count only messages after lastReadAt
+    // Build the participant map for lastReadAt
+    const participantMap = new Map(
+      filteredConversations.map((conv) => {
+        const participant = conv.participants.find((p) => p.userId === userId);
+        return [conv.id, participant?.lastReadAt ?? null];
+      }),
     );
+
+    // For conversations that have lastReadAt, do a single batch query
+    const convsWithLastRead = filteredConversations.filter(
+      (c) => participantMap.get(c.id) != null,
+    );
+    
+    let unreadAfterReadMap = new Map<string, number>();
+    if (convsWithLastRead.length > 0) {
+      // Use Promise.all but with a single query per conversation that has lastReadAt
+      // This is still better than N+1 since we only query conversations with read markers
+      const unreadCounts = await Promise.all(
+        convsWithLastRead.map(async (conv) => {
+          const lastReadAt = participantMap.get(conv.id)!;
+          const count = await this.prisma.message.count({
+            where: {
+              conversationId: conv.id,
+              senderId: { not: userId },
+              isDeleted: false,
+              createdAt: { gt: lastReadAt },
+            },
+          });
+          return { id: conv.id, count };
+        }),
+      );
+      unreadAfterReadMap = new Map(unreadCounts.map((r) => [r.id, r.count]));
+    }
+
+    const transformedConversations = filteredConversations.map((conv) => {
+      const currentParticipant = conv.participants.find((p) => p.userId === userId);
+      const otherParticipant = conv.participants.find((p) => p.userId !== userId);
+
+      // Use batch unread count: if lastReadAt exists, use the filtered count; otherwise use total
+      const unreadCount = participantMap.get(conv.id)
+        ? (unreadAfterReadMap.get(conv.id) ?? 0)
+        : (totalMsgMap.get(conv.id) ?? 0);
+
+      return {
+        id: conv.id,
+        lastMessage: conv.messages[0] || null,
+        lastMessageAt: conv.lastMessageAt,
+        lastMessagePreview: conv.lastMessagePreview,
+        createdAt: conv.createdAt,
+        otherUser: otherParticipant
+          ? {
+              id: otherParticipant.userId,
+              name:
+                otherParticipant.user.profile?.displayName ||
+                otherParticipant.user.profile?.fullName ||
+                otherParticipant.user.email.split('@')[0],
+              avatarUrl: otherParticipant.user.profile?.avatarUrl,
+              isOnline: this.isUserOnline(otherParticipant.userId),
+            }
+          : null,
+        unreadCount,
+        isMuted: currentParticipant?.isMuted || false,
+      };
+    });
 
     return {
       data: transformedConversations,
@@ -744,6 +788,8 @@ export class ChatService {
     const senderAvatar = message.sender.profile?.avatarUrl || undefined;
 
     for (const participant of otherParticipants) {
+      // Only send FCM push, do NOT save to notification panel
+      // (messages have their own chat history)
       await this.notificationsService.sendNotification({
         userId: participant.userId,
         type: NotificationType.CHAT,
@@ -757,6 +803,7 @@ export class ChatService {
           messageId: message.id,
           senderId: userId,
         },
+        saveToDb: false,
       });
     }
 
@@ -1137,6 +1184,7 @@ export class ChatService {
     for (const p of otherParticipants) {
       // Only send push if user is offline
       if (!this.isUserOnline(p.userId)) {
+        // Only send FCM push, do NOT save to notification panel
         await this.notificationsService.sendNotification({
           userId: p.userId,
           type: NotificationType.CHAT,
@@ -1150,6 +1198,7 @@ export class ChatService {
             messageId: message.id,
             senderId: userId,
           },
+          saveToDb: false,
         });
       }
     }

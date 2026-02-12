@@ -6,6 +6,7 @@ import '../../../../config/routes/route_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_exceptions.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
@@ -86,7 +87,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
             const SizedBox(height: 8),
             Text(
               'Bạn có thể đăng nhập bằng mật khẩu mới.',
-              style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+              style: AppTypography.bodySmall.copyWith(color: context.appColors.textSecondary),
               textAlign: TextAlign.center,
             ),
           ],
@@ -121,7 +122,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               children: [
                 Text(
                   'Nhập mã xác nhận đã gửi đến ${widget.email} và mật khẩu mới.',
-                  style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+                  style: AppTypography.bodyMedium.copyWith(color: context.appColors.textSecondary),
                 ),
                 const SizedBox(height: 24),
                 AppTextField(
@@ -147,7 +148,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                   prefixIcon: Ionicons.lock_closed_outline,
                   suffix: IconButton(
                     onPressed: () => setState(() => _obscureNew = !_obscureNew),
-                    icon: Icon(_obscureNew ? Ionicons.eye_off_outline : Ionicons.eye_outline, color: AppColors.textHint),
+                    icon: Icon(_obscureNew ? Ionicons.eye_off_outline : Ionicons.eye_outline, color: context.appColors.textHint),
                   ),
                   enabled: !_isLoading,
                   validator: (v) {
@@ -168,7 +169,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                   prefixIcon: Ionicons.lock_closed_outline,
                   suffix: IconButton(
                     onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
-                    icon: Icon(_obscureConfirm ? Ionicons.eye_off_outline : Ionicons.eye_outline, color: AppColors.textHint),
+                    icon: Icon(_obscureConfirm ? Ionicons.eye_off_outline : Ionicons.eye_outline, color: context.appColors.textHint),
                   ),
                   enabled: !_isLoading,
                   validator: (v) {

@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -11,6 +13,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'app.dart';
 import 'core/di/injection.dart';
 import 'core/network/api_client.dart';
+import 'core/services/connectivity_service.dart';
 import 'core/services/deep_link_service.dart';
 import 'core/services/local_notification_service.dart';
 import 'core/services/local_storage_service.dart';
@@ -37,6 +40,12 @@ void main() {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
+
+      // Initialize Crashlytics
+      if (!kDebugMode) {
+        FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+      }
+
       // Set up background message handler
       FirebaseMessaging.onBackgroundMessage(
         _firebaseMessagingBackgroundHandler,
@@ -47,6 +56,9 @@ void main() {
 
       // Initialize local storage
       await LocalStorageService.init();
+
+      // Initialize connectivity monitoring
+      await ConnectivityService.instance.init();
 
       // Setup dependency injection
       await setupDependencies();
@@ -112,6 +124,9 @@ void main() {
       // Log errors that occur outside of Flutter
       debugPrint('Unhandled error: $error');
       debugPrint('Stack trace: $stackTrace');
+      if (!kDebugMode) {
+        FirebaseCrashlytics.instance.recordError(error, stackTrace, fatal: true);
+      }
     },
   );
 }

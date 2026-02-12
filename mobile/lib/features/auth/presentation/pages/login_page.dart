@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:ionicons/ionicons.dart';
 
 import '../../../../config/routes/route_names.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
 import '../bloc/auth_bloc.dart';
@@ -121,7 +123,7 @@ class _LoginPageState extends State<LoginPage> {
                     Text(
                       'Đăng nhập để tiếp tục kết nối',
                       style: AppTypography.bodyLarge.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                       ),
                     ),
 
@@ -165,8 +167,8 @@ class _LoginPageState extends State<LoginPage> {
                         if (value == null || value.isEmpty) {
                           return 'Vui lòng nhập mật khẩu';
                         }
-                        if (value.length < 6) {
-                          return 'Mật khẩu phải có ít nhất 6 ký tự';
+                        if (value.length < AppConstants.minPasswordLength) {
+                          return 'Mật khẩu phải có ít nhất ${AppConstants.minPasswordLength} ký tự';
                         }
                         return null;
                       },
@@ -210,7 +212,7 @@ class _LoginPageState extends State<LoginPage> {
                           child: Text(
                             'hoặc',
                             style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.textHint,
+                              color: context.appColors.textHint,
                             ),
                           ),
                         ),
@@ -283,29 +285,31 @@ class _SocialLoginButton extends StatelessWidget {
   final String icon;
   final String text;
   final VoidCallback? onPressed;
-  final Color backgroundColor;
-  final Color textColor;
+  final Color? backgroundColor;
+  final Color? textColor;
 
   const _SocialLoginButton({
     required this.icon,
     required this.text,
     this.onPressed,
-    this.backgroundColor = Colors.white,
-    this.textColor = AppColors.textPrimary,
+    this.backgroundColor,
+    this.textColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final bg = backgroundColor ?? context.appColors.surface;
+    final fg = textColor ?? context.appColors.textPrimary;
     return SizedBox(
       width: double.infinity,
       height: 56,
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
-          backgroundColor: backgroundColor,
-          foregroundColor: textColor,
-          side: backgroundColor == Colors.white
-              ? const BorderSide(color: AppColors.border)
+          backgroundColor: bg,
+          foregroundColor: fg,
+          side: backgroundColor == null
+              ? BorderSide(color: context.appColors.border)
               : BorderSide.none,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -318,13 +322,13 @@ class _SocialLoginButton extends StatelessWidget {
             Icon(
               icon.contains('google') ? Ionicons.logo_google : Ionicons.logo_facebook,
               size: 24,
-              color: textColor,
+              color: fg,
             ),
             const SizedBox(width: 12),
             Flexible(
               child: Text(
                 text,
-                style: AppTypography.labelLarge.copyWith(color: textColor),
+                style: AppTypography.labelLarge.copyWith(color: fg),
                 overflow: TextOverflow.ellipsis,
               ),
             ),

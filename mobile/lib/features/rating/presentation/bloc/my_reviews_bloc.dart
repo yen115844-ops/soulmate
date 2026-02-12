@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/utils/error_utils.dart';
 import '../../data/reviews_repository.dart';
 import 'my_reviews_event.dart';
 import 'my_reviews_state.dart';
@@ -34,7 +35,7 @@ class MyReviewsBloc extends Bloc<MyReviewsEvent, MyReviewsState> {
     } catch (e) {
       emit(state.copyWith(
         status: MyReviewsStatus.error,
-        errorMessage: e.toString(),
+        errorMessage: getErrorMessage(e),
       ));
     }
   }
@@ -63,7 +64,7 @@ class MyReviewsBloc extends Bloc<MyReviewsEvent, MyReviewsState> {
       // Refresh on error
       add(const MyReviewsRefreshRequested());
       emit(state.copyWith(
-        errorMessage: 'Không thể xóa đánh giá: ${e.toString()}',
+        errorMessage: getErrorMessage(e),
       ));
     }
   }
@@ -77,7 +78,7 @@ class MyReviewsBloc extends Bloc<MyReviewsEvent, MyReviewsState> {
       add(const MyReviewsRefreshRequested());
     } catch (e) {
       emit(state.copyWith(
-        errorMessage: 'Không thể gửi phản hồi: ${e.toString()}',
+        errorMessage: getErrorMessage(e),
       ));
     }
   }

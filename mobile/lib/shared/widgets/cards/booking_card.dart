@@ -5,6 +5,7 @@ import 'package:ionicons/ionicons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/theme_context.dart';
 import '../../../core/utils/image_utils.dart';
 
 /// Booking Card - For bookings list
@@ -48,7 +49,7 @@ class BookingCard extends StatelessWidget {
       case 'rejected':
         return AppColors.error;
       default:
-        return AppColors.textSecondary;
+        return AppColors.info;
     }
   }
 
@@ -108,12 +109,12 @@ class BookingCard extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.appColors.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.appColors.border),
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadow.withOpacity(0.05),
+              color: context.appColors.shadow.withOpacity(0.05),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -145,7 +146,7 @@ class BookingCard extends StatelessWidget {
                   Text(
                     '#${id.substring(0, 8).toUpperCase()}',
                     style: AppTypography.labelSmall.copyWith(
-                      color: AppColors.textHint,
+                      color: context.appColors.textHint,
                     ),
                   ),
                 ],
@@ -172,10 +173,10 @@ class BookingCard extends StatelessWidget {
                             imageUrl: ImageUtils.buildImageUrl(partnerAvatar),
                             fit: BoxFit.cover,
                             placeholder: (context, url) => Container(
-                              color: AppColors.backgroundLight,
+                              color: context.appColors.background,
                             ),
                             errorWidget: (context, url, error) => Container(
-                              color: AppColors.backgroundLight,
+                              color: context.appColors.background,
                               child: const Icon(Ionicons.person_outline),
                             ),
                           ),
@@ -240,13 +241,13 @@ class BookingCard extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: AppColors.backgroundLight,
+                                color: context.appColors.background,
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Icon(
+                              child:   Icon(
                                 Ionicons.calendar_outline,
                                 size: 18,
-                                color: AppColors.textSecondary,
+                                color: context.appColors.textSecondary,
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -257,7 +258,7 @@ class BookingCard extends StatelessWidget {
                                   Text(
                                     'Ngày',
                                     style: AppTypography.labelSmall.copyWith(
-                                      color: AppColors.textHint,
+                                      color: context.appColors.textHint,
                                     ),
                                   ),
                                   Text(
@@ -275,7 +276,7 @@ class BookingCard extends StatelessWidget {
                       Container(
                         width: 1,
                         height: 40,
-                        color: AppColors.border,
+                        color: context.appColors.border,
                       ),
                       Expanded(
                         child: Row(
@@ -284,13 +285,13 @@ class BookingCard extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: AppColors.backgroundLight,
+                                color: context.appColors.background,
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Icon(
+                              child:   Icon(
                                 Ionicons.time_outline,
                                 size: 18,
-                                color: AppColors.textSecondary,
+                                color: context.appColors.textSecondary,
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -301,7 +302,7 @@ class BookingCard extends StatelessWidget {
                                   Text(
                                     'Thời gian',
                                     style: AppTypography.labelSmall.copyWith(
-                                      color: AppColors.textHint,
+                                      color: context.appColors.textHint,
                                     ),
                                   ),
                                   Text(
@@ -435,7 +436,7 @@ class MiniBookingCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: context.appColors.surface.withOpacity(0.2),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(

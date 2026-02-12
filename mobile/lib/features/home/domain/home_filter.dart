@@ -10,6 +10,7 @@ class HomeFilter extends Equatable {
   final int? maxRate;
   final int? radius;
   final String? city;
+  final String? district;
   final bool verifiedOnly;
   final bool availableNow;
   final String sortBy;
@@ -23,6 +24,7 @@ class HomeFilter extends Equatable {
     this.maxRate,
     this.radius,
     this.city,
+    this.district,
     this.verifiedOnly = false,
     this.availableNow = false,
     this.sortBy = 'rating',
@@ -41,6 +43,7 @@ class HomeFilter extends Equatable {
       maxRate == null &&
       radius == null &&
       city == null &&
+      district == null &&
       !verifiedOnly &&
       !availableNow &&
       sortBy == 'rating';
@@ -54,6 +57,7 @@ class HomeFilter extends Equatable {
     int? maxRate,
     int? radius,
     String? city,
+    String? district,
     bool? verifiedOnly,
     bool? availableNow,
     String? sortBy,
@@ -67,6 +71,7 @@ class HomeFilter extends Equatable {
       maxRate: maxRate ?? this.maxRate,
       radius: radius ?? this.radius,
       city: city ?? this.city,
+      district: district ?? this.district,
       verifiedOnly: verifiedOnly ?? this.verifiedOnly,
       availableNow: availableNow ?? this.availableNow,
       sortBy: sortBy ?? this.sortBy,
@@ -81,6 +86,8 @@ class HomeFilter extends Equatable {
     bool clearPriceRange = false,
     bool clearRadius = false,
     bool clearCity = false,
+    bool clearDistrict = false,
+    bool clearLocation = false,
   }) {
     return HomeFilter(
       serviceType: clearServiceType ? null : serviceType,
@@ -90,11 +97,19 @@ class HomeFilter extends Equatable {
       minRate: clearPriceRange ? null : minRate,
       maxRate: clearPriceRange ? null : maxRate,
       radius: clearRadius ? null : radius,
-      city: clearCity ? null : city,
+      city: (clearCity || clearLocation) ? null : city,
+      district: (clearDistrict || clearLocation) ? null : district,
       verifiedOnly: verifiedOnly,
       availableNow: availableNow,
       sortBy: sortBy,
     );
+  }
+
+  /// Location display string
+  String? get locationDisplay {
+    if (city == null && district == null) return null;
+    if (district != null && city != null) return '$district, $city';
+    return city ?? district;
   }
 
   @override
@@ -107,6 +122,7 @@ class HomeFilter extends Equatable {
         maxRate,
         radius,
         city,
+        district,
         verifiedOnly,
         availableNow,
         sortBy,

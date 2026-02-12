@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException, Injectable, Logger, NotFoundExc
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { UserRole, UserStatus } from '@prisma/client';
+import { randomInt } from 'crypto';
 import { comparePassword, hashPassword } from '../../common/utils/hash.util';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -28,6 +29,7 @@ export class AuthService {
   private readonly OTP_EXPIRY_MINUTES = 10;
   private readonly OTP_PURPOSE_VERIFY_EMAIL = 'verify_email';
   private readonly OTP_PURPOSE_RESET_PASSWORD = 'reset_password';
+  private readonly OTP_MAX_ATTEMPTS = 5;
 
   private readonly LOCK_DURATION_MINUTES = 15;
 
@@ -125,8 +127,32 @@ export class AuthService {
       orderBy: { createdAt: 'desc' },
     });
 
-    if (!otpRecord || otpRecord.code !== dto.otp.trim()) {
+    if (!otpRecord) {
       throw new BadRequestException('Mã OTP không hợp lệ hoặc đã hết hạn');
+    }
+
+    // Check brute-force: max attempts exceeded
+    if (otpRecord.attempts >= this.OTP_MAX_ATTEMPTS) {
+      // Invalidate this OTP
+      await this.prisma.otpCode.update({
+        where: { id: otpRecord.id },
+        data: { isUsed: true },
+      });
+      throw new BadRequestException('Đã nhập sai OTP quá nhiều lần. Vui lòng yêu cầu mã mới.');
+    }
+
+    if (otpRecord.code !== dto.otp.trim()) {
+      // Increment attempt count
+      await this.prisma.otpCode.update({
+        where: { id: otpRecord.id },
+        data: { attempts: { increment: 1 } },
+      });
+      const remaining = this.OTP_MAX_ATTEMPTS - otpRecord.attempts - 1;
+      throw new BadRequestException(
+        remaining > 0
+          ? `Mã OTP không đúng. Còn ${remaining} lần thử.`
+          : 'Đã nhập sai OTP quá nhiều lần. Vui lòng yêu cầu mã mới.',
+      );
     }
 
     const user = await this.prisma.$transaction(async (tx) => {
@@ -232,8 +258,30 @@ export class AuthService {
       orderBy: { createdAt: 'desc' },
     });
 
-    if (!otpRecord || otpRecord.code !== dto.otp.trim()) {
+    if (!otpRecord) {
       throw new BadRequestException('Mã OTP không hợp lệ hoặc đã hết hạn');
+    }
+
+    // Check brute-force: max attempts exceeded
+    if (otpRecord.attempts >= this.OTP_MAX_ATTEMPTS) {
+      await this.prisma.otpCode.update({
+        where: { id: otpRecord.id },
+        data: { isUsed: true },
+      });
+      throw new BadRequestException('Đã nhập sai OTP quá nhiều lần. Vui lòng yêu cầu mã mới.');
+    }
+
+    if (otpRecord.code !== dto.otp.trim()) {
+      await this.prisma.otpCode.update({
+        where: { id: otpRecord.id },
+        data: { attempts: { increment: 1 } },
+      });
+      const remaining = this.OTP_MAX_ATTEMPTS - otpRecord.attempts - 1;
+      throw new BadRequestException(
+        remaining > 0
+          ? `Mã OTP không đúng. Còn ${remaining} lần thử.`
+          : 'Đã nhập sai OTP quá nhiều lần. Vui lòng yêu cầu mã mới.',
+      );
     }
 
     const user = await this.prisma.user.findUnique({
@@ -261,7 +309,7 @@ export class AuthService {
   }
 
   private generateOtp(): string {
-    return Math.floor(100000 + Math.random() * 900000).toString();
+    return randomInt(100000, 999999).toString();
   }
 
   /**
@@ -317,6 +365,9 @@ export class AuthService {
     }
     if (user.status === UserStatus.SUSPENDED) {
       throw new UnauthorizedException('Tài khoản của bạn đã bị tạm khóa');
+    }
+    if (user.status === UserStatus.DELETED) {
+      throw new UnauthorizedException('Tài khoản này đã bị xóa');
     }
 
     // Generate tokens
@@ -462,7 +513,7 @@ export class AuthService {
       include: { profile: true },
     });
 
-    if (!user || user.status === UserStatus.BANNED) {
+    if (!user || user.status === UserStatus.BANNED || user.status === UserStatus.DELETED) {
       return null;
     }
 
@@ -477,7 +528,9 @@ export class AuthService {
   }
 
   /**
-   * Generate access and refresh tokens (expiry from app_settings.session_timeout in days)
+   * Generate access and refresh tokens
+   * Access token: short-lived (15 minutes)
+   * Refresh token: long-lived (session_timeout from app_settings, default 30 days)
    */
   private async generateTokens(user: { id: string; email: string; role: UserRole }): Promise<TokenResponse> {
     const payload: JwtPayload = {
@@ -487,8 +540,8 @@ export class AuthService {
     };
 
     const sessionTimeoutDays = await this.settingsService.getNumber('session_timeout', 30);
-    const accessExpiresInSeconds = sessionTimeoutDays * 24 * 3600;
-    const refreshExpiresInSeconds = accessExpiresInSeconds;
+    const accessExpiresInSeconds = 15 * 60; // 15 minutes
+    const refreshExpiresInSeconds = sessionTimeoutDays * 24 * 3600;
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
@@ -541,25 +594,6 @@ export class AuthService {
   }
 
   /**
-   * Parse expires in string to seconds
-   */
-  private parseExpiresIn(expiresIn: string): number {
-    const match = expiresIn.match(/^(\d+)([smhd])$/);
-    if (!match) return 900; // default 15 minutes
-
-    const value = parseInt(match[1], 10);
-    const unit = match[2];
-
-    switch (unit) {
-      case 's': return value;
-      case 'm': return value * 60;
-      case 'h': return value * 3600;
-      case 'd': return value * 86400;
-      default: return 900;
-    }
-  }
-
-  /**
    * Get current user with full profile
    */
   async getCurrentUser(userId: string) {
@@ -600,13 +634,13 @@ export class AuthService {
       throw new BadRequestException('Mật khẩu không chính xác');
     }
 
-    // Soft delete: update status to BANNED and anonymize data
+    // Soft delete: update status to DELETED and anonymize data
     await this.prisma.$transaction(async (tx) => {
       // Update user status
       await tx.user.update({
         where: { id: userId },
         data: {
-          status: UserStatus.BANNED,
+          status: UserStatus.DELETED,
           email: `deleted_${userId}@deleted.account`,
           phone: null,
         },

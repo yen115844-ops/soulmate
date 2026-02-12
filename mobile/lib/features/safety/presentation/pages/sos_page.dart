@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 
 class SosPage extends StatefulWidget {
@@ -111,7 +112,7 @@ class _SosPageState extends State<SosPage> with SingleTickerProviderStateMixin {
               Text(
                 'Vị trí của bạn đang được gửi đến các liên hệ khẩn cấp và đội ngũ hỗ trợ.',
                 style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+                  color: context.appColors.textSecondary,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -151,7 +152,7 @@ class _SosPageState extends State<SosPage> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _isEmergencyMode ? AppColors.error : AppColors.backgroundLight,
+      backgroundColor: _isEmergencyMode ? AppColors.error : context.appColors.background,
       appBar: AppBar(
         leading: const AppBackButton(),
         title: const Text('SOS Khẩn cấp'),
@@ -183,7 +184,7 @@ class _SosPageState extends State<SosPage> with SingleTickerProviderStateMixin {
                         child: Text(
                           'Chỉ sử dụng khi bạn gặp nguy hiểm thực sự',
                           style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.textSecondary,
+                            color: context.appColors.textSecondary,
                           ),
                         ),
                       ),
@@ -265,7 +266,7 @@ class _SosPageState extends State<SosPage> with SingleTickerProviderStateMixin {
                 style: AppTypography.bodyLarge.copyWith(
                   color: _isEmergencyMode
                       ? AppColors.textWhite
-                      : AppColors.textSecondary,
+                      : context.appColors.textSecondary,
                 ),
               ),
 
@@ -276,7 +277,7 @@ class _SosPageState extends State<SosPage> with SingleTickerProviderStateMixin {
                 Text(
                   'Gọi nhanh',
                   style: AppTypography.titleSmall.copyWith(
-                    color: AppColors.textSecondary,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -314,16 +315,16 @@ class _SosPageState extends State<SosPage> with SingleTickerProviderStateMixin {
                   Text(
                     'Liên hệ khẩn cấp',
                     style: AppTypography.titleSmall.copyWith(
-                      color: AppColors.textSecondary,
+                      color: context.appColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.card,
+                      color: context.appColors.card,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: context.appColors.border),
                     ),
                     child: Column(
                       children: _emergencyContacts.map((contact) {
@@ -335,12 +336,12 @@ class _SosPageState extends State<SosPage> with SingleTickerProviderStateMixin {
                                 width: 40,
                                 height: 40,
                                 decoration: BoxDecoration(
-                                  color: AppColors.backgroundLight,
+                                  color: context.appColors.background,
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(
+                                child:   Icon(
                                   Ionicons.person_outline,
-                                  color: AppColors.textSecondary,
+                                  color: context.appColors.textSecondary,
                                   size: 20,
                                 ),
                               ),
@@ -356,7 +357,7 @@ class _SosPageState extends State<SosPage> with SingleTickerProviderStateMixin {
                                     Text(
                                       contact['phone']!,
                                       style: AppTypography.labelSmall.copyWith(
-                                        color: AppColors.textHint,
+                                        color: context.appColors.textHint,
                                       ),
                                     ),
                                   ],
@@ -428,7 +429,7 @@ class _QuickCallButton extends StatelessWidget {
           Text(
             subtitle,
             style: AppTypography.labelSmall.copyWith(
-              color: AppColors.textHint,
+              color: context.appColors.textHint,
             ),
           ),
         ],

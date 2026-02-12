@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 
 /// Shell Page cho Partner Mode với Bottom Navigation cố định
@@ -46,10 +47,10 @@ class _PartnerBottomNavigationBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.appColors.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(10),
+            color: context.appColors.textPrimary.withAlpha(10),
             offset: const Offset(0, -4),
             blurRadius: 16,
           ),
@@ -123,14 +124,14 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: isSelected ? AppColors.primary : AppColors.textHint,
+              color: isSelected ? AppColors.primary : context.appColors.textHint,
               size: 24,
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: AppTypography.labelSmall.copyWith(
-                color: isSelected ? AppColors.primary : AppColors.textHint,
+                color: isSelected ? AppColors.primary : context.appColors.textHint,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
             ),

@@ -7,6 +7,7 @@ import '../../../../config/routes/route_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../data/partner_repository.dart';
 import '../bloc/partner_earnings_bloc.dart';
@@ -166,9 +167,9 @@ class _PartnerEarningsContent extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: AppColors.card,
+                        color: context.appColors.card,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.border),
+                        border: Border.all(color: context.appColors.border),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -221,9 +222,9 @@ class _PartnerEarningsContent extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: AppColors.card,
+                              color: context.appColors.card,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.border),
+                              border: Border.all(color: context.appColors.border),
                             ),
                             child: Row(
                               children: [
@@ -249,7 +250,7 @@ class _PartnerEarningsContent extends StatelessWidget {
                                       Text(
                                         '${_maskAccountNumber(wallet.bankAccountNo)} - ${wallet.bankAccountName ?? ""}',
                                         style: AppTypography.bodySmall.copyWith(
-                                          color: AppColors.textSecondary,
+                                          color: context.appColors.textSecondary,
                                         ),
                                       ),
                                     ],
@@ -288,8 +289,8 @@ class _PartnerEarningsContent extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (dialogContext) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
+        decoration:   BoxDecoration(
+          color: context.appColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: EdgeInsets.only(
@@ -310,7 +311,7 @@ class _PartnerEarningsContent extends StatelessWidget {
             Text(
               'Số dư khả dụng: ${_formatFullCurrency(wallet.balance)}đ',
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
             ),
             const SizedBox(height: 24),
@@ -341,9 +342,9 @@ class _PartnerEarningsContent extends StatelessWidget {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.backgroundLight,
+                      color: context.appColors.background,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: context.appColors.border),
                     ),
                     child: Text(
                       '${_formatCurrency(amount)}đ',
@@ -371,7 +372,7 @@ class _PartnerEarningsContent extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.backgroundLight,
+                  color: context.appColors.background,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -380,10 +381,10 @@ class _PartnerEarningsContent extends StatelessWidget {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: AppColors.card,
+                        color: context.appColors.card,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Ionicons.business_outline, color: AppColors.textSecondary),
+                      child:   Icon(Ionicons.business_outline, color: context.appColors.textSecondary),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -394,7 +395,7 @@ class _PartnerEarningsContent extends StatelessWidget {
                           Text(
                             '${_maskAccountNumber(wallet.bankAccountNo)} - ${wallet.bankAccountName ?? ""}',
                             style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.textHint,
+                              color: context.appColors.textHint,
                             ),
                           ),
                         ],
@@ -459,13 +460,13 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Ionicons.alert_circle_outline, size: 64, color: AppColors.textHint),
+              Icon(Ionicons.alert_circle_outline, size: 64, color: context.appColors.textHint),
             const SizedBox(height: 16),
             Text(
               message,
               textAlign: TextAlign.center,
               style: AppTypography.bodyLarge.copyWith(
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
             ),
             const SizedBox(height: 24),
@@ -535,7 +536,7 @@ class _BalanceCard extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: isWithdrawing ? null : onWithdraw,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.surface,
+                    backgroundColor: context.appColors.surface,
                     foregroundColor: AppColors.primary,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
@@ -609,7 +610,7 @@ class _StatCard extends StatelessWidget {
           Text(
             label,
             style: AppTypography.labelSmall.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -640,13 +641,13 @@ class _SummaryRow extends StatelessWidget {
         Text(
           label,
           style: AppTypography.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
+            color: context.appColors.textSecondary,
           ),
         ),
         Text(
           value,
           style: (isBold ? AppTypography.titleMedium : AppTypography.bodyMedium).copyWith(
-            color: valueColor ?? AppColors.textPrimary,
+            color: valueColor ?? context.appColors.textPrimary,
             fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
           ),
         ),

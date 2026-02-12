@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/utils/error_utils.dart';
 import '../../data/partner_repository.dart';
 import 'partner_reviews_event.dart';
 import 'partner_reviews_state.dart';
@@ -50,7 +51,7 @@ class PartnerReviewsBloc
       ));
     } catch (e) {
       debugPrint('Partner reviews load error: $e');
-      emit(PartnerReviewsError(message: 'Không thể tải đánh giá. $e'));
+      emit(PartnerReviewsError(message: getErrorMessage(e)));
     }
   }
 

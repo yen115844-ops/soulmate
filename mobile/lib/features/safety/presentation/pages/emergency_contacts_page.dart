@@ -5,6 +5,7 @@ import 'package:ionicons/ionicons.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
@@ -40,8 +41,8 @@ class _EmergencyContactsView extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
+        decoration:   BoxDecoration(
+          color: context.appColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: EdgeInsets.only(
@@ -90,12 +91,12 @@ class _EmergencyContactsView extends StatelessWidget {
                         vertical: 10,
                       ),
                       decoration: BoxDecoration(
-                        color: isSelected ? AppColors.primary : AppColors.card,
+                        color: isSelected ? AppColors.primary : context.appColors.card,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: isSelected
                               ? AppColors.primary
-                              : AppColors.border,
+                              : context.appColors.border,
                         ),
                       ),
                       child: Text(
@@ -103,7 +104,7 @@ class _EmergencyContactsView extends StatelessWidget {
                         style: AppTypography.labelMedium.copyWith(
                           color: isSelected
                               ? AppColors.textWhite
-                              : AppColors.textSecondary,
+                              : context.appColors.textSecondary,
                         ),
                       ),
                     ),
@@ -232,7 +233,7 @@ class _EmergencyContactsView extends StatelessWidget {
                       child: Text(
                         'Liên hệ khẩn cấp sẽ được thông báo khi bạn nhấn nút SOS trong lúc gặp sự cố.',
                         style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.appColors.textSecondary,
                         ),
                       ),
                     ),
@@ -258,9 +259,9 @@ class _EmergencyContactsView extends StatelessWidget {
                             return Container(
                               margin: const EdgeInsets.only(bottom: 12),
                               decoration: BoxDecoration(
-                                color: AppColors.card,
+                                color: context.appColors.card,
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: AppColors.border),
+                                border: Border.all(color: context.appColors.border),
                               ),
                               child: ListTile(
                                 contentPadding: const EdgeInsets.all(16),
@@ -319,7 +320,7 @@ class _EmergencyContactsView extends StatelessWidget {
                                     Text(
                                       contact.phone,
                                       style: AppTypography.bodyMedium.copyWith(
-                                        color: AppColors.textSecondary,
+                                        color: context.appColors.textSecondary,
                                       ),
                                     ),
                                     if (contact.relationship != null) ...[
@@ -330,7 +331,7 @@ class _EmergencyContactsView extends StatelessWidget {
                                           vertical: 4,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: AppColors.backgroundLight,
+                                          color: context.appColors.background,
                                           borderRadius: BorderRadius.circular(
                                             8,
                                           ),
@@ -339,7 +340,7 @@ class _EmergencyContactsView extends StatelessWidget {
                                           contact.relationship!,
                                           style: AppTypography.labelSmall
                                               .copyWith(
-                                                color: AppColors.textHint,
+                                                color: context.appColors.textHint,
                                               ),
                                         ),
                                       ),
@@ -396,13 +397,13 @@ class _EmptyState extends StatelessWidget {
             width: 100,
             height: 100,
             decoration: BoxDecoration(
-              color: AppColors.backgroundLight,
+              color: context.appColors.background,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child:   Icon(
               Ionicons.call_outline,
               size: 48,
-              color: AppColors.textHint,
+              color: context.appColors.textHint,
             ),
           ),
           const SizedBox(height: 24),
@@ -411,7 +412,7 @@ class _EmptyState extends StatelessWidget {
           Text(
             'Thêm liên hệ để được hỗ trợ khi cần',
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ),
           const SizedBox(height: 24),

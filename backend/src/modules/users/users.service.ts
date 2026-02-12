@@ -142,8 +142,8 @@ export class UsersService {
       throw new NotFoundException('Profile not found');
     }
 
-    // Generate avatar URL
-    const avatarUrl = `/uploads/${file.filename}`;
+    // Generate avatar URL (use the public file serving endpoint)
+    const avatarUrl = `/api/upload/files/${file.filename}`;
 
     // Update profile with new avatar URL
     const profile = await this.prisma.profile.update({

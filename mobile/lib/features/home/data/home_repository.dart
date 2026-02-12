@@ -2,11 +2,12 @@ import 'package:flutter/foundation.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/network/base_repository.dart';
 import '../../../core/utils/image_utils.dart';
 import '../../partner/domain/entities/partner_entity.dart';
 
 /// Repository for Home feature - handles partner search and discovery
-class HomeRepository {
+class HomeRepository with BaseRepositoryMixin {
   final ApiClient _apiClient;
 
   HomeRepository({required ApiClient apiClient}) : _apiClient = apiClient;
@@ -15,6 +16,7 @@ class HomeRepository {
   Future<HomePartnersResponse> searchPartners({
     int page = 1,
     int limit = 20,
+    String? query,
     String? serviceType,
     String? gender,
     int? minAge,
@@ -25,6 +27,7 @@ class HomeRepository {
     double? lng,
     int? radius,
     String? city,
+    String? district,
     bool? verifiedOnly,
     bool? availableNow,
     String? sortBy,
@@ -35,6 +38,7 @@ class HomeRepository {
         queryParameters: {
           'page': page,
           'limit': limit,
+          if (query != null && query.isNotEmpty) 'q': query,
           if (serviceType != null) 'serviceType': serviceType,
           if (gender != null) 'gender': gender,
           if (minAge != null) 'minAge': minAge,
@@ -45,13 +49,14 @@ class HomeRepository {
           if (lng != null) 'lng': lng,
           if (radius != null) 'radius': radius,
           if (city != null) 'city': city,
+          if (district != null) 'district': district,
           if (verifiedOnly != null) 'verifiedOnly': verifiedOnly,
           if (availableNow != null) 'availableNow': availableNow,
           if (sortBy != null) 'sortBy': sortBy,
         },
       );
 
-      return HomePartnersResponse.fromJson(_extractData(response.data));
+      return HomePartnersResponse.fromJson(extractRawData(response.data));
     } catch (e) {
       debugPrint('Search partners error: $e');
       rethrow;
@@ -62,24 +67,17 @@ class HomeRepository {
   Future<PartnerEntity> getPartnerById(String partnerId) async {
     try {
       final response = await _apiClient.get('/partners/$partnerId');
-      final data = _extractData(response.data) as Map<String, dynamic>;
+      final data = extractRawData(response.data) as Map<String, dynamic>;
       return HomePartnersResponse._mapToPartnerEntity(data);
     } catch (e) {
       debugPrint('Get partner error: $e');
       rethrow;
     }
   }
-
-  /// Extract data from API response
-  dynamic _extractData(dynamic responseData) {
-    if (responseData is Map<String, dynamic>) {
-      if (responseData.containsKey('data')) {
-        return responseData['data'];
-      }
-    }
-    return responseData;
-  }
 }
+
+/// Default avatar placeholder URL
+const _kDefaultAvatarUrl = 'https://via.placeholder.com/400';
 
 /// Response model for home partners search
 class HomePartnersResponse {
@@ -222,7 +220,12 @@ class HomePartnersResponse {
     if (profile?['dateOfBirth'] != null) {
       try {
         final dob = DateTime.parse(profile!['dateOfBirth'].toString());
-        age = DateTime.now().difference(dob).inDays ~/ 365;
+        final now = DateTime.now();
+        age = now.year - dob.year;
+        if (now.month < dob.month ||
+            (now.month == dob.month && now.day < dob.day)) {
+          age--;
+        }
       } catch (_) {}
     }
 
@@ -231,15 +234,12 @@ class HomePartnersResponse {
         ? (avatarUrl.startsWith('http')
             ? avatarUrl
             : ImageUtils.buildImageUrl(avatarUrl))
-        : 'https://via.placeholder.com/400';
+        : _kDefaultAvatarUrl;
 
     // introduction (API) ưu tiên hơn profile.bio
     final introduction = data['introduction']?.toString();
     final bio = introduction ?? profile?['bio']?.toString();
 
-    // isAvailable (API) = partner bật "sẵn sàng nhận booking" (toggle) – dùng cho logic khác nếu cần
-    // ignore: unused_local_variable
-    final isAvailable = data['isAvailable'] == true;
     // verificationBadge: "gold" | "PREMIUM" | ...
     final badge = data['verificationBadge']?.toString().toLowerCase();
     final isPremium = badge == 'gold' || badge == 'premium';

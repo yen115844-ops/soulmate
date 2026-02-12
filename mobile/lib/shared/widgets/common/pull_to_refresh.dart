@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/theme_context.dart';
 
 /// Custom Pull to Refresh Wrapper
 class PullToRefresh extends StatelessWidget {
@@ -22,7 +23,7 @@ class PullToRefresh extends StatelessWidget {
     return RefreshIndicator(
       onRefresh: onRefresh,
       color: color ?? AppColors.primary,
-      backgroundColor: backgroundColor ?? AppColors.surface,
+      backgroundColor: backgroundColor ?? context.appColors.surface,
       strokeWidth: 2.5,
       displacement: 40,
       child: child,
@@ -48,7 +49,7 @@ class SliverPullToRefresh extends StatelessWidget {
     return RefreshIndicator(
       onRefresh: onRefresh,
       color: AppColors.primary,
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.appColors.surface,
       child: CustomScrollView(
         controller: controller,
         physics: const AlwaysScrollableScrollPhysics(),

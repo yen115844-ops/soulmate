@@ -5,11 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:ionicons/ionicons.dart';
+import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
@@ -71,7 +73,8 @@ class _ProfilePageContentState extends State<_ProfilePageContent> {
             }
           },
           buildWhen: (previous, current) {
-            if (current is ProfileUpdating && _lastLoadedState != null) return true;
+            if (current is ProfileUpdating && _lastLoadedState != null)
+              return true;
             return true;
           },
           builder: (context, state) {
@@ -88,7 +91,9 @@ class _ProfilePageContentState extends State<_ProfilePageContent> {
               );
             }
 
-            final displayState = state is ProfileLoaded ? state : _lastLoadedState;
+            final displayState = state is ProfileLoaded
+                ? state
+                : _lastLoadedState;
             if (displayState != null) {
               return RefreshIndicator(
                 onRefresh: () async {
@@ -118,7 +123,6 @@ class _ProfilePageContentState extends State<_ProfilePageContent> {
   }
 
   void _showAvatarPicker(BuildContext context) {
-    final picker = ImagePicker();
     showModalBottomSheet(
       context: context,
       builder: (bottomSheetContext) => SafeArea(
@@ -130,6 +134,7 @@ class _ProfilePageContentState extends State<_ProfilePageContent> {
               onTap: () async {
                 Navigator.pop(bottomSheetContext);
                 try {
+                  final picker = ImagePicker();
                   final image = await picker.pickImage(
                     source: ImageSource.camera,
                     maxWidth: 800,
@@ -138,14 +143,16 @@ class _ProfilePageContentState extends State<_ProfilePageContent> {
                   );
                   if (image != null && context.mounted) {
                     context.read<ProfileBloc>().add(
-                          ProfileAvatarUpdateRequested(imagePath: image.path),
-                        );
+                      ProfileAvatarUpdateRequested(imagePath: image.path),
+                    );
                   }
                 } catch (e) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập.'),
+                        content: Text(
+                          'Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập.',
+                        ),
                       ),
                     );
                   }
@@ -158,22 +165,30 @@ class _ProfilePageContentState extends State<_ProfilePageContent> {
               onTap: () async {
                 Navigator.pop(bottomSheetContext);
                 try {
-                  final image = await picker.pickImage(
-                    source: ImageSource.gallery,
-                    maxWidth: 800,
-                    maxHeight: 800,
-                    imageQuality: 80,
+                  final List<AssetEntity>? assets = await AssetPicker.pickAssets(
+                    context,
+                    pickerConfig: AssetPickerConfig(
+                      maxAssets: 1,
+                      requestType: RequestType.image,
+                      themeColor: AppColors.primary,
+                      textDelegate: const VietnameseAssetPickerTextDelegate(),
+                    ),
                   );
-                  if (image != null && context.mounted) {
-                    context.read<ProfileBloc>().add(
-                          ProfileAvatarUpdateRequested(imagePath: image.path),
-                        );
+                  if (assets != null && assets.isNotEmpty && context.mounted) {
+                    final file = await assets.first.file;
+                    if (file != null && context.mounted) {
+                      context.read<ProfileBloc>().add(
+                        ProfileAvatarUpdateRequested(imagePath: file.path),
+                      );
+                    }
                   }
                 } catch (e) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Không thể truy cập thư viện ảnh. Vui lòng kiểm tra quyền truy cập.'),
+                        content: Text(
+                          'Không thể truy cập thư viện ảnh. Vui lòng kiểm tra quyền truy cập.',
+                        ),
                       ),
                     );
                   }
@@ -201,13 +216,17 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Ionicons.alert_circle_outline, size: 64, color: AppColors.textHint),
+              Icon(
+              Ionicons.alert_circle_outline,
+              size: 64,
+              color: context.appColors.textHint,
+            ),
             const SizedBox(height: 16),
             Text(
               message,
               textAlign: TextAlign.center,
               style: AppTypography.bodyLarge.copyWith(
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
             ),
             const SizedBox(height: 24),
@@ -255,11 +274,10 @@ class _ProfileContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          // Profile Header
-          _ProfileHeader(
+          // Profile Hero Header
+          _ProfileHeroHeader(
             displayName: displayName,
             email: user.email,
             avatarUrl: avatarUrl,
@@ -268,152 +286,182 @@ class _ProfileContent extends StatelessWidget {
             onAvatarTap: onAvatarTap,
           ),
 
-          const SizedBox(height: 24),
-
-          // Stats Row
-          _StatsRow(
-            totalBookings: stats.totalBookings,
-            totalReviews: stats.totalReviews,
-            averageRating: stats.averageRating,
+          // Stats Cards
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: _ModernStatsRow(
+              totalBookings: stats.totalBookings,
+              totalReviews: stats.totalReviews,
+              averageRating: stats.averageRating,
+            ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
           // Quick Actions
-          _QuickActions(
-            isPartner: stats.isPartner,
-            partnerStatus: stats.partnerStatus,
-          ),
-
-          const SizedBox(height: 24),
-
-          // Menu Items
-          _MenuSection(
-            title: 'Tài khoản',
-            items: [
-              _MenuItem(
-                icon: Ionicons.create_outline,
-                title: 'Chỉnh sửa hồ sơ',
-                onTap: () => context.push(RouteNames.editProfile),
-              ),
-              _MenuItem(
-                icon: Ionicons.wallet_outline,
-                title: 'Ví của tôi',
-                subtitle: _formatCurrency(stats.walletBalance),
-                onTap: () => context.push(RouteNames.wallet),
-              ),
-              _MenuItem(
-                icon: Ionicons.heart_outline,
-                title: 'Danh sách yêu thích',
-                onTap: () => context.push(RouteNames.favorites),
-              ),
-              _MenuItem(
-                icon: Ionicons.star_outline,
-                title: 'Đánh giá của tôi',
-                onTap: () => context.push(RouteNames.myReviews),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          _MenuSection(
-            title: 'Bảo mật & Xác thực',
-            items: [
-              _MenuItem(
-                icon: Ionicons.shield_checkmark_outline,
-                title: 'Xác minh danh tính (eKYC)',
-                subtitle: kycStatusText,
-                subtitleColor: isKycVerified
-                    ? AppColors.success
-                    : AppColors.warning,
-                onTap: () => context.push(RouteNames.kyc),
-              ),
-              _MenuItem(
-                icon: Ionicons.call_outline,
-                title: 'Liên hệ khẩn cấp',
-                onTap: () => context.push(RouteNames.emergencyContacts),
-              ),
-              _MenuItem(
-                icon: Ionicons.lock_closed_outline,
-                title: 'Đổi mật khẩu',
-                onTap: () => context.push(RouteNames.changePassword),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          _MenuSection(
-            title: 'Cài đặt',
-            items: [
-              _MenuItem(
-                icon: Ionicons.cog_outline,
-                title: 'Cài đặt ứng dụng',
-                subtitle: 'Thông báo, giao diện, ngôn ngữ',
-                onTap: () => context.push(RouteNames.settings),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          _MenuSection(
-            title: 'Hỗ trợ',
-            items: [
-              _MenuItem(
-                icon: Ionicons.help_circle_outline,
-                title: 'Trung tâm trợ giúp',
-                onTap: () => context.push(RouteNames.helpCenter),
-              ),
-              _MenuItem(
-                icon: Ionicons.document_text_outline,
-                title: 'Điều khoản sử dụng',
-                onTap: () => context.push(RouteNames.termsOfService),
-              ),
-              _MenuItem(
-                icon: Ionicons.shield_checkmark_outline,
-                title: 'Chính sách bảo mật',
-                onTap: () => context.push(RouteNames.privacyPolicy),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 24),
-
-          // Logout Button
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                _showLogoutDialog(context);
-              },
-              icon: const Icon(Ionicons.log_out_outline, color: AppColors.error),
-              label: Text(
-                'Đăng xuất',
-                style: AppTypography.labelLarge.copyWith(
-                  color: AppColors.error,
-                ),
-              ),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppColors.error),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: _QuickActions(
+              isPartner: stats.isPartner,
+              partnerStatus: stats.partnerStatus,
             ),
           ),
 
           const SizedBox(height: 24),
 
-          // App Version
-          Text(
-            'Mate Social v1.0.0',
-            style: AppTypography.labelSmall.copyWith(color: AppColors.textHint),
-          ),
+          // Menu Items
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              children: [
+                _ModernMenuSection(
+                  title: 'Tài khoản',
+                  items: [
+                    _ModernMenuItem(
+                      icon: Ionicons.create_outline,
+                      iconBgColor: const Color(0xFFE8F5E9),
+                      iconColor: const Color(0xFF43A047),
+                      title: 'Chỉnh sửa hồ sơ',
+                      onTap: () => context.push(RouteNames.editProfile),
+                    ),
+                    _ModernMenuItem(
+                      icon: Ionicons.wallet_outline,
+                      iconBgColor: const Color(0xFFFFF3E0),
+                      iconColor: const Color(0xFFFF9800),
+                      title: 'Ví của tôi',
+                      subtitle: _formatCurrency(stats.walletBalance),
+                      onTap: () => context.push(RouteNames.wallet),
+                    ),
+                    _ModernMenuItem(
+                      icon: Ionicons.heart_outline,
+                      iconBgColor: const Color(0xFFFCE4EC),
+                      iconColor: const Color(0xFFE91E63),
+                      title: 'Danh sách yêu thích',
+                      onTap: () => context.push(RouteNames.favorites),
+                    ),
+                    _ModernMenuItem(
+                      icon: Ionicons.star_outline,
+                      iconBgColor: const Color(0xFFFFF8E1),
+                      iconColor: const Color(0xFFFFA000),
+                      title: 'Đánh giá của tôi',
+                      onTap: () => context.push(RouteNames.myReviews),
+                    ),
+                  ],
+                ),
 
-          const SizedBox(height: 100),
+                const SizedBox(height: 16),
+
+                _ModernMenuSection(
+                  title: 'Bảo mật & Xác thực',
+                  items: [
+                    _ModernMenuItem(
+                      icon: Ionicons.shield_checkmark_outline,
+                      iconBgColor: const Color(0xFFE3F2FD),
+                      iconColor: const Color(0xFF1976D2),
+                      title: 'Xác minh danh tính (eKYC)',
+                      subtitle: kycStatusText,
+                      subtitleColor: isKycVerified
+                          ? AppColors.success
+                          : AppColors.warning,
+                      onTap: () => context.push(RouteNames.kyc),
+                    ),
+                    _ModernMenuItem(
+                      icon: Ionicons.call_outline,
+                      iconBgColor: const Color(0xFFE8F5E9),
+                      iconColor: const Color(0xFF43A047),
+                      title: 'Liên hệ khẩn cấp',
+                      onTap: () => context.push(RouteNames.emergencyContacts),
+                    ),
+                    _ModernMenuItem(
+                      icon: Ionicons.lock_closed_outline,
+                      iconBgColor: const Color(0xFFF3E5F5),
+                      iconColor: const Color(0xFF7B1FA2),
+                      title: 'Đổi mật khẩu',
+                      onTap: () => context.push(RouteNames.changePassword),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                _ModernMenuSection(
+                  title: 'Cài đặt & Hỗ trợ',
+                  items: [
+                    _ModernMenuItem(
+                      icon: Ionicons.cog_outline,
+                      iconBgColor:   context.appColors.background,
+                      iconColor: const Color(0xFF616161),
+                      title: 'Cài đặt ứng dụng',
+                      subtitle: 'Thông báo, giao diện, ngôn ngữ',
+                      onTap: () => context.push(RouteNames.settings),
+                    ),
+                    _ModernMenuItem(
+                      icon: Ionicons.help_circle_outline,
+                      iconBgColor: const Color(0xFFE0F7FA),
+                      iconColor: const Color(0xFF00ACC1),
+                      title: 'Trung tâm trợ giúp',
+                      onTap: () => context.push(RouteNames.helpCenter),
+                    ),
+                    _ModernMenuItem(
+                      icon: Ionicons.document_text_outline,
+                      iconBgColor:   context.appColors.background,
+                      iconColor: const Color(0xFF616161),
+                      title: 'Điều khoản sử dụng',
+                      onTap: () => context.push(RouteNames.termsOfService),
+                    ),
+                    _ModernMenuItem(
+                      icon: Ionicons.shield_checkmark_outline,
+                      iconBgColor:   context.appColors.background,
+                      iconColor: const Color(0xFF616161),
+                      title: 'Chính sách bảo mật',
+                      onTap: () => context.push(RouteNames.privacyPolicy),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 24),
+
+                // Logout Button
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showLogoutDialog(context),
+                    icon: const Icon(
+                      Ionicons.log_out_outline,
+                      color: AppColors.error,
+                    ),
+                    label: Text(
+                      'Đăng xuất',
+                      style: AppTypography.labelLarge.copyWith(
+                        color: AppColors.error,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(
+                        color: AppColors.error,
+                        width: 1.5,
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                Text(
+                  'Mate Social v1.0.0',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: context.appColors.textHint,
+                  ),
+                ),
+
+                const SizedBox(height: 100),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -423,6 +471,7 @@ class _ProfileContent extends StatelessWidget {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Đăng xuất'),
         content: const Text('Bạn có chắc chắn muốn đăng xuất?'),
         actions: [
@@ -433,7 +482,6 @@ class _ProfileContent extends StatelessWidget {
           TextButton(
             onPressed: () {
               Navigator.pop(dialogContext);
-              // Trigger global logout
               context.read<AuthBloc>().add(const AuthLogoutRequested());
             },
             child: Text('Đăng xuất', style: TextStyle(color: AppColors.error)),
@@ -444,7 +492,8 @@ class _ProfileContent extends StatelessWidget {
   }
 }
 
-class _ProfileHeader extends StatelessWidget {
+/// Modern profile hero header with gradient background
+class _ProfileHeroHeader extends StatelessWidget {
   final String displayName;
   final String email;
   final String? avatarUrl;
@@ -452,7 +501,7 @@ class _ProfileHeader extends StatelessWidget {
   final bool isUpdatingAvatar;
   final VoidCallback? onAvatarTap;
 
-  const _ProfileHeader({
+  const _ProfileHeroHeader({
     required this.displayName,
     required this.email,
     required this.avatarUrl,
@@ -463,103 +512,182 @@ class _ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Avatar - tappable to upload
-        GestureDetector(
-          onTap: isUpdatingAvatar ? null : onAvatarTap,
-          child: Stack(
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary,
+            AppColors.primary.withOpacity(0.8),
+            AppColors.primaryLight,
+          ],
+        ),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+          child: Column(
             children: [
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.primary, width: 3),
-                ),
-                child: ClipOval(
-                  child: avatarUrl != null && avatarUrl!.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: ImageUtils.buildImageUrl(avatarUrl!),
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) =>
-                              Container(color: AppColors.shimmerBase),
-                          errorWidget: (context, url, error) => _DefaultAvatar(),
-                        )
-                      : _DefaultAvatar(),
-                ),
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.surface, width: 3),
-                  ),
-                  child: const Icon(
-                    Ionicons.camera_outline,
-                    color: AppColors.textWhite,
-                    size: 16,
-                  ),
-                ),
-              ),
-              if (isUpdatingAvatar)
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withAlpha(128),
-                      shape: BoxShape.circle,
+              // Title row
+              Row(
+                children: [
+                  Text(
+                    'Cá nhân',
+                    style: AppTypography.titleLarge.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
                     ),
-                    child: const Center(
-                      child: SizedBox(
-                        width: 32,
-                        height: 32,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 3,
-                          color: AppColors.textWhite,
-                        ),
+                  ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () => context.push(RouteNames.settings),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: context.appColors.surface.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Ionicons.cog_outline,
+                        color: Colors.white,
+                        size: 22,
                       ),
                     ),
                   ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              // Avatar
+              GestureDetector(
+                onTap: isUpdatingAvatar ? null : onAvatarTap,
+                child: Stack(
+                  children: [
+                    Container(
+                      width: 96,
+                      height: 96,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: context.appColors.surface, width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: context.appColors.textPrimary.withOpacity(0.15),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ClipOval(
+                        child: avatarUrl != null && avatarUrl!.isNotEmpty
+                            ? CachedNetworkImage(
+                                imageUrl: ImageUtils.buildImageUrl(avatarUrl!),
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => Container(
+                                  color: Colors.white.withOpacity(0.3),
+                                ),
+                                errorWidget: (context, url, error) =>
+                                    _DefaultAvatar(),
+                              )
+                            : _DefaultAvatar(),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: context.appColors.surface,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: context.appColors.textPrimary.withOpacity(0.1),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Ionicons.camera_outline,
+                          color: AppColors.primary,
+                          size: 16,
+                        ),
+                      ),
+                    ),
+                    if (isUpdatingAvatar)
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: context.appColors.textPrimary.withAlpha(100),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Center(
+                            child: SizedBox(
+                              width: 28,
+                              height: 28,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
+              ),
+
+              const SizedBox(height: 14),
+
+              // Name
+              Text(
+                displayName,
+                style: AppTypography.headlineSmall.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+
+              const SizedBox(height: 4),
+
+              // Email
+              Text(
+                email,
+                style: AppTypography.bodySmall.copyWith(
+                  color: Colors.white.withOpacity(0.8),
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              // Role badge
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: context.appColors.surface.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  roleText,
+                  style: AppTypography.labelSmall.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
-
-        const SizedBox(height: 16),
-
-        // Name
-        Text(displayName, style: AppTypography.headlineSmall),
-
-        const SizedBox(height: 4),
-
-        // Email
-        Text(
-          email,
-          style: AppTypography.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
-
-        const SizedBox(height: 8),
-
-        // User type badge
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withAlpha(25),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text(
-            roleText,
-            style: AppTypography.labelMedium.copyWith(color: AppColors.primary),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -568,18 +696,19 @@ class _DefaultAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.backgroundLight,
-      child: const Icon(Ionicons.person_outline, size: 48, color: AppColors.textHint),
+      color: Colors.white.withOpacity(0.3),
+      child: const Icon(Ionicons.person_outline, size: 42, color: Colors.white),
     );
   }
 }
 
-class _StatsRow extends StatelessWidget {
+/// Modern stats row with individual cards
+class _ModernStatsRow extends StatelessWidget {
   final int totalBookings;
   final int totalReviews;
   final double averageRating;
 
-  const _StatsRow({
+  const _ModernStatsRow({
     required this.totalBookings,
     required this.totalReviews,
     required this.averageRating,
@@ -587,69 +716,87 @@ class _StatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _StatItem(value: totalBookings.toString(), label: 'Lịch hẹn'),
-          Container(width: 1, height: 40, color: AppColors.divider),
-          _StatItem(value: totalReviews.toString(), label: 'Đánh giá'),
-          Container(width: 1, height: 40, color: AppColors.divider),
-          _StatItem(
-            value: averageRating.toStringAsFixed(1),
-            label: 'Điểm TB',
-            icon: Ionicons.star_outline,
-            iconColor: AppColors.starFilled,
-          ),
-        ],
+    return Transform.translate(
+      offset: const Offset(0, -20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        decoration: BoxDecoration(
+          color: context.appColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: context.appColors.textPrimary.withOpacity(0.06),
+              blurRadius: 20,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: _ModernStatItem(
+                value: totalBookings.toString(),
+                label: 'Lịch hẹn',
+                icon: Ionicons.calendar_outline,
+                color: const Color(0xFF3B82F6),
+              ),
+            ),
+            Container(width: 1, height: 40, color: context.appColors.border),
+            Expanded(
+              child: _ModernStatItem(
+                value: averageRating.toStringAsFixed(1),
+                label: 'Đánh giá',
+                icon: Ionicons.star,
+                color: const Color(0xFFFFA000),
+              ),
+            ),
+            Container(width: 1, height: 40, color: context.appColors.border),
+            Expanded(
+              child: _ModernStatItem(
+                value: totalReviews.toString(),
+                label: 'Nhận xét',
+                icon: Ionicons.chatbubble_outline,
+                color: const Color(0xFF10B981),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _StatItem extends StatelessWidget {
+class _ModernStatItem extends StatelessWidget {
   final String value;
   final String label;
-  final IconData? icon;
-  final Color? iconColor;
+  final IconData icon;
+  final Color color;
 
-  const _StatItem({
+  const _ModernStatItem({
     required this.value,
     required this.label,
-    this.icon,
-    this.iconColor,
+    required this.icon,
+    required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, size: 16, color: iconColor),
-              const SizedBox(width: 4),
-            ],
-            Text(
-              value,
-              style: AppTypography.headlineSmall.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
+        Icon(icon, size: 18, color: color),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: AppTypography.titleLarge.copyWith(
+            fontWeight: FontWeight.w800,
+            fontSize: 20,
+          ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 2),
         Text(
           label,
           style: AppTypography.labelSmall.copyWith(
-            color: AppColors.textSecondary,
+            color: context.appColors.textSecondary,
           ),
         ),
       ],
@@ -739,7 +886,9 @@ class _PartnerStatusCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
-                  isVerified ? Ionicons.checkmark_done_outline : Ionicons.time_outline,
+                  isVerified
+                      ? Ionicons.checkmark_done_outline
+                      : Ionicons.time_outline,
                   color: statusColor,
                   size: 20,
                 ),
@@ -752,7 +901,7 @@ class _PartnerStatusCard extends StatelessWidget {
                     Text(
                       'Trạng thái Partner',
                       style: AppTypography.labelMedium.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -791,7 +940,7 @@ class _PartnerStatusCard extends StatelessWidget {
             Text(
               'Hồ sơ của bạn đang được xét duyệt. Chúng tôi sẽ thông báo kết quả trong vòng 24-48 giờ.',
               style: AppTypography.bodySmall.copyWith(
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
             ),
           ],
@@ -800,24 +949,28 @@ class _PartnerStatusCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _StatItem(
+                  child: _ModernStatItem(
                     label: 'Đơn hàng',
                     value:
                         '${status.completedBookings}/${status.totalBookings}',
+                    icon: Ionicons.bag_check_outline,
+                    color: AppColors.success,
                   ),
                 ),
                 Expanded(
-                  child: _StatItem(
+                  child: _ModernStatItem(
                     label: 'Đánh giá',
                     value: status.averageRating.toStringAsFixed(1),
-                    icon: Ionicons.star_outline,
-                    iconColor: Colors.amber,
+                    icon: Ionicons.star,
+                    color: Colors.amber,
                   ),
                 ),
                 Expanded(
-                  child: _StatItem(
+                  child: _ModernStatItem(
                     label: 'Reviews',
                     value: '${status.totalReviews}',
+                    icon: Ionicons.chatbubble_outline,
+                    color: AppColors.secondary,
                   ),
                 ),
               ],
@@ -843,7 +996,9 @@ class _PartnerStatusCard extends StatelessWidget {
                       // Toggle availability
                     },
                     icon: Icon(
-                      status.isAvailable ? Ionicons.eye_outline : Ionicons.eye_off_outline,
+                      status.isAvailable
+                          ? Ionicons.eye_outline
+                          : Ionicons.eye_off_outline,
                       size: 18,
                     ),
                     label: Text(
@@ -852,7 +1007,7 @@ class _PartnerStatusCard extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: status.isAvailable
                           ? AppColors.success
-                          : AppColors.textSecondary,
+                          : context.appColors.textSecondary,
                     ),
                   ),
                 ),
@@ -869,7 +1024,7 @@ class _PartnerStatusCard extends StatelessWidget {
       case 'gold':
         return Colors.amber.shade700;
       case 'silver':
-        return Colors.grey.shade500;
+        return AppColors.textSecondary;
       case 'bronze':
         return Colors.brown.shade400;
       default:
@@ -898,9 +1053,19 @@ class _QuickActionButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withAlpha(25),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [color, color.withOpacity(0.8)],
+          ),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withAlpha(50)),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -908,17 +1073,17 @@ class _QuickActionButton extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: color.withAlpha(50),
+                color: context.appColors.surface.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: color, size: 20),
+              child: Icon(icon, color: Colors.white, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 label,
                 style: AppTypography.labelMedium.copyWith(
-                  color: color,
+                  color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -930,11 +1095,12 @@ class _QuickActionButton extends StatelessWidget {
   }
 }
 
-class _MenuSection extends StatelessWidget {
+/// Modern menu section with clean design
+class _ModernMenuSection extends StatelessWidget {
   final String title;
   final List<Widget> items;
 
-  const _MenuSection({required this.title, required this.items});
+  const _ModernMenuSection({required this.title, required this.items});
 
   @override
   Widget build(BuildContext context) {
@@ -942,19 +1108,26 @@ class _MenuSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 12),
+          padding: const EdgeInsets.only(left: 4, bottom: 10),
           child: Text(
             title,
             style: AppTypography.titleSmall.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ),
         Container(
           decoration: BoxDecoration(
-            color: AppColors.card,
+            color: context.appColors.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border),
+            boxShadow: [
+              BoxShadow(
+                color: context.appColors.textPrimary.withOpacity(0.03),
+                blurRadius: 12,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Column(
             children: items.asMap().entries.map((entry) {
@@ -964,7 +1137,7 @@ class _MenuSection extends StatelessWidget {
                 children: [
                   item,
                   if (index < items.length - 1)
-                    const Divider(height: 1, indent: 56),
+                    const Divider(height: 1, indent: 64, endIndent: 16),
                 ],
               );
             }).toList(),
@@ -975,49 +1148,47 @@ class _MenuSection extends StatelessWidget {
   }
 }
 
-class _MenuItem extends StatelessWidget {
+/// Modern menu item with colored icon backgrounds
+class _ModernMenuItem extends StatelessWidget {
   final IconData icon;
+  final Color iconBgColor;
+  final Color iconColor;
   final String title;
   final String? subtitle;
   final Color? subtitleColor;
-  final Widget? trailing;
   final VoidCallback? onTap;
 
-  const _MenuItem({
+  const _ModernMenuItem({
     required this.icon,
+    required this.iconBgColor,
+    required this.iconColor,
     required this.title,
     this.subtitle,
     this.subtitleColor,
-    this.trailing,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
             children: [
               Container(
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(10),
+                  color: iconBgColor,
+                  borderRadius: BorderRadius.circular(11),
                 ),
-                child: Icon(
-                  icon,
-                  color: colorScheme.onSurfaceVariant,
-                  size: 20,
-                ),
+                child: Icon(icon, color: iconColor, size: 20),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1025,30 +1196,29 @@ class _MenuItem extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: colorScheme.onSurface,
+                      style: AppTypography.bodyMedium.copyWith(
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     if (subtitle != null) ...[
                       const SizedBox(height: 2),
                       Text(
                         subtitle!,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: subtitleColor ?? colorScheme.onSurfaceVariant,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: subtitleColor ?? context.appColors.textSecondary,
+                          fontWeight: subtitleColor != null
+                              ? FontWeight.w600
+                              : FontWeight.w400,
                         ),
                       ),
                     ],
                   ],
                 ),
               ),
-              if (trailing != null)
-                trailing!
-              else if (onTap != null)
+              if (onTap != null)
                 Icon(
                   Ionicons.chevron_forward_outline,
-                  color: colorScheme.onSurfaceVariant,
+                  color: context.appColors.textHint,
                   size: 18,
                 ),
             ],

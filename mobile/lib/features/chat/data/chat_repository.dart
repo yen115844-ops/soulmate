@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../../core/network/api_client.dart';
+import '../../../core/network/base_repository.dart';
 
 /// Message types supported
 class MessageType {
@@ -15,7 +16,7 @@ class MessageType {
 }
 
 /// Chat Repository - Handles chat and messaging
-class ChatRepository {
+class ChatRepository with BaseRepositoryMixin {
   final ApiClient _apiClient;
 
   ChatRepository({required ApiClient apiClient}) : _apiClient = apiClient;
@@ -34,7 +35,7 @@ class ChatRepository {
         },
       );
 
-      return ConversationsResponse.fromJson(_extractData(response.data));
+      return ConversationsResponse.fromJson(extractRawData(response.data));
     } catch (e) {
       debugPrint('Get conversations error: $e');
       rethrow;
@@ -51,7 +52,7 @@ class ChatRepository {
         '/chat/conversations/find/$participantId',
       );
 
-      return ConversationEntity.fromJson(_extractData(response.data));
+      return ConversationEntity.fromJson(extractRawData(response.data));
     } catch (e) {
       debugPrint('Find conversation error: $e');
       rethrow;
@@ -73,7 +74,7 @@ class ChatRepository {
         },
       );
 
-      return ConversationEntity.fromJson(_extractData(response.data));
+      return ConversationEntity.fromJson(extractRawData(response.data));
     } catch (e) {
       debugPrint('Get or create conversation error: $e');
       rethrow;
@@ -95,7 +96,7 @@ class ChatRepository {
         },
       );
 
-      return SendFirstMessageResponse.fromJson(_extractData(response.data));
+      return SendFirstMessageResponse.fromJson(extractRawData(response.data));
     } catch (e) {
       debugPrint('Send first message error: $e');
       rethrow;
@@ -119,7 +120,7 @@ class ChatRepository {
         '/chat/conversations/$conversationId',
       );
 
-      return ConversationEntity.fromJson(_extractData(response.data));
+      return ConversationEntity.fromJson(extractRawData(response.data));
     } catch (e) {
       debugPrint('Get conversation by ID error: $e');
       rethrow;
@@ -143,7 +144,7 @@ class ChatRepository {
         },
       );
 
-      return MessagesResponse.fromJson(_extractData(response.data));
+      return MessagesResponse.fromJson(extractRawData(response.data));
     } catch (e) {
       debugPrint('Get messages error: $e');
       rethrow;
@@ -165,7 +166,7 @@ class ChatRepository {
         },
       );
 
-      return MessageEntity.fromJson(_extractData(response.data));
+      return MessageEntity.fromJson(extractRawData(response.data));
     } catch (e) {
       debugPrint('Send message error: $e');
       rethrow;
@@ -190,7 +191,7 @@ class ChatRepository {
         },
       );
 
-      return MessageEntity.fromJson(_extractData(response.data));
+      return MessageEntity.fromJson(extractRawData(response.data));
     } catch (e) {
       debugPrint('Send image message error: $e');
       rethrow;
@@ -219,7 +220,7 @@ class ChatRepository {
         },
       );
 
-      return MessageEntity.fromJson(_extractData(response.data));
+      return MessageEntity.fromJson(extractRawData(response.data));
     } catch (e) {
       debugPrint('Send location message error: $e');
       rethrow;
@@ -236,7 +237,7 @@ class ChatRepository {
     });
 
     final response = await _apiClient.post('/upload/images', data: formData);
-    final data = _extractData(response.data);
+    final data = extractRawData(response.data);
     
     if (data['urls'] != null && (data['urls'] as List).isNotEmpty) {
       return (data['urls'] as List).first;
@@ -278,7 +279,7 @@ class ChatRepository {
         },
       );
 
-      return MessagesResponse.fromJson(_extractData(response.data));
+      return MessagesResponse.fromJson(extractRawData(response.data));
     } catch (e) {
       debugPrint('Search messages error: $e');
       rethrow;
@@ -299,7 +300,7 @@ class ChatRepository {
   Future<int> getUnreadCount() async {
     try {
       final response = await _apiClient.get('/chat/unread-count');
-      final data = _extractData(response.data);
+      final data = extractRawData(response.data);
       return data['unreadCount'] ?? 0;
     } catch (e) {
       debugPrint('Get unread count error: $e');
@@ -331,7 +332,7 @@ class ChatRepository {
   Future<List<BlockedUserEntity>> getBlockedUsers() async {
     try {
       final response = await _apiClient.get('/users/blocked/list');
-      final data = _extractData(response.data);
+      final data = extractRawData(response.data);
       
       // Handle both formats: {data: [...]} or direct array
       List<dynamic> list;
@@ -359,21 +360,12 @@ class ChatRepository {
           'userIds': userIds.join(','),
         },
       );
-      final data = _extractData(response.data);
+      final data = extractRawData(response.data);
       return Map<String, bool>.from(data ?? {});
     } catch (e) {
       debugPrint('Get online status error: $e');
       return {};
     }
-  }
-
-  dynamic _extractData(dynamic responseData) {
-    if (responseData is Map<String, dynamic>) {
-      if (responseData.containsKey('data')) {
-        return responseData['data'];
-      }
-    }
-    return responseData;
   }
 }
 

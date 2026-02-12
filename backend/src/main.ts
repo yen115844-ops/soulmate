@@ -2,8 +2,10 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import {
+    AllExceptionsFilter,
     HttpExceptionFilter,
     PrismaExceptionFilter,
 } from './common/filters';
@@ -23,14 +25,23 @@ async function bootstrap() {
   const port = configService.get<number>('PORT', 3000);
   const apiPrefix = configService.get<string>('API_PREFIX', 'api/v1');
 
+  // Security headers
+  app.use(helmet());
+
+  // Graceful shutdown
+  app.enableShutdownHooks();
+
   // Global prefix
   app.setGlobalPrefix(apiPrefix);
 
-  // CORS
+  // CORS — use specific origins in production, wildcard only in development
+  const corsOrigins = configService.get<string>('CORS_ORIGINS', '*');
   app.enableCors({
-    origin: configService.get<string>('CORS_ORIGINS', '*').split(','),
+    origin: corsOrigins === '*' 
+      ? (process.env.NODE_ENV === 'production' ? false : true)
+      : corsOrigins.split(',').map(o => o.trim()),
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    credentials: true,
+    credentials: corsOrigins !== '*',
   });
 
   // Global validation pipe
@@ -45,8 +56,9 @@ async function bootstrap() {
     }),
   );
 
-  // Global filters
+  // Global filters (order matters: last registered = first executed)
   app.useGlobalFilters(
+    new AllExceptionsFilter(),
     new HttpExceptionFilter(),
     new PrismaExceptionFilter(),
   );

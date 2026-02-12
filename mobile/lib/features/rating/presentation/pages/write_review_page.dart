@@ -4,6 +4,7 @@ import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
@@ -232,7 +233,7 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
                         labelStyle: TextStyle(
                           color: isSelected
                               ? AppColors.primary
-                              : AppColors.textSecondary,
+                              : context.appColors.textSecondary,
                         ),
                       );
                     }).toList(),
@@ -260,7 +261,7 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.backgroundLight,
+                      color: context.appColors.background,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -277,7 +278,7 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
                               Text(
                                 'Tên của bạn sẽ không hiển thị công khai',
                                 style: AppTypography.bodySmall.copyWith(
-                                  color: AppColors.textSecondary,
+                                  color: context.appColors.textSecondary,
                                 ),
                               ),
                             ],
@@ -314,9 +315,9 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: context.appColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.appColors.border),
       ),
       child: Row(
         children: [
@@ -326,7 +327,7 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
                 ? NetworkImage(_booking!.partnerAvatar!)
                 : null,
             child: _booking?.partnerAvatar == null
-                ? Icon(Ionicons.person_outline, color: AppColors.textSecondary)
+                ? Icon(Ionicons.person_outline, color: context.appColors.textSecondary)
                 : null,
           ),
           const SizedBox(width: 16),
@@ -344,7 +345,7 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
                 Text(
                   _booking?.serviceType ?? '',
                   style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
               ],
@@ -400,7 +401,7 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
                         : Icons.star_outline_rounded,
                     color: index < rating
                         ? AppColors.warning
-                        : AppColors.textHint,
+                        : context.appColors.textHint,
                     size: small ? 24 : 32,
                   ),
                 ),

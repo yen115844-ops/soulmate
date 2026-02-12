@@ -1,23 +1,31 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/network/base_repository.dart';
+import '../../../favorites/data/favorites_repository.dart';
 import '../../data/home_repository.dart';
 import '../../domain/home_filter.dart';
 import 'home_event.dart';
 import 'home_state.dart';
 
 /// Home BLoC - Manages home page state
-class HomeBloc extends Bloc<HomeEvent, HomeState> {
+class HomeBloc extends Bloc<HomeEvent, HomeState> with BaseRepositoryMixin {
   final HomeRepository _repository;
+  final FavoritesRepository? _favoritesRepository;
   static const int _pageSize = 20;
 
-  HomeBloc({required HomeRepository repository})
-      : _repository = repository,
+  HomeBloc({
+    required HomeRepository repository,
+    FavoritesRepository? favoritesRepository,
+  })  : _repository = repository,
+        _favoritesRepository = favoritesRepository,
         super(HomeState.initial()) {
     on<HomeLoadPartners>(_onLoadPartners);
     on<HomeLoadMore>(_onLoadMore);
     on<HomeApplyFilter>(_onApplyFilter);
     on<HomeResetFilter>(_onResetFilter);
+    on<HomeSearch>(_onSearch);
+    on<HomeToggleFavorite>(_onToggleFavorite);
   }
 
   /// Load partners with current filter
@@ -26,9 +34,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     Emitter<HomeState> emit,
   ) async {
     try {
-      // If refreshing, show loading state
       if (event.refresh || state.status == HomeStatus.initial) {
-        emit(state.copyWith(status: HomeStatus.loading));
+        emit(state.copyWith(status: HomeStatus.loading, clearError: true));
       }
 
       final response = await _repository.searchPartners(
@@ -42,6 +49,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         maxRate: state.filter.maxRate,
         radius: state.filter.radius,
         city: state.filter.city,
+        district: state.filter.district,
         verifiedOnly: state.filter.verifiedOnly ? true : null,
         availableNow: state.filter.availableNow ? true : null,
         sortBy: state.filter.sortBy,
@@ -53,13 +61,13 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         currentPage: response.page,
         totalPages: response.totalPages,
         hasMore: response.hasNextPage,
-        errorMessage: null,
+        clearError: true,
       ));
     } catch (e) {
       debugPrint('HomeBloc: Load partners error: $e');
       emit(state.copyWith(
         status: HomeStatus.error,
-        errorMessage: _getErrorMessage(e),
+        errorMessage: getErrorMessage(e),
       ));
     }
   }
@@ -86,6 +94,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         maxRate: state.filter.maxRate,
         radius: state.filter.radius,
         city: state.filter.city,
+        district: state.filter.district,
         verifiedOnly: state.filter.verifiedOnly ? true : null,
         availableNow: state.filter.availableNow ? true : null,
         sortBy: state.filter.sortBy,
@@ -101,8 +110,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     } catch (e) {
       debugPrint('HomeBloc: Load more error: $e');
       emit(state.copyWith(
-        status: HomeStatus.success, // Keep success to show existing data
-        errorMessage: _getErrorMessage(e),
+        status: HomeStatus.success,
+        errorMessage: getErrorMessage(e),
       ));
     }
   }
@@ -117,7 +126,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       status: HomeStatus.loading,
     ));
 
-    // Reload with new filter
     add(const HomeLoadPartners(refresh: true));
   }
 
@@ -134,15 +142,67 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     add(const HomeLoadPartners(refresh: true));
   }
 
-  /// Get user-friendly error message
-  String _getErrorMessage(dynamic error) {
-    if (error.toString().contains('SocketException') ||
-        error.toString().contains('Connection')) {
-      return 'Không có kết nối mạng. Vui lòng kiểm tra và thử lại.';
+  /// Search partners by query
+  Future<void> _onSearch(
+    HomeSearch event,
+    Emitter<HomeState> emit,
+  ) async {
+    try {
+      emit(state.copyWith(status: HomeStatus.loading, clearError: true));
+
+      final response = await _repository.searchPartners(
+        page: 1,
+        limit: _pageSize,
+        query: event.query,
+        serviceType: state.filter.serviceType,
+        gender: state.filter.gender,
+        sortBy: state.filter.sortBy,
+      );
+
+      emit(state.copyWith(
+        status: HomeStatus.success,
+        partners: response.partners,
+        currentPage: response.page,
+        totalPages: response.totalPages,
+        hasMore: response.hasNextPage,
+        clearError: true,
+      ));
+    } catch (e) {
+      debugPrint('HomeBloc: Search error: $e');
+      emit(state.copyWith(
+        status: HomeStatus.error,
+        errorMessage: getErrorMessage(e),
+      ));
     }
-    if (error.toString().contains('TimeoutException')) {
-      return 'Kết nối quá chậm. Vui lòng thử lại.';
+  }
+
+  /// Toggle favorite partner
+  Future<void> _onToggleFavorite(
+    HomeToggleFavorite event,
+    Emitter<HomeState> emit,
+  ) async {
+    if (_favoritesRepository == null) return;
+
+    final isFavorite = state.favoriteIds.contains(event.partnerId);
+    // Optimistic update
+    final updatedFavorites = Set<String>.from(state.favoriteIds);
+    if (isFavorite) {
+      updatedFavorites.remove(event.partnerId);
+    } else {
+      updatedFavorites.add(event.partnerId);
     }
-    return 'Đã có lỗi xảy ra. Vui lòng thử lại.';
+    emit(state.copyWith(favoriteIds: updatedFavorites));
+
+    try {
+      if (isFavorite) {
+        await _favoritesRepository.removeFavorite(event.partnerId);
+      } else {
+        await _favoritesRepository.addFavorite(event.partnerId);
+      }
+    } catch (e) {
+      // Revert on error
+      debugPrint('HomeBloc: Toggle favorite error: $e');
+      emit(state.copyWith(favoriteIds: state.favoriteIds));
+    }
   }
 }

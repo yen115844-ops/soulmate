@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:ionicons/ionicons.dart';
 import 'package:intl/intl.dart';
+import 'package:ionicons/ionicons.dart';
 
+import '../../../../core/theme/theme_context.dart';
 import '../../domain/models/partner_schedule.dart';
 
 /// Trang cài đặt lịch làm việc cho Partner
@@ -194,7 +195,7 @@ class _ScheduleSettingsPageState extends State<ScheduleSettingsPage>
                     style: TextStyle(
                       color: isEnabled 
                           ? theme.colorScheme.primary 
-                          : Colors.grey,
+                          : context.appColors.textHint,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -208,7 +209,7 @@ class _ScheduleSettingsPageState extends State<ScheduleSettingsPage>
                       ? '${slots.length} khung giờ'
                       : 'Nghỉ',
                   style: TextStyle(
-                    color: isEnabled ? Colors.green : Colors.grey,
+                    color: isEnabled ? Colors.green : context.appColors.textHint,
                   ),
                 ),
                 trailing: Switch(
@@ -369,7 +370,7 @@ class _ScheduleSettingsPageState extends State<ScheduleSettingsPage>
               ),
               const SizedBox(width: 24),
               _buildLegendItem(
-                color: Colors.grey.shade300,
+                color: context.appColors.border,
                 label: 'Quá hạn',
               ),
             ],
@@ -426,7 +427,7 @@ class _ScheduleSettingsPageState extends State<ScheduleSettingsPage>
                   child: Text(
                     day,
                     style: TextStyle(
-                      color: Colors.grey.shade600,
+                      color: context.appColors.textSecondary,
                       fontWeight: FontWeight.w500,
                       fontSize: 13,
                     ),
@@ -485,12 +486,12 @@ class _ScheduleSettingsPageState extends State<ScheduleSettingsPage>
                 child: Container(
                   decoration: BoxDecoration(
                     color: isPast
-                        ? Colors.grey.shade200
+                        ? context.appColors.border
                         : isBlocked
                             ? Colors.red.withOpacity(0.2)
                             : hasSchedule
                                 ? theme.colorScheme.primary.withOpacity(0.1)
-                                : Colors.grey.shade100,
+                                : context.appColors.background,
                     borderRadius: BorderRadius.circular(8),
                     border: isToday
                         ? Border.all(color: theme.colorScheme.primary, width: 2)
@@ -503,12 +504,12 @@ class _ScheduleSettingsPageState extends State<ScheduleSettingsPage>
                         dayOffset.toString(),
                         style: TextStyle(
                           color: isPast
-                              ? Colors.grey
+                              ? context.appColors.textHint
                               : isBlocked
                                   ? Colors.red
                                   : hasSchedule
                                       ? theme.colorScheme.primary
-                                      : Colors.grey.shade600,
+                                      : context.appColors.textSecondary,
                           fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
                         ),
                       ),
@@ -603,7 +604,7 @@ class _TimeSlotRow extends StatelessWidget {
             child: Icon(
               Ionicons.chevron_forward_outline,
               size: 20,
-              color: Colors.grey.shade400,
+              color: context.appColors.textHint,
             ),
           ),
           Expanded(
@@ -664,7 +665,7 @@ class _TimePickerButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.shade300),
+          border: Border.all(color: context.appColors.border),
         ),
         child: Row(
           children: [
@@ -682,7 +683,7 @@ class _TimePickerButton extends StatelessWidget {
                     label,
                     style: TextStyle(
                       fontSize: 10,
-                      color: Colors.grey.shade600,
+                      color: context.appColors.textSecondary,
                     ),
                   ),
                   Text(

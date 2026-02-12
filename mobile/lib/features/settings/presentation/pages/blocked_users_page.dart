@@ -5,6 +5,7 @@ import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../chat/data/chat_repository.dart';
@@ -135,13 +136,13 @@ class _BlockedUsersPageState extends State<BlockedUsersPage> {
             Icon(
               Ionicons.alert_circle_outline,
               size: 48,
-              color: AppColors.textHint,
+              color: context.appColors.textHint,
             ),
             const SizedBox(height: 16),
             Text(
               _error!,
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textHint,
+                color: context.appColors.textHint,
               ),
               textAlign: TextAlign.center,
             ),
@@ -164,20 +165,20 @@ class _BlockedUsersPageState extends State<BlockedUsersPage> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: context.appColors.surface,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Ionicons.person_remove_outline,
                 size: 48,
-                color: AppColors.textHint,
+                color: context.appColors.textHint,
               ),
             ),
             const SizedBox(height: 24),
             Text(
               'Không có người dùng nào bị chặn',
               style: AppTypography.titleMedium.copyWith(
-                color: AppColors.textPrimary,
+                color: context.appColors.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
@@ -186,7 +187,7 @@ class _BlockedUsersPageState extends State<BlockedUsersPage> {
               child: Text(
                 'Khi bạn chặn ai đó, họ sẽ không thể nhắn tin hoặc xem hồ sơ của bạn.',
                 style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textHint,
+                  color: context.appColors.textHint,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -215,7 +216,7 @@ class _BlockedUsersPageState extends State<BlockedUsersPage> {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: AppColors.border),
+        side: BorderSide(color: context.appColors.border),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -253,7 +254,7 @@ class _BlockedUsersPageState extends State<BlockedUsersPage> {
                   Text(
                     'Đã chặn ${_formatDate(user.blockedAt)}',
                     style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textHint,
+                      color: context.appColors.textHint,
                     ),
                   ),
                 ],

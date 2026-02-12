@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_config.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
@@ -235,7 +236,7 @@ class _PhotoManagerPageState extends State<PhotoManagerPage> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
-              color: AppColors.backgroundLight,
+              color: context.appColors.background,
               child: Column(
                 children: [
                   Row(
@@ -259,7 +260,7 @@ class _PhotoManagerPageState extends State<PhotoManagerPage> {
                   Text(
                     'Thêm ảnh để hồ sơ hấp dẫn hơn',
                     style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
+                      color: context.appColors.textSecondary,
                     ),
                   ),
                 ],
@@ -343,10 +344,10 @@ class _PhotoManagerPageState extends State<PhotoManagerPage> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: context.appColors.surface,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: context.appColors.textPrimary.withOpacity(0.05),
                       blurRadius: 10,
                       offset: const Offset(0, -2),
                     ),
@@ -444,7 +445,7 @@ class _PhotoItem extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           child: Container(
             decoration: BoxDecoration(
-              color: AppColors.backgroundLight,
+              color: context.appColors.background,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Stack(
@@ -454,16 +455,16 @@ class _PhotoItem extends StatelessWidget {
                   Image.network(
                     imageUrl!,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Center(
-                      child: Icon(Ionicons.image_outline, color: AppColors.textHint),
+                    errorBuilder: (_, __, ___) => Center(
+                      child: Icon(Ionicons.image_outline, color: context.appColors.textHint),
                     ),
                   )
                 else if (file != null)
                   Image.file(
                     file!,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Center(
-                      child: Icon(Ionicons.image_outline, color: AppColors.textHint),
+                    errorBuilder: (_, __, ___) => Center(
+                      child: Icon(Ionicons.image_outline, color: context.appColors.textHint),
                     ),
                   ),
                 // Overlay for marked items

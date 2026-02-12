@@ -4,6 +4,7 @@ import 'package:ionicons/ionicons.dart';
 
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 
@@ -60,7 +61,7 @@ class BookingConfirmationPage extends StatelessWidget {
               Text(
                 'Partner sẽ xác nhận lịch hẹn của bạn. Bạn có thể xem chi tiết và trạng thái trong mục Đặt lịch.',
                 style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+                  color: context.appColors.textSecondary,
                 ),
                 textAlign: TextAlign.center,
               ),

@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/theme_context.dart';
 
  
 
@@ -58,7 +59,7 @@ class AppButton extends StatelessWidget {
           gradient: onPressed != null && !isLoading
               ? AppColors.primaryGradient
               : null,
-          color: onPressed == null || isLoading ? AppColors.border : null,
+          color: onPressed == null || isLoading ? context.appColors.border : null,
           borderRadius: BorderRadius.circular(borderRadius),
           boxShadow: onPressed != null && !isLoading
               ? [
@@ -138,17 +139,17 @@ class SocialButton extends StatelessWidget {
   final String text;
   final String? iconPath;
   final IconData? icon;
-  final Color backgroundColor;
-  final Color textColor;
+  final Color? backgroundColor;
+  final Color? textColor;
   final VoidCallback? onPressed;
 
-  const SocialButton({
+  SocialButton({
     super.key,
     required this.text,
     this.iconPath,
     this.icon,
-    this.backgroundColor = AppColors.surface,
-    this.textColor = AppColors.textPrimary,
+    this.backgroundColor,
+    this.textColor,
     this.onPressed,
   });
 
@@ -182,16 +183,18 @@ class SocialButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bg = backgroundColor ?? context.appColors.surface;
+    final fg = textColor ?? context.appColors.textPrimary;
     return SizedBox(
       width: double.infinity,
       height: 56,
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
-          backgroundColor: backgroundColor,
-          foregroundColor: textColor,
-          side: backgroundColor == AppColors.surface
-              ? const BorderSide(color: AppColors.border)
+          backgroundColor: bg,
+          foregroundColor: fg,
+          side: backgroundColor == null
+              ? BorderSide(color: context.appColors.border)
               : BorderSide.none,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -201,13 +204,13 @@ class SocialButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (icon != null)
-              Icon(icon, size: 24, color: textColor)
+              Icon(icon, size: 24, color: fg)
             else if (iconPath != null)
               Image.asset(iconPath!, width: 24, height: 24),
             const SizedBox(width: 12),
             Text(
               text,
-              style: AppTypography.labelLarge.copyWith(color: textColor),
+              style: AppTypography.labelLarge.copyWith(color: fg),
             ),
           ],
         ),
@@ -243,14 +246,14 @@ class AppIconButton extends StatelessWidget {
           width: size,
           height: size,
           decoration: BoxDecoration(
-            color: backgroundColor ?? AppColors.backgroundLight,
+            color: backgroundColor ?? context.appColors.background,
             borderRadius: BorderRadius.circular(12),
           ),
           child: IconButton(
             onPressed: onPressed,
             icon: Icon(
               icon,
-              color: iconColor ?? AppColors.textPrimary,
+              color: iconColor ?? context.appColors.textPrimary,
               size: 22,
             ),
             padding: EdgeInsets.zero,
@@ -312,10 +315,10 @@ class AppChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? color.withAlpha(25) : AppColors.backgroundLight,
+          color: isSelected ? color.withAlpha(25) : context.appColors.background,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: isSelected ? color : AppColors.border,
+            color: isSelected ? color : context.appColors.border,
             width: 1.5,
           ),
         ),
@@ -326,14 +329,14 @@ class AppChip extends StatelessWidget {
               Icon(
                 icon,
                 size: 16,
-                color: isSelected ? color : AppColors.textSecondary,
+                color: isSelected ? color : context.appColors.textSecondary,
               ),
               const SizedBox(width: 6),
             ],
             Text(
               label,
               style: AppTypography.labelMedium.copyWith(
-                color: isSelected ? color : AppColors.textSecondary,
+                color: isSelected ? color : context.appColors.textSecondary,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               ),
             ),

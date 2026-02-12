@@ -5,6 +5,7 @@ import 'package:ionicons/ionicons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/theme_context.dart';
 import '../../../core/utils/image_utils.dart';
 
 /// Partner Card - Main card for displaying partner info
@@ -44,12 +45,12 @@ class PartnerCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.card,
+          color: context.appColors.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.appColors.border),
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadow,
+              color: context.appColors.shadow,
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -71,14 +72,14 @@ class PartnerCard extends StatelessWidget {
                     width: double.infinity,
                     fit: BoxFit.cover,
                     placeholder: (context, url) =>
-                        Container(height: 180, color: AppColors.shimmerBase),
+                        Container(height: 180, color: context.appColors.shimmerBase),
                     errorWidget: (context, url, error) => Container(
                       height: 180,
-                      color: AppColors.backgroundLight,
-                      child: const Icon(
+                      color: context.appColors.background,
+                      child: Icon(
                         Ionicons.person_outline,
                         size: 48,
-                        color: AppColors.textHint,
+                        color: context.appColors.textHint,
                       ),
                     ),
                   ),
@@ -136,7 +137,7 @@ class PartnerCard extends StatelessWidget {
                         isFavorite ? Ionicons.heart_outline : Ionicons.heart_outline,
                         color: isFavorite
                             ? AppColors.error
-                            : AppColors.textSecondary,
+                            : context.appColors.textSecondary,
                         size: 20,
                       ),
                     ),
@@ -209,7 +210,7 @@ class PartnerCard extends StatelessWidget {
                       Text(
                         ' ($reviewCount)',
                         style: AppTypography.labelSmall.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.appColors.textSecondary,
                         ),
                       ),
                     ],
@@ -219,9 +220,9 @@ class PartnerCard extends StatelessWidget {
                   if (distance != null) ...[
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Ionicons.location_outline,
-                          color: AppColors.textSecondary,
+                          color: context.appColors.textSecondary,
                           size: 14,
                         ),
                         const SizedBox(width: 4),
@@ -300,9 +301,9 @@ class PartnerCardCompact extends StatelessWidget {
       child: Container(
         width: 150,
         decoration: BoxDecoration(
-          color: AppColors.card,
+          color: context.appColors.card,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.appColors.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -319,14 +320,14 @@ class PartnerCardCompact extends StatelessWidget {
                     width: double.infinity,
                     fit: BoxFit.cover,
                     placeholder: (context, url) =>
-                        Container(height: 130, color: AppColors.shimmerBase),
+                        Container(height: 130, color: context.appColors.shimmerBase),
                     errorWidget: (context, url, error) => Container(
                       height: 130,
-                      color: AppColors.backgroundLight,
-                      child: const Icon(
+                      color: context.appColors.background,
+                      child: Icon(
                         Ionicons.person_outline,
                         size: 32,
-                        color: AppColors.textHint,
+                        color: context.appColors.textHint,
                       ),
                     ),
                   ),
@@ -341,7 +342,7 @@ class PartnerCardCompact extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: AppColors.online,
                         shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.card, width: 2),
+                        border: Border.all(color: context.appColors.card, width: 2),
                       ),
                     ),
                   ),
@@ -416,10 +417,10 @@ class ServiceCard extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? color.withAlpha(25) : AppColors.card,
+          color: isSelected ? color.withAlpha(25) : context.appColors.card,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? color : AppColors.border,
+            color: isSelected ? color : context.appColors.border,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -439,7 +440,7 @@ class ServiceCard extends StatelessWidget {
             Text(
               name,
               style: AppTypography.labelMedium.copyWith(
-                color: isSelected ? color : AppColors.textPrimary,
+                color: isSelected ? color : context.appColors.textPrimary,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               ),
               textAlign: TextAlign.center,
@@ -517,9 +518,9 @@ class BookingCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.card,
+          color: context.appColors.card,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.appColors.border),
         ),
         child: Column(
           children: [
@@ -531,9 +532,9 @@ class BookingCard extends StatelessWidget {
                   backgroundImage: partnerAvatar != null
                       ? CachedNetworkImageProvider(partnerAvatar!)
                       : null,
-                  backgroundColor: AppColors.backgroundLight,
+                  backgroundColor: context.appColors.background,
                   child: partnerAvatar == null
-                      ? const Icon(Ionicons.person_outline, color: AppColors.textHint)
+                      ? Icon(Ionicons.person_outline, color: context.appColors.textHint)
                       : null,
                 ),
                 const SizedBox(width: 12),
@@ -594,9 +595,9 @@ class BookingCard extends StatelessWidget {
                 Expanded(
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Ionicons.calendar_outline,
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                         size: 18,
                       ),
                       const SizedBox(width: 8),
@@ -608,9 +609,9 @@ class BookingCard extends StatelessWidget {
                 Expanded(
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Ionicons.time_outline,
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                         size: 18,
                       ),
                       const SizedBox(width: 8),

@@ -17,6 +17,8 @@ const ADMIN_ALERT_SETTINGS_KEYS = {
   new_booking_alert: true,
   kyc_pending_alert: true,
   admin_email_alerts: true,
+  sos_alert: true,
+  report_alert: true,
 } as const;
 
 export interface PushQueueStatus {
@@ -142,32 +144,37 @@ export class NotificationsService implements OnModuleInit {
     actionId?: string;
     data?: any;
     sendPush?: boolean;
+    saveToDb?: boolean;
   }) {
-    this.logger.log(`[NotificationsService] sendNotification called for user ${data.userId}, type: ${data.type}, sendPush: ${data.sendPush !== false}`);
-    
-    // Create in database
-    const notification = await this.prisma.notification.create({
-      data: {
-        userId: data.userId,
-        type: data.type,
-        title: data.title,
-        body: data.body,
-        imageUrl: data.imageUrl,
-        actionType: data.actionType,
-        actionId: data.actionId,
-        data: data.data,
-      },
-    });
+    const shouldSaveToDb = data.saveToDb !== false;
+    this.logger.log(`[NotificationsService] sendNotification called for user ${data.userId}, type: ${data.type}, sendPush: ${data.sendPush !== false}, saveToDb: ${shouldSaveToDb}`);
 
-    this.logger.log(`[NotificationsService] Notification saved to DB with id: ${notification.id}`);
+    let notification: any = null;
+
+    // Create in database (skip for CHAT — messages have their own history)
+    if (shouldSaveToDb) {
+      notification = await this.prisma.notification.create({
+        data: {
+          userId: data.userId,
+          type: data.type,
+          title: data.title,
+          body: data.body,
+          imageUrl: data.imageUrl,
+          actionType: data.actionType,
+          actionId: data.actionId,
+          data: data.data,
+        },
+      });
+      this.logger.log(`[NotificationsService] Notification saved to DB with id: ${notification.id}`);
+    }
 
     // Queue push notification if requested
     if (data.sendPush !== false) {
       await this.sendPushNotification({
         ...data,
-        saveToDb: false, // Already saved
+        saveToDb: false, // Already saved (or skipped)
         sendPush: true,
-        notificationId: notification.id,
+        notificationId: notification?.id,
       });
     }
 
@@ -181,6 +188,8 @@ export class NotificationsService implements OnModuleInit {
 
     const where: any = {
       userId,
+      // Exclude CHAT notifications — messages have their own chat history
+      type: { not: NotificationType.CHAT },
     };
 
     if (isRead !== undefined) {
@@ -200,7 +209,7 @@ export class NotificationsService implements OnModuleInit {
       }),
       this.prisma.notification.count({ where }),
       this.prisma.notification.count({
-        where: { userId, isRead: false },
+        where: { userId, isRead: false, type: { not: NotificationType.CHAT } },
       }),
     ]);
 
@@ -230,7 +239,12 @@ export class NotificationsService implements OnModuleInit {
 
   async getUnreadCount(userId: string) {
     const count = await this.prisma.notification.count({
-      where: { userId, isRead: false },
+      where: {
+        userId,
+        isRead: false,
+        // Exclude CHAT — messages have their own unread count
+        type: { not: NotificationType.CHAT },
+      },
     });
 
     return { unreadCount: count };

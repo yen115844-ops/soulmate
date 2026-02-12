@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:ionicons/ionicons.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/theme_context.dart';
 import '../../../core/theme/app_typography.dart';
 import '../buttons/app_button.dart';
 
@@ -39,7 +40,7 @@ class ErrorStateWidget extends StatelessWidget {
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(
-                    color: AppColors.error.withOpacity(0.1),
+                    color: AppColors.error.withAlpha(25),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -69,7 +70,7 @@ class ErrorStateWidget extends StatelessWidget {
             Text(
               message ?? 'Vui lòng thử lại sau hoặc kiểm tra kết nối mạng',
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ).animate().fadeIn(delay: 200.ms),

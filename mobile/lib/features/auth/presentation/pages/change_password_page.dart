@@ -5,6 +5,7 @@ import 'package:ionicons/ionicons.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
@@ -131,7 +132,7 @@ class _ChangePasswordContentState extends State<_ChangePasswordContent> {
             Text(
               'Mật khẩu của bạn đã được cập nhật. Hãy sử dụng mật khẩu mới cho lần đăng nhập tiếp theo.',
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -196,7 +197,7 @@ class _ChangePasswordContentState extends State<_ChangePasswordContent> {
                           child: Text(
                             'Mật khẩu mới cần có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường và số.',
                             style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
+                              color: context.appColors.textSecondary,
                             ),
                           ),
                         ),
@@ -222,7 +223,7 @@ class _ChangePasswordContentState extends State<_ChangePasswordContent> {
                         _obscureCurrentPassword
                             ? Ionicons.eye_off_outline
                             : Ionicons.eye_outline,
-                        color: AppColors.textHint,
+                        color: context.appColors.textHint,
                       ),
                     ),
                     validator: _validateCurrentPassword,
@@ -243,7 +244,7 @@ class _ChangePasswordContentState extends State<_ChangePasswordContent> {
                       ),
                       icon: Icon(
                         _obscureNewPassword ? Ionicons.eye_off_outline : Ionicons.eye_outline,
-                        color: AppColors.textHint,
+                        color: context.appColors.textHint,
                       ),
                     ),
                     validator: _validateNewPassword,
@@ -275,7 +276,7 @@ class _ChangePasswordContentState extends State<_ChangePasswordContent> {
                         _obscureConfirmPassword
                             ? Ionicons.eye_off_outline
                             : Ionicons.eye_outline,
-                        color: AppColors.textHint,
+                        color: context.appColors.textHint,
                       ),
                     ),
                     validator: _validateConfirmPassword,
@@ -383,7 +384,7 @@ class _PasswordStrengthIndicator extends StatelessWidget {
                 margin: EdgeInsets.only(right: index < 4 ? 4 : 0),
                 height: 4,
                 decoration: BoxDecoration(
-                  color: index < strength ? color : AppColors.border,
+                  color: index < strength ? color : context.appColors.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -397,7 +398,7 @@ class _PasswordStrengthIndicator extends StatelessWidget {
             Text(
               'Độ mạnh mật khẩu:',
               style: AppTypography.labelSmall.copyWith(
-                color: AppColors.textHint,
+                color: context.appColors.textHint,
               ),
             ),
             Text(
@@ -444,13 +445,13 @@ class _RequirementItem extends StatelessWidget {
           Icon(
             isMet ? Ionicons.checkmark_circle_outline : Ionicons.close_circle_outline,
             size: 16,
-            color: isMet ? AppColors.success : AppColors.textHint,
+            color: isMet ? AppColors.success : context.appColors.textHint,
           ),
           const SizedBox(width: 8),
           Text(
             text,
             style: AppTypography.labelSmall.copyWith(
-              color: isMet ? AppColors.success : AppColors.textHint,
+              color: isMet ? AppColors.success : context.appColors.textHint,
             ),
           ),
         ],

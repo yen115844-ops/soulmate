@@ -10,6 +10,7 @@ import '../../../../config/routes/route_names.dart';
 import '../../../../core/constants/service_type_emoji.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/bloc/master_data_bloc.dart';
 import '../../../../shared/data/models/master_data_models.dart';
@@ -199,7 +200,7 @@ class _BecomePartnerPageState extends State<BecomePartnerPage> {
             Text(
               'Hồ sơ của bạn đang được xét duyệt. Chúng tôi sẽ thông báo kết quả trong vòng 24-48 giờ.',
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -253,7 +254,7 @@ class _BecomePartnerPageState extends State<BecomePartnerPage> {
             Text(
               error,
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -409,10 +410,10 @@ class _BecomePartnerPageState extends State<BecomePartnerPage> {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: context.appColors.surface,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withAlpha(10),
+                color: context.appColors.textPrimary.withAlpha(10),
                 offset: const Offset(0, -4),
                 blurRadius: 16,
               ),
@@ -471,7 +472,7 @@ class _StepIndicator extends StatelessWidget {
               child: Container(
                 height: 3,
                 decoration: BoxDecoration(
-                  color: isCompleted ? AppColors.primary : AppColors.border,
+                  color: isCompleted ? AppColors.primary : context.appColors.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -489,12 +490,12 @@ class _StepIndicator extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isCompleted || isCurrent
                         ? AppColors.primary
-                        : AppColors.card,
+                        : context.appColors.card,
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: isCompleted || isCurrent
                           ? AppColors.primary
-                          : AppColors.border,
+                          : context.appColors.border,
                       width: 2,
                     ),
                   ),
@@ -510,7 +511,7 @@ class _StepIndicator extends StatelessWidget {
                             style: AppTypography.labelMedium.copyWith(
                               color: isCurrent
                                   ? AppColors.textWhite
-                                  : AppColors.textSecondary,
+                                  : context.appColors.textSecondary,
                             ),
                           ),
                   ),
@@ -521,7 +522,7 @@ class _StepIndicator extends StatelessWidget {
                   style: AppTypography.labelSmall.copyWith(
                     color: isCurrent || isCompleted
                         ? AppColors.primary
-                        : AppColors.textHint,
+                        : context.appColors.textHint,
                     fontWeight: isCurrent ? FontWeight.w600 : FontWeight.normal,
                   ),
                 ),
@@ -557,7 +558,7 @@ class _BasicInfoStep extends StatelessWidget {
           Text(
             'Hãy cho mọi người biết về bạn để tăng cơ hội được chọn.',
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ),
           const SizedBox(height: 24),
@@ -575,7 +576,7 @@ class _BasicInfoStep extends StatelessWidget {
             style: AppTypography.labelSmall.copyWith(
               color: bioController.text.length >= 20
                   ? AppColors.success
-                  : AppColors.textHint,
+                  : context.appColors.textHint,
             ),
           ),
 
@@ -595,7 +596,7 @@ class _BasicInfoStep extends StatelessWidget {
             style: AppTypography.labelSmall.copyWith(
               color: introController.text.length >= 50
                   ? AppColors.success
-                  : AppColors.textHint,
+                  : context.appColors.textHint,
             ),
           ),
 
@@ -662,7 +663,7 @@ class _TipItem extends StatelessWidget {
             child: Text(
               text,
               style: AppTypography.bodySmall.copyWith(
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
             ),
           ),
@@ -701,7 +702,7 @@ class _ServicesStep extends StatelessWidget {
           Text(
             'Chọn các dịch vụ bạn muốn cung cấp. Bạn có thể thay đổi sau.',
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ),
           const SizedBox(height: 24),
@@ -714,7 +715,7 @@ class _ServicesStep extends StatelessWidget {
                 child: Text(
                   'Đang tải danh sách dịch vụ...',
                   style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
               ),
@@ -739,12 +740,12 @@ class _ServicesStep extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primary : AppColors.card,
+                      color: isSelected ? AppColors.primary : context.appColors.card,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isSelected
                             ? AppColors.primary
-                            : AppColors.border,
+                            : context.appColors.border,
                       ),
                     ),
                     child: Row(
@@ -755,7 +756,7 @@ class _ServicesStep extends StatelessWidget {
                             fontSize: 20,
                             color: isSelected
                                 ? AppColors.textWhite
-                                : AppColors.textSecondary,
+                                : context.appColors.textSecondary,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -765,7 +766,7 @@ class _ServicesStep extends StatelessWidget {
                             style: AppTypography.labelMedium.copyWith(
                               color: isSelected
                                   ? AppColors.textWhite
-                                  : AppColors.textPrimary,
+                                  : context.appColors.textPrimary,
                             ),
                           ),
                         ),
@@ -790,7 +791,7 @@ class _ServicesStep extends StatelessWidget {
           Text(
             'Đặt mức giá phù hợp với dịch vụ của bạn.',
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ),
           const SizedBox(height: 16),
@@ -810,7 +811,7 @@ class _ServicesStep extends StatelessWidget {
           Text(
             'Gợi ý mức giá:',
             style: AppTypography.labelMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
@@ -829,9 +830,9 @@ class _ServicesStep extends StatelessWidget {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.backgroundLight,
+                    color: context.appColors.background,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: context.appColors.border),
                   ),
                   child: Text(
                     '${(price / 1000).toInt()}k/giờ',
@@ -870,7 +871,7 @@ class _PhotosStep extends StatelessWidget {
           Text(
             'Thêm ít nhất 3 hình ảnh chất lượng cao để hồ sơ thu hút hơn.',
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ),
           const SizedBox(height: 24),
@@ -893,10 +894,10 @@ class _PhotosStep extends StatelessWidget {
                   onTap: onPickPhotos,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: AppColors.card,
+                      color: context.appColors.card,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: AppColors.border,
+                        color: context.appColors.border,
                         style: BorderStyle.solid,
                       ),
                     ),
@@ -1078,7 +1079,7 @@ class _BankAccountStep extends StatelessWidget {
           Text(
             'Thêm tài khoản ngân hàng để nhận thanh toán từ các đơn hàng.',
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ),
           const SizedBox(height: 24),
@@ -1091,13 +1092,13 @@ class _BankAccountStep extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               decoration: BoxDecoration(
-                color: AppColors.card,
+                color: context.appColors.card,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: context.appColors.border),
               ),
               child: Row(
                 children: [
-                  Icon(Ionicons.business_outline, color: AppColors.textHint),
+                  Icon(Ionicons.business_outline, color: context.appColors.textHint),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -1106,12 +1107,12 @@ class _BankAccountStep extends StatelessWidget {
                           : bankNameController.text,
                       style: AppTypography.bodyLarge.copyWith(
                         color: bankNameController.text.isEmpty
-                            ? AppColors.textHint
-                            : AppColors.textPrimary,
+                            ? context.appColors.textHint
+                            : context.appColors.textPrimary,
                       ),
                     ),
                   ),
-                  Icon(Ionicons.chevron_down_outline, color: AppColors.textHint),
+                  Icon(Ionicons.chevron_down_outline, color: context.appColors.textHint),
                 ],
               ),
             ),
@@ -1166,7 +1167,7 @@ class _BankAccountStep extends StatelessWidget {
                       Text(
                         'Thông tin tài khoản của bạn được mã hóa và bảo mật. Chúng tôi sẽ không chia sẻ với bất kỳ ai.',
                         style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.appColors.textSecondary,
                         ),
                       ),
                     ],
@@ -1182,9 +1183,9 @@ class _BankAccountStep extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.card,
+              color: context.appColors.card,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: context.appColors.border),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1200,13 +1201,13 @@ class _BankAccountStep extends StatelessWidget {
                 _CommissionItem(
                   label: 'Phí dịch vụ',
                   value: '20%',
-                  color: AppColors.textSecondary,
+                  color: context.appColors.textSecondary,
                 ),
                 const Divider(height: 24),
                 Text(
                   'Tiền sẽ được chuyển vào tài khoản ngân hàng trong vòng 1-3 ngày làm việc sau khi hoàn thành dịch vụ.',
                   style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
               ],
@@ -1222,8 +1223,8 @@ class _BankAccountStep extends StatelessWidget {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
+        decoration: BoxDecoration(
+          color: context.appColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -1245,12 +1246,12 @@ class _BankAccountStep extends StatelessWidget {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: AppColors.backgroundLight,
+                        color: context.appColors.background,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Ionicons.business_outline,
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                         size: 20,
                       ),
                     ),
@@ -1293,7 +1294,7 @@ class _CommissionItem extends StatelessWidget {
         Text(
           label,
           style: AppTypography.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
+            color: context.appColors.textSecondary,
           ),
         ),
         Text(

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/services/local_storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../data/chat_repository.dart';
 
@@ -117,7 +118,7 @@ class _ChatWithUserPageState extends State<ChatWithUserPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.appColors.background,
       appBar: AppBar(
         title: const Text('Tin nhắn'),
         leading: IconButton(
@@ -135,7 +136,7 @@ class _ChatWithUserPageState extends State<ChatWithUserPage> {
                   Text(
                     'Đang mở cuộc trò chuyện...',
                     style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.textSecondary,
+                      color: context.appColors.textSecondary,
                     ),
                   ),
                 ],
@@ -152,7 +153,7 @@ class _ChatWithUserPageState extends State<ChatWithUserPage> {
                       _error!,
                       textAlign: TextAlign.center,
                       style: AppTypography.bodyLarge.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                       ),
                     ),
                   ),

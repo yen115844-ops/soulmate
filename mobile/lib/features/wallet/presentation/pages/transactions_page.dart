@@ -3,6 +3,7 @@ import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 
 class TransactionsPage extends StatefulWidget {
@@ -163,16 +164,16 @@ class _FilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.card,
+          color: isSelected ? AppColors.primary : context.appColors.card,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
+            color: isSelected ? AppColors.primary : context.appColors.border,
           ),
         ),
         child: Text(
           label,
           style: AppTypography.labelMedium.copyWith(
-            color: isSelected ? AppColors.textWhite : AppColors.textSecondary,
+            color: isSelected ? AppColors.textWhite : context.appColors.textSecondary,
           ),
         ),
       ),
@@ -240,7 +241,7 @@ class _TransactionItem extends StatelessWidget {
       subtitle: Text(
         date,
         style: AppTypography.labelSmall.copyWith(
-          color: AppColors.textHint,
+          color: context.appColors.textHint,
         ),
       ),
       trailing: Text(
@@ -265,13 +266,13 @@ class _EmptyState extends StatelessWidget {
             width: 100,
             height: 100,
             decoration: BoxDecoration(
-              color: AppColors.backgroundLight,
+              color: context.appColors.background,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child:   Icon(
               Ionicons.document_text_outline,
               size: 48,
-              color: AppColors.textHint,
+              color: context.appColors.textHint,
             ),
           ),
           const SizedBox(height: 24),
@@ -283,7 +284,7 @@ class _EmptyState extends StatelessWidget {
           Text(
             'Chưa có giao dịch nào trong danh mục này',
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ),
         ],

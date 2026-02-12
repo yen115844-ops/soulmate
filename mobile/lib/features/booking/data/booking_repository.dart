@@ -2,9 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/network/api_client.dart';
+import '../../../core/network/base_repository.dart';
 import '../domain/entities/booking_entity.dart';
 
-class BookingRepository {
+class BookingRepository with BaseRepositoryMixin {
   final ApiClient _apiClient;
 
   BookingRepository({required ApiClient apiClient}) : _apiClient = apiClient;
@@ -31,7 +32,7 @@ class BookingRepository {
         queryParameters: queryParams,
       );
 
-      return BookingListResponse.fromJson(_extractData(response.data));
+      return BookingListResponse.fromJson(extractRawData(response.data));
     } catch (e, stackTrace) {
       debugPrint('Get user bookings error: $e');
       debugPrint('Stack trace: $stackTrace');
@@ -43,7 +44,7 @@ class BookingRepository {
   Future<BookingEntity> getBookingById(String bookingId) async {
     try {
       final response = await _apiClient.get('/bookings/$bookingId');
-      return BookingEntity.fromJson(_extractData(response.data));
+      return BookingEntity.fromJson(extractRawData(response.data));
     } catch (e, stackTrace) {
       debugPrint('Get booking detail error: $e');
       debugPrint('Stack trace: $stackTrace');
@@ -78,7 +79,7 @@ class BookingRepository {
         },
       );
 
-      return BookingEntity.fromJson(_extractData(response.data));
+      return BookingEntity.fromJson(extractRawData(response.data));
     } catch (e, stackTrace) {
       debugPrint('Create booking error: $e');
       debugPrint('Stack trace: $stackTrace');
@@ -99,7 +100,7 @@ class BookingRepository {
         },
       );
 
-      return BookingEntity.fromJson(_extractData(response.data));
+      return BookingEntity.fromJson(extractRawData(response.data));
     } catch (e, stackTrace) {
       debugPrint('Cancel booking error: $e');
       debugPrint('Stack trace: $stackTrace');
@@ -117,7 +118,7 @@ class BookingRepository {
         '/bookings/$bookingId/complete',
         data: note != null && note.isNotEmpty ? {'note': note} : <String, dynamic>{},
       );
-      return BookingEntity.fromJson(_extractData(response.data));
+      return BookingEntity.fromJson(extractRawData(response.data));
     } catch (e, stackTrace) {
       debugPrint('Complete booking error: $e');
       debugPrint('Stack trace: $stackTrace');
@@ -129,7 +130,7 @@ class BookingRepository {
   Future<BookingStatsResponse> getUserBookingStats() async {
     try {
       final response = await _apiClient.get('/bookings/stats/user');
-      return BookingStatsResponse.fromJson(_extractData(response.data));
+      return BookingStatsResponse.fromJson(extractRawData(response.data));
     } catch (e, stackTrace) {
       debugPrint('Get booking stats error: $e');
       debugPrint('Stack trace: $stackTrace');
@@ -137,16 +138,6 @@ class BookingRepository {
     }
   }
 
-  /// Extract data from API response
-  dynamic _extractData(dynamic responseData) {
-    if (responseData is Map<String, dynamic>) {
-      // Handle wrapped response {success, data, ...}
-      if (responseData.containsKey('data')) {
-        return responseData['data'];
-      }
-    }
-    return responseData;
-  }
 }
 
 // Response models

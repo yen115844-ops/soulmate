@@ -12,6 +12,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/services/local_storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../favorites/data/favorites_repository.dart';
 import '../../../home/data/home_repository.dart';
@@ -163,7 +164,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: context.appColors.background,
       body: _isLoading
           ? _buildLoading()
           : _partner == null
@@ -351,7 +352,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.6),
+                    color: context.appColors.textPrimary.withOpacity(0.6),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -396,7 +397,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                           borderRadius: BorderRadius.circular(4),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.3),
+                              color: context.appColors.textPrimary.withOpacity(0.3),
                               blurRadius: 4,
                             ),
                           ],
@@ -469,10 +470,10 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                           imageUrl: ImageUtils.buildImageUrl(gallery[index]),
                           fit: BoxFit.cover,
                           placeholder: (_, __) => Container(
-                            color: Colors.grey[800],
+                            color: context.appColors.textPrimary,
                           ),
                           errorWidget: (_, __, ___) => Container(
-                            color: Colors.grey[800],
+                            color: context.appColors.textPrimary,
                             child: const Icon(Icons.error,
                                 size: 16, color: Colors.white54),
                           ),
@@ -543,11 +544,11 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
         margin: const EdgeInsets.symmetric(horizontal: 16),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.appColors.surface,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: context.appColors.textPrimary.withOpacity(0.08),
               blurRadius: 24,
               offset: const Offset(0, 8),
             ),
@@ -596,9 +597,9 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                         height: 18,
                         decoration: BoxDecoration(
                           color:
-                              _partner!.isOnline ? AppColors.success : Colors.grey,
+                              _partner!.isOnline ? AppColors.success : context.appColors.textHint,
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 3),
+                          border: Border.all(color: context.appColors.surface, width: 3),
                           boxShadow: _partner!.isOnline
                               ? [
                                   BoxShadow(
@@ -626,7 +627,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                               _partner!.name,
                               style: AppTypography.titleLarge.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
+                                color: context.appColors.textPrimary,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -660,7 +661,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                             width: 4,
                             height: 4,
                             decoration: BoxDecoration(
-                              color: AppColors.textHint,
+                              color: context.appColors.textHint,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -672,7 +673,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                             style: AppTypography.labelSmall.copyWith(
                               color: _partner!.isOnline
                                   ? AppColors.success
-                                  : AppColors.textHint,
+                                  : context.appColors.textHint,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -683,13 +684,13 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                         Row(
                           children: [
                             Icon(Ionicons.location_outline,
-                                size: 14, color: AppColors.textHint),
+                                size: 14, color: context.appColors.textHint),
                             const SizedBox(width: 4),
                             Flexible(
                               child: Text(
                                 _partner!.location!,
                                 style: AppTypography.labelSmall.copyWith(
-                                  color: AppColors.textSecondary,
+                                  color: context.appColors.textSecondary,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -731,12 +732,12 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: AppColors.textHint),
+        Icon(icon, size: 14, color: context.appColors.textHint),
         const SizedBox(width: 4),
         Text(
           text,
           style: AppTypography.labelSmall.copyWith(
-            color: AppColors.textSecondary,
+            color: context.appColors.textSecondary,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -771,11 +772,11 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.appColors.surface,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: context.appColors.textPrimary.withOpacity(0.04),
               blurRadius: 20,
               offset: const Offset(0, 4),
             ),
@@ -844,14 +845,14 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
             value,
             style: AppTypography.titleMedium.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
             style: AppTypography.labelSmall.copyWith(
-              color: AppColors.textHint,
+              color: context.appColors.textHint,
               fontSize: 10,
             ),
           ),
@@ -864,7 +865,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
     return Container(
       height: 40,
       width: 1,
-      color: AppColors.border.withOpacity(0.5),
+      color: context.appColors.border.withOpacity(0.5),
     );
   }
 
@@ -935,7 +936,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                     padding:
                         const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: context.appColors.surface.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Row(
@@ -965,7 +966,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: context.appColors.surface.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
@@ -1022,7 +1023,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
       height: 4,
       margin: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.5),
+        color: context.appColors.surface.withOpacity(0.5),
         shape: BoxShape.circle,
       ),
     );
@@ -1041,14 +1042,14 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.appColors.surface,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Center(
                 child: Text(
                   'Chưa cập nhật dịch vụ',
                   style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textHint,
+                    color: context.appColors.textHint,
                   ),
                 ),
               ),
@@ -1098,7 +1099,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: context.appColors.surface.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Center(
@@ -1156,11 +1157,11 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.appColors.surface,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: context.appColors.textPrimary.withOpacity(0.04),
                   blurRadius: 20,
                   offset: const Offset(0, 4),
                 ),
@@ -1172,7 +1173,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                   padding: const EdgeInsets.all(6),
                   margin: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
+                    color: context.appColors.background,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Row(
@@ -1194,7 +1195,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                               boxShadow: isSelected
                                   ? [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.05),
+                                        color: context.appColors.textPrimary.withOpacity(0.05),
                                         blurRadius: 8,
                                         offset: const Offset(0, 2),
                                       ),
@@ -1207,7 +1208,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                               style: AppTypography.labelMedium.copyWith(
                                 color: isSelected
                                     ? AppColors.primary
-                                    : AppColors.textHint,
+                                    : context.appColors.textHint,
                                 fontWeight: isSelected
                                     ? FontWeight.w600
                                     : FontWeight.w500,
@@ -1263,7 +1264,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
           Text(
             bio,
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
               height: 1.6,
             ),
           ),
@@ -1273,7 +1274,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
           Text(
             'Tài năng',
             style: AppTypography.labelMedium.copyWith(
-              color: AppColors.textHint,
+              color: context.appColors.textHint,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -1370,13 +1371,13 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
           Icon(
             Ionicons.document_text_outline,
             size: 40,
-            color: AppColors.textHint.withOpacity(0.5),
+            color: context.appColors.textHint.withOpacity(0.5),
           ),
           const SizedBox(height: 12),
           Text(
             message,
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textHint,
+              color: context.appColors.textHint,
             ),
           ),
         ],
@@ -1403,11 +1404,11 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.appColors.surface,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: context.appColors.textPrimary.withOpacity(0.04),
                   blurRadius: 20,
                   offset: const Offset(0, 4),
                 ),
@@ -1467,7 +1468,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
               _partner!.rating.toStringAsFixed(1),
               style: AppTypography.headlineLarge.copyWith(
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: context.appColors.textPrimary,
                 fontSize: 48,
               ),
             ),
@@ -1489,7 +1490,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
             Text(
               '${_partner!.reviewCount} đánh giá',
               style: AppTypography.labelSmall.copyWith(
-                color: AppColors.textHint,
+                color: context.appColors.textHint,
               ),
             ),
           ],
@@ -1514,7 +1515,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                     Text(
                       '$star',
                       style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.textHint,
+                        color: context.appColors.textHint,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -1526,7 +1527,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                       child: Container(
                         height: 6,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
+                          color: context.appColors.background,
                           borderRadius: BorderRadius.circular(3),
                         ),
                         child: FractionallySizedBox(
@@ -1555,7 +1556,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: context.appColors.background,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -1594,13 +1595,13 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                       review.userName,
                       style: AppTypography.labelMedium.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        color: context.appColors.textPrimary,
                       ),
                     ),
                     Text(
                       review.timeAgo,
                       style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.textHint,
+                        color: context.appColors.textHint,
                         fontSize: 11,
                       ),
                     ),
@@ -1637,7 +1638,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
             Text(
               review.comment,
               style: AppTypography.bodySmall.copyWith(
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
                 height: 1.5,
               ),
               maxLines: 3,
@@ -1673,7 +1674,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
             title,
             style: AppTypography.titleMedium.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: context.appColors.textPrimary,
             ),
           ),
           const Spacer(),
@@ -1686,7 +1687,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                     Text(
                       trailing,
                       style: AppTypography.labelMedium.copyWith(
-                        color: AppColors.textHint,
+                        color: context.appColors.textHint,
                       ),
                     ),
                   if (onTap != null) ...[
@@ -1694,7 +1695,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                     Icon(
                       Ionicons.chevron_forward_outline,
                       size: 16,
-                      color: AppColors.textHint,
+                      color: context.appColors.textHint,
                     ),
                   ],
                 ],
@@ -1714,10 +1715,10 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
         MediaQuery.of(context).padding.bottom + 16,
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appColors.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: context.appColors.textPrimary.withOpacity(0.06),
             blurRadius: 20,
             offset: const Offset(0, -8),
           ),
@@ -1748,7 +1749,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                     height: 56,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
+                      color: context.appColors.background,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Row(
@@ -1757,13 +1758,13 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                         Icon(
                           Ionicons.person_outline,
                           size: 20,
-                          color: AppColors.textSecondary,
+                          color: context.appColors.textSecondary,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           'Đây là hồ sơ của bạn',
                           style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
+                            color: context.appColors.textSecondary,
                           ),
                         ),
                       ],
@@ -1840,7 +1841,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
           Text(
             'Đang tải hồ sơ...',
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textHint,
+              color: context.appColors.textHint,
             ),
           ),
         ],
@@ -1859,7 +1860,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
               child: IconButton(
                 onPressed: () => context.pop(),
                 style: IconButton.styleFrom(
-                  backgroundColor: const Color(0xFFF1F5F9),
+                  backgroundColor: context.appColors.background,
                 ),
                 icon: const Icon(Ionicons.chevron_back_outline),
               ),
@@ -1896,7 +1897,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                     Text(
                       'Hồ sơ không khả dụng hoặc bạn không có quyền xem.',
                       style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textHint,
+                        color: context.appColors.textHint,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -1930,8 +1931,8 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration:   BoxDecoration(
+          color: context.appColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: Column(
@@ -1993,7 +1994,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
         Text(
           label,
           style: AppTypography.labelSmall.copyWith(
-            color: AppColors.textSecondary,
+            color: context.appColors.textSecondary,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -2005,7 +2006,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
     Navigator.of(context).push(
       PageRouteBuilder(
         opaque: false,
-        barrierColor: Colors.black87,
+        barrierColor: context.appColors.textPrimary,
         pageBuilder: (context, animation, secondaryAnimation) {
           return _FullScreenGallery(
             images: images,
@@ -2064,7 +2065,7 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: context.appColors.surface.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.close, color: Colors.white, size: 20),
@@ -2074,7 +2075,7 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
         title: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
+            color: context.appColors.surface.withOpacity(0.1),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(

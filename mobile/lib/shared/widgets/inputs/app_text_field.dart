@@ -4,6 +4,7 @@ import 'package:ionicons/ionicons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/theme_context.dart';
 
 /// Custom Text Input Field
 class AppTextField extends StatefulWidget {
@@ -95,7 +96,7 @@ class _AppTextFieldState extends State<AppTextField> {
             Text(
               widget.label!,
               style: AppTypography.labelLarge.copyWith(
-                color: _isFocused ? AppColors.primary : AppColors.textPrimary,
+                color: _isFocused ? AppColors.primary : context.appColors.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
@@ -125,14 +126,14 @@ class _AppTextFieldState extends State<AppTextField> {
                       widget.prefixIcon,
                       color: _isFocused
                           ? AppColors.primary
-                          : AppColors.textSecondary,
+                          : context.appColors.textSecondary,
                     )
                   : null,
               suffixIcon: widget.obscureText
                   ? IconButton(
                       icon: Icon(
                         _obscureText ? Ionicons.eye_off_outline : Ionicons.eye_outline,
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                       ),
                       onPressed: () {
                         setState(() {
@@ -174,9 +175,9 @@ class AppSearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.backgroundLight,
+        color: context.appColors.background,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.appColors.border),
       ),
       child: Row(
         children: [
@@ -190,9 +191,9 @@ class AppSearchField extends StatelessWidget {
               style: AppTypography.bodyLarge,
               decoration: InputDecoration(
                 hintText: hint,
-                prefixIcon: const Icon(
+                prefixIcon:   Icon(
                   Ionicons.search_outline,
-                  color: AppColors.textSecondary,
+                  color: context.appColors.textSecondary,
                 ),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
@@ -317,8 +318,8 @@ class _OtpTextFieldState extends State<OtpTextField> {
                 contentPadding: EdgeInsets.zero,
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(
-                    color: AppColors.border,
+                  borderSide:   BorderSide(
+                    color: context.appColors.border,
                     width: 1.5,
                   ),
                 ),
@@ -332,7 +333,7 @@ class _OtpTextFieldState extends State<OtpTextField> {
                 filled: true,
                 fillColor: _focusNodes[index].hasFocus
                     ? AppColors.primary.withAlpha(10)
-                    : AppColors.backgroundLight,
+                    : context.appColors.background,
               ),
               onChanged: (value) => _onChanged(value, index),
             ),

@@ -5,11 +5,13 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ionicons/ionicons.dart';
+import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/theme_cubit.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
@@ -67,7 +69,6 @@ class _SettingsPageContentState extends State<_SettingsPageContent> {
   }
 
   void _showAvatarPicker(BuildContext context) {
-    final picker = ImagePicker();
     showModalBottomSheet(
       context: context,
       builder: (bottomSheetContext) => SafeArea(
@@ -79,6 +80,7 @@ class _SettingsPageContentState extends State<_SettingsPageContent> {
               onTap: () async {
                 Navigator.pop(bottomSheetContext);
                 try {
+                  final picker = ImagePicker();
                   final image = await picker.pickImage(
                     source: ImageSource.camera,
                     maxWidth: 800,
@@ -107,16 +109,22 @@ class _SettingsPageContentState extends State<_SettingsPageContent> {
               onTap: () async {
                 Navigator.pop(bottomSheetContext);
                 try {
-                  final image = await picker.pickImage(
-                    source: ImageSource.gallery,
-                    maxWidth: 800,
-                    maxHeight: 800,
-                    imageQuality: 80,
+                  final List<AssetEntity>? assets = await AssetPicker.pickAssets(
+                    context,
+                    pickerConfig: AssetPickerConfig(
+                      maxAssets: 1,
+                      requestType: RequestType.image,
+                      themeColor: AppColors.primary,
+                      textDelegate: const VietnameseAssetPickerTextDelegate(),
+                    ),
                   );
-                  if (image != null && context.mounted) {
-                    context.read<ProfileBloc>().add(
-                          ProfileAvatarUpdateRequested(imagePath: image.path),
-                        );
+                  if (assets != null && assets.isNotEmpty && context.mounted) {
+                    final file = await assets.first.file;
+                    if (file != null && context.mounted) {
+                      context.read<ProfileBloc>().add(
+                            ProfileAvatarUpdateRequested(imagePath: file.path),
+                          );
+                    }
                   }
                 } catch (e) {
                   if (context.mounted) {
@@ -162,13 +170,13 @@ class _SettingsPageContentState extends State<_SettingsPageContent> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Ionicons.alert_circle_outline, size: 64, color: AppColors.textHint),
+                      Icon(Ionicons.alert_circle_outline, size: 64, color: context.appColors.textHint),
                     const SizedBox(height: 16),
                     Text(
                       state.message,
                       textAlign: TextAlign.center,
                       style: AppTypography.bodyLarge.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -271,9 +279,9 @@ class _SettingsContent extends StatelessWidget {
                               height: 56,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: AppColors.card,
+                                color: context.appColors.card,
                                 border: Border.all(
-                                  color: AppColors.border,
+                                  color: context.appColors.border,
                                 ),
                               ),
                               child: ClipOval(
@@ -284,7 +292,7 @@ class _SettingsContent extends StatelessWidget {
                                         ),
                                         fit: BoxFit.cover,
                                         placeholder: (_, __) => Container(
-                                          color: AppColors.shimmerBase,
+                                          color: context.appColors.shimmerBase,
                                         ),
                                         errorWidget: (_, __, ___) =>
                                             _AvatarPlaceholder(),
@@ -296,7 +304,7 @@ class _SettingsContent extends StatelessWidget {
                               Positioned.fill(
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    color: Colors.black.withAlpha(128),
+                                    color: context.appColors.textPrimary.withAlpha(128),
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Center(
@@ -327,15 +335,15 @@ class _SettingsContent extends StatelessWidget {
                               Text(
                                 'Thay đổi ảnh đại diện',
                                 style: AppTypography.bodySmall.copyWith(
-                                  color: AppColors.textSecondary,
+                                  color: context.appColors.textSecondary,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const Icon(
+                          Icon(
                           Ionicons.camera_outline,
-                          color: AppColors.textHint,
+                          color: context.appColors.textHint,
                           size: 20,
                         ),
                       ],
@@ -435,9 +443,9 @@ class _SettingsContent extends StatelessWidget {
             title: 'Ngôn ngữ',
             subtitle: settings.languageDisplayName,
             onTap: () => _showLanguageDialog(context, bloc, settings.language),
-            trailing: const Icon(
+            trailing:   Icon(
               Ionicons.chevron_forward_outline,
-              color: AppColors.textHint,
+              color: context.appColors.textHint,
               size: 18,
             ),
           ),
@@ -475,9 +483,9 @@ class _SettingsContent extends StatelessWidget {
             title: 'Ai có thể nhắn tin cho tôi',
             subtitle: settings.allowMessagesFromDisplayName,
             onTap: () => _showAllowMessagesDialog(context, bloc, settings.allowMessagesFrom),
-            trailing: const Icon(
+            trailing:   Icon(
               Ionicons.chevron_forward_outline,
-              color: AppColors.textHint,
+              color: context.appColors.textHint,
               size: 18,
             ),
           ),
@@ -487,9 +495,9 @@ class _SettingsContent extends StatelessWidget {
             title: 'Người dùng đã chặn',
             subtitle: 'Quản lý danh sách người bị chặn',
             onTap: () => context.push(RouteNames.blockedUsers),
-            trailing: const Icon(
+            trailing:   Icon(
               Ionicons.chevron_forward_outline,
-              color: AppColors.textHint,
+              color: context.appColors.textHint,
               size: 18,
             ),
           ),
@@ -502,9 +510,9 @@ class _SettingsContent extends StatelessWidget {
             title: 'Xóa bộ nhớ cache',
             subtitle: 'Giải phóng dung lượng',
             onTap: () => _showClearCacheDialog(context),
-            trailing: const Icon(
+            trailing:   Icon(
               Ionicons.chevron_forward_outline,
-              color: AppColors.textHint,
+              color: context.appColors.textHint,
               size: 18,
             ),
           ),
@@ -517,9 +525,9 @@ class _SettingsContent extends StatelessWidget {
             subtitle: 'Xóa vĩnh viễn tài khoản và mọi dữ liệu',
             titleColor: AppColors.error,
             onTap: () => _showDeleteAccountDialog(context),
-            trailing: const Icon(
+            trailing:   Icon(
               Ionicons.chevron_forward_outline,
-              color: AppColors.textHint,
+              color: context.appColors.textHint,
               size: 18,
             ),
           ),
@@ -714,9 +722,9 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+              Text(
               'Hành động này không thể hoàn tác. Tất cả dữ liệu của bạn sẽ bị xóa vĩnh viễn.',
-              style: TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: context.appColors.textSecondary),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -729,7 +737,7 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
                 suffixIcon: IconButton(
                   icon: Icon(
                     _obscurePassword ? Ionicons.eye_off_outline : Ionicons.eye_outline,
-                    color: AppColors.textSecondary,
+                    color: context.appColors.textSecondary,
                   ),
                   onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                 ),
@@ -775,11 +783,11 @@ class _AvatarPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.backgroundLight,
-      child: const Icon(
+      color: context.appColors.background,
+      child:   Icon(
         Ionicons.person_outline,
         size: 28,
-        color: AppColors.textHint,
+        color: context.appColors.textHint,
       ),
     );
   }
@@ -797,7 +805,7 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         title,
         style: AppTypography.titleSmall.copyWith(
-          color: AppColors.textSecondary,
+          color: context.appColors.textSecondary,
         ),
       ),
     );

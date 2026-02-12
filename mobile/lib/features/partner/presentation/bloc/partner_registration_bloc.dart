@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/utils/error_utils.dart';
 import '../../data/partner_repository.dart';
 import 'partner_registration_event.dart';
 import 'partner_registration_state.dart';
@@ -47,9 +49,9 @@ class PartnerRegistrationBloc
         isAlreadyPartner: true,
       ));
     } catch (e) {
-      print('Đăng ký thất bại: $e');
+      debugPrint('Đăng ký thất bại: $e');
       emit(PartnerRegistrationFailure(
-        error: 'Đăng ký thất bại: ${e.toString()}',
+        error: getErrorMessage(e),
       ));
     }
   }

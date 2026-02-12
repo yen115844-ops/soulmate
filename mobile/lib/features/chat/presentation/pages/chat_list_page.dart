@@ -5,13 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ionicons/ionicons.dart';
 
-import '../../../../core/network/api_client.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/services/chat_socket_service.dart';
-import '../../../../core/services/local_storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/image_utils.dart';
-import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../data/chat_repository.dart';
 
 class ChatListPage extends StatefulWidget {
@@ -56,9 +55,7 @@ class _ChatListPageState extends State<ChatListPage> {
   }
 
   void _initRepository() {
-    final storage = LocalStorageService.instance;
-    final apiClient = ApiClient(storage: storage);
-    _chatRepository = ChatRepository(apiClient: apiClient);
+    _chatRepository = getIt<ChatRepository>();
   }
 
   void _connectSocket() {
@@ -233,7 +230,8 @@ class _ChatListPageState extends State<ChatListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: _isSearching ? null : const AppBackButton(),
+        leading: _isSearching ? null : const SizedBox.shrink(),
+        leadingWidth: _isSearching ? null : 0,
         title: _isSearching
             ? TextField(
                 controller: _searchController,
@@ -241,7 +239,7 @@ class _ChatListPageState extends State<ChatListPage> {
                 decoration: InputDecoration(
                   hintText: 'Tìm kiếm cuộc trò chuyện...',
                   hintStyle: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textHint,
+                    color: context.appColors.textHint,
                   ),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(
@@ -370,18 +368,18 @@ class _ChatListPageState extends State<ChatListPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Ionicons.search_outline, size: 64, color: AppColors.textHint),
+          Icon(Ionicons.search_outline, size: 64, color: context.appColors.textHint),
           const SizedBox(height: 16),
           Text(
             'Không tìm thấy kết quả',
             style: AppTypography.titleMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Thử tìm kiếm với từ khóa khác',
-            style: AppTypography.bodyMedium.copyWith(color: AppColors.textHint),
+            style: AppTypography.bodyMedium.copyWith(color: context.appColors.textHint),
           ),
         ],
       ),
@@ -421,16 +419,16 @@ class _ConversationItem extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 28,
-                  backgroundColor: AppColors.backgroundLight,
+                  backgroundColor: context.appColors.background,
                   backgroundImage: avatar.isNotEmpty
                       ? CachedNetworkImageProvider(
                           ImageUtils.buildImageUrl(avatar),
                         )
                       : null,
                   child: avatar.isEmpty
-                      ? const Icon(
+                      ? Icon(
                           Ionicons.person_outline,
-                          color: AppColors.textHint,
+                          color: context.appColors.textHint,
                         )
                       : null,
                 ),
@@ -444,7 +442,7 @@ class _ConversationItem extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: AppColors.online,
                         shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.surface, width: 3),
+                        border: Border.all(color: context.appColors.surface, width: 3),
                       ),
                     ),
                   ),
@@ -472,7 +470,7 @@ class _ConversationItem extends StatelessWidget {
                         style: AppTypography.labelSmall.copyWith(
                           color: unreadCount > 0
                               ? AppColors.primary
-                              : AppColors.textHint,
+                              : context.appColors.textHint,
                         ),
                       ),
                     ],
@@ -485,8 +483,8 @@ class _ConversationItem extends StatelessWidget {
                           lastMessage,
                           style: AppTypography.bodyMedium.copyWith(
                             color: unreadCount > 0
-                                ? AppColors.textPrimary
-                                : AppColors.textSecondary,
+                                ? context.appColors.textPrimary
+                                : context.appColors.textSecondary,
                             fontWeight: unreadCount > 0
                                 ? FontWeight.w500
                                 : FontWeight.w400,
@@ -538,13 +536,13 @@ class _EmptyState extends StatelessWidget {
             width: 100,
             height: 100,
             decoration: BoxDecoration(
-              color: AppColors.backgroundLight,
+              color: context.appColors.background,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Ionicons.chatbubble_outline,
               size: 48,
-              color: AppColors.textHint,
+              color: context.appColors.textHint,
             ),
           ),
           const SizedBox(height: 24),
@@ -553,7 +551,7 @@ class _EmptyState extends StatelessWidget {
           Text(
             'Đặt lịch để bắt đầu trò chuyện',
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ),
         ],

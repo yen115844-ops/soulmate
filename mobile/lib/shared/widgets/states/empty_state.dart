@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:ionicons/ionicons.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/theme_context.dart';
 import '../../../core/theme/app_typography.dart';
 import '../buttons/app_button.dart';
 
@@ -41,7 +42,7 @@ class EmptyStateWidget extends StatelessWidget {
                   width: 120,
                   height: 120,
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withAlpha(25),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -71,7 +72,7 @@ class EmptyStateWidget extends StatelessWidget {
             Text(
               message ?? 'Chưa có nội dung nào ở đây',
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ).animate().fadeIn(delay: 200.ms),

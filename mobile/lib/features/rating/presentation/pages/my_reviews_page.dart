@@ -5,6 +5,7 @@ import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../data/models/review_model.dart';
@@ -173,9 +174,9 @@ class _ReviewCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: context.appColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.appColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,13 +199,13 @@ class _ReviewCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: AppColors.backgroundLight,
+                            color: context.appColors.background,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             serviceType,
                             style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.textHint,
+                              color: context.appColors.textHint,
                             ),
                           ),
                         ),
@@ -212,7 +213,7 @@ class _ReviewCard extends StatelessWidget {
                         Text(
                           date,
                           style: AppTypography.labelSmall.copyWith(
-                            color: AppColors.textHint,
+                            color: context.appColors.textHint,
                           ),
                         ),
                       ],
@@ -237,7 +238,7 @@ class _ReviewCard extends StatelessWidget {
           Text(
             comment,
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ),
         ],
@@ -267,13 +268,13 @@ class _EmptyState extends StatelessWidget {
             width: 100,
             height: 100,
             decoration: BoxDecoration(
-              color: AppColors.backgroundLight,
+              color: context.appColors.background,
               shape: BoxShape.circle,
             ),
             child: Icon(
               icon,
               size: 48,
-              color: AppColors.textHint,
+              color: context.appColors.textHint,
             ),
           ),
           const SizedBox(height: 24),
@@ -285,7 +286,7 @@ class _EmptyState extends StatelessWidget {
           Text(
             subtitle,
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ),
         ],

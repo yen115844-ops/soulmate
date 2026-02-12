@@ -6,6 +6,7 @@ import 'package:ionicons/ionicons.dart';
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
@@ -66,7 +67,7 @@ class _WalletPageContent extends StatelessWidget {
                     Text(
                       'Số dư dùng để thanh toán đặt lịch trên nền tảng.',
                       style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -294,9 +295,9 @@ class _TransactionList extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: context.appColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.appColors.border),
       ),
       child: Column(
         children: displayTransactions.asMap().entries.map((entry) {
@@ -368,7 +369,7 @@ class _TransactionItem extends StatelessWidget {
       subtitle: Text(
         _formatDate(transaction.createdAt),
         style: AppTypography.labelSmall.copyWith(
-          color: AppColors.textHint,
+          color: context.appColors.textHint,
         ),
       ),
       trailing: Text(
@@ -388,9 +389,9 @@ class _EmptyTransactions extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: context.appColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.appColors.border),
       ),
       child: Center(
         child: Column(
@@ -398,13 +399,13 @@ class _EmptyTransactions extends StatelessWidget {
             Icon(
               Ionicons.document_text_outline,
               size: 48,
-              color: AppColors.textHint,
+              color: context.appColors.textHint,
             ),
             const SizedBox(height: 16),
             Text(
               'Chưa có giao dịch nào',
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
             ),
           ],
@@ -437,7 +438,7 @@ class _ErrorView extends StatelessWidget {
             Text(
               message,
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),

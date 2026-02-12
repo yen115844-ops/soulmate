@@ -341,6 +341,43 @@ export class PartnersService {
       };
     }
 
+    // District filter
+    if (dto.district) {
+      if (!where.user.is.profile) {
+        where.user.is.profile = { is: {} };
+      }
+      where.user.is.profile.is.district = {
+        contains: dto.district,
+        mode: 'insensitive',
+      };
+    }
+
+    // Age filter (based on dateOfBirth)
+    if (dto.minAge !== undefined || dto.maxAge !== undefined) {
+      if (!where.user.is.profile) {
+        where.user.is.profile = { is: {} };
+      }
+      const now = new Date();
+      const dobFilter: any = { not: null };
+      if (dto.maxAge !== undefined) {
+        // maxAge => born after this date (younger)
+        const minBirthDate = new Date(now.getFullYear() - dto.maxAge - 1, now.getMonth(), now.getDate());
+        dobFilter.gte = minBirthDate;
+      }
+      if (dto.minAge !== undefined) {
+        // minAge => born before this date (older)
+        const maxBirthDate = new Date(now.getFullYear() - dto.minAge, now.getMonth(), now.getDate());
+        dobFilter.lte = maxBirthDate;
+      }
+      where.user.is.profile.is.dateOfBirth = dobFilter;
+    }
+
+    // Available now filter (active within last 15 minutes)
+    if (dto.availableNow) {
+      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+      where.lastActiveAt = { gte: fifteenMinutesAgo };
+    }
+
     // Build order by
     let orderBy: any = { averageRating: 'desc' };
     if (dto.sortBy === 'price_low') {

@@ -1,26 +1,20 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../core/network/api_client.dart';
+import '../../../core/network/base_repository.dart';
 import 'models/wallet_models.dart';
 
-class WalletRepository {
+class WalletRepository with BaseRepositoryMixin {
   final ApiClient _apiClient;
 
   WalletRepository({required ApiClient apiClient}) : _apiClient = apiClient;
 
-  /// Extract data from wrapped response {success, data, ...}
-  dynamic _extractData(dynamic response) {
-    if (response is Map<String, dynamic>) {
-      return response['data'] ?? response;
-    }
-    return response;
-  }
 
   /// Get wallet info
   Future<WalletModel> getWallet() async {
     try {
       final response = await _apiClient.get('/wallet');
-      final data = _extractData(response.data);
+      final data = extractRawData(response.data);
       return WalletModel.fromJson(data as Map<String, dynamic>);
     } catch (e) {
       debugPrint('Get wallet error: $e');
@@ -41,7 +35,7 @@ class WalletRepository {
           'limit': limit,
         },
       );
-      final data = _extractData(response.data);
+      final data = extractRawData(response.data);
       return TransactionsResponse.fromJson(data as Map<String, dynamic>);
     } catch (e) {
       debugPrint('Get transactions error: $e');
@@ -73,7 +67,7 @@ class WalletRepository {
         '/wallet/withdraw',
         data: requestData,
       );
-      final data = _extractData(response.data);
+      final data = extractRawData(response.data);
       return WithdrawResponse.fromJson(data as Map<String, dynamic>);
     } catch (e) {
       debugPrint('Withdraw error: $e');
@@ -95,7 +89,7 @@ class WalletRepository {
           'paymentMethod': paymentMethod,
         },
       );
-      final data = _extractData(response.data);
+      final data = extractRawData(response.data);
       return TopUpResponse.fromJson(data as Map<String, dynamic>);
     } catch (e) {
       debugPrint('TopUp error: $e');
