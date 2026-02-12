@@ -87,11 +87,16 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final authBloc = getIt<AuthBloc>()..add(const AuthCheckRequested());
+
+    // Initialize GoRouter with AuthBloc so it can react to auth state changes
+    AppRouter.init(authBloc);
+
     return MultiBlocProvider(
       providers: [
         BlocProvider<ThemeCubit>.value(value: getIt<ThemeCubit>()),
         BlocProvider<AuthBloc>.value(
-          value: getIt<AuthBloc>()..add(const AuthCheckRequested()),
+          value: authBloc,
         ),
       ],
       child: BlocListener<AuthBloc, auth_state.AuthState>(
@@ -101,7 +106,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
             getIt<ProfileBloc>().add(const ProfileResetRequested());
             getIt<MasterDataBloc>().add(const MasterDataResetRequested());
             ChatSocketService.instance.disconnect();
-            AppRouter.router.go(RouteNames.login);
+            // GoRouter redirect will handle navigation to /login automatically
           } else if (state is auth_state.AuthAuthenticated ||
               state is auth_state.AuthNeedsProfileSetup) {
             ChatSocketService.instance.connect();

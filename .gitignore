@@ -1,0 +1,25 @@
+# Environment variables
+.env
+.env.*
+.env.local
+.env.*.local
+!.env.example
+
+# Private keys & certificates
+*.p12
+*.pem
+*.key
+*.jks
+*.keystore
+*.mobileprovision
+*.cer
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

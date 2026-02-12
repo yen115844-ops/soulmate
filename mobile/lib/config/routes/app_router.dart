@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/di/injection.dart';
+import '../../core/services/local_storage_service.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/bloc/auth_state.dart' as auth_state;
 import '../../features/auth/presentation/pages/change_password_page.dart';
@@ -46,34 +49,62 @@ import '../../features/settings/presentation/pages/privacy_policy_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/settings/presentation/pages/terms_of_service_page.dart';
 // Feature Pages
-import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/wallet/presentation/pages/transactions_page.dart';
 import '../../features/wallet/presentation/pages/wallet_page.dart';
 import '../../features/wallet/presentation/pages/wallet_topup_page.dart';
 import '../../features/wallet/presentation/pages/wallet_withdraw_page.dart';
 import 'route_names.dart';
 
+/// Converts a [Stream] into a [Listenable] so GoRouter can
+/// re-evaluate its redirect whenever the stream emits.
+class _GoRouterRefreshStream extends ChangeNotifier {
+  late final StreamSubscription<dynamic> _sub;
+
+  _GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners(); // trigger initial evaluation
+    _sub = stream.asBroadcastStream().listen((_) => notifyListeners());
+  }
+
+  @override
+  void dispose() {
+    _sub.cancel();
+    super.dispose();
+  }
+}
+
 /// App Router Configuration using go_router
 class AppRouter {
   AppRouter._();
 
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
-  
+
   /// Expose navigator key for global access
   static GlobalKey<NavigatorState> get navigatorKey => _rootNavigatorKey;
 
   static GoRouter get router => _router;
 
-  static final GoRouter _router = GoRouter(
-    navigatorKey: _rootNavigatorKey,
-    initialLocation: RouteNames.splash,
-    debugLogDiagnostics: true,
-    routes: [
-      // Splash Screen
+  static GoRouter? _routerInstance;
+  static GoRouter get _router => _routerInstance!;
+
+  /// Must be called once before accessing [router], typically in App widget.
+  static void init(AuthBloc authBloc) {
+    _routerInstance ??= _createRouter(authBloc);
+  }
+
+  static GoRouter _createRouter(AuthBloc authBloc) {
+    return GoRouter(
+      navigatorKey: _rootNavigatorKey,
+      initialLocation: '/',
+      debugLogDiagnostics: true,
+      refreshListenable: _GoRouterRefreshStream(authBloc.stream),
+      routes: [
+      // Lightweight loading screen shown while AuthBloc resolves
       GoRoute(
-        path: RouteNames.splash,
-        name: 'splash',
-        builder: (context, state) => const SplashPage(),
+        path: '/',
+        name: 'auth-loading',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        ),
       ),
 
       // Onboarding
@@ -497,12 +528,40 @@ class AppRouter {
     // Redirect Logic (auth guard)
     redirect: (context, state) {
       final authBloc = getIt<AuthBloc>();
-      final authState = authBloc.state;
-      final isLoggedIn = authState is auth_state.AuthAuthenticated ||
-          authState is auth_state.AuthNeedsProfileSetup ||
-          authState is auth_state.AuthPendingVerification;
+      final currentState = authBloc.state;
       final location = state.matchedLocation;
-      final isPublicRoute = location == RouteNames.splash ||
+
+      // --- Auth is still loading (app just started) ----------------------
+      // AuthBloc hasn't finished checking tokens yet. Don't redirect
+      // anywhere — the native splash is still visible or the screen is
+      // blank for a brief moment. Once AuthBloc emits a resolved state,
+      // refreshListenable triggers redirect re-evaluation.
+      final isAuthResolving = currentState is auth_state.AuthInitial ||
+          currentState is auth_state.AuthLoading;
+
+      if (isAuthResolving) {
+        // While auth is resolving, keep user on loading screen.
+        if (location != '/') return '/';
+        return null;
+      }
+
+      // --- Onboarding gate -----------------------------------------------
+      final storage = LocalStorageService.instance;
+      if (!storage.isOnboardingComplete && location != RouteNames.onboarding) {
+        return RouteNames.onboarding;
+      }
+
+      // --- Resolved auth state -------------------------------------------
+      final isLoggedIn = currentState is auth_state.AuthAuthenticated ||
+          currentState is auth_state.AuthNeedsProfileSetup ||
+          currentState is auth_state.AuthPendingVerification;
+
+      // Auth resolved — leave the loading screen
+      if (location == '/') {
+        return isLoggedIn ? RouteNames.home : RouteNames.login;
+      }
+
+      final isPublicRoute =
           location == RouteNames.onboarding ||
           location == RouteNames.login ||
           location == RouteNames.register ||
@@ -531,4 +590,5 @@ class AppRouter {
       return null;
     },
   );
+  }
 }

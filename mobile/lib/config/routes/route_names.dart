@@ -3,6 +3,7 @@ class RouteNames {
   RouteNames._();
 
   // Root
+  @Deprecated('Splash page removed – auth is checked via GoRouter redirect')
   static const String splash = '/';
   static const String onboarding = '/onboarding';
 
