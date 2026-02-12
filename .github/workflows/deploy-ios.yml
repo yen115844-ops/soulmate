@@ -28,10 +28,6 @@ jobs:
         working-directory: mobile
         run: flutter pub get
 
-      - name: Install CocoaPods
-        working-directory: mobile/ios
-        run: pod install
-
       # Import Apple certificates and provisioning profiles
       - name: Install Apple Certificate
         env:
@@ -70,7 +66,7 @@ jobs:
 
           PROJECT_PATH="mobile/ios/Runner.xcodeproj/project.pbxproj"
 
-          # Switch from Automatic to Manual signing
+          # Switch from Automatic to Manual signing for Runner target
           sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' "$PROJECT_PATH"
           sed -i '' 's/CODE_SIGN_IDENTITY = "Apple Development"/CODE_SIGN_IDENTITY = "iPhone Distribution"/g' "$PROJECT_PATH"
           sed -i '' "s/PROVISIONING_PROFILE_SPECIFIER = \"\"/PROVISIONING_PROFILE_SPECIFIER = \"${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}\"/g" "$PROJECT_PATH"
@@ -105,12 +101,7 @@ jobs:
         run: |
           flutter build ipa \
             --release \
-            --no-codesign
-
-          xcodebuild -exportArchive \
-            -archivePath build/ios/archive/Runner.xcarchive \
-            -exportOptionsPlist ios/ExportOptions.plist \
-            -exportPath build/ios/ipa
+            --export-options-plist=ios/ExportOptions.plist
 
       - name: Upload to App Store Connect
         env:
