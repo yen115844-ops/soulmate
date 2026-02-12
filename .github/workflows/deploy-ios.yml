@@ -61,19 +61,24 @@ jobs:
 
       - name: Set Manual Signing
         run: |
-          # Override signing settings via xcconfig (more reliable than sed on pbxproj)
-          # Release.xcconfig is loaded by the Release build configuration
-          cat >> mobile/ios/Flutter/Release.xcconfig << EOF
-          CODE_SIGN_STYLE = Manual
-          CODE_SIGN_IDENTITY = Apple Distribution
-          DEVELOPMENT_TEAM = ${{ secrets.APPLE_TEAM_ID }}
-          PROVISIONING_PROFILE_SPECIFIER = ${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}
-          CODE_SIGN_IDENTITY[sdk=iphoneos*] = Apple Distribution
-          EOF
-
-          # Also remove legacy signing overrides from pbxproj that could take precedence
           PROJECT_PATH="mobile/ios/Runner.xcodeproj/project.pbxproj"
+
+          # Switch signing style from Automatic to Manual
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PROJECT_PATH"
+
+          # Replace signing identity
+          sed -i '' 's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "Apple Distribution";/g' "$PROJECT_PATH"
+
+          # Remove legacy project-level signing identity overrides
           sed -i '' '/"CODE_SIGN_IDENTITY\[sdk=iphoneos\*\]"/d' "$PROJECT_PATH"
+
+          # Set provisioning profile and team
+          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = "";/PROVISIONING_PROFILE_SPECIFIER = "${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}";/g' "$PROJECT_PATH"
+          sed -i '' 's/DEVELOPMENT_TEAM = HD27T77BMR;/DEVELOPMENT_TEAM = ${{ secrets.APPLE_TEAM_ID }};/g' "$PROJECT_PATH"
+
+          # Debug: verify changes applied
+          echo "=== Signing settings after sed ==="
+          grep -n 'CODE_SIGN_STYLE\|CODE_SIGN_IDENTITY\|PROVISIONING_PROFILE_SPECIFIER\|DEVELOPMENT_TEAM' "$PROJECT_PATH" || true
 
       - name: Create ExportOptions.plist
         run: |
