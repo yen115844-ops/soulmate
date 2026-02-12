@@ -68,7 +68,7 @@ jobs:
 
           # Switch from Automatic to Manual signing for Runner target
           sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' "$PROJECT_PATH"
-          sed -i '' 's/CODE_SIGN_IDENTITY = "Apple Development"/CODE_SIGN_IDENTITY = "iPhone Distribution"/g' "$PROJECT_PATH"
+          sed -i '' 's/CODE_SIGN_IDENTITY = "Apple Development"/CODE_SIGN_IDENTITY = "Apple Distribution"/g' "$PROJECT_PATH"
           sed -i '' "s/PROVISIONING_PROFILE_SPECIFIER = \"\"/PROVISIONING_PROFILE_SPECIFIER = \"${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}\"/g" "$PROJECT_PATH"
           sed -i '' "s/DEVELOPMENT_TEAM = HD27T77BMR/DEVELOPMENT_TEAM = ${{ secrets.APPLE_TEAM_ID }}/g" "$PROJECT_PATH"
 
