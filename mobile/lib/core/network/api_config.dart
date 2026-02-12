@@ -9,8 +9,8 @@ class ApiConfig {
   /// Base URL — configured via `--dart-define=API_BASE_URL=...`.
   /// In debug mode, falls back to localhost; in release mode, uses production URL.
   static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL');
-  static const String _defaultDebugUrl = 'https://gomate-backend.trancongtien.io.vn';
-  static const String _defaultReleaseUrl = 'https://gomate-backend.trancongtien.io.vn'; // TODO: Replace with real production URL
+  static const String _defaultDebugUrl = 'https://gomate-backend.trancongtien.io.vn/api';
+  static const String _defaultReleaseUrl = 'https://gomate-backend.trancongtien.io.vn/api'; // TODO: Replace with real production URL
 
   static String get baseUrl {
     if (_envBaseUrl.isNotEmpty) return _envBaseUrl;

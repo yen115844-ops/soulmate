@@ -52,24 +52,20 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAa548ryd0ioyB0uyu6dOlpjzRZ0VcVL44',
-    appId: '1:952711967353:android:d0e977a983c6c4fcdfdaa8',
-    messagingSenderId: '952711967353',
-    projectId: 'carehub-ad1bc',
-    databaseURL: 'https://carehub-ad1bc-default-rtdb.firebaseio.com',
-    storageBucket: 'carehub-ad1bc.firebasestorage.app',
+    apiKey: 'AIzaSyAs4Zay6bqvFfqevnK-7qoWMRww5GbKeUg',
+    appId: '1:216284978099:android:e64e9229c7fca7beb249c6',
+    messagingSenderId: '216284978099',
+    projectId: 'soulmate-f4405',
+    storageBucket: 'soulmate-f4405.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDoi9jOSWss93BERqaycM9C9j8cq5G09NI',
-    appId: '1:952711967353:ios:deb8c6c9f37fcfe3dfdaa8',
-    messagingSenderId: '952711967353',
-    projectId: 'carehub-ad1bc',
-    databaseURL: 'https://carehub-ad1bc-default-rtdb.firebaseio.com',
-    storageBucket: 'carehub-ad1bc.firebasestorage.app',
-    androidClientId: '952711967353-h6carinbc2g0kcgfugpiett8e96831c6.apps.googleusercontent.com',
-    iosClientId: '952711967353-vulf7eo3ofm7q2b0nn42jskmjgh33t57.apps.googleusercontent.com',
-    iosBundleId: 'tiendev.socialmate.vn',
+    apiKey: 'AIzaSyACJGoLDqjL4B5nvGiYf06-SqYR7ecr-rA',
+    appId: '1:216284978099:ios:06a005a533d30a3bb249c6',
+    messagingSenderId: '216284978099',
+    projectId: 'soulmate-f4405',
+    storageBucket: 'soulmate-f4405.firebasestorage.app',
+    iosBundleId: 'soulmate.vn',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(

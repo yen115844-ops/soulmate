@@ -1,160 +1,26 @@
 {
   "project_info": {
-    "project_number": "952711967353",
-    "firebase_url": "https://carehub-ad1bc-default-rtdb.firebaseio.com",
-    "project_id": "carehub-ad1bc",
-    "storage_bucket": "carehub-ad1bc.firebasestorage.app"
+    "project_number": "216284978099",
+    "project_id": "soulmate-f4405",
+    "storage_bucket": "soulmate-f4405.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:952711967353:android:31e13e66c318a081dfdaa8",
+        "mobilesdk_app_id": "1:216284978099:android:e64e9229c7fca7beb249c6",
         "android_client_info": {
-          "package_name": "com.example.care_hub"
+          "package_name": "soulmate.vn"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "952711967353-h6carinbc2g0kcgfugpiett8e96831c6.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.care_hub",
-            "certificate_hash": "50950fb1e01e8180ab7d1b69909d061dba529194"
-          }
-        },
-        {
-          "client_id": "952711967353-af408o0dsjm98cjfvmikb0j4oj5k9njv.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAa548ryd0ioyB0uyu6dOlpjzRZ0VcVL44"
+          "current_key": "AIzaSyAs4Zay6bqvFfqevnK-7qoWMRww5GbKeUg"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "952711967353-af408o0dsjm98cjfvmikb0j4oj5k9njv.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "952711967353-eq410otektf63rfuteclm7t2r103r94c.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.socialmate.vn.mobile"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:952711967353:android:4b9e199e48e0440edfdaa8",
-        "android_client_info": {
-          "package_name": "com.job.finder.mobile"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "952711967353-af408o0dsjm98cjfvmikb0j4oj5k9njv.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyAa548ryd0ioyB0uyu6dOlpjzRZ0VcVL44"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "952711967353-af408o0dsjm98cjfvmikb0j4oj5k9njv.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "952711967353-eq410otektf63rfuteclm7t2r103r94c.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.socialmate.vn.mobile"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:952711967353:android:fbf4f201caa03e0bdfdaa8",
-        "android_client_info": {
-          "package_name": "com.socialmate.vn.mobile"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "952711967353-af408o0dsjm98cjfvmikb0j4oj5k9njv.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyAa548ryd0ioyB0uyu6dOlpjzRZ0VcVL44"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "952711967353-af408o0dsjm98cjfvmikb0j4oj5k9njv.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "952711967353-eq410otektf63rfuteclm7t2r103r94c.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.socialmate.vn.mobile"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:952711967353:android:d0e977a983c6c4fcdfdaa8",
-        "android_client_info": {
-          "package_name": "tiendev.socialmate.vn"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "952711967353-af408o0dsjm98cjfvmikb0j4oj5k9njv.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyAa548ryd0ioyB0uyu6dOlpjzRZ0VcVL44"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "952711967353-af408o0dsjm98cjfvmikb0j4oj5k9njv.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "952711967353-eq410otektf63rfuteclm7t2r103r94c.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.socialmate.vn.mobile"
-              }
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }
