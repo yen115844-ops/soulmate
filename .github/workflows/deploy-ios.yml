@@ -62,9 +62,22 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
 
+      - name: Set Manual Signing
+        run: |
+          # Get provisioning profile UUID
+          PP_UUID=$(/usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin <<< $(/usr/bin/security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/build_pp.mobileprovision))
+
+          PROJECT_PATH="mobile/ios/Runner.xcodeproj/project.pbxproj"
+
+          # Switch from Automatic to Manual signing
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' "$PROJECT_PATH"
+          sed -i '' 's/CODE_SIGN_IDENTITY = "Apple Development"/CODE_SIGN_IDENTITY = "iPhone Distribution"/g' "$PROJECT_PATH"
+          sed -i '' "s/PROVISIONING_PROFILE_SPECIFIER = \"\"/PROVISIONING_PROFILE_SPECIFIER = \"${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}\"/g" "$PROJECT_PATH"
+          sed -i '' "s/DEVELOPMENT_TEAM = HD27T77BMR/DEVELOPMENT_TEAM = ${{ secrets.APPLE_TEAM_ID }}/g" "$PROJECT_PATH"
+
       - name: Create ExportOptions.plist
         run: |
-          cat > mobile/ios/ExportOptions.plist << EOF
+          cat > mobile/ios/ExportOptions.plist << 'PLIST'
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -84,14 +97,19 @@ jobs:
               <string>${{ secrets.APPLE_TEAM_ID }}</string>
           </dict>
           </plist>
-          EOF
+          PLIST
 
       - name: Build IPA
         working-directory: mobile
         run: |
           flutter build ipa \
             --release \
-            --export-options-plist=ios/ExportOptions.plist
+            --no-codesign
+
+          xcodebuild -exportArchive \
+            -archivePath build/ios/archive/Runner.xcarchive \
+            -exportOptionsPlist ios/ExportOptions.plist \
+            -exportPath build/ios/ipa
 
       - name: Upload to App Store Connect
         env:
