@@ -27,6 +27,8 @@ class ProfileUpdateRequested extends ProfileEvent {
   final DateTime? dateOfBirth;
   final int? heightCm;
   final int? weightKg;
+  final String? provinceId;
+  final String? districtId;
   final String? city;
   final String? district;
   final String? address;
@@ -42,6 +44,8 @@ class ProfileUpdateRequested extends ProfileEvent {
     this.dateOfBirth,
     this.heightCm,
     this.weightKg,
+    this.provinceId,
+    this.districtId,
     this.city,
     this.district,
     this.address,
@@ -59,6 +63,8 @@ class ProfileUpdateRequested extends ProfileEvent {
         dateOfBirth,
         heightCm,
         weightKg,
+        provinceId,
+        districtId,
         city,
         district,
         address,
@@ -102,18 +108,22 @@ class ProfilePhotoDeleteRequested extends ProfileEvent {
 class ProfileLocationUpdateRequested extends ProfileEvent {
   final double latitude;
   final double longitude;
+  final String? provinceId;
+  final String? districtId;
   final String? city;
   final String? district;
 
   const ProfileLocationUpdateRequested({
     required this.latitude,
     required this.longitude,
+    this.provinceId,
+    this.districtId,
     this.city,
     this.district,
   });
 
   @override
-  List<Object?> get props => [latitude, longitude, city, district];
+  List<Object?> get props => [latitude, longitude, provinceId, districtId, city, district];
 }
 
 /// Event to reset profile state (used when user logs out)

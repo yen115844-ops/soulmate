@@ -90,6 +90,18 @@ class ApiClient {
               return handler.next(error);
             }
             
+            // Only attempt refresh if we actually have a refresh token.
+            // If there is no refresh token the user was never logged in
+            // (or already logged out), so a 401 is expected — don't
+            // surface a "session expired" message.
+            final hasRefresh = _storage.refreshToken != null &&
+                _storage.refreshToken!.isNotEmpty;
+
+            if (!hasRefresh) {
+              debugPrint('🔐 Auth: No refresh token, skipping refresh & onAuthFailed');
+              return handler.next(error);
+            }
+
             final refreshed = await _refreshToken();
             if (refreshed) {
               // Retry the original request with new token

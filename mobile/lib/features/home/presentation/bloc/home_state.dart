@@ -1,7 +1,16 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../../shared/data/models/master_data_models.dart';
 import '../../../partner/domain/entities/partner_entity.dart';
 import '../../domain/home_filter.dart';
+
+/// Location detection status
+enum LocationDetectionStatus {
+  initial,
+  detecting,
+  detected,
+  permissionDenied,
+}
 
 /// Home BLoC State
 class HomeState extends Equatable {
@@ -14,6 +23,10 @@ class HomeState extends Equatable {
   final String? errorMessage;
   final Set<String> favoriteIds;
 
+  // Location detection
+  final LocationDetectionStatus locationStatus;
+  final List<ProvinceModel> provinces;
+
   const HomeState({
     this.status = HomeStatus.initial,
     this.partners = const [],
@@ -23,6 +36,8 @@ class HomeState extends Equatable {
     this.hasMore = false,
     this.errorMessage,
     this.favoriteIds = const {},
+    this.locationStatus = LocationDetectionStatus.initial,
+    this.provinces = const [],
   });
 
   /// Initial state
@@ -53,6 +68,8 @@ class HomeState extends Equatable {
     String? errorMessage,
     Set<String>? favoriteIds,
     bool clearError = false,
+    LocationDetectionStatus? locationStatus,
+    List<ProvinceModel>? provinces,
   }) {
     return HomeState(
       status: status ?? this.status,
@@ -63,6 +80,8 @@ class HomeState extends Equatable {
       hasMore: hasMore ?? this.hasMore,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       favoriteIds: favoriteIds ?? this.favoriteIds,
+      locationStatus: locationStatus ?? this.locationStatus,
+      provinces: provinces ?? this.provinces,
     );
   }
 
@@ -76,6 +95,8 @@ class HomeState extends Equatable {
         hasMore,
         errorMessage,
         favoriteIds,
+        locationStatus,
+        provinces,
       ];
 }
 

@@ -8,6 +8,7 @@ import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../shared/widgets/auth_guard.dart';
 import '../../../booking/presentation/pages/bookings_page.dart';
 import '../../../chat/presentation/pages/chat_list_page.dart';
 import '../../../favorites/presentation/pages/favorites_page.dart';
@@ -31,13 +32,20 @@ class _SwipeableHomePageState extends State<SwipeableHomePage>
   double _slideBegin = 0;
   double _slideEnd = 0;
 
-  final List<Widget> _pages = const [
-    HomePage(),
-    FavoritesPage(),
-    BookingsPage(),
-    ChatListPage(),
-    ProfilePage(),
-  ];
+  /// Build page list dynamically.
+  /// Auth-required pages (Favorites, Bookings, Chat) return a lightweight
+  /// placeholder for guest users so that IndexedStack doesn't trigger
+  /// API calls that will fail with 401.
+  List<Widget> get _pages {
+    final isGuest = !AuthGuard.isAuthenticated;
+    return [
+      const HomePage(),
+      if (isGuest) const _AuthRequiredPlaceholder() else const FavoritesPage(),
+      if (isGuest) const _AuthRequiredPlaceholder() else const BookingsPage(),
+      if (isGuest) const _AuthRequiredPlaceholder() else const ChatListPage(),
+      const ProfilePage(),
+    ];
+  }
 
   static const _icons = [
     (outline: Ionicons.home_outline, filled: Ionicons.home),
@@ -50,15 +58,21 @@ class _SwipeableHomePageState extends State<SwipeableHomePage>
   @override
   void initState() {
     super.initState();
-    switch (widget.initialPage) {
-      case 0:
-        _currentIndex = 2;
-        break;
-      case 2:
-        _currentIndex = 4;
-        break;
-      default:
-        _currentIndex = 0;
+
+    // For guest users, always start on Home tab (index 0)
+    if (!AuthGuard.isAuthenticated) {
+      _currentIndex = 0;
+    } else {
+      switch (widget.initialPage) {
+        case 0:
+          _currentIndex = 2; // Bookings
+          break;
+        case 2:
+          _currentIndex = 4; // Profile
+          break;
+        default:
+          _currentIndex = 0; // Home
+      }
     }
 
     _slideBegin = _currentIndex.toDouble();
@@ -82,10 +96,35 @@ class _SwipeableHomePageState extends State<SwipeableHomePage>
     return lerpDouble(_slideBegin, _slideEnd, t)!;
   }
 
+  /// Tabs that require authentication: Favorites(1), Bookings(2), Chat(3)
+  /// Profile(4) allows guest access with basic settings
+  static const _authRequiredTabs = {1, 2, 3};
+
+  static const _authTabMessages = {
+    1: 'Đăng nhập để xem danh sách yêu thích của bạn.',
+    2: 'Đăng nhập để xem và quản lý đặt lịch.',
+    3: 'Đăng nhập để nhắn tin với mọi người.',
+  };
+
   void _onTabTap(int index) {
     if (index == _currentIndex) return;
-    HapticFeedback.selectionClick();
 
+    // Guard auth-required tabs for guest users
+    if (_authRequiredTabs.contains(index) && !AuthGuard.isAuthenticated) {
+      HapticFeedback.heavyImpact();
+      AuthGuard.requireAuth(
+        context,
+        onAuthenticated: () => _switchToTab(index),
+        message: _authTabMessages[index],
+      );
+      return;
+    }
+
+    HapticFeedback.selectionClick();
+    _switchToTab(index);
+  }
+
+  void _switchToTab(int index) {
     _slideBegin = _animatedPosition;
     _slideEnd = index.toDouble();
     _currentIndex = index;
@@ -112,36 +151,39 @@ class _SwipeableHomePageState extends State<SwipeableHomePage>
               top: false,
               child: Padding(
                 padding: const EdgeInsets.only(left: 20, right: 20, bottom: 8),
-                child: LiquidGlass.withOwnLayer(
-                  settings: LiquidGlassSettings(
-                    blur: 4,
-                    ambientStrength: 0.6,
-                    lightAngle: 0.2 * math.pi,
-                    glassColor: isDark
-                        ? Colors.white10
-                        : Colors.black.withAlpha(18),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.cardDark : AppColors.card,
+                    borderRadius: BorderRadius.circular(40),
+                    border: isDark
+                        ? Border.all(color: AppColors.borderDark, width: 0.5)
+                        : null,
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark ? AppColors.shadowDark : AppColors.shadow,
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  shape: LiquidRoundedSuperellipse(borderRadius: 40),
-                  glassContainsChild: false,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 10,
-                    ),
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final tabWidth = constraints.maxWidth / 5;
-                        return AnimatedBuilder(
-                          animation: _slideController,
-                          builder: (context, _) {
-                            final pos = _animatedPosition;
-                            const pillSize = 48.0;
-                            final pillLeft =
-                                pos * tabWidth + (tabWidth - pillSize) / 2;
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 10,
+                  ),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final tabWidth = constraints.maxWidth / 5;
+                      return AnimatedBuilder(
+                        animation: _slideController,
+                        builder: (context, _) {
+                          final pos = _animatedPosition;
+                          const pillSize = 48.0;
+                          final pillLeft =
+                              pos * tabWidth + (tabWidth - pillSize) / 2;
 
-                            return SizedBox(
-                              height: pillSize,
-                              child: Stack(
+                          return SizedBox(
+                            height: pillSize,
+                            child: Stack(
                               alignment: Alignment.center,
                               children: [
                                 // ── Sliding pill indicator ──
@@ -161,8 +203,10 @@ class _SwipeableHomePageState extends State<SwipeableHomePage>
                                 Row(
                                   children: List.generate(5, (i) {
                                     final distance = (pos - i).abs();
-                                    final activeness =
-                                        (1.0 - distance).clamp(0.0, 1.0);
+                                    final activeness = (1.0 - distance).clamp(
+                                      0.0,
+                                      1.0,
+                                    );
                                     return Expanded(
                                       child: GestureDetector(
                                         onTap: () => _onTabTap(i),
@@ -180,11 +224,10 @@ class _SwipeableHomePageState extends State<SwipeableHomePage>
                                 ),
                               ],
                             ),
-                            );
-                          },
-                        );
-                      },
-                    ),
+                          );
+                        },
+                      );
+                    },
                   ),
                 ),
               ),
@@ -200,31 +243,36 @@ class _SlidingPill extends StatelessWidget {
   final double size;
   final bool isDark;
 
-  const _SlidingPill({
-    required this.size,
-    required this.isDark,
-  });
+  const _SlidingPill({required this.size, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white,
-        border: Border.all(
-          color:
-              (isDark ? Colors.white : AppColors.primary).withOpacity(0.5),
-          width: 1.5,
+    return LiquidGlass.withOwnLayer(
+      settings: LiquidGlassSettings(
+        blur: 6,
+        ambientStrength: isDark ? 1.0 : 0.8,
+        lightAngle: 0.2 * math.pi,
+        glassColor: isDark
+            ? AppColors.primaryDark.withValues(alpha: 0.3)
+            : AppColors.primary.withValues(alpha: 0.15),
+      ),
+      shape: LiquidRoundedSuperellipse(borderRadius: size / 2),
+      glassContainsChild: false,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: isDark
+                  ? AppColors.primaryDark.withValues(alpha: 0.5)
+                  : AppColors.primary.withValues(alpha: 0.2),
+              blurRadius: 16,
+              spreadRadius: 1,
+            ),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(isDark ? 0.5 : 0.3),
-            blurRadius: 20,
-            spreadRadius: 1,
-          ),
-        ],
       ),
     );
   }
@@ -243,9 +291,10 @@ class _NavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = isDark ? Colors.white : AppColors.primary;
-    final inactiveColor =
-        isDark ? Colors.white60 : AppColors.textSecondary;
+    final activeColor = isDark ? AppColors.primaryLight : AppColors.primary;
+    final inactiveColor = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondary;
     final color = Color.lerp(inactiveColor, activeColor, activeness)!;
     final scale = 1.0 + 0.12 * activeness;
     final size = 24 + 2 * activeness;
@@ -256,5 +305,18 @@ class _NavIcon extends StatelessWidget {
         child: Icon(icon, color: color, size: size),
       ),
     );
+  }
+}
+
+/// Lightweight placeholder shown inside IndexedStack for guest users.
+/// This prevents auth-required pages from being built and firing API calls.
+class _AuthRequiredPlaceholder extends StatelessWidget {
+  const _AuthRequiredPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    // Returning an empty SizedBox — the tab-tap guard in _onTabTap
+    // already prevents guests from seeing this page.
+    return const SizedBox.shrink();
   }
 }

@@ -110,6 +110,33 @@ export class UsersService {
       updateData.dateOfBirth = new Date(dto.dateOfBirth);
     }
 
+    // Auto-populate denormalized city/district names from provinceId/districtId
+    if (dto.provinceId) {
+      const province = await this.prisma.province.findUnique({
+        where: { id: dto.provinceId },
+      });
+      if (province) {
+        updateData.city = province.name;
+        updateData.provinceId = province.id;
+      }
+    } else if (dto.provinceId === null) {
+      updateData.provinceId = null;
+      updateData.city = null;
+    }
+
+    if (dto.districtId) {
+      const district = await this.prisma.district.findUnique({
+        where: { id: dto.districtId },
+      });
+      if (district) {
+        updateData.district = district.name;
+        updateData.districtId = district.id;
+      }
+    } else if (dto.districtId === null) {
+      updateData.districtId = null;
+      updateData.district = null;
+    }
+
     const profile = await this.prisma.profile.update({
       where: { userId },
       data: updateData,
@@ -165,14 +192,39 @@ export class UsersService {
    * Update user location
    */
   async updateLocation(userId: string, dto: UpdateLocationDto) {
+    const updateData: any = {
+      currentLat: dto.currentLat,
+      currentLng: dto.currentLng,
+    };
+
+    // Auto-populate denormalized city/district names from provinceId/districtId
+    if (dto.provinceId) {
+      const province = await this.prisma.province.findUnique({
+        where: { id: dto.provinceId },
+      });
+      if (province) {
+        updateData.city = province.name;
+        updateData.provinceId = province.id;
+      }
+    } else if (dto.city !== undefined) {
+      updateData.city = dto.city;
+    }
+
+    if (dto.districtId) {
+      const district = await this.prisma.district.findUnique({
+        where: { id: dto.districtId },
+      });
+      if (district) {
+        updateData.district = district.name;
+        updateData.districtId = district.id;
+      }
+    } else if (dto.district !== undefined) {
+      updateData.district = dto.district;
+    }
+
     const profile = await this.prisma.profile.update({
       where: { userId },
-      data: {
-        currentLat: dto.currentLat,
-        currentLng: dto.currentLng,
-        city: dto.city,
-        district: dto.district,
-      },
+      data: updateData,
     });
 
     return profile;

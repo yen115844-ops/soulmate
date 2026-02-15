@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -12,10 +13,13 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/theme/theme_cubit.dart';
 import '../../../../core/utils/image_utils.dart';
+import '../../../../shared/widgets/auth_guard.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
+import '../../../auth/presentation/bloc/auth_state.dart' as auth_state;
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
@@ -25,15 +29,35 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Use existing ProfileBloc singleton and trigger load
-    final profileBloc = getIt<ProfileBloc>();
-    if (profileBloc.state is ProfileInitial) {
-      profileBloc.add(const ProfileLoadRequested());
-    }
+    // Reactively rebuild when auth state changes (e.g. guest → logged in)
+    return BlocBuilder<AuthBloc, auth_state.AuthState>(
+      bloc: getIt<AuthBloc>(),
+      buildWhen: (previous, current) {
+        // Only rebuild when switching between authenticated / unauthenticated
+        final wasAuth = previous is auth_state.AuthAuthenticated ||
+            previous is auth_state.AuthNeedsProfileSetup ||
+            previous is auth_state.AuthPendingVerification;
+        final isAuth = current is auth_state.AuthAuthenticated ||
+            current is auth_state.AuthNeedsProfileSetup ||
+            current is auth_state.AuthPendingVerification;
+        return wasAuth != isAuth;
+      },
+      builder: (context, authState) {
+        if (!AuthGuard.isAuthenticated) {
+          return const _GuestProfileView();
+        }
 
-    return BlocProvider.value(
-      value: profileBloc,
-      child: const _ProfilePageContent(),
+        // Use existing ProfileBloc singleton and trigger load
+        final profileBloc = getIt<ProfileBloc>();
+        if (profileBloc.state is ProfileInitial) {
+          profileBloc.add(const ProfileLoadRequested());
+        }
+
+        return BlocProvider.value(
+          value: profileBloc,
+          child: const _ProfilePageContent(),
+        );
+      },
     );
   }
 }
@@ -1221,6 +1245,334 @@ class _ModernMenuItem extends StatelessWidget {
                   color: context.appColors.textHint,
                   size: 18,
                 ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Guest Profile View — shows basic settings for unauthenticated users
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _GuestProfileView extends StatelessWidget {
+  const _GuestProfileView();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              // Guest Header
+              const _GuestProfileHeader(),
+
+              const SizedBox(height: 24),
+
+              // Basic Settings
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    // Appearance section (local, no API needed)
+                    _ModernMenuSection(
+                      title: 'Giao diện',
+                      items: [
+                        BlocBuilder<ThemeCubit, ThemeState>(
+                          builder: (context, themeState) {
+                            return _ModernMenuItem(
+                              icon: Ionicons.moon_outline,
+                              iconBgColor: const Color(0xFFEDE7F6),
+                              iconColor: const Color(0xFF5E35B1),
+                              title: 'Chế độ tối',
+                              subtitle: themeState.isDarkMode
+                                  ? 'Đang bật'
+                                  : 'Đang tắt',
+                              onTap: () {
+                                getIt<ThemeCubit>().setDarkMode(
+                                  !themeState.isDarkMode,
+                                );
+                              },
+                            );
+                          },
+                        ),
+                        BlocBuilder<ThemeCubit, ThemeState>(
+                          builder: (context, themeState) {
+                            return _ModernMenuItem(
+                              icon: Ionicons.phone_portrait_outline,
+                              iconBgColor: const Color(0xFFE3F2FD),
+                              iconColor: const Color(0xFF1976D2),
+                              title: 'Theo hệ thống',
+                              subtitle: themeState.isSystemMode
+                                  ? 'Đang bật'
+                                  : 'Đang tắt',
+                              onTap: () {
+                                if (themeState.isSystemMode) {
+                                  getIt<ThemeCubit>()
+                                      .setThemeMode(ThemeMode.light);
+                                } else {
+                                  getIt<ThemeCubit>()
+                                      .setThemeMode(ThemeMode.system);
+                                }
+                              },
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Support section
+                    _ModernMenuSection(
+                      title: 'Hỗ trợ',
+                      items: [
+                        _ModernMenuItem(
+                          icon: Ionicons.help_circle_outline,
+                          iconBgColor: const Color(0xFFE0F7FA),
+                          iconColor: const Color(0xFF00ACC1),
+                          title: 'Trung tâm trợ giúp',
+                          onTap: () => context.push(RouteNames.helpCenter),
+                        ),
+                        _ModernMenuItem(
+                          icon: Ionicons.document_text_outline,
+                          iconBgColor: context.appColors.background,
+                          iconColor: const Color(0xFF616161),
+                          title: 'Điều khoản sử dụng',
+                          onTap: () =>
+                              context.push(RouteNames.termsOfService),
+                        ),
+                        _ModernMenuItem(
+                          icon: Ionicons.shield_checkmark_outline,
+                          iconBgColor: context.appColors.background,
+                          iconColor: const Color(0xFF616161),
+                          title: 'Chính sách bảo mật',
+                          onTap: () =>
+                              context.push(RouteNames.privacyPolicy),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Data section
+                    _ModernMenuSection(
+                      title: 'Dữ liệu',
+                      items: [
+                        _ModernMenuItem(
+                          icon: Ionicons.trash_outline,
+                          iconBgColor: const Color(0xFFFFF3E0),
+                          iconColor: const Color(0xFFFF9800),
+                          title: 'Xóa bộ nhớ cache',
+                          subtitle: 'Giải phóng dung lượng',
+                          onTap: () => _showClearCacheDialog(context),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Login Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => context.push(RouteNames.login),
+                        icon: const Icon(Ionicons.log_in_outline),
+                        label: const Text('Đăng nhập'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Register Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => context.push(RouteNames.register),
+                        icon: const Icon(Ionicons.person_add_outline),
+                        label: const Text('Tạo tài khoản mới'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                          side: const BorderSide(
+                            color: AppColors.primary,
+                            width: 1.5,
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    Text(
+                      'Mate Social v1.0.0',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: context.appColors.textHint,
+                      ),
+                    ),
+
+                    const SizedBox(height: 100),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showClearCacheDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Xóa bộ nhớ cache?'),
+        content: const Text(
+          'Hành động này sẽ xóa ảnh và dữ liệu tạm thời được lưu trên thiết bị để giải phóng dung lượng.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              await _clearCache(context);
+            },
+            child: const Text('Xóa', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _clearCache(BuildContext context) async {
+    try {
+      await DefaultCacheManager().emptyCache();
+      if (context.mounted) {
+        PaintingBinding.instance.imageCache.clear();
+        PaintingBinding.instance.imageCache.clearLiveImages();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đã xóa bộ nhớ cache'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Không thể xóa cache: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+}
+
+/// Guest profile header — invitation to login/register
+class _GuestProfileHeader extends StatelessWidget {
+  const _GuestProfileHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary,
+            AppColors.primary.withOpacity(0.8),
+            AppColors.primaryLight,
+          ],
+        ),
+        borderRadius: const BorderRadius.vertical(
+          bottom: Radius.circular(32),
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+          child: Column(
+            children: [
+              // Title row
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Cá nhân',
+                  style: AppTypography.titleLarge.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Default avatar
+              Container(
+                width: 96,
+                height: 96,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.5),
+                    width: 3,
+                  ),
+                ),
+                child: ClipOval(
+                  child: Container(
+                    color: Colors.white.withOpacity(0.2),
+                    child: const Icon(
+                      Ionicons.person_outline,
+                      size: 42,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              // Guest label
+              Text(
+                'Khách',
+                style: AppTypography.headlineSmall.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+
+              const SizedBox(height: 6),
+
+              Text(
+                'Đăng nhập để trải nghiệm đầy đủ tính năng',
+                style: AppTypography.bodySmall.copyWith(
+                  color: Colors.white.withOpacity(0.8),
+                ),
+              ),
             ],
           ),
         ),

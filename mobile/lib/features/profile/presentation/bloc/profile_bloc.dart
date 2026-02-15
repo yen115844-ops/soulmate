@@ -89,6 +89,8 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         dateOfBirth: event.dateOfBirth,
         heightCm: event.heightCm,
         weightKg: event.weightKg,
+        provinceId: event.provinceId,
+        districtId: event.districtId,
         city: event.city,
         district: event.district,
         address: event.address,
@@ -222,6 +224,8 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       await _profileRepository.updateLocation(
         latitude: event.latitude,
         longitude: event.longitude,
+        provinceId: event.provinceId,
+        districtId: event.districtId,
         city: event.city,
         district: event.district,
       );

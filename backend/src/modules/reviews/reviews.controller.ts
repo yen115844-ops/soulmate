@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import {
     CreateReviewDto,
@@ -68,15 +69,17 @@ export class ReviewsController {
     return this.reviewsService.getReviewStats(userId);
   }
 
+  @Public()
   @Get('user/:userId/stats')
-  @ApiOperation({ summary: 'Get review statistics for a user' })
+  @ApiOperation({ summary: 'Get review statistics for a user (public)' })
   @ApiResponse({ status: 200, description: 'Review stats' })
   async getUserReviewStats(@Param('userId') userId: string) {
     return this.reviewsService.getReviewStats(userId);
   }
 
+  @Public()
   @Get('user/:userId')
-  @ApiOperation({ summary: 'Get reviews for a specific user' })
+  @ApiOperation({ summary: 'Get reviews for a specific user (public)' })
   @ApiResponse({ status: 200, description: 'Reviews list' })
   async getUserReviews(
     @Param('userId') userId: string,

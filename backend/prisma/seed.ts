@@ -802,6 +802,32 @@ async function main() {
   }
   console.log(`Seeded ${samplePartners.length} sample partners`);
 
+  // Post-process: update all profiles with provinceId/districtId based on city/district names
+  const allProvinces = await prisma.province.findMany();
+  const allDistricts = await prisma.district.findMany();
+  const allProfiles = await prisma.profile.findMany();
+
+  let updatedCount = 0;
+  for (const profile of allProfiles) {
+    if (profile.city && !profile.provinceId) {
+      const province = allProvinces.find(p => p.name === profile.city);
+      if (province) {
+        const district = profile.district
+          ? allDistricts.find(d => d.name === profile.district && d.provinceId === province.id)
+          : null;
+        await prisma.profile.update({
+          where: { id: profile.id },
+          data: {
+            provinceId: province.id,
+            districtId: district?.id || null,
+          },
+        });
+        updatedCount++;
+      }
+    }
+  }
+  console.log(`Updated ${updatedCount} profiles with provinceId/districtId`);
+
   console.log('Seeding completed!');
 }
 

@@ -246,15 +246,15 @@ export class SearchPartnersDto {
   @Max(100)
   radius?: number;
 
-  @ApiPropertyOptional({ example: 'Ho Chi Minh' })
+  @ApiPropertyOptional({ description: 'Province/City ID from master data' })
   @IsOptional()
   @IsString()
-  city?: string;
+  cityId?: string;
 
-  @ApiPropertyOptional({ example: 'Quận 1', description: 'District filter (case-insensitive contains)' })
+  @ApiPropertyOptional({ description: 'District ID from master data' })
   @IsOptional()
   @IsString()
-  district?: string;
+  districtId?: string;
 
   @ApiPropertyOptional({ example: 'rating', enum: ['rating', 'price_low', 'price_high', 'distance', 'newest'] })
   @IsOptional()

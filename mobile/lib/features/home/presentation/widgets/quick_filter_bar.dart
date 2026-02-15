@@ -61,12 +61,12 @@ class QuickFilterBar extends StatelessWidget {
                   isActive: true,
                   onDismiss: () {
                     context.read<HomeBloc>().add(
-                          HomeApplyFilter(filter.clear(clearGender: true)),
-                        );
+                      HomeApplyFilter(filter.clear(clearGender: true)),
+                    );
                   },
                 ),
               ),
-            // Location chip
+            // Location chip (not dismissable — location is always required)
             if (filter.locationDisplay != null)
               Padding(
                 padding: const EdgeInsets.only(right: 8),
@@ -74,11 +74,6 @@ class QuickFilterBar extends StatelessWidget {
                   label: filter.locationDisplay!,
                   icon: Ionicons.map_outline,
                   isActive: true,
-                  onDismiss: () {
-                    context.read<HomeBloc>().add(
-                          HomeApplyFilter(filter.clear(clearLocation: true)),
-                        );
-                  },
                 ),
               ),
             // Verified chip
@@ -88,10 +83,10 @@ class QuickFilterBar extends StatelessWidget {
               isActive: filter.verifiedOnly,
               onTap: () {
                 context.read<HomeBloc>().add(
-                      HomeApplyFilter(
-                        filter.copyWith(verifiedOnly: !filter.verifiedOnly),
-                      ),
-                    );
+                  HomeApplyFilter(
+                    filter.copyWith(verifiedOnly: !filter.verifiedOnly),
+                  ),
+                );
               },
             ),
             const SizedBox(width: 8),
@@ -102,10 +97,10 @@ class QuickFilterBar extends StatelessWidget {
               isActive: filter.availableNow,
               onTap: () {
                 context.read<HomeBloc>().add(
-                      HomeApplyFilter(
-                        filter.copyWith(availableNow: !filter.availableNow),
-                      ),
-                    );
+                  HomeApplyFilter(
+                    filter.copyWith(availableNow: !filter.availableNow),
+                  ),
+                );
               },
             ),
           ],
@@ -191,11 +186,13 @@ class _QuickFilterChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon,
-                size: 16,
-                color: isActive
-                    ? AppColors.primary
-                    : context.appColors.textSecondary),
+            Icon(
+              icon,
+              size: 16,
+              color: isActive
+                  ? AppColors.primary
+                  : context.appColors.textSecondary,
+            ),
             const SizedBox(width: 6),
             Text(
               label,
@@ -231,8 +228,11 @@ class _QuickFilterChip extends StatelessWidget {
               const SizedBox(width: 4),
               GestureDetector(
                 onTap: onDismiss,
-                child: Icon(Ionicons.close_circle,
-                    size: 16, color: AppColors.primary),
+                child: Icon(
+                  Ionicons.close_circle,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
               ),
             ],
           ],

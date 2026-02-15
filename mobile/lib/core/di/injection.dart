@@ -19,7 +19,6 @@ import '../../features/partner/presentation/bloc/partner_dashboard_bloc.dart';
 import '../../features/partner/presentation/bloc/partner_earnings_bloc.dart';
 import '../../features/partner/presentation/bloc/partner_profile_bloc.dart';
 import '../../features/partner/presentation/bloc/partner_registration_bloc.dart';
-import '../../features/partner/presentation/bloc/partner_reviews_bloc.dart';
 import '../../features/partner/presentation/bloc/schedule_settings_bloc.dart';
 import '../../features/profile/data/profile_repository.dart';
 import '../../features/profile/presentation/bloc/profile_bloc.dart';
@@ -199,10 +198,8 @@ Future<void> setupDependencies() async {
     () => PartnerBookingsBloc(partnerRepository: getIt<PartnerRepository>()),
   );
 
-  // Partner Reviews BLoC
-  getIt.registerFactory<PartnerReviewsBloc>(
-    () => PartnerReviewsBloc(partnerRepository: getIt<PartnerRepository>()),
-  );
+  // Partner Reviews BLoC — created manually in PartnerReviewsPage
+  // because it requires a dynamic partnerId parameter.
 
   // Partner Earnings BLoC
   getIt.registerFactory<PartnerEarningsBloc>(

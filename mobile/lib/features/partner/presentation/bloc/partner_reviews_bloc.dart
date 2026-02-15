@@ -9,9 +9,12 @@ import 'partner_reviews_state.dart';
 class PartnerReviewsBloc
     extends Bloc<PartnerReviewsEvent, PartnerReviewsState> {
   final PartnerRepository _partnerRepository;
+  final String partnerId;
 
-  PartnerReviewsBloc({required PartnerRepository partnerRepository})
-      : _partnerRepository = partnerRepository,
+  PartnerReviewsBloc({
+    required PartnerRepository partnerRepository,
+    required this.partnerId,
+  })  : _partnerRepository = partnerRepository,
         super(const PartnerReviewsInitial()) {
     on<PartnerReviewsLoadRequested>(_onLoadRequested);
     on<PartnerReviewsLoadMoreRequested>(_onLoadMoreRequested);
@@ -28,11 +31,12 @@ class PartnerReviewsBloc
     try {
       final results = await Future.wait([
         _partnerRepository.getPartnerReviews(
+          partnerId: partnerId,
           page: event.page,
           minRating: event.minRating,
           sortBy: event.sortBy,
         ),
-        _partnerRepository.getPartnerReviewStats(),
+        _partnerRepository.getPartnerReviewStats(partnerId: partnerId),
       ]);
 
       final reviewsResponse = results[0] as PartnerReviewsResponse;
@@ -68,6 +72,7 @@ class PartnerReviewsBloc
 
     try {
       final response = await _partnerRepository.getPartnerReviews(
+        partnerId: partnerId,
         page: currentState.page + 1,
         minRating: currentState.currentFilter,
         sortBy: currentState.currentSort,
@@ -101,11 +106,12 @@ class PartnerReviewsBloc
     try {
       final results = await Future.wait([
         _partnerRepository.getPartnerReviews(
+          partnerId: partnerId,
           page: 1,
           minRating: currentFilter,
           sortBy: currentSort,
         ),
-        _partnerRepository.getPartnerReviewStats(),
+        _partnerRepository.getPartnerReviewStats(partnerId: partnerId),
       ]);
 
       final reviewsResponse = results[0] as PartnerReviewsResponse;
@@ -145,6 +151,7 @@ class PartnerReviewsBloc
 
     try {
       final response = await _partnerRepository.getPartnerReviews(
+        partnerId: partnerId,
         page: 1,
         minRating: event.minRating,
         sortBy: event.sortBy ?? currentState.currentSort,

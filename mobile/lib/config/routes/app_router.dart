@@ -479,13 +479,8 @@ class AppRouter {
       ),
     ],
 
-    // Error Page (404) - redirect by auth
+    // Error Page (404) - always redirect to home
     errorBuilder: (context, state) {
-      final authBloc = getIt<AuthBloc>();
-      final authState = authBloc.state;
-      final isLoggedIn = authState is auth_state.AuthAuthenticated ||
-          authState is auth_state.AuthNeedsProfileSetup ||
-          authState is auth_state.AuthPendingVerification;
       return Scaffold(
         body: Center(
           child: Column(
@@ -510,14 +505,8 @@ class AppRouter {
               ),
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () {
-                  if (isLoggedIn) {
-                    context.go(RouteNames.home);
-                  } else {
-                    context.go(RouteNames.login);
-                  }
-                },
-                child: Text(isLoggedIn ? 'Về trang chủ' : 'Về đăng nhập'),
+                onPressed: () => context.go(RouteNames.home),
+                child: const Text('Về trang chủ'),
               ),
             ],
           ),
@@ -526,24 +515,15 @@ class AppRouter {
     },
 
     // Redirect Logic (auth guard)
+    //
+    // Philosophy: Users can browse the app freely without logging in.
+    // Only features that require user identity (bookings, chat, profile,
+    // wallet, etc.) redirect to login. The AuthGuard utility handles
+    // in-page prompts for auth-gated actions (favorite, book, chat).
     redirect: (context, state) {
       final authBloc = getIt<AuthBloc>();
       final currentState = authBloc.state;
       final location = state.matchedLocation;
-
-      // --- Auth is still loading (app just started) ----------------------
-      // AuthBloc hasn't finished checking tokens yet. Don't redirect
-      // anywhere — the native splash is still visible or the screen is
-      // blank for a brief moment. Once AuthBloc emits a resolved state,
-      // refreshListenable triggers redirect re-evaluation.
-      final isAuthResolving = currentState is auth_state.AuthInitial ||
-          currentState is auth_state.AuthLoading;
-
-      if (isAuthResolving) {
-        // While auth is resolving, keep user on loading screen.
-        if (location != '/') return '/';
-        return null;
-      }
 
       // --- Onboarding gate -----------------------------------------------
       final storage = LocalStorageService.instance;
@@ -551,17 +531,31 @@ class AppRouter {
         return RouteNames.onboarding;
       }
 
-      // --- Resolved auth state -------------------------------------------
+      // --- Auth state ----------------------------------------------------
+      final isAuthResolving = currentState is auth_state.AuthInitial ||
+          currentState is auth_state.AuthLoading;
+
       final isLoggedIn = currentState is auth_state.AuthAuthenticated ||
           currentState is auth_state.AuthNeedsProfileSetup ||
           currentState is auth_state.AuthPendingVerification;
 
-      // Auth resolved — leave the loading screen
-      if (location == '/') {
-        return isLoggedIn ? RouteNames.home : RouteNames.login;
+      // User explicitly logged out or deleted account → force login
+      final isLoggedOut = currentState is auth_state.AuthLogoutSuccess ||
+          currentState is auth_state.AuthAccountDeleted;
+      if (isLoggedOut && location != RouteNames.login) {
+        return RouteNames.login;
       }
 
-      final isPublicRoute =
+      // Routes that guests can browse without authentication
+      final isBrowsableRoute =
+          location == RouteNames.home ||
+          location.startsWith('/partner/') ||
+          location == RouteNames.helpCenter ||
+          location == RouteNames.termsOfService ||
+          location == RouteNames.privacyPolicy;
+
+      // Auth pages (login, register, etc.)
+      final isAuthRoute =
           location == RouteNames.onboarding ||
           location == RouteNames.login ||
           location == RouteNames.register ||
@@ -569,24 +563,42 @@ class AppRouter {
           location == RouteNames.forgotPassword ||
           location == RouteNames.resetPassword;
 
-      if (!isLoggedIn && !isPublicRoute) {
-        return RouteNames.login;
+      // If auth is still resolving, let browsable routes through
+      // immediately — no loading screen needed.
+      if (isAuthResolving) {
+        if (location == '/') return RouteNames.home;
+        if (isBrowsableRoute || isAuthRoute) return null;
+        // For auth-required routes, wait on loading screen until resolved
+        if (location != '/') return '/';
+        return null;
       }
+
+      // Auth resolved — leave the loading screen
+      if (location == '/') {
+        return RouteNames.home;
+      }
+
+      // Logged-in user on auth pages → go home
       if (isLoggedIn && (location == RouteNames.login || location == RouteNames.register)) {
         return RouteNames.home;
       }
-      // Sau xác thực OTP đăng ký: đang ở /otp-verification và đã login → về home
       if (isLoggedIn && location.startsWith(RouteNames.otpVerification)) {
         return RouteNames.home;
       }
-      // /main không có route riêng – dùng /home làm màn chính
+
+      // Guest on auth-required route → redirect to login
+      if (!isLoggedIn && !isAuthRoute && !isBrowsableRoute) {
+        return RouteNames.login;
+      }
+
+      // /main → /home, /search → /home
       if (location == RouteNames.main) {
         return RouteNames.home;
       }
-      // Không có trang Search riêng – bộ lọc ở Home: /search → /home
       if (location == RouteNames.search) {
         return RouteNames.home;
       }
+
       return null;
     },
   );

@@ -114,6 +114,14 @@ class _EditProfileContentState extends State<_EditProfileContent> {
       _savedCityName = profile.city;
       _savedDistrictName = profile.district;
 
+      // Use provinceId/districtId from profile if available
+      if (profile.provinceId != null && profile.provinceId!.isNotEmpty) {
+        _selectedProvinceId = profile.provinceId;
+      }
+      if (profile.districtId != null && profile.districtId!.isNotEmpty) {
+        _selectedDistrictId = profile.districtId;
+      }
+
       // These will be populated when master data is loaded
       // For now, store the names as temporary identifiers
       _selectedLanguageIds = List<String>.from(profile.languages);
@@ -127,8 +135,18 @@ class _EditProfileContentState extends State<_EditProfileContent> {
   void _initializeLocationFromMasterData(MasterDataLoaded state) {
     if (_hasInitializedLocation) return;
     
-    // Find province by name
-    if (_savedCityName != null && _savedCityName!.isNotEmpty) {
+    // If we already have provinceId from profile, use it directly
+    if (_selectedProvinceId != null && _selectedProvinceId!.isNotEmpty) {
+      // Verify it exists in loaded provinces
+      final exists = state.provinces.any((p) => p.id == _selectedProvinceId);
+      if (exists) {
+        // Load districts for this province
+        context.read<MasterDataBloc>().add(DistrictsLoadRequested(_selectedProvinceId!));
+      } else {
+        _selectedProvinceId = null;
+      }
+    } else if (_savedCityName != null && _savedCityName!.isNotEmpty) {
+      // Fallback: find province by name (for backward compatibility)
       final province = state.provinces.firstWhere(
         (p) => p.name == _savedCityName || p.code == _savedCityName,
         orElse: () => ProvinceModel(id: '', code: '', name: ''),
@@ -136,8 +154,6 @@ class _EditProfileContentState extends State<_EditProfileContent> {
       
       if (province.id.isNotEmpty) {
         _selectedProvinceId = province.id;
-        
-        // Load districts for this province
         context.read<MasterDataBloc>().add(DistrictsLoadRequested(province.id));
       }
     }
@@ -147,10 +163,18 @@ class _EditProfileContentState extends State<_EditProfileContent> {
 
   /// Initialize district selection when districts are loaded
   void _initializeDistrictFromMasterData(MasterDataLoaded state) {
-    if (_selectedDistrictId != null) return;
+    // If we already have a valid districtId from profile, verify it exists
+    if (_selectedDistrictId != null && _selectedDistrictId!.isNotEmpty) {
+      final exists = state.districts.any((d) => d.id == _selectedDistrictId);
+      if (!exists) {
+        _selectedDistrictId = null;
+      }
+      return;
+    }
+    
     if (_savedDistrictName == null || _savedDistrictName!.isEmpty) return;
     
-    // Find district by name
+    // Fallback: find district by name
     final district = state.districts.firstWhere(
       (d) => d.name == _savedDistrictName || d.code == _savedDistrictName,
       orElse: () => DistrictModel(id: '', provinceId: '', code: '', name: ''),
@@ -996,6 +1020,8 @@ class _EditProfileContentState extends State<_EditProfileContent> {
             dateOfBirth: _birthday,
             heightCm: _heightCm,
             weightKg: _weightKg,
+            provinceId: _selectedProvinceId,
+            districtId: _selectedDistrictId,
             city: cityName,
             district: districtName,
             address: _addressController.text.trim().isNotEmpty

@@ -4,6 +4,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/base_repository.dart';
 import '../../../core/utils/image_utils.dart';
+import '../../../shared/data/models/master_data_models.dart';
 import '../../partner/domain/entities/partner_entity.dart';
 
 /// Repository for Home feature - handles partner search and discovery
@@ -11,6 +12,44 @@ class HomeRepository with BaseRepositoryMixin {
   final ApiClient _apiClient;
 
   HomeRepository({required ApiClient apiClient}) : _apiClient = apiClient;
+
+  /// Load all provinces from master data
+  Future<List<ProvinceModel>> getProvinces() async {
+    try {
+      final response = await _apiClient.get('/master-data/provinces');
+      final data = extractRawData(response.data);
+      if (data is List) {
+        return data
+            .map((e) => ProvinceModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('HomeRepository: Load provinces error: $e');
+      return [];
+    }
+  }
+
+  /// Load districts for a province
+  Future<List<DistrictModel>> getDistrictsByProvinceId(
+    String provinceId,
+  ) async {
+    try {
+      final response = await _apiClient.get(
+        '/master-data/provinces/$provinceId/districts',
+      );
+      final data = extractRawData(response.data);
+      if (data is List) {
+        return data
+            .map((e) => DistrictModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('HomeRepository: Load districts error: $e');
+      return [];
+    }
+  }
 
   /// Search partners with filters
   Future<HomePartnersResponse> searchPartners({
@@ -26,8 +65,8 @@ class HomeRepository with BaseRepositoryMixin {
     double? lat,
     double? lng,
     int? radius,
-    String? city,
-    String? district,
+    String? cityId,
+    String? districtId,
     bool? verifiedOnly,
     bool? availableNow,
     String? sortBy,
@@ -48,8 +87,8 @@ class HomeRepository with BaseRepositoryMixin {
           if (lat != null) 'lat': lat,
           if (lng != null) 'lng': lng,
           if (radius != null) 'radius': radius,
-          if (city != null) 'city': city,
-          if (district != null) 'district': district,
+          if (cityId != null) 'cityId': cityId,
+          if (districtId != null) 'districtId': districtId,
           if (verifiedOnly != null) 'verifiedOnly': verifiedOnly,
           if (availableNow != null) 'availableNow': availableNow,
           if (sortBy != null) 'sortBy': sortBy,

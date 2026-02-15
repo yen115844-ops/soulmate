@@ -50,7 +50,14 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   }
 
   /// Update lastActiveAt on backend so "online" shows on Home/Favorites.
+  /// Only fires when the user is actually authenticated to avoid
+  /// spurious 401s that trigger a false "session expired" message.
   void _updatePresence() {
+    final authState = getIt<AuthBloc>().state;
+    if (authState is! auth_state.AuthAuthenticated &&
+        authState is! auth_state.AuthNeedsProfileSetup) {
+      return;
+    }
     getIt<PartnerRepository>()
         .updatePresence()
         .catchError((_) {});
@@ -70,7 +77,8 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   }
 
   void _handleAuthFailed(String message) {
-    // Show a snackbar and redirect to login
+    // Show a snackbar — don't force redirect to login,
+    // the user can continue browsing as a guest.
     final context = AppRouter.navigatorKey.currentContext;
     if (context != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -81,8 +89,8 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         ),
       );
     }
-    // Navigate to login
-    AppRouter.router.go(RouteNames.login);
+    // Navigate to home (guest mode) instead of forcing login
+    AppRouter.router.go(RouteNames.home);
   }
 
   @override
@@ -101,12 +109,20 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       ],
       child: BlocListener<AuthBloc, auth_state.AuthState>(
         listener: (context, state) {
-          if (state is auth_state.AuthUnauthenticated) {
-            // Reset singleton BLoCs to clear old user data in memory
+          if (state is auth_state.AuthLogoutSuccess ||
+              state is auth_state.AuthAccountDeleted) {
+            // User explicitly logged out or deleted account
+            // → reset blocs, disconnect, and navigate to login
             getIt<ProfileBloc>().add(const ProfileResetRequested());
             getIt<MasterDataBloc>().add(const MasterDataResetRequested());
             ChatSocketService.instance.disconnect();
-            // GoRouter redirect will handle navigation to /login automatically
+            AppRouter.router.go(RouteNames.login);
+          } else if (state is auth_state.AuthUnauthenticated) {
+            // Session expired or token invalid — clear data
+            // but stay on browsable route (guest mode)
+            getIt<ProfileBloc>().add(const ProfileResetRequested());
+            getIt<MasterDataBloc>().add(const MasterDataResetRequested());
+            ChatSocketService.instance.disconnect();
           } else if (state is auth_state.AuthAuthenticated ||
               state is auth_state.AuthNeedsProfileSetup) {
             ChatSocketService.instance.connect();

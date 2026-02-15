@@ -183,12 +183,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       } else {
         await _authRepository.logout();
       }
+      // AuthLogoutSuccess tells the UI to navigate to login.
+      // App.dart BlocListener handles cleanup and navigation.
       emit(const AuthLogoutSuccess());
-      emit(const AuthUnauthenticated());
     } catch (e) {
       // Even if API fails, still logout locally
+      debugPrint('Logout API failed: $e');
       emit(const AuthLogoutSuccess());
-      emit(const AuthUnauthenticated());
     }
   }
 
@@ -273,8 +274,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     try {
       await _authRepository.deleteAccount(password: event.password);
+      // AuthAccountDeleted tells the UI to navigate to login.
+      // App.dart BlocListener handles cleanup and navigation.
       emit(const AuthAccountDeleted());
-      emit(const AuthUnauthenticated());
     } on ApiException catch (e) {
       emit(AuthError(message: e.message, errors: e.errors));
     } catch (e) {

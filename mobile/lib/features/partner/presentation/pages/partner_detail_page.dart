@@ -14,6 +14,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
+import '../../../../shared/widgets/auth_guard.dart';
 import '../../../favorites/data/favorites_repository.dart';
 import '../../../home/data/home_repository.dart';
 import '../../domain/entities/partner_entity.dart';
@@ -72,6 +73,8 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
   }
 
   Future<void> _checkFavoriteStatus() async {
+    // Skip favorite check for guest users
+    if (!AuthGuard.isAuthenticated) return;
     try {
       final repository = getIt<FavoritesRepository>();
       final isFav = await repository.isFavorite(widget.partnerId);
@@ -82,6 +85,15 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
   }
 
   Future<void> _toggleFavorite() async {
+    // Require authentication for favorites
+    if (!AuthGuard.isAuthenticated) {
+      AuthGuard.requireAuth(
+        context,
+        onAuthenticated: () => _toggleFavorite(),
+        message: 'Đăng nhập để thêm vào danh sách yêu thích.',
+      );
+      return;
+    }
     if (_isFavoriteLoading) return;
     HapticFeedback.mediumImpact();
     setState(() => _isFavoriteLoading = true);
@@ -1733,8 +1745,14 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                 borderRadius: BorderRadius.circular(16),
               ),
               child: IconButton(
-                onPressed: () => context
-                    .push('/chat/user/${_partner!.userId ?? _partner!.id}'),
+                onPressed: () {
+                  AuthGuard.requireAuth(
+                    context,
+                    onAuthenticated: () => context
+                        .push('/chat/user/${_partner!.userId ?? _partner!.id}'),
+                    message: 'Đăng nhập để nhắn tin với người này.',
+                  );
+                },
                 icon: const Icon(Ionicons.chatbubble_outline),
                 color: AppColors.primary,
                 iconSize: 24,
@@ -1790,8 +1808,12 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                       child: InkWell(
                         onTap: () {
                           HapticFeedback.mediumImpact();
-                          context
-                              .push('/booking/create?partnerId=${_partner!.id}');
+                          AuthGuard.requireAuth(
+                            context,
+                            onAuthenticated: () => context
+                                .push('/booking/create?partnerId=${_partner!.id}'),
+                            message: 'Đăng nhập để đặt lịch hẹn.',
+                          );
                         },
                         borderRadius: BorderRadius.circular(16),
                         child: Row(

@@ -115,6 +115,8 @@ class ProfileModel extends Equatable {
   final int? weightKg;
   final double? currentLat;
   final double? currentLng;
+  final String? provinceId;
+  final String? districtId;
   final String? city;
   final String? district;
   final String? address;
@@ -139,6 +141,8 @@ class ProfileModel extends Equatable {
     this.weightKg,
     this.currentLat,
     this.currentLng,
+    this.provinceId,
+    this.districtId,
     this.city,
     this.district,
     this.address,
@@ -167,6 +171,8 @@ class ProfileModel extends Equatable {
       weightKg: json['weightKg'] != null ? int.tryParse(json['weightKg'].toString()) : null,
       currentLat: json['currentLat'] != null ? double.tryParse(json['currentLat'].toString()) : null,
       currentLng: json['currentLng'] != null ? double.tryParse(json['currentLng'].toString()) : null,
+      provinceId: json['provinceId']?.toString(),
+      districtId: json['districtId']?.toString(),
       city: json['city']?.toString(),
       district: json['district']?.toString(),
       address: json['address']?.toString(),
@@ -206,6 +212,8 @@ class ProfileModel extends Equatable {
       'weightKg': weightKg,
       'currentLat': currentLat,
       'currentLng': currentLng,
+      'provinceId': provinceId,
+      'districtId': districtId,
       'city': city,
       'district': district,
       'address': address,
@@ -238,6 +246,8 @@ class ProfileModel extends Equatable {
     int? weightKg,
     double? currentLat,
     double? currentLng,
+    String? provinceId,
+    String? districtId,
     String? city,
     String? district,
     String? address,
@@ -262,6 +272,8 @@ class ProfileModel extends Equatable {
       weightKg: weightKg ?? this.weightKg,
       currentLat: currentLat ?? this.currentLat,
       currentLng: currentLng ?? this.currentLng,
+      provinceId: provinceId ?? this.provinceId,
+      districtId: districtId ?? this.districtId,
       city: city ?? this.city,
       district: district ?? this.district,
       address: address ?? this.address,
@@ -289,6 +301,8 @@ class ProfileModel extends Equatable {
         weightKg,
         currentLat,
         currentLng,
+        provinceId,
+        districtId,
         city,
         district,
         address,

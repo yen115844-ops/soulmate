@@ -7,9 +7,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/services/deep_link_service.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../shared/widgets/auth_guard.dart';
 import '../../../partner/domain/entities/partner_entity.dart';
 import '../../../profile/profile.dart';
-import '../../domain/home_filter.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
@@ -30,14 +30,18 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final profileBloc = getIt<ProfileBloc>();
-    if (profileBloc.state is ProfileInitial) {
+
+    // Only load profile when user is authenticated
+    if (AuthGuard.isAuthenticated && profileBloc.state is ProfileInitial) {
       profileBloc.add(const ProfileLoadRequested());
     }
 
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (_) => getIt<HomeBloc>()..add(const HomeLoadPartners()),
+          create: (_) => getIt<HomeBloc>()
+            ..add(const HomeDetectLocation())
+            ..add(const HomeLoadPartners()),
         ),
         BlocProvider.value(value: profileBloc),
       ],
@@ -99,14 +103,21 @@ class _HomePageViewState extends State<_HomePageView> {
 
   void _onServiceTap(String code) {
     setState(() {
+      final bloc = context.read<HomeBloc>();
       if (_selectedService == code) {
         _selectedService = null;
-        context.read<HomeBloc>().add(const HomeResetFilter());
+        bloc.add(
+          HomeApplyFilter(
+            bloc.state.filter.clear(clearServiceType: true),
+          ),
+        );
       } else {
         _selectedService = code;
-        context.read<HomeBloc>().add(
-              HomeApplyFilter(HomeFilter(serviceType: code)),
-            );
+        bloc.add(
+          HomeApplyFilter(
+            bloc.state.filter.copyWith(serviceType: code),
+          ),
+        );
       }
     });
   }
@@ -227,25 +238,22 @@ class _HomePageViewState extends State<_HomePageView> {
 
   SliverList _buildPartnerList(List<PartnerEntity> partners) {
     return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          final partner = partners[index];
-          return Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                child: GestureDetector(
-                  onTap: () => _onPartnerTap(partner),
-                  child: PartnerCard(partner: partner),
-                ),
-              )
-              .animate()
-              .fadeIn(
-                delay: Duration(milliseconds: 60 * (index % 8)),
-                duration: 350.ms,
-              )
-              .slideY(begin: 0.05, end: 0);
-        },
-        childCount: partners.length,
-      ),
+      delegate: SliverChildBuilderDelegate((context, index) {
+        final partner = partners[index];
+        return Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+              child: GestureDetector(
+                onTap: () => _onPartnerTap(partner),
+                child: PartnerCard(partner: partner),
+              ),
+            )
+            .animate()
+            .fadeIn(
+              delay: Duration(milliseconds: 60 * (index % 8)),
+              duration: 350.ms,
+            )
+            .slideY(begin: 0.05, end: 0);
+      }, childCount: partners.length),
     );
   }
 }

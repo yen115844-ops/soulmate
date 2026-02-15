@@ -509,17 +509,17 @@ class PartnerRepository with BaseRepositoryMixin {
 
   // ==================== Reviews API ====================
 
-  /// Get partner reviews (reviews received by partner)
+  /// Get reviews for a specific partner (public endpoint)
   Future<PartnerReviewsResponse> getPartnerReviews({
+    required String partnerId,
     int page = 1,
     int limit = 10,
     String? minRating,
     String? sortBy,
   }) async {
     try {
-      // First try dedicated reviews API
       final response = await _apiClient.get(
-        '/reviews/received',
+        '/reviews/user/$partnerId',
         queryParameters: {
           'page': page,
           'limit': limit,
@@ -533,10 +533,8 @@ class PartnerRepository with BaseRepositoryMixin {
     } catch (e) {
       debugPrint('Reviews API error, falling back to partner profile: $e');
 
-      // Fallback: Get reviews from partner profile
-      final profile = await getMyPartnerProfile();
-
-      final response = await _apiClient.get('/partners/${profile.userId}');
+      // Fallback: Get reviews from partner detail
+      final response = await _apiClient.get('/partners/$partnerId');
 
       final data = extractRawData(response.data);
       var reviewsResponse = PartnerReviewsResponse.fromPartnerData(data);
@@ -560,11 +558,12 @@ class PartnerRepository with BaseRepositoryMixin {
     }
   }
 
-  /// Get review statistics for partner
-  Future<ReviewStats> getPartnerReviewStats() async {
+  /// Get review statistics for a specific partner (public endpoint)
+  Future<ReviewStats> getPartnerReviewStats({
+    required String partnerId,
+  }) async {
     try {
-      // Try dedicated stats API
-      final response = await _apiClient.get('/reviews/stats');
+      final response = await _apiClient.get('/reviews/user/$partnerId/stats');
       final data = extractRawData(response.data);
 
       return ReviewStats(
@@ -577,14 +576,15 @@ class PartnerRepository with BaseRepositoryMixin {
         rating1Count: data['ratingDistribution']?['1'] ?? 0,
       );
     } catch (e) {
-      debugPrint('Review stats API error, using profile data: $e');
+      debugPrint('Review stats API error, falling back to partner data: $e');
 
-      // Fallback to profile
-      final profile = await getMyPartnerProfile();
+      // Fallback: Get stats from partner detail
+      final partnerResponse = await _apiClient.get('/partners/$partnerId');
+      final partnerData = extractRawData(partnerResponse.data) as Map<String, dynamic>;
 
       return ReviewStats(
-        averageRating: profile.averageRating,
-        totalReviews: profile.totalReviews,
+        averageRating: PartnerStats.parseDouble(partnerData['averageRating']),
+        totalReviews: partnerData['totalReviews'] ?? 0,
         rating5Count: 0,
         rating4Count: 0,
         rating3Count: 0,

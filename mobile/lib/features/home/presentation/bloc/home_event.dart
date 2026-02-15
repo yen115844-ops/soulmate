@@ -59,3 +59,24 @@ class HomeToggleFavorite extends HomeEvent {
   @override
   List<Object?> get props => [partnerId];
 }
+
+/// Detect user location via GPS and match against provinces
+class HomeDetectLocation extends HomeEvent {
+  const HomeDetectLocation();
+}
+
+/// User manually selected a city from the picker
+class HomeSelectCity extends HomeEvent {
+  final String cityId;
+  final String cityName;
+
+  const HomeSelectCity({required this.cityId, required this.cityName});
+
+  @override
+  List<Object?> get props => [cityId, cityName];
+}
+
+/// Retry location detection (clear cache and re-detect)
+class HomeRetryLocation extends HomeEvent {
+  const HomeRetryLocation();
+}

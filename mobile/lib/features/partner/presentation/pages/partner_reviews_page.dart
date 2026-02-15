@@ -7,8 +7,8 @@ import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../data/partner_repository.dart';
 import '../bloc/partner_reviews_bloc.dart';
@@ -26,6 +26,7 @@ class PartnerReviewsPage extends StatelessWidget {
     return BlocProvider(
       create: (context) => PartnerReviewsBloc(
         partnerRepository: getIt<PartnerRepository>(),
+        partnerId: partnerId,
       )..add(const PartnerReviewsLoadRequested()),
       child: const _PartnerReviewsContent(),
     );

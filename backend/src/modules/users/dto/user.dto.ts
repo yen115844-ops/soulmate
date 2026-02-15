@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Gender, KycStatus, UserRole, UserStatus } from '@prisma/client';
 import { Type } from 'class-transformer';
-import { IsArray, IsDateString, IsEnum, IsNumber, IsOptional, IsString, IsUrl, Max, MaxLength, Min } from 'class-validator';
+import { IsArray, IsDateString, IsEnum, IsNumber, IsOptional, IsString, IsUrl, IsUUID, Max, MaxLength, Min } from 'class-validator';
 
 export class UpdateProfileDto {
   @ApiPropertyOptional({ example: 'Nguyen Van A' })
@@ -55,12 +55,22 @@ export class UpdateProfileDto {
   @Max(200)
   weightKg?: number;
 
-  @ApiPropertyOptional({ example: 'Ho Chi Minh City' })
+  @ApiPropertyOptional({ description: 'Province/City ID from master data' })
+  @IsOptional()
+  @IsUUID()
+  provinceId?: string;
+
+  @ApiPropertyOptional({ description: 'District ID from master data' })
+  @IsOptional()
+  @IsUUID()
+  districtId?: string;
+
+  @ApiPropertyOptional({ example: 'Ho Chi Minh City', description: 'Display name (denormalized), auto-populated from provinceId if not provided' })
   @IsOptional()
   @IsString()
   city?: string;
 
-  @ApiPropertyOptional({ example: 'District 1' })
+  @ApiPropertyOptional({ example: 'District 1', description: 'Display name (denormalized), auto-populated from districtId if not provided' })
   @IsOptional()
   @IsString()
   district?: string;
@@ -107,6 +117,16 @@ export class UpdateLocationDto {
   @IsNumber()
   @Type(() => Number)
   currentLng?: number;
+
+  @ApiPropertyOptional({ description: 'Province/City ID from master data' })
+  @IsOptional()
+  @IsUUID()
+  provinceId?: string;
+
+  @ApiPropertyOptional({ description: 'District ID from master data' })
+  @IsOptional()
+  @IsUUID()
+  districtId?: string;
 
   @ApiPropertyOptional({ example: 'Ho Chi Minh City' })
   @IsOptional()

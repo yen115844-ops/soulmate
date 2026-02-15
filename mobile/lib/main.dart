@@ -17,6 +17,7 @@ import 'core/services/connectivity_service.dart';
 import 'core/services/deep_link_service.dart';
 import 'core/services/local_notification_service.dart';
 import 'core/services/local_storage_service.dart';
+import 'core/services/location_service.dart';
 import 'core/services/push_notification_service.dart';
 import 'firebase_options.dart';
 
@@ -43,7 +44,8 @@ void main() {
 
       // Initialize Crashlytics
       if (!kDebugMode) {
-        FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+        FlutterError.onError =
+            FirebaseCrashlytics.instance.recordFlutterFatalError;
       }
 
       // Set up background message handler
@@ -117,6 +119,10 @@ void main() {
       );
       FlutterNativeSplash.remove();
 
+      // Pre-warm location detection (non-blocking)
+      // Result gets cached so HomeAppBar picks it up instantly
+      LocationService.instance.detectCurrentLocation();
+
       // Run the app
       runApp(const App());
     },
@@ -125,7 +131,11 @@ void main() {
       debugPrint('Unhandled error: $error');
       debugPrint('Stack trace: $stackTrace');
       if (!kDebugMode) {
-        FirebaseCrashlytics.instance.recordError(error, stackTrace, fatal: true);
+        FirebaseCrashlytics.instance.recordError(
+          error,
+          stackTrace,
+          fatal: true,
+        );
       }
     },
   );

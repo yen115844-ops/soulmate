@@ -4,10 +4,11 @@ import 'package:intl/intl.dart';
 import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/di/injection.dart';
-import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../shared/data/models/master_data_models.dart';
+import '../../data/home_repository.dart';
 import '../../domain/home_filter.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
@@ -32,13 +33,15 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   late String? _selectedGender;
   late String? _selectedCity;
   late String? _selectedDistrict;
+  late String? _selectedCityId;
+  late String? _selectedDistrictId;
   late bool _verifiedOnly;
   late bool _onlineOnly;
   late String _sortBy;
 
-  // Loaded from API
-  List<Map<String, dynamic>> _provinces = [];
-  List<Map<String, dynamic>> _districts = [];
+  // Loaded location data
+  List<ProvinceModel> _provinces = [];
+  List<DistrictModel> _districts = [];
   bool _loadingLocations = false;
 
   @override
@@ -58,10 +61,12 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     _selectedGender = filter.gender;
     _selectedCity = filter.city;
     _selectedDistrict = filter.district;
+    _selectedCityId = filter.cityId;
+    _selectedDistrictId = filter.districtId;
     _verifiedOnly = filter.verifiedOnly;
     _onlineOnly = filter.availableNow;
     _sortBy = filter.sortBy;
-    _loadProvinces();
+    _initProvinces();
   }
 
   static const _genders = [
@@ -74,12 +79,12 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     (
       code: 'price_low',
       label: 'Giá thấp → cao',
-      icon: Ionicons.trending_up_outline
+      icon: Ionicons.trending_up_outline,
     ),
     (
       code: 'price_high',
       label: 'Giá cao → thấp',
-      icon: Ionicons.trending_down_outline
+      icon: Ionicons.trending_down_outline,
     ),
     (code: 'newest', label: 'Mới nhất', icon: Ionicons.time_outline),
   ];
@@ -116,8 +121,11 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             padding: const EdgeInsets.fromLTRB(24, 16, 16, 8),
             child: Row(
               children: [
-                Icon(Ionicons.funnel_outline,
-                    size: 22, color: AppColors.primary),
+                Icon(
+                  Ionicons.funnel_outline,
+                  size: 22,
+                  color: AppColors.primary,
+                ),
                 const SizedBox(width: 10),
                 Text(
                   'Bộ lọc tìm kiếm',
@@ -128,8 +136,11 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                 const Spacer(),
                 TextButton.icon(
                   onPressed: _resetFilters,
-                  icon: Icon(Ionicons.refresh_outline,
-                      size: 16, color: AppColors.primary),
+                  icon: Icon(
+                    Ionicons.refresh_outline,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
                   label: Text(
                     'Đặt lại',
                     style: TextStyle(
@@ -147,8 +158,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           // Filters
           Expanded(
             child: SingleChildScrollView(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -163,23 +173,24 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                             label: 'Tất cả',
                             icon: Ionicons.people_outline,
                             selected: _selectedGender == null,
-                            onTap: () =>
-                                setState(() => _selectedGender = null),
+                            onTap: () => setState(() => _selectedGender = null),
                           ),
                         ),
                         const SizedBox(width: 10),
-                        ..._genders.map((g) => Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.only(right: 10),
-                                child: _GenderChip(
-                                  label: g.label,
-                                  icon: g.icon,
-                                  selected: _selectedGender == g.code,
-                                  onTap: () => setState(
-                                      () => _selectedGender = g.code),
-                                ),
+                        ..._genders.map(
+                          (g) => Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 10),
+                              child: _GenderChip(
+                                label: g.label,
+                                icon: g.icon,
+                                selected: _selectedGender == g.code,
+                                onTap: () =>
+                                    setState(() => _selectedGender = g.code),
                               ),
-                            )),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -206,31 +217,28 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                             max: 50,
                             divisions: 49,
                             label: '${_distance.round()} km',
-                            onChanged: (v) =>
-                                setState(() => _distance = v),
+                            onChanged: (v) => setState(() => _distance = v),
                           ),
                         ),
                         Padding(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('1 km',
-                                  style:
-                                      AppTypography.labelSmall.copyWith(
-                                    color:
-                                        context.appColors.textSecondary,
-                                    fontSize: 11,
-                                  )),
-                              Text('50 km',
-                                  style:
-                                      AppTypography.labelSmall.copyWith(
-                                    color:
-                                        context.appColors.textSecondary,
-                                    fontSize: 11,
-                                  )),
+                              Text(
+                                '1 km',
+                                style: AppTypography.labelSmall.copyWith(
+                                  color: context.appColors.textSecondary,
+                                  fontSize: 11,
+                                ),
+                              ),
+                              Text(
+                                '50 km',
+                                style: AppTypography.labelSmall.copyWith(
+                                  color: context.appColors.textSecondary,
+                                  fontSize: 11,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -257,31 +265,28 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                               '${_ageRange.start.round()}',
                               '${_ageRange.end.round()}',
                             ),
-                            onChanged: (v) =>
-                                setState(() => _ageRange = v),
+                            onChanged: (v) => setState(() => _ageRange = v),
                           ),
                         ),
                         Padding(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('18 tuổi',
-                                  style:
-                                      AppTypography.labelSmall.copyWith(
-                                    color:
-                                        context.appColors.textSecondary,
-                                    fontSize: 11,
-                                  )),
-                              Text('50 tuổi',
-                                  style:
-                                      AppTypography.labelSmall.copyWith(
-                                    color:
-                                        context.appColors.textSecondary,
-                                    fontSize: 11,
-                                  )),
+                              Text(
+                                '18 tuổi',
+                                style: AppTypography.labelSmall.copyWith(
+                                  color: context.appColors.textSecondary,
+                                  fontSize: 11,
+                                ),
+                              ),
+                              Text(
+                                '50 tuổi',
+                                style: AppTypography.labelSmall.copyWith(
+                                  color: context.appColors.textSecondary,
+                                  fontSize: 11,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -305,36 +310,31 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                             max: 2000000,
                             divisions: 39,
                             labels: RangeLabels(
-                              priceFormat
-                                  .format(_priceRange.start.round()),
-                              priceFormat
-                                  .format(_priceRange.end.round()),
+                              priceFormat.format(_priceRange.start.round()),
+                              priceFormat.format(_priceRange.end.round()),
                             ),
-                            onChanged: (v) =>
-                                setState(() => _priceRange = v),
+                            onChanged: (v) => setState(() => _priceRange = v),
                           ),
                         ),
                         Padding(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('50K',
-                                  style:
-                                      AppTypography.labelSmall.copyWith(
-                                    color:
-                                        context.appColors.textSecondary,
-                                    fontSize: 11,
-                                  )),
-                              Text('2.000K',
-                                  style:
-                                      AppTypography.labelSmall.copyWith(
-                                    color:
-                                        context.appColors.textSecondary,
-                                    fontSize: 11,
-                                  )),
+                              Text(
+                                '50K',
+                                style: AppTypography.labelSmall.copyWith(
+                                  color: context.appColors.textSecondary,
+                                  fontSize: 11,
+                                ),
+                              ),
+                              Text(
+                                '2.000K',
+                                style: AppTypography.labelSmall.copyWith(
+                                  color: context.appColors.textSecondary,
+                                  fontSize: 11,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -350,8 +350,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                       spacing: 10,
                       runSpacing: 10,
                       children: serviceCategories.map((s) {
-                        final selected =
-                            _selectedServices.contains(s.code);
+                        final selected = _selectedServices.contains(s.code);
                         return _FilterServiceChip(
                           label: s.label,
                           icon: s.icon,
@@ -373,19 +372,18 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                       children: _sortOptions.map((s) {
                         final selected = _sortBy == s.code;
                         return GestureDetector(
-                          onTap: () =>
-                              setState(() => _sortBy = s.code),
+                          onTap: () => setState(() => _sortBy = s.code),
                           child: AnimatedContainer(
-                            duration:
-                                const Duration(milliseconds: 200),
+                            duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 10),
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
                             decoration: BoxDecoration(
                               color: selected
                                   ? AppColors.primary
                                   : context.appColors.background,
-                              borderRadius:
-                                  BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: selected
                                     ? AppColors.primary
@@ -396,21 +394,20 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(s.icon,
-                                    size: 16,
-                                    color: selected
-                                        ? Colors.white
-                                        : context.appColors
-                                            .textSecondary),
+                                Icon(
+                                  s.icon,
+                                  size: 16,
+                                  color: selected
+                                      ? Colors.white
+                                      : context.appColors.textSecondary,
+                                ),
                                 const SizedBox(width: 6),
                                 Text(
                                   s.label,
-                                  style: AppTypography.labelMedium
-                                      .copyWith(
+                                  style: AppTypography.labelMedium.copyWith(
                                     color: selected
                                         ? Colors.white
-                                        : context
-                                            .appColors.textPrimary,
+                                        : context.appColors.textPrimary,
                                     fontWeight: selected
                                         ? FontWeight.w700
                                         : FontWeight.w500,
@@ -476,11 +473,11 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
       ),
       child: Row(
         children: [
-          Icon(icon,
-              color: value
-                  ? AppColors.primary
-                  : context.appColors.textSecondary,
-              size: 20),
+          Icon(
+            icon,
+            color: value ? AppColors.primary : context.appColors.textSecondary,
+            size: 20,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -501,19 +498,16 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     );
   }
 
-  SliderThemeData get _sliderTheme =>
-      SliderTheme.of(context).copyWith(
-        activeTrackColor: AppColors.primary,
-        inactiveTrackColor: AppColors.primary.withOpacity(0.15),
-        thumbColor: AppColors.primary,
-        overlayColor: AppColors.primary.withOpacity(0.08),
-        trackHeight: 4,
-        thumbShape:
-            const RoundSliderThumbShape(enabledThumbRadius: 8),
-        rangeThumbShape:
-            const RoundRangeSliderThumbShape(enabledThumbRadius: 8),
-        showValueIndicator: ShowValueIndicator.always,
-      );
+  SliderThemeData get _sliderTheme => SliderTheme.of(context).copyWith(
+    activeTrackColor: AppColors.primary,
+    inactiveTrackColor: AppColors.primary.withOpacity(0.15),
+    thumbColor: AppColors.primary,
+    overlayColor: AppColors.primary.withOpacity(0.08),
+    trackHeight: 4,
+    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+    rangeThumbShape: const RoundRangeSliderThumbShape(enabledThumbRadius: 8),
+    showValueIndicator: ShowValueIndicator.always,
+  );
 
   void _resetFilters() {
     setState(() {
@@ -522,9 +516,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
       _priceRange = const RangeValues(100000, 1000000);
       _selectedServices = {};
       _selectedGender = null;
-      _selectedCity = null;
-      _selectedDistrict = null;
-      _districts = [];
+      // Note: city and district are NOT cleared as they are mandatory
       _verifiedOnly = false;
       _onlineOnly = false;
       _sortBy = 'rating';
@@ -543,57 +535,32 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
 
   // ───────────────────────── Location loading ─────────────────────────
 
-  Future<void> _loadProvinces() async {
-    if (!mounted) return;
-    setState(() => _loadingLocations = true);
-    try {
-      final apiClient = getIt<ApiClient>();
-      final response = await apiClient.get('/master-data/provinces');
-      final rawData = response.data;
-      final data = rawData is Map && rawData.containsKey('data')
-          ? rawData['data']
-          : rawData;
-      if (data is List && mounted) {
-        _provinces = data.cast<Map<String, dynamic>>();
-        if (_selectedCity != null) {
-          await _loadDistrictsForCity(_selectedCity!);
-        }
-      }
-    } catch (e) {
-      debugPrint('Load provinces error: $e');
-    } finally {
-      if (mounted) {
-        setState(() => _loadingLocations = false);
-      }
+  /// Initialize provinces from BLoC state (already loaded by HomeDetectLocation)
+  void _initProvinces() {
+    final homeState = context.read<HomeBloc>().state;
+    _provinces = homeState.provinces;
+    if (_selectedCityId != null) {
+      _loadDistrictsForCityId(_selectedCityId!);
     }
   }
 
-  Future<void> _loadDistrictsForCity(String cityName) async {
-    final province = _provinces.where((p) {
-      final name = p['name']?.toString() ?? '';
-      return name.toLowerCase().contains(cityName.toLowerCase()) ||
-          cityName.toLowerCase().contains(name.toLowerCase());
-    }).firstOrNull;
-
-    if (province == null) return;
-
+  /// Load districts via repository layer (not direct API call)
+  Future<void> _loadDistrictsForCityId(String provinceId) async {
+    setState(() => _loadingLocations = true);
     try {
-      final apiClient = getIt<ApiClient>();
-      final provinceId = province['id']?.toString();
-      final response = await apiClient.get(
-        '/master-data/provinces/$provinceId/districts',
-      );
-      final rawData = response.data;
-      final data = rawData is Map && rawData.containsKey('data')
-          ? rawData['data']
-          : rawData;
-      if (data is List && mounted) {
+      final repo = getIt<HomeRepository>();
+      final districts = await repo.getDistrictsByProvinceId(provinceId);
+      if (mounted) {
         setState(() {
-          _districts = data.cast<Map<String, dynamic>>();
+          _districts = districts;
+          _loadingLocations = false;
         });
       }
     } catch (e) {
-      debugPrint('Load districts error: $e');
+      debugPrint('FilterBottomSheet: Load districts error: $e');
+      if (mounted) {
+        setState(() => _loadingLocations = false);
+      }
     }
   }
 
@@ -606,26 +573,33 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
         _buildDropdown(
           label: 'Tỉnh/Thành phố',
           icon: Ionicons.business_outline,
-          value: _selectedCity,
+          value: _selectedCityId,
+          displayValue: _selectedCity,
           hint: 'Chọn tỉnh/thành phố',
           isLoading: _loadingLocations,
           items: _provinces.map((p) {
-            final name = p['name']?.toString() ?? '';
-            return (code: name, label: name);
+            return (code: p.id, label: p.name);
           }).toList(),
           onChanged: (value) {
+            final province = _provinces.firstWhere(
+              (p) => p.id == value,
+            );
             setState(() {
-              _selectedCity = value;
+              _selectedCityId = value;
+              _selectedCity = province.name;
+              _selectedDistrictId = null;
               _selectedDistrict = null;
               _districts = [];
             });
             if (value != null) {
-              _loadDistrictsForCity(value);
+              _loadDistrictsForCityId(value);
             }
           },
           onClear: () {
             setState(() {
+              _selectedCityId = null;
               _selectedCity = null;
+              _selectedDistrictId = null;
               _selectedDistrict = null;
               _districts = [];
             });
@@ -635,20 +609,29 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
         _buildDropdown(
           label: 'Quận/Huyện',
           icon: Ionicons.location_outline,
-          value: _selectedDistrict,
-          hint: _selectedCity == null
+          value: _selectedDistrictId,
+          displayValue: _selectedDistrict,
+          hint: _selectedCityId == null
               ? 'Chọn tỉnh/thành trước'
               : 'Chọn quận/huyện',
-          enabled: _selectedCity != null,
+          enabled: _selectedCityId != null,
           items: _districts.map((d) {
-            final name = d['name']?.toString() ?? '';
-            return (code: name, label: name);
+            return (code: d.id, label: d.name);
           }).toList(),
           onChanged: (value) {
-            setState(() => _selectedDistrict = value);
+            final district = _districts.firstWhere(
+              (d) => d.id == value,
+            );
+            setState(() {
+              _selectedDistrictId = value;
+              _selectedDistrict = district.name;
+            });
           },
           onClear: () {
-            setState(() => _selectedDistrict = null);
+            setState(() {
+              _selectedDistrictId = null;
+              _selectedDistrict = null;
+            });
           },
         ),
       ],
@@ -659,6 +642,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     required String label,
     required IconData icon,
     required String? value,
+    String? displayValue,
     required String hint,
     required List<({String code, String label})> items,
     required ValueChanged<String?> onChanged,
@@ -669,18 +653,17 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     return GestureDetector(
       onTap: enabled && !isLoading
           ? () => _showPickerSheet(
-                context: context,
-                title: label,
-                icon: icon,
-                items: items,
-                selectedValue: value,
-                onSelect: onChanged,
-              )
+              context: context,
+              title: label,
+              icon: icon,
+              items: items,
+              selectedValue: value,
+              onSelect: onChanged,
+            )
           : null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: value != null
               ? AppColors.primary.withOpacity(0.06)
@@ -700,8 +683,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
               color: value != null
                   ? AppColors.primary
                   : enabled
-                      ? context.appColors.textSecondary
-                      : context.appColors.textHint,
+                  ? context.appColors.textSecondary
+                  : context.appColors.textHint,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -717,7 +700,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    value ?? hint,
+                    displayValue ?? hint,
                     style: AppTypography.bodyMedium.copyWith(
                       color: value != null
                           ? context.appColors.textPrimary
@@ -739,8 +722,11 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             else if (value != null && onClear != null)
               GestureDetector(
                 onTap: onClear,
-                child: Icon(Ionicons.close_circle,
-                    size: 20, color: AppColors.primary),
+                child: Icon(
+                  Ionicons.close_circle,
+                  size: 20,
+                  color: AppColors.primary,
+                ),
               )
             else
               Icon(
@@ -846,7 +832,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     if (_ageRange.start != 18 || _ageRange.end != 35) count++;
     if (_priceRange.start != 100000 || _priceRange.end != 1000000) count++;
     if (_selectedServices.isNotEmpty) count++;
-    if (_selectedCity != null || _selectedDistrict != null) count++;
+    if (_selectedCityId != null || _selectedDistrictId != null) count++;
     if (_verifiedOnly) count++;
     if (_onlineOnly) count++;
     if (_sortBy != 'rating') count++;
@@ -885,8 +871,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                     ),
                     padding: EdgeInsets.zero,
                   ),
-                  child:
-                      const Icon(Ionicons.trash_outline, size: 20),
+                  child: const Icon(Ionicons.trash_outline, size: 20),
                 ),
               ),
               const SizedBox(width: 12),
@@ -925,10 +910,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   void _applyFilter() {
     final filter = HomeFilter(
       radius: _distance.round() != 10 ? _distance.round() : null,
-      minAge:
-          _ageRange.start.round() != 18 ? _ageRange.start.round() : null,
-      maxAge:
-          _ageRange.end.round() != 35 ? _ageRange.end.round() : null,
+      minAge: _ageRange.start.round() != 18 ? _ageRange.start.round() : null,
+      maxAge: _ageRange.end.round() != 35 ? _ageRange.end.round() : null,
       minRate: _priceRange.start.round() != 100000
           ? _priceRange.start.round()
           : null,
@@ -939,6 +922,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           ? _selectedServices.first
           : null,
       gender: _selectedGender,
+      cityId: _selectedCityId,
+      districtId: _selectedDistrictId,
       city: _selectedCity,
       district: _selectedDistrict,
       verifiedOnly: _verifiedOnly,
@@ -977,32 +962,27 @@ class _GenderChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color:
-              selected ? AppColors.primary : context.appColors.background,
+          color: selected ? AppColors.primary : context.appColors.background,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color:
-                selected ? AppColors.primary : context.appColors.border,
+            color: selected ? AppColors.primary : context.appColors.border,
             width: 1.5,
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon,
-                size: 18,
-                color: selected
-                    ? Colors.white
-                    : context.appColors.textSecondary),
+            Icon(
+              icon,
+              size: 18,
+              color: selected ? Colors.white : context.appColors.textSecondary,
+            ),
             const SizedBox(width: 6),
             Text(
               label,
               style: AppTypography.labelMedium.copyWith(
-                color: selected
-                    ? Colors.white
-                    : context.appColors.textPrimary,
-                fontWeight:
-                    selected ? FontWeight.w700 : FontWeight.w500,
+                color: selected ? Colors.white : context.appColors.textPrimary,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
           ],
@@ -1034,8 +1014,7 @@ class _FilterServiceChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: selected ? color : color.withOpacity(0.08),
           borderRadius: BorderRadius.circular(12),
@@ -1047,8 +1026,7 @@ class _FilterServiceChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon,
-                size: 16, color: selected ? Colors.white : color),
+            Icon(icon, size: 16, color: selected ? Colors.white : color),
             const SizedBox(width: 6),
             Text(
               label,

@@ -330,26 +330,20 @@ export class PartnersService {
       };
     }
 
-    // City filter
-    if (dto.city) {
+    // City filter (by province ID)
+    if (dto.cityId) {
       if (!where.user.is.profile) {
         where.user.is.profile = { is: {} };
       }
-      where.user.is.profile.is.city = { 
-        contains: dto.city, 
-        mode: 'insensitive' 
-      };
+      where.user.is.profile.is.provinceId = dto.cityId;
     }
 
-    // District filter
-    if (dto.district) {
+    // District filter (by district ID)
+    if (dto.districtId) {
       if (!where.user.is.profile) {
         where.user.is.profile = { is: {} };
       }
-      where.user.is.profile.is.district = {
-        contains: dto.district,
-        mode: 'insensitive',
-      };
+      where.user.is.profile.is.districtId = dto.districtId;
     }
 
     // Age filter (based on dateOfBirth)

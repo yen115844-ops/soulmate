@@ -9,8 +9,10 @@ class HomeFilter extends Equatable {
   final int? minRate;
   final int? maxRate;
   final int? radius;
-  final String? city;
-  final String? district;
+  final String? cityId; // Province UUID for API
+  final String? districtId; // District UUID for API
+  final String? city; // Display name
+  final String? district; // Display name
   final bool verifiedOnly;
   final bool availableNow;
   final String sortBy;
@@ -23,6 +25,8 @@ class HomeFilter extends Equatable {
     this.minRate,
     this.maxRate,
     this.radius,
+    this.cityId,
+    this.districtId,
     this.city,
     this.district,
     this.verifiedOnly = false,
@@ -33,7 +37,7 @@ class HomeFilter extends Equatable {
   /// Empty filter
   static const HomeFilter empty = HomeFilter();
 
-  /// Check if filter is empty
+  /// Check if filter is empty (excluding mandatory location)
   bool get isEmpty =>
       serviceType == null &&
       gender == null &&
@@ -42,8 +46,6 @@ class HomeFilter extends Equatable {
       minRate == null &&
       maxRate == null &&
       radius == null &&
-      city == null &&
-      district == null &&
       !verifiedOnly &&
       !availableNow &&
       sortBy == 'rating';
@@ -56,6 +58,8 @@ class HomeFilter extends Equatable {
     int? minRate,
     int? maxRate,
     int? radius,
+    String? cityId,
+    String? districtId,
     String? city,
     String? district,
     bool? verifiedOnly,
@@ -70,6 +74,8 @@ class HomeFilter extends Equatable {
       minRate: minRate ?? this.minRate,
       maxRate: maxRate ?? this.maxRate,
       radius: radius ?? this.radius,
+      cityId: cityId ?? this.cityId,
+      districtId: districtId ?? this.districtId,
       city: city ?? this.city,
       district: district ?? this.district,
       verifiedOnly: verifiedOnly ?? this.verifiedOnly,
@@ -97,11 +103,23 @@ class HomeFilter extends Equatable {
       minRate: clearPriceRange ? null : minRate,
       maxRate: clearPriceRange ? null : maxRate,
       radius: clearRadius ? null : radius,
+      cityId: (clearCity || clearLocation) ? null : cityId,
+      districtId: (clearDistrict || clearLocation) ? null : districtId,
       city: (clearCity || clearLocation) ? null : city,
       district: (clearDistrict || clearLocation) ? null : district,
       verifiedOnly: verifiedOnly,
       availableNow: availableNow,
       sortBy: sortBy,
+    );
+  }
+
+  /// Clear all filters except location
+  HomeFilter clearAllExceptLocation() {
+    return HomeFilter(
+      cityId: cityId,
+      districtId: districtId,
+      city: city,
+      district: district,
     );
   }
 
@@ -114,17 +132,19 @@ class HomeFilter extends Equatable {
 
   @override
   List<Object?> get props => [
-        serviceType,
-        gender,
-        minAge,
-        maxAge,
-        minRate,
-        maxRate,
-        radius,
-        city,
-        district,
-        verifiedOnly,
-        availableNow,
-        sortBy,
-      ];
+    serviceType,
+    gender,
+    minAge,
+    maxAge,
+    minRate,
+    maxRate,
+    radius,
+    cityId,
+    districtId,
+    city,
+    district,
+    verifiedOnly,
+    availableNow,
+    sortBy,
+  ];
 }

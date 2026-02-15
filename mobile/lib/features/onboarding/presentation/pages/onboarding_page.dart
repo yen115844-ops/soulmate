@@ -5,8 +5,8 @@ import 'package:ionicons/ionicons.dart';
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/services/local_storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 
 class OnboardingPage extends StatefulWidget {
@@ -72,7 +72,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
     // Mark onboarding as complete
     await _storage.setOnboardingComplete();
     if (mounted) {
-      context.go(RouteNames.login);
+      // Go to home — users can browse without logging in
+      context.go(RouteNames.home);
     }
   }
 

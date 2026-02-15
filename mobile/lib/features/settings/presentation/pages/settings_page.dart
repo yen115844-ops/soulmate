@@ -38,7 +38,8 @@ class SettingsPage extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (context) => getIt<SettingsBloc>()..add(const SettingsLoadRequested()),
+          create: (context) =>
+              getIt<SettingsBloc>()..add(const SettingsLoadRequested()),
         ),
         BlocProvider.value(value: profileBloc),
       ],
@@ -55,19 +56,6 @@ class _SettingsPageContent extends StatefulWidget {
 }
 
 class _SettingsPageContentState extends State<_SettingsPageContent> {
-  bool _hasSyncedThemeFromApi = false;
-
-  void _syncThemeFromSettings(dynamic settings) {
-    final themeCubit = getIt<ThemeCubit>();
-    if (settings.useSystemTheme == true) {
-      themeCubit.setThemeMode(ThemeMode.system);
-    } else {
-      themeCubit.setThemeMode(
-        settings.darkModeEnabled == true ? ThemeMode.dark : ThemeMode.light,
-      );
-    }
-  }
-
   void _showAvatarPicker(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -89,14 +77,16 @@ class _SettingsPageContentState extends State<_SettingsPageContent> {
                   );
                   if (image != null && context.mounted) {
                     context.read<ProfileBloc>().add(
-                          ProfileAvatarUpdateRequested(imagePath: image.path),
-                        );
+                      ProfileAvatarUpdateRequested(imagePath: image.path),
+                    );
                   }
                 } catch (e) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập.'),
+                        content: Text(
+                          'Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập.',
+                        ),
                       ),
                     );
                   }
@@ -109,28 +99,32 @@ class _SettingsPageContentState extends State<_SettingsPageContent> {
               onTap: () async {
                 Navigator.pop(bottomSheetContext);
                 try {
-                  final List<AssetEntity>? assets = await AssetPicker.pickAssets(
-                    context,
-                    pickerConfig: AssetPickerConfig(
-                      maxAssets: 1,
-                      requestType: RequestType.image,
-                      themeColor: AppColors.primary,
-                      textDelegate: const VietnameseAssetPickerTextDelegate(),
-                    ),
-                  );
+                  final List<AssetEntity>? assets =
+                      await AssetPicker.pickAssets(
+                        context,
+                        pickerConfig: AssetPickerConfig(
+                          maxAssets: 1,
+                          requestType: RequestType.image,
+                          themeColor: AppColors.primary,
+                          textDelegate:
+                              const VietnameseAssetPickerTextDelegate(),
+                        ),
+                      );
                   if (assets != null && assets.isNotEmpty && context.mounted) {
                     final file = await assets.first.file;
                     if (file != null && context.mounted) {
                       context.read<ProfileBloc>().add(
-                            ProfileAvatarUpdateRequested(imagePath: file.path),
-                          );
+                        ProfileAvatarUpdateRequested(imagePath: file.path),
+                      );
                     }
                   }
                 } catch (e) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Không thể truy cập thư viện ảnh. Vui lòng kiểm tra quyền truy cập.'),
+                        content: Text(
+                          'Không thể truy cập thư viện ảnh. Vui lòng kiểm tra quyền truy cập.',
+                        ),
                       ),
                     );
                   }
@@ -146,7 +140,10 @@ class _SettingsPageContentState extends State<_SettingsPageContent> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(leading: const AppBackButton(), title: const Text('Cài đặt')),
+      appBar: AppBar(
+        leading: const AppBackButton(),
+        title: const Text('Cài đặt'),
+      ),
       body: BlocConsumer<SettingsBloc, SettingsState>(
         listener: (context, state) {
           if (state is SettingsError) {
@@ -170,7 +167,11 @@ class _SettingsPageContentState extends State<_SettingsPageContent> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                      Icon(Ionicons.alert_circle_outline, size: 64, color: context.appColors.textHint),
+                    Icon(
+                      Ionicons.alert_circle_outline,
+                      size: 64,
+                      color: context.appColors.textHint,
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       state.message,
@@ -182,7 +183,9 @@ class _SettingsPageContentState extends State<_SettingsPageContent> {
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
                       onPressed: () {
-                        context.read<SettingsBloc>().add(const SettingsLoadRequested());
+                        context.read<SettingsBloc>().add(
+                          const SettingsLoadRequested(),
+                        );
                       },
                       icon: const Icon(Ionicons.refresh_outline),
                       label: const Text('Thử lại'),
@@ -194,12 +197,6 @@ class _SettingsPageContentState extends State<_SettingsPageContent> {
           }
 
           if (state is SettingsLoaded) {
-            if (!_hasSyncedThemeFromApi) {
-              _hasSyncedThemeFromApi = true;
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                _syncThemeFromSettings(state.settings);
-              });
-            }
             return BlocListener<ProfileBloc, ProfileState>(
               listener: (context, profileState) {
                 if (profileState is ProfileError) {
@@ -236,10 +233,7 @@ class _SettingsContent extends StatelessWidget {
   final dynamic settings;
   final VoidCallback? onAvatarTap;
 
-  const _SettingsContent({
-    required this.settings,
-    this.onAvatarTap,
-  });
+  const _SettingsContent({required this.settings, this.onAvatarTap});
 
   @override
   Widget build(BuildContext context) {
@@ -304,7 +298,8 @@ class _SettingsContent extends StatelessWidget {
                               Positioned.fill(
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    color: context.appColors.textPrimary.withAlpha(128),
+                                    color: context.appColors.textPrimary
+                                        .withAlpha(128),
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Center(
@@ -341,7 +336,7 @@ class _SettingsContent extends StatelessWidget {
                             ],
                           ),
                         ),
-                          Icon(
+                        Icon(
                           Ionicons.camera_outline,
                           color: context.appColors.textHint,
                           size: 20,
@@ -406,10 +401,12 @@ class _SettingsContent extends StatelessWidget {
                 subtitle: 'Sử dụng giao diện tối',
                 trailing: Switch(
                   value: themeState.isDarkMode,
-                  onChanged: (value) {
-                    context.read<ThemeCubit>().setDarkMode(value);
-                    bloc.add(SettingsDarkModeChanged(enabled: value));
-                  },
+                  onChanged: themeState.isSystemMode
+                      ? null
+                      : (value) {
+                          context.read<ThemeCubit>().setDarkMode(value);
+                          bloc.add(SettingsDarkModeChanged(enabled: value));
+                        },
                   activeColor: AppColors.primary,
                 ),
               );
@@ -428,7 +425,16 @@ class _SettingsContent extends StatelessWidget {
                     if (value) {
                       context.read<ThemeCubit>().setThemeMode(ThemeMode.system);
                     } else {
-                      context.read<ThemeCubit>().setThemeMode(ThemeMode.light);
+                      // When turning off system theme, apply the current
+                      // effective brightness so the UI doesn't jump.
+                      final brightness = MediaQuery.platformBrightnessOf(
+                        context,
+                      );
+                      final isDark = brightness == Brightness.dark;
+                      context.read<ThemeCubit>().setThemeMode(
+                        isDark ? ThemeMode.dark : ThemeMode.light,
+                      );
+                      bloc.add(SettingsDarkModeChanged(enabled: isDark));
                     }
                     bloc.add(SettingsUseSystemThemeChanged(enabled: value));
                   },
@@ -443,7 +449,7 @@ class _SettingsContent extends StatelessWidget {
             title: 'Ngôn ngữ',
             subtitle: settings.languageDisplayName,
             onTap: () => _showLanguageDialog(context, bloc, settings.language),
-            trailing:   Icon(
+            trailing: Icon(
               Ionicons.chevron_forward_outline,
               color: context.appColors.textHint,
               size: 18,
@@ -482,8 +488,12 @@ class _SettingsContent extends StatelessWidget {
             icon: Ionicons.people_outline,
             title: 'Ai có thể nhắn tin cho tôi',
             subtitle: settings.allowMessagesFromDisplayName,
-            onTap: () => _showAllowMessagesDialog(context, bloc, settings.allowMessagesFrom),
-            trailing:   Icon(
+            onTap: () => _showAllowMessagesDialog(
+              context,
+              bloc,
+              settings.allowMessagesFrom,
+            ),
+            trailing: Icon(
               Ionicons.chevron_forward_outline,
               color: context.appColors.textHint,
               size: 18,
@@ -495,7 +505,7 @@ class _SettingsContent extends StatelessWidget {
             title: 'Người dùng đã chặn',
             subtitle: 'Quản lý danh sách người bị chặn',
             onTap: () => context.push(RouteNames.blockedUsers),
-            trailing:   Icon(
+            trailing: Icon(
               Ionicons.chevron_forward_outline,
               color: context.appColors.textHint,
               size: 18,
@@ -504,13 +514,13 @@ class _SettingsContent extends StatelessWidget {
 
           // Data Section
           _SectionHeader(title: 'Dữ liệu'),
-          
+
           _SettingsTile(
             icon: Ionicons.trash_outline,
             title: 'Xóa bộ nhớ cache',
             subtitle: 'Giải phóng dung lượng',
             onTap: () => _showClearCacheDialog(context),
-            trailing:   Icon(
+            trailing: Icon(
               Ionicons.chevron_forward_outline,
               color: context.appColors.textHint,
               size: 18,
@@ -525,7 +535,7 @@ class _SettingsContent extends StatelessWidget {
             subtitle: 'Xóa vĩnh viễn tài khoản và mọi dữ liệu',
             titleColor: AppColors.error,
             onTap: () => _showDeleteAccountDialog(context),
-            trailing:   Icon(
+            trailing: Icon(
               Ionicons.chevron_forward_outline,
               color: context.appColors.textHint,
               size: 18,
@@ -538,7 +548,11 @@ class _SettingsContent extends StatelessWidget {
     );
   }
 
-  void _showLanguageDialog(BuildContext context, SettingsBloc bloc, String currentLanguage) {
+  void _showLanguageDialog(
+    BuildContext context,
+    SettingsBloc bloc,
+    String currentLanguage,
+  ) {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -568,7 +582,11 @@ class _SettingsContent extends StatelessWidget {
     );
   }
 
-  void _showAllowMessagesDialog(BuildContext context, SettingsBloc bloc, String currentValue) {
+  void _showAllowMessagesDialog(
+    BuildContext context,
+    SettingsBloc bloc,
+    String currentValue,
+  ) {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -580,7 +598,9 @@ class _SettingsContent extends StatelessWidget {
               title: 'Mọi người',
               isSelected: currentValue == 'everyone',
               onTap: () {
-                bloc.add(const SettingsAllowMessagesFromChanged(value: 'everyone'));
+                bloc.add(
+                  const SettingsAllowMessagesFromChanged(value: 'everyone'),
+                );
                 Navigator.pop(dialogContext);
               },
             ),
@@ -588,7 +608,9 @@ class _SettingsContent extends StatelessWidget {
               title: 'Người đã xác minh',
               isSelected: currentValue == 'verified',
               onTap: () {
-                bloc.add(const SettingsAllowMessagesFromChanged(value: 'verified'));
+                bloc.add(
+                  const SettingsAllowMessagesFromChanged(value: 'verified'),
+                );
                 Navigator.pop(dialogContext);
               },
             ),
@@ -722,7 +744,7 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-              Text(
+            Text(
               'Hành động này không thể hoàn tác. Tất cả dữ liệu của bạn sẽ bị xóa vĩnh viễn.',
               style: TextStyle(color: context.appColors.textSecondary),
             ),
@@ -736,10 +758,13 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscurePassword ? Ionicons.eye_off_outline : Ionicons.eye_outline,
+                    _obscurePassword
+                        ? Ionicons.eye_off_outline
+                        : Ionicons.eye_outline,
                     color: context.appColors.textSecondary,
                   ),
-                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                  onPressed: () =>
+                      setState(() => _obscurePassword = !_obscurePassword),
                 ),
               ),
               enabled: !_isLoading,
@@ -760,7 +785,9 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
                       return;
                     }
                     authBloc.add(
-                      AuthDeleteAccountRequested(password: _passwordController.text),
+                      AuthDeleteAccountRequested(
+                        password: _passwordController.text,
+                      ),
                     );
                   },
             child: _isLoading
@@ -784,7 +811,7 @@ class _AvatarPlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: context.appColors.background,
-      child:   Icon(
+      child: Icon(
         Ionicons.person_outline,
         size: 28,
         color: context.appColors.textHint,
@@ -913,14 +940,15 @@ class _LanguageOption extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: colorScheme.onSurface,
-                  ),
+                  style: TextStyle(fontSize: 16, color: colorScheme.onSurface),
                 ),
               ),
               if (isSelected)
-                const Icon(Ionicons.checkmark_circle_outline, color: AppColors.primary, size: 20),
+                const Icon(
+                  Ionicons.checkmark_circle_outline,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
             ],
           ),
         ),

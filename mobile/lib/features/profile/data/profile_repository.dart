@@ -34,6 +34,8 @@ class ProfileRepository {
     DateTime? dateOfBirth,
     int? heightCm,
     int? weightKg,
+    String? provinceId,
+    String? districtId,
     String? city,
     String? district,
     String? address,
@@ -50,6 +52,8 @@ class ProfileRepository {
     if (dateOfBirth != null) data['dateOfBirth'] = dateOfBirth.toIso8601String();
     if (heightCm != null) data['heightCm'] = heightCm;
     if (weightKg != null) data['weightKg'] = weightKg;
+    if (provinceId != null) data['provinceId'] = provinceId;
+    if (districtId != null) data['districtId'] = districtId;
     if (city != null) data['city'] = city;
     if (district != null) data['district'] = district;
     if (address != null) data['address'] = address;
@@ -73,6 +77,8 @@ class ProfileRepository {
   Future<void> updateLocation({
     required double latitude,
     required double longitude,
+    String? provinceId,
+    String? districtId,
     String? city,
     String? district,
   }) async {
@@ -81,6 +87,8 @@ class ProfileRepository {
       data: {
         'currentLat': latitude,
         'currentLng': longitude,
+        if (provinceId != null) 'provinceId': provinceId,
+        if (districtId != null) 'districtId': districtId,
         if (city != null) 'city': city,
         if (district != null) 'district': district,
       },
