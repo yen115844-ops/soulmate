@@ -12,6 +12,8 @@ jobs:
   build-and-deploy:
     name: Build & Upload to App Store Connect
     runs-on: macos-latest
+    # Timeout để tránh treo job tốn tiền
+    timeout-minutes: 60 
 
     steps:
       - name: Checkout code
@@ -20,7 +22,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.38.9'
+          flutter-version: '3.27.0' # HÃY KIỂM TRA LẠI VERSION CHÍNH XÁC CỦA BẠN
           channel: 'stable'
           cache: true
 
@@ -28,78 +30,73 @@ jobs:
         working-directory: mobile
         run: flutter pub get
 
-      # Import Apple certificates and provisioning profiles
-      - name: Install Apple Certificate
+      # Cài đặt Certificate & Profile (Cách chuẩn tắc)
+      - name: Install Apple Certificate and Profile
         env:
-          P12_BASE64: ${{ secrets.IOS_P12_BASE64 }}
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.IOS_P12_BASE64 }}
           P12_PASSWORD: ${{ secrets.IOS_P12_PASSWORD }}
-          PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+          BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
-          # Create variables
+          # Tạo variables
           CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
           PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
 
-          # Import certificate and provisioning profile from secrets
-          echo -n "$P12_BASE64" | base64 --decode -o $CERTIFICATE_PATH
-          echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode -o $PP_PATH
+          # Import từ secrets
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+          echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
 
-          # Create temporary keychain
+          # Tạo keychain
           security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
-          # Import certificate to keychain
+          # Import certificate
           security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security list-keychain -d user -s $KEYCHAIN_PATH
 
           # Apply provisioning profile
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
 
-      - name: Set Manual Signing
+      # Step này xử lý việc đổi từ Auto Signing -> Manual Signing
+      # LƯU Ý: Đảm bảo 'soulmate.vn' là Bundle ID chính xác của bạn
+      - name: Configure Signing Logic (Sed)
         run: |
           PROJECT_PATH="mobile/ios/Runner.xcodeproj/project.pbxproj"
-
-          # Switch signing style from Automatic to Manual
+          
+          # Force tắt Automatic Signing
           sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PROJECT_PATH"
-
-          # Replace signing identity
+          
+          # Chuyển về Distribution Certificate
           sed -i '' 's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "Apple Distribution";/g' "$PROJECT_PATH"
-
-          # Remove legacy project-level signing identity overrides
-          sed -i '' '/"CODE_SIGN_IDENTITY\[sdk=iphoneos\*\]"/d' "$PROJECT_PATH"
-
-          # Set provisioning profile and team
+          
+          # Set Team ID & Profile Specifier
+          # Lưu ý: Lệnh sed này tìm chuỗi DEVELOPMENT_TEAM cũ để thay thế.
+          # Nếu trong code bạn chưa set team, lệnh này có thể fail.
+          # Tốt nhất là gán đè trực tiếp nếu có thể, nhưng cách dưới đây an toàn hơn cho cấu trúc file
           sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = "";/PROVISIONING_PROFILE_SPECIFIER = "${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}";/g' "$PROJECT_PATH"
-          sed -i '' 's/DEVELOPMENT_TEAM = HD27T77BMR;/DEVELOPMENT_TEAM = ${{ secrets.APPLE_TEAM_ID }};/g' "$PROJECT_PATH"
-
-          # Debug: verify changes applied
-          echo "=== Signing settings after sed ==="
-          grep -n 'CODE_SIGN_STYLE\|CODE_SIGN_IDENTITY\|PROVISIONING_PROFILE_SPECIFIER\|DEVELOPMENT_TEAM' "$PROJECT_PATH" || true
+          sed -i '' 's/DEVELOPMENT_TEAM = [A-Z0-9]*;/DEVELOPMENT_TEAM = ${{ secrets.APPLE_TEAM_ID }};/g' "$PROJECT_PATH"
 
       - name: Create ExportOptions.plist
         run: |
-          cat > mobile/ios/ExportOptions.plist << 'PLIST'
+          cat > mobile/ios/ExportOptions.plist << PLIST
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
               <key>method</key>
               <string>app-store-connect</string>
-              <key>destination</key>
-              <string>upload</string>
+              <key>teamID</key>
+              <string>${{ secrets.APPLE_TEAM_ID }}</string>
               <key>signingStyle</key>
               <string>manual</string>
               <key>provisioningProfiles</key>
               <dict>
-                  <key>soulmate.vn</key>
+                  <key>soulmate.vn</key> 
                   <string>${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}</string>
               </dict>
-              <key>teamID</key>
-              <string>${{ secrets.APPLE_TEAM_ID }}</string>
           </dict>
           </plist>
           PLIST
@@ -109,34 +106,31 @@ jobs:
         run: |
           flutter build ipa \
             --release \
-            --export-options-plist=ios/ExportOptions.plist
+            --export-options-plist=ios/ExportOptions.plist \
+            --build-number=${{ github.run_number }} 
+          # Lưu ý: Thêm --build-number để tự tăng version code mỗi lần push, tránh lỗi trùng build number trên Store
 
       - name: Upload to App Store Connect
         env:
-          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
         run: |
-          # Decode API key
+          # Decode API Key ra file .p8
           mkdir -p ~/private_keys
-          echo -n "$APP_STORE_CONNECT_API_KEY_BASE64" | base64 --decode > ~/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8
+          echo -n "$API_KEY_CONTENT" | base64 --decode > ~/private_keys/AuthKey_$API_KEY_ID.p8
 
-          # Upload using xcrun altool
-          xcrun notarytool store-credentials "AC_PASSWORD" \
-            --apple-id "not-used" \
-            --team-id "${{ secrets.APPLE_TEAM_ID }}" || true
-
-          # Upload IPA to App Store Connect
+          # Upload bằng xcrun altool (Clean hơn, bỏ đoạn notarytool thừa thãi)
+          echo "Uploading IPA to App Store Connect..."
           xcrun altool --upload-app \
             --type ios \
-            --file mobile/build/ios/ipa/*.ipa \
-            --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
-            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
+            --file "mobile/build/ios/ipa/Runner.ipa" \
+            --apiKey "$API_KEY_ID" \
+            --apiIssuer "$ISSUER_ID"
 
-      # Cleanup
-      - name: Clean up keychain and provisioning profile
-        if: ${{ always() }}
+      - name: Clean up keychain and profiles
+        if: always()
         run: |
-          security delete-keychain $RUNNER_TEMP/app-signing.keychain-db
-          rm -f ~/Library/MobileDevice/Provisioning\ Profiles/build_pp.mobileprovision
-          rm -rf ~/private_keys
+          security delete-keychain $RUNNER_TEMP/app-signing.keychain-db || true
+          rm -rf ~/Library/MobileDevice/Provisioning\ Profiles || true
+          rm -rf ~/private_keys || true

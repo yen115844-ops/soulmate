@@ -132,7 +132,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         child: BlocBuilder<ThemeCubit, ThemeState>(
           builder: (context, themeState) {
             return MaterialApp.router(
-              title: 'Social Mate',
+              title: 'Social Mate App',
               debugShowCheckedModeBanner: false,
 
               // Theme
