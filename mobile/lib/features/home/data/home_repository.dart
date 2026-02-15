@@ -65,7 +65,7 @@ class HomeRepository with BaseRepositoryMixin {
     double? lat,
     double? lng,
     int? radius,
-    String? cityId,
+    String? provinceId,
     String? districtId,
     bool? verifiedOnly,
     bool? availableNow,
@@ -87,7 +87,7 @@ class HomeRepository with BaseRepositoryMixin {
           if (lat != null) 'lat': lat,
           if (lng != null) 'lng': lng,
           if (radius != null) 'radius': radius,
-          if (cityId != null) 'cityId': cityId,
+          if (provinceId != null) 'provinceId': provinceId,
           if (districtId != null) 'districtId': districtId,
           if (verifiedOnly != null) 'verifiedOnly': verifiedOnly,
           if (availableNow != null) 'availableNow': availableNow,
@@ -164,17 +164,21 @@ class HomePartnersResponse {
     final photos = <String>[];
     if (profile?['photos'] is List) {
       for (final e in profile!['photos'] as List) {
-        final url = e is Map ? (e['url'] ?? e.toString()).toString() : e.toString();
+        final url = e is Map
+            ? (e['url'] ?? e.toString()).toString()
+            : e.toString();
         if (url.isNotEmpty) {
-          photos.add(url.startsWith('http') ? url : ImageUtils.buildImageUrl(url));
+          photos.add(
+            url.startsWith('http') ? url : ImageUtils.buildImageUrl(url),
+          );
         }
       }
     }
     final coverFromProfile = profile?['coverPhotoUrl']?.toString();
     final coverUrl = (coverFromProfile != null && coverFromProfile.isNotEmpty)
         ? (coverFromProfile.startsWith('http')
-            ? coverFromProfile
-            : ImageUtils.buildImageUrl(coverFromProfile))
+              ? coverFromProfile
+              : ImageUtils.buildImageUrl(coverFromProfile))
         : (photos.isNotEmpty ? photos.first : null);
 
     final interests = <String>[];
@@ -186,9 +190,7 @@ class HomePartnersResponse {
 
     final talents = <String>[];
     if (profile?['talents'] is List) {
-      talents.addAll(
-        (profile!['talents'] as List).map((e) => e.toString()),
-      );
+      talents.addAll((profile!['talents'] as List).map((e) => e.toString()));
     }
 
     // interestsDetail, talentsDetail từ API (name, icon)
@@ -215,9 +217,7 @@ class HomePartnersResponse {
     // serviceTypes từ API
     final services = <String>[];
     if (data['serviceTypes'] is List) {
-      services.addAll(
-        (data['serviceTypes'] as List).map((e) => e.toString()),
-      );
+      services.addAll((data['serviceTypes'] as List).map((e) => e.toString()));
     }
     final serviceTypesDetail = data['serviceTypesDetail'] is List
         ? List<Map<String, dynamic>>.from(
@@ -233,24 +233,27 @@ class HomePartnersResponse {
           final reviewer = reviewData['reviewer'] as Map<String, dynamic>?;
           final reviewerProfile = reviewer?['profile'] as Map<String, dynamic>?;
           final avatar = reviewerProfile?['avatarUrl']?.toString();
-          reviews.add(ReviewEntity(
-            id: reviewData['id']?.toString() ?? '',
-            userName: reviewerProfile?['fullName']?.toString() ??
-                reviewerProfile?['displayName']?.toString() ??
-                'Người dùng',
-            userAvatar: avatar != null && avatar.isNotEmpty
-                ? (avatar.startsWith('http')
-                    ? avatar
-                    : ImageUtils.buildImageUrl(avatar))
-                : null,
-            rating: _parseDouble(reviewData['rating']),
-            comment: reviewData['comment']?.toString() ?? '',
-            createdAt: reviewData['createdAt'] != null
-                ? DateTime.tryParse(reviewData['createdAt'].toString()) ??
-                    DateTime.now()
-                : DateTime.now(),
-            serviceName: reviewData['serviceType']?.toString(),
-          ));
+          reviews.add(
+            ReviewEntity(
+              id: reviewData['id']?.toString() ?? '',
+              userName:
+                  reviewerProfile?['fullName']?.toString() ??
+                  reviewerProfile?['displayName']?.toString() ??
+                  'Người dùng',
+              userAvatar: avatar != null && avatar.isNotEmpty
+                  ? (avatar.startsWith('http')
+                        ? avatar
+                        : ImageUtils.buildImageUrl(avatar))
+                  : null,
+              rating: _parseDouble(reviewData['rating']),
+              comment: reviewData['comment']?.toString() ?? '',
+              createdAt: reviewData['createdAt'] != null
+                  ? DateTime.tryParse(reviewData['createdAt'].toString()) ??
+                        DateTime.now()
+                  : DateTime.now(),
+              serviceName: reviewData['serviceType']?.toString(),
+            ),
+          );
         }
       }
     }
@@ -271,8 +274,8 @@ class HomePartnersResponse {
     final avatarUrl = profile?['avatarUrl']?.toString();
     final fullAvatarUrl = avatarUrl != null && avatarUrl.isNotEmpty
         ? (avatarUrl.startsWith('http')
-            ? avatarUrl
-            : ImageUtils.buildImageUrl(avatarUrl))
+              ? avatarUrl
+              : ImageUtils.buildImageUrl(avatarUrl))
         : _kDefaultAvatarUrl;
 
     // introduction (API) ưu tiên hơn profile.bio
@@ -291,16 +294,18 @@ class HomePartnersResponse {
       lastActive = DateTime.tryParse(user!['lastActiveAt'].toString());
     }
     // Online = có hoạt động trong N phút (tính từ lúc đăng nhập), không dùng isAvailable
-    final isOnline = lastActive != null &&
-        DateTime.now().difference(lastActive).inMinutes < AppConstants.onlineThresholdMinutes;
+    final isOnline =
+        lastActive != null &&
+        DateTime.now().difference(lastActive).inMinutes <
+            AppConstants.onlineThresholdMinutes;
 
     // Stats từ API: totalBookings, completedBookings, responseTime (phút)
     PartnerEntityStats? stats;
     final totalBookings = data['totalBookings'] is int
         ? data['totalBookings'] as int
         : (data['totalBookings'] != null
-            ? int.tryParse(data['totalBookings'].toString())
-            : null);
+              ? int.tryParse(data['totalBookings'].toString())
+              : null);
     final responseTime = data['responseTime'];
     if (totalBookings != null || responseTime != null) {
       stats = PartnerEntityStats(
@@ -308,8 +313,8 @@ class HomePartnersResponse {
         avgResponseTime: responseTime is int
             ? responseTime
             : (responseTime != null
-                ? int.tryParse(responseTime.toString()) ?? 0
-                : 0),
+                  ? int.tryParse(responseTime.toString()) ?? 0
+                  : 0),
       );
     }
 
@@ -317,7 +322,8 @@ class HomePartnersResponse {
     return PartnerEntity(
       id: data['userId']?.toString() ?? data['id']?.toString() ?? '',
       userId: data['userId']?.toString(),
-      name: profile?['displayName']?.toString() ??
+      name:
+          profile?['displayName']?.toString() ??
           profile?['fullName']?.toString() ??
           user?['email']?.toString().split('@').first ??
           'Partner',
@@ -328,8 +334,8 @@ class HomePartnersResponse {
       reviewCount: (data['totalReviews'] is int)
           ? data['totalReviews'] as int
           : (data['totalReviews'] != null
-              ? int.tryParse(data['totalReviews'].toString()) ?? 0
-              : 0),
+                ? int.tryParse(data['totalReviews'].toString()) ?? 0
+                : 0),
       hourlyRate: _parseDouble(data['hourlyRate']).round(),
       isOnline: isOnline,
       isVerified: data['isVerified'] == true,
@@ -349,8 +355,8 @@ class HomePartnersResponse {
       completedBookings: (data['completedBookings'] is int)
           ? data['completedBookings'] as int
           : (data['completedBookings'] != null
-              ? int.tryParse(data['completedBookings'].toString()) ?? 0
-              : 0),
+                ? int.tryParse(data['completedBookings'].toString()) ?? 0
+                : 0),
       workingHours: null,
       lastActive: lastActive,
       stats: stats,
@@ -358,13 +364,13 @@ class HomePartnersResponse {
       experienceYears: data['experienceYears'] is int
           ? data['experienceYears'] as int
           : (data['experienceYears'] != null
-              ? int.tryParse(data['experienceYears'].toString())
-              : null),
+                ? int.tryParse(data['experienceYears'].toString())
+                : null),
       minimumHours: data['minimumHours'] is int
           ? data['minimumHours'] as int
           : (data['minimumHours'] != null
-              ? int.tryParse(data['minimumHours'].toString())
-              : null),
+                ? int.tryParse(data['minimumHours'].toString())
+                : null),
       currency: data['currency']?.toString(),
     );
   }

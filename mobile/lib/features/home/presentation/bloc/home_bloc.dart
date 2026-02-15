@@ -52,7 +52,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> with BaseRepositoryMixin {
         minRate: state.filter.minRate,
         maxRate: state.filter.maxRate,
         radius: state.filter.radius,
-        cityId: state.filter.cityId,
+        provinceId: state.filter.provinceId,
         districtId: state.filter.districtId,
         verifiedOnly: state.filter.verifiedOnly ? true : null,
         availableNow: state.filter.availableNow ? true : null,
@@ -98,7 +98,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> with BaseRepositoryMixin {
         minRate: state.filter.minRate,
         maxRate: state.filter.maxRate,
         radius: state.filter.radius,
-        cityId: state.filter.cityId,
+        provinceId: state.filter.provinceId,
         districtId: state.filter.districtId,
         verifiedOnly: state.filter.verifiedOnly ? true : null,
         availableNow: state.filter.availableNow ? true : null,
@@ -166,7 +166,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> with BaseRepositoryMixin {
         minRate: state.filter.minRate,
         maxRate: state.filter.maxRate,
         radius: state.filter.radius,
-        cityId: state.filter.cityId,
+        provinceId: state.filter.provinceId,
         districtId: state.filter.districtId,
         verifiedOnly: state.filter.verifiedOnly ? true : null,
         availableNow: state.filter.availableNow ? true : null,
@@ -245,18 +245,22 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> with BaseRepositoryMixin {
       final firstProvince = provinces.isNotEmpty ? provinces.first : null;
       if (firstProvince != null) {
         final newFilter = state.filter.copyWith(
-          cityId: firstProvince.id,
+          provinceId: firstProvince.id,
           city: firstProvince.name,
         );
-        emit(state.copyWith(
-          locationStatus: LocationDetectionStatus.permissionDenied,
-          filter: newFilter,
-        ));
+        emit(
+          state.copyWith(
+            locationStatus: LocationDetectionStatus.permissionDenied,
+            filter: newFilter,
+          ),
+        );
         add(const HomeLoadPartners(refresh: true));
       } else {
-        emit(state.copyWith(
-          locationStatus: LocationDetectionStatus.permissionDenied,
-        ));
+        emit(
+          state.copyWith(
+            locationStatus: LocationDetectionStatus.permissionDenied,
+          ),
+        );
       }
       return;
     }
@@ -281,11 +285,13 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> with BaseRepositoryMixin {
   ) async {
     final newFilter = state.filter
         .clear(clearCity: true, clearDistrict: true)
-        .copyWith(cityId: event.cityId, city: event.cityName);
-    emit(state.copyWith(
-      filter: newFilter,
-      locationStatus: LocationDetectionStatus.detected,
-    ));
+        .copyWith(provinceId: event.cityId, city: event.cityName);
+    emit(
+      state.copyWith(
+        filter: newFilter,
+        locationStatus: LocationDetectionStatus.detected,
+      ),
+    );
     add(const HomeLoadPartners(refresh: true));
   }
 
@@ -331,31 +337,37 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> with BaseRepositoryMixin {
 
     if (matchedProvince != null) {
       final newFilter = state.filter.copyWith(
-        cityId: matchedProvince.id,
+        provinceId: matchedProvince.id,
         city: matchedProvince.name,
         districtId: matchedDistrict?.id,
         district: matchedDistrict?.name,
       );
-      emit(state.copyWith(
-        filter: newFilter,
-        locationStatus: LocationDetectionStatus.detected,
-      ));
+      emit(
+        state.copyWith(
+          filter: newFilter,
+          locationStatus: LocationDetectionStatus.detected,
+        ),
+      );
     } else {
       // GPS worked but no matching city → default to first province
       final firstProvince = provinces.isNotEmpty ? provinces.first : null;
       if (firstProvince != null) {
         final newFilter = state.filter.copyWith(
-          cityId: firstProvince.id,
+          provinceId: firstProvince.id,
           city: firstProvince.name,
         );
-        emit(state.copyWith(
-          filter: newFilter,
-          locationStatus: LocationDetectionStatus.permissionDenied,
-        ));
+        emit(
+          state.copyWith(
+            filter: newFilter,
+            locationStatus: LocationDetectionStatus.permissionDenied,
+          ),
+        );
       } else {
-        emit(state.copyWith(
-          locationStatus: LocationDetectionStatus.permissionDenied,
-        ));
+        emit(
+          state.copyWith(
+            locationStatus: LocationDetectionStatus.permissionDenied,
+          ),
+        );
       }
       debugPrint(
         'HomeBloc: No matching city for "$rawCity". '
@@ -381,10 +393,22 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> with BaseRepositoryMixin {
   String _normalize(String input) {
     var s = input.toLowerCase().trim();
     for (final prefix in [
-      'thành phố ', 'thanh pho ', 'tỉnh ', 'tinh ',
-      'quận ', 'quan ', 'huyện ', 'huyen ',
-      'thị xã ', 'thi xa ', 'phường ', 'phuong ',
-      'xã ', 'xa ', 'tp. ', 'tp ',
+      'thành phố ',
+      'thanh pho ',
+      'tỉnh ',
+      'tinh ',
+      'quận ',
+      'quan ',
+      'huyện ',
+      'huyen ',
+      'thị xã ',
+      'thi xa ',
+      'phường ',
+      'phuong ',
+      'xã ',
+      'xa ',
+      'tp. ',
+      'tp ',
     ]) {
       if (s.startsWith(prefix)) {
         s = s.substring(prefix.length);
@@ -399,19 +423,73 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> with BaseRepositoryMixin {
   /// Remove Vietnamese diacritics
   String _removeDiacritics(String str) {
     const map = {
-      'à': 'a', 'á': 'a', 'ả': 'a', 'ã': 'a', 'ạ': 'a',
-      'ă': 'a', 'ằ': 'a', 'ắ': 'a', 'ẳ': 'a', 'ẵ': 'a', 'ặ': 'a',
-      'â': 'a', 'ầ': 'a', 'ấ': 'a', 'ẩ': 'a', 'ẫ': 'a', 'ậ': 'a',
+      'à': 'a',
+      'á': 'a',
+      'ả': 'a',
+      'ã': 'a',
+      'ạ': 'a',
+      'ă': 'a',
+      'ằ': 'a',
+      'ắ': 'a',
+      'ẳ': 'a',
+      'ẵ': 'a',
+      'ặ': 'a',
+      'â': 'a',
+      'ầ': 'a',
+      'ấ': 'a',
+      'ẩ': 'a',
+      'ẫ': 'a',
+      'ậ': 'a',
       'đ': 'd',
-      'è': 'e', 'é': 'e', 'ẻ': 'e', 'ẽ': 'e', 'ẹ': 'e',
-      'ê': 'e', 'ề': 'e', 'ế': 'e', 'ể': 'e', 'ễ': 'e', 'ệ': 'e',
-      'ì': 'i', 'í': 'i', 'ỉ': 'i', 'ĩ': 'i', 'ị': 'i',
-      'ò': 'o', 'ó': 'o', 'ỏ': 'o', 'õ': 'o', 'ọ': 'o',
-      'ô': 'o', 'ồ': 'o', 'ố': 'o', 'ổ': 'o', 'ỗ': 'o', 'ộ': 'o',
-      'ơ': 'o', 'ờ': 'o', 'ớ': 'o', 'ở': 'o', 'ỡ': 'o', 'ợ': 'o',
-      'ù': 'u', 'ú': 'u', 'ủ': 'u', 'ũ': 'u', 'ụ': 'u',
-      'ư': 'u', 'ừ': 'u', 'ứ': 'u', 'ử': 'u', 'ữ': 'u', 'ự': 'u',
-      'ỳ': 'y', 'ý': 'y', 'ỷ': 'y', 'ỹ': 'y', 'ỵ': 'y',
+      'è': 'e',
+      'é': 'e',
+      'ẻ': 'e',
+      'ẽ': 'e',
+      'ẹ': 'e',
+      'ê': 'e',
+      'ề': 'e',
+      'ế': 'e',
+      'ể': 'e',
+      'ễ': 'e',
+      'ệ': 'e',
+      'ì': 'i',
+      'í': 'i',
+      'ỉ': 'i',
+      'ĩ': 'i',
+      'ị': 'i',
+      'ò': 'o',
+      'ó': 'o',
+      'ỏ': 'o',
+      'õ': 'o',
+      'ọ': 'o',
+      'ô': 'o',
+      'ồ': 'o',
+      'ố': 'o',
+      'ổ': 'o',
+      'ỗ': 'o',
+      'ộ': 'o',
+      'ơ': 'o',
+      'ờ': 'o',
+      'ớ': 'o',
+      'ở': 'o',
+      'ỡ': 'o',
+      'ợ': 'o',
+      'ù': 'u',
+      'ú': 'u',
+      'ủ': 'u',
+      'ũ': 'u',
+      'ụ': 'u',
+      'ư': 'u',
+      'ừ': 'u',
+      'ứ': 'u',
+      'ử': 'u',
+      'ữ': 'u',
+      'ự': 'u',
+      'ỳ': 'y',
+      'ý': 'y',
+      'ỷ': 'y',
+      'ỹ': 'y',
+      'ỵ': 'y',
     };
     final buf = StringBuffer();
     for (final c in str.split('')) {

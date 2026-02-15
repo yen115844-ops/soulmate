@@ -65,9 +65,9 @@ class HomeAppBar extends StatelessWidget {
                               padding: const EdgeInsets.only(right: 8),
                               child: _CircleIconButton(
                                 icon: Ionicons.locate_outline,
-                                onTap: () => context
-                                    .read<HomeBloc>()
-                                    .add(const HomeRetryLocation()),
+                                onTap: () => context.read<HomeBloc>().add(
+                                  const HomeRetryLocation(),
+                                ),
                                 tooltip: 'Định vị lại',
                               ),
                             ),
@@ -142,7 +142,7 @@ class HomeAppBar extends StatelessWidget {
   Widget _buildLocationSection(BuildContext context, HomeState state) {
     final isDetecting =
         state.locationStatus == LocationDetectionStatus.detecting ||
-            state.locationStatus == LocationDetectionStatus.initial;
+        state.locationStatus == LocationDetectionStatus.initial;
 
     if (isDetecting) {
       return _buildLocationRow(
@@ -194,7 +194,7 @@ class HomeAppBar extends StatelessWidget {
         title: 'Chọn khu vực',
         icon: Ionicons.location_outline,
         items: items,
-        selectedValue: state.filter.cityId,
+        selectedValue: state.filter.provinceId,
         onSelect: (value) {
           Navigator.pop(context, value);
         },
@@ -203,8 +203,8 @@ class HomeAppBar extends StatelessWidget {
       if (selectedId != null && context.mounted) {
         final province = state.provinces.firstWhere((p) => p.id == selectedId);
         context.read<HomeBloc>().add(
-              HomeSelectCity(cityId: province.id, cityName: province.name),
-            );
+          HomeSelectCity(cityId: province.id, cityName: province.name),
+        );
       }
     });
   }

@@ -2,13 +2,13 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable,
 import { SlotStatus, UserRole, UserStatus } from '@prisma/client';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import {
-  AdminPartnerQueryDto,
-  CreateAvailabilitySlotDto,
-  CreatePartnerProfileDto,
-  SearchPartnersDto,
-  UpdateAvailabilitySlotDto,
-  UpdatePartnerProfileDto,
-  UpdatePartnerStatusDto,
+    AdminPartnerQueryDto,
+    CreateAvailabilitySlotDto,
+    CreatePartnerProfileDto,
+    SearchPartnersDto,
+    UpdateAvailabilitySlotDto,
+    UpdatePartnerProfileDto,
+    UpdatePartnerStatusDto,
 } from './dto';
 
 @Injectable()
@@ -331,11 +331,11 @@ export class PartnersService {
     }
 
     // City filter (by province ID)
-    if (dto.cityId) {
+    if (dto.provinceId) {
       if (!where.user.is.profile) {
         where.user.is.profile = { is: {} };
       }
-      where.user.is.profile.is.provinceId = dto.cityId;
+      where.user.is.profile.is.provinceId = dto.provinceId;
     }
 
     // District filter (by district ID)

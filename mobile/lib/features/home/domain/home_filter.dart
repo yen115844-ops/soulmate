@@ -9,7 +9,7 @@ class HomeFilter extends Equatable {
   final int? minRate;
   final int? maxRate;
   final int? radius;
-  final String? cityId; // Province UUID for API
+  final String? provinceId; // Province UUID for API
   final String? districtId; // District UUID for API
   final String? city; // Display name
   final String? district; // Display name
@@ -25,7 +25,7 @@ class HomeFilter extends Equatable {
     this.minRate,
     this.maxRate,
     this.radius,
-    this.cityId,
+    this.provinceId,
     this.districtId,
     this.city,
     this.district,
@@ -58,7 +58,7 @@ class HomeFilter extends Equatable {
     int? minRate,
     int? maxRate,
     int? radius,
-    String? cityId,
+    String? provinceId,
     String? districtId,
     String? city,
     String? district,
@@ -74,7 +74,7 @@ class HomeFilter extends Equatable {
       minRate: minRate ?? this.minRate,
       maxRate: maxRate ?? this.maxRate,
       radius: radius ?? this.radius,
-      cityId: cityId ?? this.cityId,
+      provinceId: provinceId ?? this.provinceId,
       districtId: districtId ?? this.districtId,
       city: city ?? this.city,
       district: district ?? this.district,
@@ -103,7 +103,7 @@ class HomeFilter extends Equatable {
       minRate: clearPriceRange ? null : minRate,
       maxRate: clearPriceRange ? null : maxRate,
       radius: clearRadius ? null : radius,
-      cityId: (clearCity || clearLocation) ? null : cityId,
+      provinceId: (clearCity || clearLocation) ? null : provinceId,
       districtId: (clearDistrict || clearLocation) ? null : districtId,
       city: (clearCity || clearLocation) ? null : city,
       district: (clearDistrict || clearLocation) ? null : district,
@@ -116,7 +116,7 @@ class HomeFilter extends Equatable {
   /// Clear all filters except location
   HomeFilter clearAllExceptLocation() {
     return HomeFilter(
-      cityId: cityId,
+      provinceId: provinceId,
       districtId: districtId,
       city: city,
       district: district,
@@ -139,7 +139,7 @@ class HomeFilter extends Equatable {
     minRate,
     maxRate,
     radius,
-    cityId,
+    provinceId,
     districtId,
     city,
     district,

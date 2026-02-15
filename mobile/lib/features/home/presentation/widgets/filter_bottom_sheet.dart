@@ -33,7 +33,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   late String? _selectedGender;
   late String? _selectedCity;
   late String? _selectedDistrict;
-  late String? _selectedCityId;
+  late String? _selectedProvinceId;
   late String? _selectedDistrictId;
   late bool _verifiedOnly;
   late bool _onlineOnly;
@@ -61,7 +61,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     _selectedGender = filter.gender;
     _selectedCity = filter.city;
     _selectedDistrict = filter.district;
-    _selectedCityId = filter.cityId;
+    _selectedProvinceId = filter.provinceId;
     _selectedDistrictId = filter.districtId;
     _verifiedOnly = filter.verifiedOnly;
     _onlineOnly = filter.availableNow;
@@ -539,8 +539,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   void _initProvinces() {
     final homeState = context.read<HomeBloc>().state;
     _provinces = homeState.provinces;
-    if (_selectedCityId != null) {
-      _loadDistrictsForCityId(_selectedCityId!);
+    if (_selectedProvinceId != null) {
+      _loadDistrictsForCityId(_selectedProvinceId!);
     }
   }
 
@@ -573,7 +573,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
         _buildDropdown(
           label: 'Tỉnh/Thành phố',
           icon: Ionicons.business_outline,
-          value: _selectedCityId,
+          value: _selectedProvinceId,
           displayValue: _selectedCity,
           hint: 'Chọn tỉnh/thành phố',
           isLoading: _loadingLocations,
@@ -581,11 +581,9 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             return (code: p.id, label: p.name);
           }).toList(),
           onChanged: (value) {
-            final province = _provinces.firstWhere(
-              (p) => p.id == value,
-            );
+            final province = _provinces.firstWhere((p) => p.id == value);
             setState(() {
-              _selectedCityId = value;
+              _selectedProvinceId = value;
               _selectedCity = province.name;
               _selectedDistrictId = null;
               _selectedDistrict = null;
@@ -597,7 +595,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           },
           onClear: () {
             setState(() {
-              _selectedCityId = null;
+              _selectedProvinceId = null;
               _selectedCity = null;
               _selectedDistrictId = null;
               _selectedDistrict = null;
@@ -611,17 +609,15 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           icon: Ionicons.location_outline,
           value: _selectedDistrictId,
           displayValue: _selectedDistrict,
-          hint: _selectedCityId == null
+          hint: _selectedProvinceId == null
               ? 'Chọn tỉnh/thành trước'
               : 'Chọn quận/huyện',
-          enabled: _selectedCityId != null,
+          enabled: _selectedProvinceId != null,
           items: _districts.map((d) {
             return (code: d.id, label: d.name);
           }).toList(),
           onChanged: (value) {
-            final district = _districts.firstWhere(
-              (d) => d.id == value,
-            );
+            final district = _districts.firstWhere((d) => d.id == value);
             setState(() {
               _selectedDistrictId = value;
               _selectedDistrict = district.name;
@@ -832,7 +828,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     if (_ageRange.start != 18 || _ageRange.end != 35) count++;
     if (_priceRange.start != 100000 || _priceRange.end != 1000000) count++;
     if (_selectedServices.isNotEmpty) count++;
-    if (_selectedCityId != null || _selectedDistrictId != null) count++;
+    if (_selectedProvinceId != null || _selectedDistrictId != null) count++;
     if (_verifiedOnly) count++;
     if (_onlineOnly) count++;
     if (_sortBy != 'rating') count++;
@@ -922,7 +918,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           ? _selectedServices.first
           : null,
       gender: _selectedGender,
-      cityId: _selectedCityId,
+      provinceId: _selectedProvinceId,
       districtId: _selectedDistrictId,
       city: _selectedCity,
       district: _selectedDistrict,
