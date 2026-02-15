@@ -331,11 +331,12 @@ export class PartnersService {
     }
 
     // City filter (by province ID)
-    if (dto.provinceId) {
+    const filterProvinceId = dto.provinceId || dto.cityId;
+    if (filterProvinceId) {
       if (!where.user.is.profile) {
         where.user.is.profile = { is: {} };
       }
-      where.user.is.profile.is.provinceId = dto.provinceId;
+      where.user.is.profile.is.provinceId = filterProvinceId;
     }
 
     // District filter (by district ID)

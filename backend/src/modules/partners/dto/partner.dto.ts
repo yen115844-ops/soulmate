@@ -256,6 +256,11 @@ export class SearchPartnersDto {
   @IsString()
   provinceId?: string;
 
+  @ApiPropertyOptional({ description: 'Province/City ID from master data (alias for provinceId)' })
+  @IsOptional()
+  @IsString()
+  cityId?: string;
+
   @ApiPropertyOptional({ description: 'District ID from master data' })
   @IsOptional()
   @IsString()

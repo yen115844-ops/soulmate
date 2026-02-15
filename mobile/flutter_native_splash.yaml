@@ -4,8 +4,8 @@ flutter_native_splash:
   web: false
   color: "#e1a8f0"
   color_dark: "#000000"
-  image: "assets/icons/logo.png"
+  image: "assets/icons/splash.png"
   android_12:
     color: "#e1a8f0"
     color_dark: "#000000"
-    image: "assets/icons/logo.png"
+    image: "assets/icons/splash.png"
