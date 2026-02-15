@@ -189,6 +189,11 @@ export class SearchPartnersDto {
   @Max(50)
   limit?: number;
 
+  @ApiPropertyOptional({ example: 'Nguyen', description: 'Search keyword (name, introduction)' })
+  @IsOptional()
+  @IsString()
+  q?: string;
+
   @ApiPropertyOptional({ example: 'walking' })
   @IsOptional()
   @IsString()

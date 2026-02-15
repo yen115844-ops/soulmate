@@ -2,13 +2,13 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable,
 import { SlotStatus, UserRole, UserStatus } from '@prisma/client';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import {
-    AdminPartnerQueryDto,
-    CreateAvailabilitySlotDto,
-    CreatePartnerProfileDto,
-    SearchPartnersDto,
-    UpdateAvailabilitySlotDto,
-    UpdatePartnerProfileDto,
-    UpdatePartnerStatusDto,
+  AdminPartnerQueryDto,
+  CreateAvailabilitySlotDto,
+  CreatePartnerProfileDto,
+  SearchPartnersDto,
+  UpdateAvailabilitySlotDto,
+  UpdatePartnerProfileDto,
+  UpdatePartnerStatusDto,
 } from './dto';
 
 @Injectable()
@@ -370,6 +370,14 @@ export class PartnersService {
     if (dto.availableNow) {
       const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
       where.lastActiveAt = { gte: fifteenMinutesAgo };
+    }
+
+    // Text search filter (search by name or introduction)
+    if (dto.q) {
+      where.OR = [
+        { introduction: { contains: dto.q, mode: 'insensitive' } },
+        { user: { is: { profile: { is: { fullName: { contains: dto.q, mode: 'insensitive' } } } } } },
+      ];
     }
 
     // Build order by
