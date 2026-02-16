@@ -6,8 +6,8 @@ import '../../../../config/routes/route_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_exceptions.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
@@ -47,10 +47,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message),
-            backgroundColor: AppColors.error,
-          ),
+          SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
         );
       }
     } catch (e) {
@@ -70,15 +67,24 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   Widget build(BuildContext context) {
     if (_sent) {
       return Scaffold(
-        appBar: AppBar(leading: const AppBackButton(), title: const Text('Quên mật khẩu')),
+        appBar: AppBar(
+          leading: const AppBackButton(),
+          title: const Text('Quên mật khẩu'),
+        ),
         body: SafeArea(
+          bottom: false,
+
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Spacer(),
-                Icon(Ionicons.mail_open_outline, size: 80, color: AppColors.primary),
+                Icon(
+                  Ionicons.mail_open_outline,
+                  size: 80,
+                  color: AppColors.primary,
+                ),
                 const SizedBox(height: 24),
                 Text(
                   'Kiểm tra email của bạn',
@@ -88,7 +94,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 const SizedBox(height: 12),
                 Text(
                   'Chúng tôi đã gửi mã xác nhận đến ${_emailController.text.trim()}. Vui lòng kiểm tra hộp thư và nhập mã vào trang đặt lại mật khẩu.',
-                  style: AppTypography.bodyMedium.copyWith(color: context.appColors.textSecondary),
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: context.appColors.textSecondary,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const Spacer(),
@@ -102,7 +110,12 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 const SizedBox(height: 12),
                 TextButton(
                   onPressed: () => context.go(RouteNames.login),
-                  child: Text('Quay lại đăng nhập', style: AppTypography.labelLarge.copyWith(color: AppColors.primary)),
+                  child: Text(
+                    'Quay lại đăng nhập',
+                    style: AppTypography.labelLarge.copyWith(
+                      color: AppColors.primary,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -112,8 +125,12 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(leading: const AppBackButton(), title: const Text('Quên mật khẩu')),
+      appBar: AppBar(
+        leading: const AppBackButton(),
+        title: const Text('Quên mật khẩu'),
+      ),
       body: SafeArea(
+        bottom: false,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Form(
@@ -123,7 +140,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               children: [
                 Text(
                   'Nhập email đăng ký tài khoản, chúng tôi sẽ gửi mã xác nhận để đặt lại mật khẩu.',
-                  style: AppTypography.bodyMedium.copyWith(color: context.appColors.textSecondary),
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: context.appColors.textSecondary,
+                  ),
                 ),
                 const SizedBox(height: 32),
                 AppTextField(
@@ -135,7 +154,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   enabled: !_isLoading,
                   validator: (v) {
                     if (v == null || v.isEmpty) return 'Vui lòng nhập email';
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) return 'Email không hợp lệ';
+                    if (!RegExp(
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                    ).hasMatch(v))
+                      return 'Email không hợp lệ';
                     return null;
                   },
                 ),
@@ -148,8 +170,15 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 const SizedBox(height: 16),
                 Center(
                   child: TextButton(
-                    onPressed: _isLoading ? null : () => context.go(RouteNames.login),
-                    child: Text('Quay lại đăng nhập', style: AppTypography.labelLarge.copyWith(color: AppColors.primary)),
+                    onPressed: _isLoading
+                        ? null
+                        : () => context.go(RouteNames.login),
+                    child: Text(
+                      'Quay lại đăng nhập',
+                      style: AppTypography.labelLarge.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
                   ),
                 ),
               ],

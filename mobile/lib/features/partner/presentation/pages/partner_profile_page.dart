@@ -2,15 +2,15 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ionicons/ionicons.dart';
 import 'package:intl/intl.dart';
+import 'package:ionicons/ionicons.dart';
 
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/constants/service_type_emoji.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
@@ -262,6 +262,8 @@ class _PartnerProfileContent extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) => SafeArea(
+        bottom: false,
+
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -291,7 +293,10 @@ class _PartnerProfileContent extends StatelessWidget {
               },
             ),
             ListTile(
-              leading: Icon(Ionicons.close_circle_outline, color: AppColors.error),
+              leading: Icon(
+                Ionicons.close_circle_outline,
+                color: AppColors.error,
+              ),
               title: Text(
                 'Tạm ngừng hoạt động Partner',
                 style: TextStyle(color: AppColors.error),
@@ -568,7 +573,11 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Ionicons.alert_circle_outline, size: 64, color: context.appColors.textHint),
+            Icon(
+              Ionicons.alert_circle_outline,
+              size: 64,
+              color: context.appColors.textHint,
+            ),
             const SizedBox(height: 16),
             Text(
               message,
@@ -651,7 +660,10 @@ class _ProfileHeader extends StatelessWidget {
                         ? AppColors.success
                         : context.appColors.textHint,
                     shape: BoxShape.circle,
-                    border: Border.all(color: context.appColors.surface, width: 2),
+                    border: Border.all(
+                      color: context.appColors.surface,
+                      width: 2,
+                    ),
                   ),
                 ),
               ),
@@ -797,7 +809,9 @@ class _StatItem extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           label,
-          style: AppTypography.labelSmall.copyWith(color: context.appColors.textHint),
+          style: AppTypography.labelSmall.copyWith(
+            color: context.appColors.textHint,
+          ),
         ),
       ],
     );
@@ -825,7 +839,11 @@ class _PhotosGrid extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Ionicons.image_outline, color: context.appColors.textHint, size: 32),
+                Icon(
+                  Ionicons.image_outline,
+                  color: context.appColors.textHint,
+                  size: 32,
+                ),
                 const SizedBox(height: 8),
                 Text(
                   'Chưa có ảnh nào',
@@ -894,7 +912,9 @@ class _ServicesGrid extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Text(
           'Chưa chọn dịch vụ nào',
-          style: AppTypography.bodyMedium.copyWith(color: context.appColors.textHint),
+          style: AppTypography.bodyMedium.copyWith(
+            color: context.appColors.textHint,
+          ),
         ),
       );
     }

@@ -18,6 +18,8 @@ import '../../../../shared/widgets/auth_guard.dart';
 import '../../../favorites/data/favorites_repository.dart';
 import '../../../home/data/home_repository.dart';
 import '../../domain/entities/partner_entity.dart';
+import '../../../favorites/presentation/bloc/favorites_bloc.dart';
+import '../../../favorites/presentation/bloc/favorites_event.dart';
 
 /// Trang chi tiết Partner - Modern UI Design 2026
 /// Không dùng SliverAppBar, hiển thị gallery rõ ràng hơn
@@ -128,6 +130,12 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
           );
         }
       }
+
+      // Refresh global favorites list
+      if (getIt.isRegistered<FavoritesBloc>()) {
+        getIt<FavoritesBloc>().add(const FavoritesRefreshRequested());
+      }
+
       if (mounted) setState(() => _isFavorite = !_isFavorite);
     } catch (e) {
       if (mounted) {
@@ -154,7 +162,8 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
       if (mounted) {
         String errorMessage = 'Không thể tải thông tin';
         if (e is DioException && e.response?.statusCode == 403) {
-          errorMessage = e.response?.data?['message'] ??
+          errorMessage =
+              e.response?.data?['message'] ??
               'Không thể xem hồ sơ người dùng này';
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -165,9 +174,9 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
           context.pop();
           return;
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$errorMessage: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$errorMessage: $e')));
       }
     }
     if (mounted) setState(() => _isLoading = false);
@@ -180,30 +189,31 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
       body: _isLoading
           ? _buildLoading()
           : _partner == null
-              ? _buildErrorState()
-              : FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: RefreshIndicator(
-                    onRefresh: () async {
-                      await _loadPartner();
-                      await _checkFavoriteStatus();
-                    },
-                    color: AppColors.primary,
-                    child: SingleChildScrollView(
-                      controller: _scrollController,
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: Column(
-                        children: [
-                          _buildImageGalleryHeader(),
-                          _buildProfileCard(),
-                          _buildContent(),
-                        ],
-                      ),
-                    ),
+          ? _buildErrorState()
+          : FadeTransition(
+              opacity: _fadeAnimation,
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  await _loadPartner();
+                  await _checkFavoriteStatus();
+                },
+                color: AppColors.primary,
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    children: [
+                      _buildImageGalleryHeader(),
+                      _buildProfileCard(),
+                      _buildContent(),
+                    ],
                   ),
                 ),
-      bottomNavigationBar:
-          _partner != null && !_isLoading ? _buildModernBottomBar() : null,
+              ),
+            ),
+      bottomNavigationBar: _partner != null && !_isLoading
+          ? _buildModernBottomBar()
+          : null,
     );
   }
 
@@ -273,10 +283,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withOpacity(0.5),
-                  Colors.transparent,
-                ],
+                colors: [Colors.black.withOpacity(0.5), Colors.transparent],
               ),
             ),
           ),
@@ -361,8 +368,10 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
               children: [
                 // Photo counter
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: context.appColors.textPrimary.withOpacity(0.6),
                     borderRadius: BorderRadius.circular(20),
@@ -370,8 +379,11 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Ionicons.images_outline,
-                          size: 16, color: Colors.white),
+                      const Icon(
+                        Ionicons.images_outline,
+                        size: 16,
+                        color: Colors.white,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         '${_currentGalleryIndex + 1} / ${gallery.length}',
@@ -409,7 +421,9 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                           borderRadius: BorderRadius.circular(4),
                           boxShadow: [
                             BoxShadow(
-                              color: context.appColors.textPrimary.withOpacity(0.3),
+                              color: context.appColors.textPrimary.withOpacity(
+                                0.3,
+                              ),
                               blurRadius: 4,
                             ),
                           ],
@@ -434,15 +448,15 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.7),
-                  ],
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
                 ),
               ),
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 itemCount: gallery.length,
                 itemBuilder: (context, index) {
                   final isSelected = _currentGalleryIndex == index;
@@ -481,13 +495,15 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                         child: CachedNetworkImage(
                           imageUrl: ImageUtils.buildImageUrl(gallery[index]),
                           fit: BoxFit.cover,
-                          placeholder: (_, __) => Container(
-                            color: context.appColors.textPrimary,
-                          ),
+                          placeholder: (_, __) =>
+                              Container(color: context.appColors.textPrimary),
                           errorWidget: (_, __, ___) => Container(
                             color: context.appColors.textPrimary,
-                            child: const Icon(Icons.error,
-                                size: 16, color: Colors.white54),
+                            child: const Icon(
+                              Icons.error,
+                              size: 16,
+                              color: Colors.white54,
+                            ),
                           ),
                         ),
                       ),
@@ -537,11 +553,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                       ),
                     ),
                   )
-                : Icon(
-                    icon,
-                    size: 20,
-                    color: Colors.white,
-                  ),
+                : Icon(icon, size: 20, color: Colors.white),
           ),
         ),
       ),
@@ -608,10 +620,14 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                         width: 18,
                         height: 18,
                         decoration: BoxDecoration(
-                          color:
-                              _partner!.isOnline ? AppColors.success : context.appColors.textHint,
+                          color: _partner!.isOnline
+                              ? AppColors.success
+                              : context.appColors.textHint,
                           shape: BoxShape.circle,
-                          border: Border.all(color: context.appColors.surface, width: 3),
+                          border: Border.all(
+                            color: context.appColors.surface,
+                            width: 3,
+                          ),
                           boxShadow: _partner!.isOnline
                               ? [
                                   BoxShadow(
@@ -695,8 +711,11 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                         const SizedBox(height: 6),
                         Row(
                           children: [
-                            Icon(Ionicons.location_outline,
-                                size: 14, color: context.appColors.textHint),
+                            Icon(
+                              Ionicons.location_outline,
+                              size: 14,
+                              color: context.appColors.textHint,
+                            ),
                             const SizedBox(width: 4),
                             Flexible(
                               child: Text(
@@ -711,7 +730,9 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                               const SizedBox(width: 8),
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 2),
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: AppColors.primary.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(10),
@@ -891,10 +912,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              AppColors.primary,
-              AppColors.primary.withOpacity(0.8),
-            ],
+            colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
           ),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
@@ -945,8 +963,10 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                 ),
                 if (_partner!.workingHours != null)
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: context.appColors.surface.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(14),
@@ -1088,7 +1108,8 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                 return Container(
                   width: 110,
                   margin: EdgeInsets.only(
-                      right: index < serviceList.length - 1 ? 12 : 0),
+                    right: index < serviceList.length - 1 ? 12 : 0,
+                  ),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
@@ -1201,13 +1222,15 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                             duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             decoration: BoxDecoration(
-                              color:
-                                  isSelected ? Colors.white : Colors.transparent,
+                              color: isSelected
+                                  ? Colors.white
+                                  : Colors.transparent,
                               borderRadius: BorderRadius.circular(10),
                               boxShadow: isSelected
                                   ? [
                                       BoxShadow(
-                                        color: context.appColors.textPrimary.withOpacity(0.05),
+                                        color: context.appColors.textPrimary
+                                            .withOpacity(0.05),
                                         blurRadius: 8,
                                         offset: const Offset(0, 2),
                                       ),
@@ -1294,15 +1317,22 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: (_partner!.talentsDetail ??
-                    _partner!.talents
-                        .map((e) => <String, dynamic>{'nameVi': e, 'icon': null})
-                        .toList())
-                .map<Widget>((e) {
-              final label = (e['nameVi'] ?? e['name'] ?? '').toString();
-              final icon = e['icon'] as String?;
-              return _buildTag(label, icon, const Color(0xFF8B5CF6));
-            }).toList(),
+            children:
+                (_partner!.talentsDetail ??
+                        _partner!.talents
+                            .map(
+                              (e) => <String, dynamic>{
+                                'nameVi': e,
+                                'icon': null,
+                              },
+                            )
+                            .toList())
+                    .map<Widget>((e) {
+                      final label = (e['nameVi'] ?? e['name'] ?? '').toString();
+                      final icon = e['icon'] as String?;
+                      return _buildTag(label, icon, const Color(0xFF8B5CF6));
+                    })
+                    .toList(),
           ),
         ],
       ],
@@ -1319,15 +1349,17 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: (_partner!.interestsDetail ??
-              _partner!.interests
-                  .map((e) => <String, dynamic>{'nameVi': e, 'icon': null})
-                  .toList())
-          .map<Widget>((e) {
-        final label = (e['nameVi'] ?? e['name'] ?? '').toString();
-        final icon = e['icon'] as String?;
-        return _buildTag(label, icon, AppColors.primary);
-      }).toList(),
+      children:
+          (_partner!.interestsDetail ??
+                  _partner!.interests
+                      .map((e) => <String, dynamic>{'nameVi': e, 'icon': null})
+                      .toList())
+              .map<Widget>((e) {
+                final label = (e['nameVi'] ?? e['name'] ?? '').toString();
+                final icon = e['icon'] as String?;
+                return _buildTag(label, icon, AppColors.primary);
+              })
+              .toList(),
     );
   }
 
@@ -1447,8 +1479,9 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                       },
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        side:
-                            BorderSide(color: AppColors.primary.withOpacity(0.3)),
+                        side: BorderSide(
+                          color: AppColors.primary.withOpacity(0.3),
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
@@ -1514,12 +1547,12 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
               final percent = star == 5
                   ? 0.7
                   : star == 4
-                      ? 0.2
-                      : star == 3
-                          ? 0.07
-                          : star == 2
-                              ? 0.02
-                              : 0.01;
+                  ? 0.2
+                  : star == 3
+                  ? 0.07
+                  : star == 2
+                  ? 0.02
+                  : 0.01;
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 2),
                 child: Row(
@@ -1532,8 +1565,11 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                       ),
                     ),
                     const SizedBox(width: 4),
-                    const Icon(Icons.star_rounded,
-                        size: 12, color: Color(0xFFF59E0B)),
+                    const Icon(
+                      Icons.star_rounded,
+                      size: 12,
+                      color: Color(0xFFF59E0B),
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Container(
@@ -1593,8 +1629,11 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                         )
                       : null,
                   child: review.userAvatar == null
-                      ? Icon(Ionicons.person_outline,
-                          size: 18, color: AppColors.primary)
+                      ? Icon(
+                          Ionicons.person_outline,
+                          size: 18,
+                          color: AppColors.primary,
+                        )
                       : null,
                 ),
               ),
@@ -1621,7 +1660,10 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [Color(0xFFF59E0B), Color(0xFFF97316)],
@@ -1631,7 +1673,11 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.star_rounded, size: 14, color: Colors.white),
+                    const Icon(
+                      Icons.star_rounded,
+                      size: 14,
+                      color: Colors.white,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       review.rating.toStringAsFixed(1),
@@ -1662,8 +1708,12 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
     );
   }
 
-  Widget _buildSectionHeader(String title, IconData icon,
-      {String? trailing, VoidCallback? onTap}) {
+  Widget _buildSectionHeader(
+    String title,
+    IconData icon, {
+    String? trailing,
+    VoidCallback? onTap,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
@@ -1748,8 +1798,9 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                 onPressed: () {
                   AuthGuard.requireAuth(
                     context,
-                    onAuthenticated: () => context
-                        .push('/chat/user/${_partner!.userId ?? _partner!.id}'),
+                    onAuthenticated: () => context.push(
+                      '/chat/user/${_partner!.userId ?? _partner!.id}',
+                    ),
                     message: 'Đăng nhập để nhắn tin với người này.',
                   );
                 },
@@ -1810,8 +1861,9 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                           HapticFeedback.mediumImpact();
                           AuthGuard.requireAuth(
                             context,
-                            onAuthenticated: () => context
-                                .push('/booking/create?partnerId=${_partner!.id}'),
+                            onAuthenticated: () => context.push(
+                              '/booking/create?partnerId=${_partner!.id}',
+                            ),
                             message: 'Đăng nhập để đặt lịch hẹn.',
                           );
                         },
@@ -1873,6 +1925,8 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
 
   Widget _buildErrorState() {
     return SafeArea(
+      bottom: false,
+
       child: Column(
         children: [
           Align(
@@ -1928,7 +1982,9 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                       onPressed: () => context.pop(),
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 14),
+                          horizontal: 24,
+                          vertical: 14,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
@@ -1953,7 +2009,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         padding: const EdgeInsets.all(24),
-        decoration:   BoxDecoration(
+        decoration: BoxDecoration(
           color: context.appColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
@@ -1980,10 +2036,20 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _shareOption(
-                    Ionicons.copy_outline, 'Sao chép', const Color(0xFF6366F1)),
-                _shareOption(Ionicons.chatbubble_outline, 'Tin nhắn',
-                    const Color(0xFF10B981)),
-                _shareOption(Icons.facebook, 'Facebook', const Color(0xFF1877F2)),
+                  Ionicons.copy_outline,
+                  'Sao chép',
+                  const Color(0xFF6366F1),
+                ),
+                _shareOption(
+                  Ionicons.chatbubble_outline,
+                  'Tin nhắn',
+                  const Color(0xFF10B981),
+                ),
+                _shareOption(
+                  Icons.facebook,
+                  'Facebook',
+                  const Color(0xFF1877F2),
+                ),
                 _shareOption(Icons.share, 'Khác', const Color(0xFF64748B)),
               ],
             ),
@@ -2137,7 +2203,11 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
       bottomNavigationBar: widget.images.length > 1
           ? Container(
               padding: EdgeInsets.fromLTRB(
-                  16, 16, 16, MediaQuery.of(context).padding.bottom + 16),
+                16,
+                16,
+                16,
+                MediaQuery.of(context).padding.bottom + 16,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// API Configuration for the Mate Social backend
 ///
 /// Use `--dart-define=API_BASE_URL=...` to override the base URL:
@@ -10,19 +12,18 @@ class ApiConfig {
   /// In debug mode, falls back to localhost; in release mode, uses production URL.
   static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL');
   static const String _defaultDebugUrl =
-      'https://gomate-backend.trancongtien.io.vn/api'; // For development, use localhost or
+      'http://localhost:3222/api'; // For development, use localhost or
   static const String _defaultReleaseUrl =
       'https://gomate-backend.trancongtien.io.vn/api'; // TODO: Replace with real production URL
 
   static String get baseUrl {
     if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
-    // Use assert to catch missing base URL in release builds during development
-    assert(() {
-      return true; // In debug mode, use localhost fallback
-    }());
-    return const bool.fromEnvironment('dart.vm.product')
-        ? _defaultReleaseUrl
-        : _defaultDebugUrl;
+
+    if (kDebugMode) {
+      return _defaultDebugUrl;
+    }
+
+    return _defaultReleaseUrl;
   }
 
   // Timeouts
@@ -44,6 +45,7 @@ class ApiConfig {
   static const String wallet = '/wallet';
   static const String notifications = '/notifications';
   static const String safety = '/safety';
+  static const String publicTerms = '/public/terms';
 }
 
 /// Auth Endpoints
@@ -113,4 +115,14 @@ class BookingEndpoints {
   static String start(String id) => '${ApiConfig.bookings}/$id/start';
   static String complete(String id) => '${ApiConfig.bookings}/$id/complete';
   static String cancel(String id) => '${ApiConfig.bookings}/$id/cancel';
+}
+
+/// Terms Endpoints (Public - no auth required)
+class TermsEndpoints {
+  TermsEndpoints._();
+
+  static String termsOfService =
+      '${ApiConfig.publicTerms}/terms-of-service';
+  static String termsAndConditions =
+      '${ApiConfig.publicTerms}/terms-and-conditions';
 }

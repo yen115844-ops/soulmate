@@ -6,8 +6,8 @@ import '../../../../config/routes/route_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_exceptions.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
@@ -81,13 +81,23 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Ionicons.checkmark_circle_outline, size: 64, color: AppColors.success),
+            Icon(
+              Ionicons.checkmark_circle_outline,
+              size: 64,
+              color: AppColors.success,
+            ),
             const SizedBox(height: 16),
-            Text('Đặt lại mật khẩu thành công!', style: AppTypography.titleMedium, textAlign: TextAlign.center),
+            Text(
+              'Đặt lại mật khẩu thành công!',
+              style: AppTypography.titleMedium,
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 8),
             Text(
               'Bạn có thể đăng nhập bằng mật khẩu mới.',
-              style: AppTypography.bodySmall.copyWith(color: context.appColors.textSecondary),
+              style: AppTypography.bodySmall.copyWith(
+                color: context.appColors.textSecondary,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -111,8 +121,13 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(leading: const AppBackButton(), title: const Text('Đặt lại mật khẩu')),
+      appBar: AppBar(
+        leading: const AppBackButton(),
+        title: const Text('Đặt lại mật khẩu'),
+      ),
       body: SafeArea(
+        bottom: false,
+
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Form(
@@ -122,7 +137,9 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               children: [
                 Text(
                   'Nhập mã xác nhận đã gửi đến ${widget.email} và mật khẩu mới.',
-                  style: AppTypography.bodyMedium.copyWith(color: context.appColors.textSecondary),
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: context.appColors.textSecondary,
+                  ),
                 ),
                 const SizedBox(height: 24),
                 AppTextField(
@@ -134,7 +151,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                   maxLength: 6,
                   enabled: !_isLoading,
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Vui lòng nhập mã xác nhận';
+                    if (v == null || v.isEmpty)
+                      return 'Vui lòng nhập mã xác nhận';
                     if (v.length < 4) return 'Mã xác nhận không hợp lệ';
                     return null;
                   },
@@ -148,15 +166,24 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                   prefixIcon: Ionicons.lock_closed_outline,
                   suffix: IconButton(
                     onPressed: () => setState(() => _obscureNew = !_obscureNew),
-                    icon: Icon(_obscureNew ? Ionicons.eye_off_outline : Ionicons.eye_outline, color: context.appColors.textHint),
+                    icon: Icon(
+                      _obscureNew
+                          ? Ionicons.eye_off_outline
+                          : Ionicons.eye_outline,
+                      color: context.appColors.textHint,
+                    ),
                   ),
                   enabled: !_isLoading,
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Vui lòng nhập mật khẩu mới';
+                    if (v == null || v.isEmpty)
+                      return 'Vui lòng nhập mật khẩu mới';
                     if (v.length < 8) return 'Mật khẩu phải có ít nhất 8 ký tự';
-                    if (!v.contains(RegExp(r'[A-Z]'))) return 'Cần ít nhất 1 chữ hoa';
-                    if (!v.contains(RegExp(r'[a-z]'))) return 'Cần ít nhất 1 chữ thường';
-                    if (!v.contains(RegExp(r'[0-9]'))) return 'Cần ít nhất 1 số';
+                    if (!v.contains(RegExp(r'[A-Z]')))
+                      return 'Cần ít nhất 1 chữ hoa';
+                    if (!v.contains(RegExp(r'[a-z]')))
+                      return 'Cần ít nhất 1 chữ thường';
+                    if (!v.contains(RegExp(r'[0-9]')))
+                      return 'Cần ít nhất 1 số';
                     return null;
                   },
                 ),
@@ -168,13 +195,21 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                   obscureText: _obscureConfirm,
                   prefixIcon: Ionicons.lock_closed_outline,
                   suffix: IconButton(
-                    onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
-                    icon: Icon(_obscureConfirm ? Ionicons.eye_off_outline : Ionicons.eye_outline, color: context.appColors.textHint),
+                    onPressed: () =>
+                        setState(() => _obscureConfirm = !_obscureConfirm),
+                    icon: Icon(
+                      _obscureConfirm
+                          ? Ionicons.eye_off_outline
+                          : Ionicons.eye_outline,
+                      color: context.appColors.textHint,
+                    ),
                   ),
                   enabled: !_isLoading,
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Vui lòng xác nhận mật khẩu';
-                    if (v != _newPasswordController.text) return 'Mật khẩu không khớp';
+                    if (v == null || v.isEmpty)
+                      return 'Vui lòng xác nhận mật khẩu';
+                    if (v != _newPasswordController.text)
+                      return 'Mật khẩu không khớp';
                     return null;
                   },
                 ),

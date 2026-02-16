@@ -95,6 +95,8 @@ class _SplashPageState extends State<SplashPage> {
       body: Container(
         decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
         child: SafeArea(
+          bottom: false,
+
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

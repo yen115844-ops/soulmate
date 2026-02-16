@@ -30,7 +30,7 @@ class PartnerDashboardPage extends StatelessWidget {
     if (profileBloc.state is ProfileInitial) {
       profileBloc.add(const ProfileLoadRequested());
     }
-    
+
     return MultiBlocProvider(
       providers: [
         BlocProvider(
@@ -203,7 +203,7 @@ class _PartnerDashboardContent extends StatelessWidget {
                       title: 'Lịch hẹn sắp tới',
                       action: 'Xem tất cả',
                       onActionTap: () async {
-                        await context.push(RouteNames.partnerBookings);
+                        context.go(RouteNames.partnerBookings);
                         // Refresh after returning from bookings page
                         if (context.mounted) {
                           context.read<PartnerDashboardBloc>().add(
@@ -254,7 +254,11 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-              Icon(Ionicons.alert_circle_outline, size: 64, color: context.appColors.textHint),
+            Icon(
+              Ionicons.alert_circle_outline,
+              size: 64,
+              color: context.appColors.textHint,
+            ),
             const SizedBox(height: 16),
             Text(
               message,
@@ -293,7 +297,11 @@ class _VerificationBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Ionicons.shield_checkmark_outline, color: AppColors.warning, size: 24),
+          const Icon(
+            Ionicons.shield_checkmark_outline,
+            color: AppColors.warning,
+            size: 24,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -318,7 +326,10 @@ class _VerificationBanner extends StatelessWidget {
           ),
           IconButton(
             onPressed: () => context.push(RouteNames.kyc),
-            icon: const Icon(Ionicons.chevron_forward_outline, color: AppColors.warning),
+            icon: const Icon(
+              Ionicons.chevron_forward_outline,
+              color: AppColors.warning,
+            ),
             iconSize: 20,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
@@ -359,10 +370,15 @@ class _WelcomeHeader extends StatelessWidget {
               radius: 28,
               backgroundColor: context.appColors.shimmerBase,
               backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
-                  ? CachedNetworkImageProvider(ImageUtils.buildImageUrl(avatarUrl))
+                  ? CachedNetworkImageProvider(
+                      ImageUtils.buildImageUrl(avatarUrl),
+                    )
                   : null,
               child: avatarUrl == null || avatarUrl.isEmpty
-                  ?   Icon(Ionicons.person_outline, color: context.appColors.textHint)
+                  ? Icon(
+                      Ionicons.person_outline,
+                      color: context.appColors.textHint,
+                    )
                   : null,
             ),
             const SizedBox(width: 16),
@@ -372,7 +388,11 @@ class _WelcomeHeader extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.waving_hand, size: 22, color: AppColors.primary),
+                      Icon(
+                        Icons.waving_hand,
+                        size: 22,
+                        color: AppColors.primary,
+                      ),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
@@ -408,7 +428,11 @@ class _WelcomeHeader extends StatelessWidget {
                       ),
                       if (profile.isVerified) ...[
                         const SizedBox(width: 8),
-                        Icon(Ionicons.checkmark_done_outline, size: 16, color: AppColors.primary),
+                        Icon(
+                          Ionicons.checkmark_done_outline,
+                          size: 16,
+                          color: AppColors.primary,
+                        ),
                       ],
                     ],
                   ),
@@ -597,7 +621,11 @@ class _EmptyBookings extends StatelessWidget {
       ),
       child: Column(
         children: [
-            Icon(Ionicons.calendar_outline, size: 48, color: context.appColors.textHint),
+          Icon(
+            Ionicons.calendar_outline,
+            size: 48,
+            color: context.appColors.textHint,
+          ),
           const SizedBox(height: 12),
           Text(
             'Không có lịch hẹn sắp tới',
@@ -646,7 +674,10 @@ class _BookingCard extends StatelessWidget {
                 ? CachedNetworkImageProvider(user!.avatarUrl!)
                 : null,
             child: user?.avatarUrl == null
-                ?   Icon(Ionicons.person_outline, color: context.appColors.textHint)
+                ? Icon(
+                    Ionicons.person_outline,
+                    color: context.appColors.textHint,
+                  )
                 : null,
           ),
           const SizedBox(width: 12),
@@ -661,7 +692,7 @@ class _BookingCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                      Icon(
+                    Icon(
                       Ionicons.time_outline,
                       size: 14,
                       color: context.appColors.textHint,
@@ -709,7 +740,7 @@ class _BookingCard extends StatelessWidget {
                     ),
                     if (booking.meetingLocation != null) ...[
                       const SizedBox(width: 8),
-                        Icon(
+                      Icon(
                         Ionicons.location_outline,
                         size: 14,
                         color: context.appColors.textHint,
@@ -798,7 +829,7 @@ class _QuickActions extends StatelessWidget {
                 icon: Ionicons.create_outline,
                 label: 'Hồ sơ',
                 color: AppColors.accent,
-                onTap: () => context.push(RouteNames.partnerProfile),
+                onTap: () => context.go(RouteNames.partnerProfile),
               ),
             ),
           ],

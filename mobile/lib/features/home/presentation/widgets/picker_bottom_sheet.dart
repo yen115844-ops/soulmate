@@ -49,8 +49,7 @@ class _PickerBottomSheetState extends State<PickerBottomSheet> {
         _filtered = widget.items;
       } else {
         _filtered = widget.items
-            .where(
-                (i) => i.label.toLowerCase().contains(query.toLowerCase()))
+            .where((i) => i.label.toLowerCase().contains(query.toLowerCase()))
             .toList();
       }
     });
@@ -101,8 +100,11 @@ class _PickerBottomSheetState extends State<PickerBottomSheet> {
                 hintStyle: AppTypography.bodyMedium.copyWith(
                   color: context.appColors.textHint,
                 ),
-                prefixIcon: Icon(Ionicons.search_outline,
-                    size: 20, color: context.appColors.textHint),
+                prefixIcon: Icon(
+                  Ionicons.search_outline,
+                  size: 20,
+                  color: context.appColors.textHint,
+                ),
                 filled: true,
                 fillColor: context.appColors.background,
                 border: OutlineInputBorder(
@@ -141,12 +143,17 @@ class _PickerBottomSheetState extends State<PickerBottomSheet> {
                             fontWeight: isSelected
                                 ? FontWeight.w700
                                 : FontWeight.w500,
-                            color: isSelected ? AppColors.primary : null,
+                            color: isSelected
+                                ? AppColors.primary
+                                : context.textTheme.displayMedium!.color,
                           ),
                         ),
                         trailing: isSelected
-                            ? Icon(Ionicons.checkmark_circle,
-                                color: AppColors.primary, size: 22)
+                            ? Icon(
+                                Ionicons.checkmark_circle,
+                                color: AppColors.primary,
+                                size: 22,
+                              )
                             : null,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 24,

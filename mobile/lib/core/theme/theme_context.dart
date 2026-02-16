@@ -35,8 +35,9 @@ class AppThemeColors {
   Color get surface => isDark ? AppColors.surfaceDark : AppColors.surface;
   Color get card => isDark ? AppColors.cardDark : AppColors.card;
 
-  Color get textPrimary =>
-      isDark ? AppColors.textPrimaryDark : AppColors.textPrimary;
+  Color get textPrimary => isDark
+      ? const Color.from(alpha: 1, red: 0.953, green: 0.957, blue: 0.965)
+      : AppColors.textPrimary;
   Color get textSecondary =>
       isDark ? AppColors.textSecondaryDark : AppColors.textSecondary;
   Color get textHint =>
@@ -89,8 +90,7 @@ class AppThemeColors {
   Color get busy => AppColors.busy;
 
   Color get starFilled => AppColors.starFilled;
-  Color get starEmpty =>
-      isDark ? AppColors.borderDark : AppColors.starEmpty;
+  Color get starEmpty => isDark ? AppColors.borderDark : AppColors.starEmpty;
 
   Color get facebook => AppColors.facebook;
   Color get google => AppColors.google;

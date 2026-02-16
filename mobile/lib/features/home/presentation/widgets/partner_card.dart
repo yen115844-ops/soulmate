@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:ionicons/ionicons.dart';
 
@@ -7,6 +8,10 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
+import '../../../../features/favorites/presentation/bloc/favorites_bloc.dart';
+import '../../../../features/favorites/presentation/bloc/favorites_event.dart';
+import '../../../../features/favorites/presentation/bloc/favorites_state.dart';
+import '../../../../shared/widgets/auth_guard.dart';
 import '../../../partner/domain/entities/partner_entity.dart';
 
 /// Modern Partner Card — Mioto-style listing
@@ -108,25 +113,56 @@ class PartnerCard extends StatelessWidget {
                 ],
                 const Spacer(),
                 // Favorite button
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: context.appColors.surface.withOpacity(0.9),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color:
-                            context.appColors.textPrimary.withOpacity(0.08),
-                        blurRadius: 8,
+                BlocBuilder<FavoritesBloc, FavoritesState>(
+                  builder: (context, state) {
+                    final isFavorite = state.favorites.any(
+                      (f) => f.partnerId == partner.id,
+                    );
+                    return GestureDetector(
+                      onTap: () {
+                        if (!AuthGuard.isAuthenticated) {
+                          AuthGuard.requireAuth(
+                            context,
+                            message:
+                                'Đăng nhập để thêm vào danh sách yêu thích.',
+                            onAuthenticated: () {},
+                          );
+                          return;
+                        }
+
+                        if (isFavorite) {
+                          context.read<FavoritesBloc>().add(
+                            FavoriteRemoveRequested(partner.id),
+                          );
+                        } else {
+                          context.read<FavoritesBloc>().add(
+                            FavoriteAddRequested(partner.id),
+                          );
+                        }
+                      },
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: context.appColors.surface.withOpacity(0.9),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: context.appColors.textPrimary.withOpacity(
+                                0.08,
+                              ),
+                              blurRadius: 8,
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          isFavorite ? Ionicons.heart : Ionicons.heart_outline,
+                          color: AppColors.error,
+                          size: 18,
+                        ),
                       ),
-                    ],
-                  ),
-                  child: Icon(
-                    Ionicons.heart_outline,
-                    color: AppColors.error,
-                    size: 18,
-                  ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -137,10 +173,7 @@ class PartnerCard extends StatelessWidget {
               bottom: 12,
               left: 12,
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: context.appColors.surface.withOpacity(0.95),
                   borderRadius: BorderRadius.circular(8),
@@ -193,10 +226,7 @@ class PartnerCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFF8E1),
                   borderRadius: BorderRadius.circular(8),

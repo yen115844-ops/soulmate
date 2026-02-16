@@ -5,8 +5,8 @@ import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../chat/data/chat_repository.dart';
 
@@ -20,7 +20,7 @@ class BlockedUsersPage extends StatefulWidget {
 
 class _BlockedUsersPageState extends State<BlockedUsersPage> {
   final ChatRepository _chatRepository = getIt<ChatRepository>();
-  
+
   List<BlockedUserEntity> _blockedUsers = [];
   bool _isLoading = true;
   String? _error;
@@ -81,14 +81,14 @@ class _BlockedUsersPageState extends State<BlockedUsersPage> {
 
     try {
       await _chatRepository.unblockUser(user.id);
-      
+
       HapticFeedback.mediumImpact();
-      
+
       if (mounted) {
         setState(() {
           _blockedUsers.removeWhere((u) => u.id == user.id);
         });
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Đã bỏ chặn ${user.name}'),
@@ -115,17 +115,13 @@ class _BlockedUsersPageState extends State<BlockedUsersPage> {
         title: const Text('Người dùng đã chặn'),
         centerTitle: true,
       ),
-      body: SafeArea(
-        child: _buildBody(),
-      ),
+      body: SafeArea(bottom: false, child: _buildBody()),
     );
   }
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (_error != null) {
@@ -227,7 +223,9 @@ class _BlockedUsersPageState extends State<BlockedUsersPage> {
               radius: 24,
               backgroundColor: AppColors.primaryLight,
               backgroundImage: user.avatarUrl != null
-                  ? CachedNetworkImageProvider(ImageUtils.buildImageUrl(user.avatarUrl!))
+                  ? CachedNetworkImageProvider(
+                      ImageUtils.buildImageUrl(user.avatarUrl!),
+                    )
                   : null,
               child: user.avatarUrl == null
                   ? Text(

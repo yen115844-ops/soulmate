@@ -15,20 +15,16 @@ class SortBottomSheet extends StatelessWidget {
   const SortBottomSheet({super.key, required this.currentSort});
 
   static const _options = [
-    (
-      code: 'rating',
-      label: 'Đánh giá cao nhất',
-      icon: Ionicons.star_outline
-    ),
+    (code: 'rating', label: 'Đánh giá cao nhất', icon: Ionicons.star_outline),
     (
       code: 'price_low',
       label: 'Giá thấp đến cao',
-      icon: Ionicons.trending_up_outline
+      icon: Ionicons.trending_up_outline,
     ),
     (
       code: 'price_high',
       label: 'Giá cao đến thấp',
-      icon: Ionicons.trending_down_outline
+      icon: Ionicons.trending_down_outline,
     ),
     (code: 'newest', label: 'Mới nhất', icon: Ionicons.time_outline),
   ];
@@ -58,8 +54,11 @@ class SortBottomSheet extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
               child: Row(
                 children: [
-                  Icon(Ionicons.swap_vertical_outline,
-                      size: 22, color: AppColors.primary),
+                  Icon(
+                    Ionicons.swap_vertical_outline,
+                    size: 22,
+                    color: AppColors.primary,
+                  ),
                   const SizedBox(width: 10),
                   Text(
                     'Sắp xếp theo',
@@ -76,26 +75,34 @@ class SortBottomSheet extends StatelessWidget {
               return ListTile(
                 onTap: () {
                   final bloc = context.read<HomeBloc>();
-                  bloc.add(HomeApplyFilter(
-                    bloc.state.filter.copyWith(sortBy: opt.code),
-                  ));
+                  bloc.add(
+                    HomeApplyFilter(
+                      bloc.state.filter.copyWith(sortBy: opt.code),
+                    ),
+                  );
                   Navigator.pop(context);
                 },
-                leading: Icon(opt.icon,
-                    color: isSelected
-                        ? AppColors.primary
-                        : context.appColors.textSecondary),
+                leading: Icon(
+                  opt.icon,
+                  color: isSelected
+                      ? AppColors.primary
+                      : context.theme.colorScheme.onSurface,
+                ),
                 title: Text(
                   opt.label,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight:
-                        isSelected ? FontWeight.w700 : FontWeight.w500,
-                    color: isSelected ? AppColors.primary : null,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: isSelected
+                        ? AppColors.primary
+                        : context.theme.colorScheme.onSurface,
                   ),
                 ),
                 trailing: isSelected
-                    ? Icon(Ionicons.checkmark_circle,
-                        color: AppColors.primary, size: 22)
+                    ? Icon(
+                        Ionicons.checkmark_circle,
+                        color: AppColors.primary,
+                        size: 22,
+                      )
                     : null,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 24),
               );

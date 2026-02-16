@@ -3,10 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ionicons/ionicons.dart';
 
-import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../shared/widgets/cards/partner_card.dart';
 import '../bloc/favorites_bloc.dart';
 import '../bloc/favorites_event.dart';
@@ -17,11 +16,7 @@ class FavoritesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) =>
-          getIt<FavoritesBloc>()..add(const FavoritesLoadRequested()),
-      child: const _FavoritesView(),
-    );
+    return const _FavoritesView();
   }
 }
 
@@ -164,7 +159,11 @@ class _ErrorState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Ionicons.alert_circle_outline, size: 64, color: AppColors.error),
+          const Icon(
+            Ionicons.alert_circle_outline,
+            size: 64,
+            color: AppColors.error,
+          ),
           const SizedBox(height: 16),
           Text(
             message,

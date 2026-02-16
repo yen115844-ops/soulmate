@@ -152,7 +152,9 @@ class _SosPageState extends State<SosPage> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _isEmergencyMode ? AppColors.error : context.appColors.background,
+      backgroundColor: _isEmergencyMode
+          ? AppColors.error
+          : context.appColors.background,
       appBar: AppBar(
         leading: const AppBackButton(),
         title: const Text('SOS Khẩn cấp'),
@@ -160,6 +162,8 @@ class _SosPageState extends State<SosPage> with SingleTickerProviderStateMixin {
         foregroundColor: _isEmergencyMode ? AppColors.textWhite : null,
       ),
       body: SafeArea(
+        bottom: false,
+
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -197,7 +201,9 @@ class _SosPageState extends State<SosPage> with SingleTickerProviderStateMixin {
               // SOS Button
               GestureDetector(
                 onLongPress: _isEmergencyMode ? null : _startEmergency,
-                onLongPressEnd: _isEmergencyMode ? null : (_) => _cancelEmergency(),
+                onLongPressEnd: _isEmergencyMode
+                    ? null
+                    : (_) => _cancelEmergency(),
                 child: AnimatedBuilder(
                   animation: _pulseAnimation,
                   builder: (context, child) {
@@ -339,7 +345,7 @@ class _SosPageState extends State<SosPage> with SingleTickerProviderStateMixin {
                                   color: context.appColors.background,
                                   shape: BoxShape.circle,
                                 ),
-                                child:   Icon(
+                                child: Icon(
                                   Ionicons.person_outline,
                                   color: context.appColors.textSecondary,
                                   size: 20,
@@ -364,7 +370,8 @@ class _SosPageState extends State<SosPage> with SingleTickerProviderStateMixin {
                                 ),
                               ),
                               IconButton(
-                                onPressed: () => _callEmergency(contact['phone']!),
+                                onPressed: () =>
+                                    _callEmergency(contact['phone']!),
                                 icon: const Icon(
                                   Ionicons.call_outline,
                                   color: AppColors.primary,

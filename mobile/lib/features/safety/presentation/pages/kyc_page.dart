@@ -53,7 +53,10 @@ class _KycPageContent extends StatelessWidget {
         // Check existing KYC status
         if (state.status == KycPageStatus.loading) {
           return Scaffold(
-            appBar: AppBar(leading: const AppBackButton(), title: const Text('Xác minh danh tính')),
+            appBar: AppBar(
+              leading: const AppBackButton(),
+              title: const Text('Xác minh danh tính'),
+            ),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
@@ -132,7 +135,10 @@ class _ExistingKycStatusPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(leading: const AppBackButton(), title: const Text('Xác minh danh tính')),
+      appBar: AppBar(
+        leading: const AppBackButton(),
+        title: const Text('Xác minh danh tính'),
+      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -177,7 +183,10 @@ class _ExistingKycStatusPage extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Ionicons.information_circle_outline, color: AppColors.error),
+                      const Icon(
+                        Ionicons.information_circle_outline,
+                        color: AppColors.error,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -284,7 +293,10 @@ class _KycWizard extends StatelessWidget {
         final currentStep = state.currentStep;
 
         return Scaffold(
-          appBar: AppBar(leading: const AppBackButton(), title: const Text('Xác minh danh tính')),
+          appBar: AppBar(
+            leading: const AppBackButton(),
+            title: const Text('Xác minh danh tính'),
+          ),
           body: Column(
             children: [
               // Progress Indicator
@@ -416,7 +428,7 @@ class _KycWizard extends StatelessWidget {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (bottomContext) => Container(
-        decoration:   BoxDecoration(
+        decoration: BoxDecoration(
           color: context.appColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
@@ -490,9 +502,9 @@ class _KycWizard extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              source == ImageSource.camera 
-                ? 'Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập.'
-                : 'Không thể truy cập thư viện ảnh. Vui lòng kiểm tra quyền truy cập.',
+              source == ImageSource.camera
+                  ? 'Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập.'
+                  : 'Không thể truy cập thư viện ảnh. Vui lòng kiểm tra quyền truy cập.',
             ),
           ),
         );
@@ -532,6 +544,8 @@ class _KycWizard extends StatelessWidget {
         ],
       ),
       child: SafeArea(
+        bottom: false,
+
         child: Row(
           children: [
             if (state.currentStep > 0)
@@ -604,7 +618,9 @@ class _KycProgressIndicator extends StatelessWidget {
               child: Container(
                 height: 3,
                 decoration: BoxDecoration(
-                  color: isCompleted ? AppColors.primary : context.appColors.border,
+                  color: isCompleted
+                      ? AppColors.primary
+                      : context.appColors.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -749,7 +765,7 @@ class _ImageCaptureWidget extends StatelessWidget {
                         color: context.appColors.background,
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child:   Icon(
+                      child: Icon(
                         Ionicons.camera_outline,
                         color: context.appColors.textHint,
                         size: 28,
@@ -866,7 +882,11 @@ class _ConfirmationStep extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Ionicons.information_circle_outline, color: AppColors.info, size: 20),
+              Icon(
+                Ionicons.information_circle_outline,
+                color: AppColors.info,
+                size: 20,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -911,7 +931,10 @@ class _DocumentPreview extends StatelessWidget {
                   borderRadius: BorderRadius.circular(isCircle ? 30 : 8),
                   child: Image.file(image!, fit: BoxFit.cover),
                 )
-              : Icon(Ionicons.document_text_outline, color: context.appColors.textHint),
+              : Icon(
+                  Ionicons.document_text_outline,
+                  color: context.appColors.textHint,
+                ),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -923,7 +946,9 @@ class _DocumentPreview extends StatelessWidget {
               Row(
                 children: [
                   Icon(
-                    image != null ? Ionicons.checkmark_circle_outline : Ionicons.close_circle_outline,
+                    image != null
+                        ? Ionicons.checkmark_circle_outline
+                        : Ionicons.close_circle_outline,
                     size: 16,
                     color: image != null ? AppColors.success : AppColors.error,
                   ),

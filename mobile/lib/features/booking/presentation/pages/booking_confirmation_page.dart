@@ -4,8 +4,8 @@ import 'package:ionicons/ionicons.dart';
 
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 
 /// Hiển thị sau khi tạo booking thành công
@@ -14,16 +14,14 @@ class BookingConfirmationPage extends StatelessWidget {
   final String? bookingId;
   final String? bookingCode;
 
-  const BookingConfirmationPage({
-    super.key,
-    this.bookingId,
-    this.bookingCode,
-  });
+  const BookingConfirmationPage({super.key, this.bookingId, this.bookingCode});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
+        bottom: false,
+
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -72,7 +70,8 @@ class BookingConfirmationPage extends StatelessWidget {
                   icon: Ionicons.document_text_outline,
                   onPressed: () => context.push('/booking/$bookingId'),
                 ),
-              if (bookingId != null && bookingId!.isNotEmpty) const SizedBox(height: 12),
+              if (bookingId != null && bookingId!.isNotEmpty)
+                const SizedBox(height: 12),
               AppButton(
                 text: 'Về trang chủ',
                 isOutlined: true,

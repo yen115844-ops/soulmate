@@ -11,6 +11,7 @@ import 'config/routes/route_names.dart';
 import 'core/di/injection.dart';
 import 'core/services/auth_service.dart';
 import 'core/services/chat_socket_service.dart';
+import 'core/services/connectivity_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_cubit.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
@@ -58,9 +59,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         authState is! auth_state.AuthNeedsProfileSetup) {
       return;
     }
-    getIt<PartnerRepository>()
-        .updatePresence()
-        .catchError((_) {});
+    getIt<PartnerRepository>().updatePresence().catchError((_) {});
   }
 
   @override
@@ -103,9 +102,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     return MultiBlocProvider(
       providers: [
         BlocProvider<ThemeCubit>.value(value: getIt<ThemeCubit>()),
-        BlocProvider<AuthBloc>.value(
-          value: authBloc,
-        ),
+        BlocProvider<AuthBloc>.value(value: authBloc),
       ],
       child: BlocListener<AuthBloc, auth_state.AuthState>(
         listener: (context, state) {
@@ -168,33 +165,70 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 
                 // Use AnnotatedRegion instead of imperative SystemChrome call
                 final isDark = Theme.of(context).brightness == Brightness.dark;
-                return AnnotatedRegion<SystemUiOverlayStyle>(
-                  value: SystemUiOverlayStyle(
-                    statusBarColor: Colors.transparent,
-                    statusBarIconBrightness: isDark
-                        ? Brightness.light
-                        : Brightness.dark,
-                    systemNavigationBarColor: Theme.of(
-                      context,
-                    ).scaffoldBackgroundColor,
-                    systemNavigationBarIconBrightness: isDark
-                        ? Brightness.light
-                        : Brightness.dark,
-                  ),
-                  child: GestureDetector(
-                    onTap: () => FocusScope.of(context).unfocus(),
-                    child: MediaQuery(
-                      // Set max text scale factor for accessibility
-                      data: MediaQuery.of(context).copyWith(
-                        textScaler: TextScaler.linear(
-                          MediaQuery.of(
-                            context,
-                          ).textScaler.scale(1.0).clamp(0.8, 1.2),
+                return ValueListenableBuilder<bool>(
+                  valueListenable: ConnectivityService.instance.isConnected,
+                  builder: (context, isConnected, _) {
+                    return Stack(
+                      children: [
+                        AnnotatedRegion<SystemUiOverlayStyle>(
+                          value: SystemUiOverlayStyle(
+                            statusBarColor: Colors.transparent,
+                            statusBarIconBrightness: isDark
+                                ? Brightness.light
+                                : Brightness.dark,
+                            systemNavigationBarColor: Theme.of(
+                              context,
+                            ).scaffoldBackgroundColor,
+                            systemNavigationBarIconBrightness: isDark
+                                ? Brightness.light
+                                : Brightness.dark,
+                          ),
+                          child: GestureDetector(
+                            onTap: () => FocusScope.of(context).unfocus(),
+                            child: MediaQuery(
+                              // Set max text scale factor for accessibility
+                              data: MediaQuery.of(context).copyWith(
+                                textScaler: TextScaler.linear(
+                                  MediaQuery.of(
+                                    context,
+                                  ).textScaler.scale(1.0).clamp(0.8, 1.2),
+                                ),
+                              ),
+                              child: child ?? const SizedBox.shrink(),
+                            ),
+                          ),
                         ),
-                      ),
-                      child: child ?? const SizedBox.shrink(),
-                    ),
-                  ),
+                        if (!isConnected)
+                          Positioned(
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            child: Material(
+                              color: Colors.red,
+                              elevation: 4,
+                              child: SafeArea(
+                                bottom: false,
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: const Text(
+                                    'Không có kết nối mạng',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
                 );
               },
             );

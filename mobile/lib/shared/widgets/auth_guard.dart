@@ -93,6 +93,8 @@ class _LoginPromptSheet extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
+        bottom: false,
+
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
           child: Column(
@@ -145,7 +147,8 @@ class _LoginPromptSheet extends StatelessWidget {
 
               // Subtitle
               Text(
-                message ?? 'Bạn cần đăng nhập hoặc đăng ký để sử dụng tính năng này.',
+                message ??
+                    'Bạn cần đăng nhập hoặc đăng ký để sử dụng tính năng này.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
@@ -174,10 +177,7 @@ class _LoginPromptSheet extends StatelessWidget {
                   ),
                   child: const Text(
                     'Đăng nhập',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -194,17 +194,17 @@ class _LoginPromptSheet extends StatelessWidget {
                   },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.primary,
-                    side: const BorderSide(color: AppColors.primary, width: 1.5),
+                    side: const BorderSide(
+                      color: AppColors.primary,
+                      width: 1.5,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
                   child: const Text(
                     'Tạo tài khoản mới',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -215,10 +215,7 @@ class _LoginPromptSheet extends StatelessWidget {
                 onPressed: () => Navigator.of(context).pop(),
                 child: Text(
                   'Để sau',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: subtitleColor,
-                  ),
+                  style: TextStyle(fontSize: 14, color: subtitleColor),
                 ),
               ),
             ],

@@ -3,14 +3,18 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ionicons/ionicons.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 
+import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../shared/widgets/auth_guard.dart';
 import '../../../booking/presentation/pages/bookings_page.dart';
 import '../../../chat/presentation/pages/chat_list_page.dart';
+import '../../../favorites/presentation/bloc/favorites_bloc.dart';
+import '../../../favorites/presentation/bloc/favorites_event.dart';
 import '../../../favorites/presentation/pages/favorites_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import 'home_page.dart';
@@ -83,6 +87,11 @@ class _SwipeableHomePageState extends State<SwipeableHomePage>
       duration: const Duration(milliseconds: 400),
       value: 1.0,
     );
+
+    // Initialize FavoritesBloc
+    if (getIt.isRegistered<FavoritesBloc>()) {
+      getIt<FavoritesBloc>().add(const FavoritesLoadRequested(limit: 100));
+    }
   }
 
   @override
@@ -138,17 +147,17 @@ class _SwipeableHomePageState extends State<SwipeableHomePage>
     final isDark = context.isDarkMode;
 
     return Scaffold(
-      body: Stack(
-        children: [
-          IndexedStack(index: _currentIndex, children: _pages),
+      body: BlocProvider.value(
+        value: getIt<FavoritesBloc>(),
+        child: Stack(
+          children: [
+            IndexedStack(index: _currentIndex, children: _pages),
 
-          // ── Floating bottom nav ──
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: SafeArea(
-              top: false,
+            // ── Floating bottom nav ──
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
               child: Padding(
                 padding: const EdgeInsets.only(left: 20, right: 20, bottom: 8),
                 child: Container(
@@ -232,8 +241,8 @@ class _SwipeableHomePageState extends State<SwipeableHomePage>
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

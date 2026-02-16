@@ -34,10 +34,12 @@ class ProfilePage extends StatelessWidget {
       bloc: getIt<AuthBloc>(),
       buildWhen: (previous, current) {
         // Only rebuild when switching between authenticated / unauthenticated
-        final wasAuth = previous is auth_state.AuthAuthenticated ||
+        final wasAuth =
+            previous is auth_state.AuthAuthenticated ||
             previous is auth_state.AuthNeedsProfileSetup ||
             previous is auth_state.AuthPendingVerification;
-        final isAuth = current is auth_state.AuthAuthenticated ||
+        final isAuth =
+            current is auth_state.AuthAuthenticated ||
             current is auth_state.AuthNeedsProfileSetup ||
             current is auth_state.AuthPendingVerification;
         return wasAuth != isAuth;
@@ -76,6 +78,9 @@ class _ProfilePageContentState extends State<_ProfilePageContent> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
+        bottom: false,
+        top: false,
+
         child: BlocConsumer<ProfileBloc, ProfileState>(
           listener: (context, state) {
             if (state is ProfileLoaded) _lastLoadedState = state;
@@ -189,15 +194,17 @@ class _ProfilePageContentState extends State<_ProfilePageContent> {
               onTap: () async {
                 Navigator.pop(bottomSheetContext);
                 try {
-                  final List<AssetEntity>? assets = await AssetPicker.pickAssets(
-                    context,
-                    pickerConfig: AssetPickerConfig(
-                      maxAssets: 1,
-                      requestType: RequestType.image,
-                      themeColor: AppColors.primary,
-                      textDelegate: const VietnameseAssetPickerTextDelegate(),
-                    ),
-                  );
+                  final List<AssetEntity>? assets =
+                      await AssetPicker.pickAssets(
+                        context,
+                        pickerConfig: AssetPickerConfig(
+                          maxAssets: 1,
+                          requestType: RequestType.image,
+                          themeColor: AppColors.primary,
+                          textDelegate:
+                              const VietnameseAssetPickerTextDelegate(),
+                        ),
+                      );
                   if (assets != null && assets.isNotEmpty && context.mounted) {
                     final file = await assets.first.file;
                     if (file != null && context.mounted) {
@@ -240,7 +247,7 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-              Icon(
+            Icon(
               Ionicons.alert_circle_outline,
               size: 64,
               color: context.appColors.textHint,
@@ -413,7 +420,7 @@ class _ProfileContent extends StatelessWidget {
                   items: [
                     _ModernMenuItem(
                       icon: Ionicons.cog_outline,
-                      iconBgColor:   context.appColors.background,
+                      iconBgColor: const Color(0xFFE0F7FA),
                       iconColor: const Color(0xFF616161),
                       title: 'Cài đặt ứng dụng',
                       subtitle: 'Thông báo, giao diện, ngôn ngữ',
@@ -428,14 +435,14 @@ class _ProfileContent extends StatelessWidget {
                     ),
                     _ModernMenuItem(
                       icon: Ionicons.document_text_outline,
-                      iconBgColor:   context.appColors.background,
+                      iconBgColor: const Color(0xFFE0F7FA),
                       iconColor: const Color(0xFF616161),
                       title: 'Điều khoản sử dụng',
                       onTap: () => context.push(RouteNames.termsOfService),
                     ),
                     _ModernMenuItem(
                       icon: Ionicons.shield_checkmark_outline,
-                      iconBgColor:   context.appColors.background,
+                      iconBgColor: const Color(0xFFE0F7FA),
                       iconColor: const Color(0xFF616161),
                       title: 'Chính sách bảo mật',
                       onTap: () => context.push(RouteNames.privacyPolicy),
@@ -552,6 +559,7 @@ class _ProfileHeroHeader extends StatelessWidget {
       ),
       child: SafeArea(
         bottom: false,
+
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
           child: Column(
@@ -598,10 +606,15 @@ class _ProfileHeroHeader extends StatelessWidget {
                       height: 96,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: context.appColors.surface, width: 3),
+                        border: Border.all(
+                          color: context.appColors.surface,
+                          width: 3,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: context.appColors.textPrimary.withOpacity(0.15),
+                            color: context.appColors.textPrimary.withOpacity(
+                              0.15,
+                            ),
                             blurRadius: 16,
                             offset: const Offset(0, 4),
                           ),
@@ -632,7 +645,9 @@ class _ProfileHeroHeader extends StatelessWidget {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: context.appColors.textPrimary.withOpacity(0.1),
+                              color: context.appColors.textPrimary.withOpacity(
+                                0.1,
+                              ),
                               blurRadius: 4,
                             ),
                           ],
@@ -1229,7 +1244,8 @@ class _ModernMenuItem extends StatelessWidget {
                       Text(
                         subtitle!,
                         style: AppTypography.bodySmall.copyWith(
-                          color: subtitleColor ?? context.appColors.textSecondary,
+                          color:
+                              subtitleColor ?? context.appColors.textSecondary,
                           fontWeight: subtitleColor != null
                               ? FontWeight.w600
                               : FontWeight.w400,
@@ -1264,6 +1280,8 @@ class _GuestProfileView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
+        bottom: false,
+
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
@@ -1312,11 +1330,13 @@ class _GuestProfileView extends StatelessWidget {
                                   : 'Đang tắt',
                               onTap: () {
                                 if (themeState.isSystemMode) {
-                                  getIt<ThemeCubit>()
-                                      .setThemeMode(ThemeMode.light);
+                                  getIt<ThemeCubit>().setThemeMode(
+                                    ThemeMode.light,
+                                  );
                                 } else {
-                                  getIt<ThemeCubit>()
-                                      .setThemeMode(ThemeMode.system);
+                                  getIt<ThemeCubit>().setThemeMode(
+                                    ThemeMode.system,
+                                  );
                                 }
                               },
                             );
@@ -1340,19 +1360,17 @@ class _GuestProfileView extends StatelessWidget {
                         ),
                         _ModernMenuItem(
                           icon: Ionicons.document_text_outline,
-                          iconBgColor: context.appColors.background,
+                          iconBgColor: const Color(0xFFE0F7FA),
                           iconColor: const Color(0xFF616161),
                           title: 'Điều khoản sử dụng',
-                          onTap: () =>
-                              context.push(RouteNames.termsOfService),
+                          onTap: () => context.push(RouteNames.termsOfService),
                         ),
                         _ModernMenuItem(
                           icon: Ionicons.shield_checkmark_outline,
-                          iconBgColor: context.appColors.background,
+                          iconBgColor: const Color(0xFFE0F7FA),
                           iconColor: const Color(0xFF616161),
                           title: 'Chính sách bảo mật',
-                          onTap: () =>
-                              context.push(RouteNames.privacyPolicy),
+                          onTap: () => context.push(RouteNames.privacyPolicy),
                         ),
                       ],
                     ),
@@ -1507,9 +1525,7 @@ class _GuestProfileHeader extends StatelessWidget {
             AppColors.primaryLight,
           ],
         ),
-        borderRadius: const BorderRadius.vertical(
-          bottom: Radius.circular(32),
-        ),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
       ),
       child: SafeArea(
         bottom: false,

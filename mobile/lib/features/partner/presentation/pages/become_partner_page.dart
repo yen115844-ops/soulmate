@@ -3,15 +3,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ionicons/ionicons.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:ionicons/ionicons.dart';
 
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/constants/service_type_emoji.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../shared/bloc/master_data_bloc.dart';
 import '../../../../shared/data/models/master_data_models.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
@@ -239,7 +239,9 @@ class _BecomePartnerPageState extends State<BecomePartnerPage> {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                isAlreadyPartner ? Ionicons.information_circle_outline : Ionicons.close_circle_outline,
+                isAlreadyPartner
+                    ? Ionicons.information_circle_outline
+                    : Ionicons.close_circle_outline,
                 color: isAlreadyPartner ? AppColors.warning : AppColors.error,
                 size: 48,
               ),
@@ -281,8 +283,8 @@ class _BecomePartnerPageState extends State<BecomePartnerPage> {
   /// Lấy emoji từ API hoặc fallback
   String _getServiceEmoji(ServiceTypeModel service) =>
       (service.icon != null && service.icon!.isNotEmpty)
-          ? service.icon!
-          : ServiceTypeEmoji.get(service.code).emoji;
+      ? service.icon!
+      : ServiceTypeEmoji.get(service.code).emoji;
 
   @override
   Widget build(BuildContext context) {
@@ -317,7 +319,10 @@ class _BecomePartnerPageState extends State<BecomePartnerPage> {
           },
           builder: (context, state) {
             return Scaffold(
-              appBar: AppBar(leading: const AppBackButton(), title: const Text('Trở thành Partner')),
+              appBar: AppBar(
+                leading: const AppBackButton(),
+                title: const Text('Trở thành Partner'),
+              ),
               body: _buildBody(context, state),
             );
           },
@@ -336,7 +341,11 @@ class _BecomePartnerPageState extends State<BecomePartnerPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Ionicons.alert_circle_outline, size: 48, color: AppColors.error),
+            Icon(
+              Ionicons.alert_circle_outline,
+              size: 48,
+              color: AppColors.error,
+            ),
             const SizedBox(height: 16),
             Text(
               state.message,
@@ -420,6 +429,8 @@ class _BecomePartnerPageState extends State<BecomePartnerPage> {
             ],
           ),
           child: SafeArea(
+            bottom: false,
+
             child: Row(
               children: [
                 if (_currentStep > 0)
@@ -472,7 +483,9 @@ class _StepIndicator extends StatelessWidget {
               child: Container(
                 height: 3,
                 decoration: BoxDecoration(
-                  color: isCompleted ? AppColors.primary : context.appColors.border,
+                  color: isCompleted
+                      ? AppColors.primary
+                      : context.appColors.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -614,7 +627,11 @@ class _BasicInfoStep extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Ionicons.flash_outline, color: AppColors.info, size: 20),
+                    Icon(
+                      Ionicons.flash_outline,
+                      color: AppColors.info,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Mẹo viết giới thiệu hay',
@@ -740,7 +757,9 @@ class _ServicesStep extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primary : context.appColors.card,
+                      color: isSelected
+                          ? AppColors.primary
+                          : context.appColors.card,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isSelected
@@ -1029,7 +1048,11 @@ class _PhotosStep extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Ionicons.flash_outline, color: AppColors.info, size: 20),
+                    Icon(
+                      Ionicons.flash_outline,
+                      color: AppColors.info,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Mẹo chọn ảnh',
@@ -1098,7 +1121,10 @@ class _BankAccountStep extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(Ionicons.business_outline, color: context.appColors.textHint),
+                  Icon(
+                    Ionicons.business_outline,
+                    color: context.appColors.textHint,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -1112,7 +1138,10 @@ class _BankAccountStep extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Icon(Ionicons.chevron_down_outline, color: context.appColors.textHint),
+                  Icon(
+                    Ionicons.chevron_down_outline,
+                    color: context.appColors.textHint,
+                  ),
                 ],
               ),
             ),
@@ -1151,7 +1180,11 @@ class _BankAccountStep extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Ionicons.shield_checkmark_outline, color: AppColors.success, size: 20),
+                Icon(
+                  Ionicons.shield_checkmark_outline,
+                  color: AppColors.success,
+                  size: 20,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -1257,7 +1290,10 @@ class _BankAccountStep extends StatelessWidget {
                     ),
                     title: Text(bank, style: AppTypography.bodyLarge),
                     trailing: isSelected
-                        ? Icon(Ionicons.checkmark_circle_outline, color: AppColors.primary)
+                        ? Icon(
+                            Ionicons.checkmark_circle_outline,
+                            color: AppColors.primary,
+                          )
                         : null,
                     onTap: () {
                       bankNameController.text = bank;

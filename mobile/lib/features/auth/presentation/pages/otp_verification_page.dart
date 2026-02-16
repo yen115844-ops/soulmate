@@ -7,8 +7,8 @@ import 'package:ionicons/ionicons.dart';
 
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
@@ -129,6 +129,8 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
         return Scaffold(
           appBar: AppBar(leading: const AppBackButton()),
           body: SafeArea(
+            bottom: false,
+
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -234,7 +236,9 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                     child: TextButton(
                       onPressed: () => context.pop(),
                       child: Text(
-                        widget.email != null ? 'Đổi email' : 'Đổi số điện thoại',
+                        widget.email != null
+                            ? 'Đổi email'
+                            : 'Đổi số điện thoại',
                         style: AppTypography.labelLarge.copyWith(
                           color: context.appColors.textSecondary,
                         ),

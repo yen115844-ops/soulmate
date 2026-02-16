@@ -2,14 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ionicons/ionicons.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_config.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../data/partner_repository.dart';
@@ -17,10 +17,7 @@ import '../../data/partner_repository.dart';
 class PhotoManagerPage extends StatefulWidget {
   final List<String> initialPhotos;
 
-  const PhotoManagerPage({
-    super.key,
-    required this.initialPhotos,
-  });
+  const PhotoManagerPage({super.key, required this.initialPhotos});
 
   @override
   State<PhotoManagerPage> createState() => _PhotoManagerPageState();
@@ -53,7 +50,8 @@ class _PhotoManagerPageState extends State<PhotoManagerPage> {
     _photos = List.from(widget.initialPhotos);
   }
 
-  int get _totalPhotos => _photos.length - _photosToRemove.length + _newPhotos.length;
+  int get _totalPhotos =>
+      _photos.length - _photosToRemove.length + _newPhotos.length;
   bool get _canAddMore => _totalPhotos < maxPhotos;
 
   Future<void> _pickImages() async {
@@ -78,8 +76,11 @@ class _PhotoManagerPageState extends State<PhotoManagerPage> {
       );
 
       if (pickedFiles.isNotEmpty) {
-        final filesToAdd = pickedFiles.take(remainingSlots).map((xFile) => File(xFile.path)).toList();
-        
+        final filesToAdd = pickedFiles
+            .take(remainingSlots)
+            .map((xFile) => File(xFile.path))
+            .toList();
+
         setState(() {
           _newPhotos.addAll(filesToAdd);
           _hasChanges = true;
@@ -89,7 +90,9 @@ class _PhotoManagerPageState extends State<PhotoManagerPage> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Chỉ thêm được $remainingSlots ảnh. Đã đạt tối đa $maxPhotos ảnh.'),
+                content: Text(
+                  'Chỉ thêm được $remainingSlots ảnh. Đã đạt tối đa $maxPhotos ảnh.',
+                ),
                 backgroundColor: AppColors.warning,
               ),
             );
@@ -181,7 +184,9 @@ class _PhotoManagerPageState extends State<PhotoManagerPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Huỷ thay đổi?'),
-        content: const Text('Bạn có thay đổi chưa lưu. Bạn có chắc muốn thoát?'),
+        content: const Text(
+          'Bạn có thay đổi chưa lưu. Bạn có chắc muốn thoát?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -201,8 +206,10 @@ class _PhotoManagerPageState extends State<PhotoManagerPage> {
   @override
   Widget build(BuildContext context) {
     // Get visible existing photos (excluding those marked for removal)
-    final visibleExistingPhotos = _photos.where((p) => !_photosToRemove.contains(p)).toList();
-    
+    final visibleExistingPhotos = _photos
+        .where((p) => !_photosToRemove.contains(p))
+        .toList();
+
     return PopScope(
       canPop: !_hasChanges,
       onPopInvokedWithResult: (didPop, result) async {
@@ -276,10 +283,7 @@ class _PhotoManagerPageState extends State<PhotoManagerPage> {
                   children: [
                     // Existing photos
                     if (visibleExistingPhotos.isNotEmpty) ...[
-                      Text(
-                        'Ảnh hiện tại',
-                        style: AppTypography.titleSmall,
-                      ),
+                      Text('Ảnh hiện tại', style: AppTypography.titleSmall),
                       const SizedBox(height: 12),
                       _buildPhotoGrid(
                         items: visibleExistingPhotos,
@@ -354,6 +358,8 @@ class _PhotoManagerPageState extends State<PhotoManagerPage> {
                   ],
                 ),
                 child: SafeArea(
+                  bottom: false,
+
                   child: SizedBox(
                     width: double.infinity,
                     child: AppButton(
@@ -392,7 +398,9 @@ class _PhotoManagerPageState extends State<PhotoManagerPage> {
           onRemove: isMarkedForRemoval
               ? () => _restorePhoto(url)
               : () => _removeExistingPhoto(url),
-          actionIcon: isMarkedForRemoval ? Ionicons.refresh_outline : Ionicons.trash_outline,
+          actionIcon: isMarkedForRemoval
+              ? Ionicons.refresh_outline
+              : Ionicons.trash_outline,
         );
       },
     );
@@ -456,7 +464,10 @@ class _PhotoItem extends StatelessWidget {
                     imageUrl!,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Center(
-                      child: Icon(Ionicons.image_outline, color: context.appColors.textHint),
+                      child: Icon(
+                        Ionicons.image_outline,
+                        color: context.appColors.textHint,
+                      ),
                     ),
                   )
                 else if (file != null)
@@ -464,7 +475,10 @@ class _PhotoItem extends StatelessWidget {
                     file!,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Center(
-                      child: Icon(Ionicons.image_outline, color: context.appColors.textHint),
+                      child: Icon(
+                        Ionicons.image_outline,
+                        color: context.appColors.textHint,
+                      ),
                     ),
                   ),
                 // Overlay for marked items
@@ -484,7 +498,10 @@ class _PhotoItem extends StatelessWidget {
                     left: 4,
                     bottom: 4,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.success,
                         borderRadius: BorderRadius.circular(4),
@@ -515,11 +532,7 @@ class _PhotoItem extends StatelessWidget {
                 color: isMarkedForRemoval ? AppColors.success : AppColors.error,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                actionIcon,
-                color: Colors.white,
-                size: 16,
-              ),
+              child: Icon(actionIcon, color: Colors.white, size: 16),
             ),
           ),
         ),

@@ -3,17 +3,14 @@ import 'package:go_router/go_router.dart';
 import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 
 /// Shell Page cho Partner Mode với Bottom Navigation cố định
 class PartnerShellPage extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
-  const PartnerShellPage({
-    super.key,
-    required this.navigationShell,
-  });
+  const PartnerShellPage({super.key, required this.navigationShell});
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +54,8 @@ class _PartnerBottomNavigationBar extends StatelessWidget {
         ],
       ),
       child: SafeArea(
+        bottom: false,
+
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           child: Row(
@@ -116,7 +115,9 @@ class _NavItem extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withAlpha(25) : Colors.transparent,
+          color: isSelected
+              ? AppColors.primary.withAlpha(25)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -124,14 +125,18 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: isSelected ? AppColors.primary : context.appColors.textHint,
+              color: isSelected
+                  ? AppColors.primary
+                  : context.appColors.textHint,
               size: 24,
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: AppTypography.labelSmall.copyWith(
-                color: isSelected ? AppColors.primary : context.appColors.textHint,
+                color: isSelected
+                    ? AppColors.primary
+                    : context.appColors.textHint,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
             ),

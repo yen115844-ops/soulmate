@@ -221,19 +221,28 @@ export interface ServiceType {
 export interface Province {
   id: string;
   name: string;
+  nameEn?: string;
   code: string;
-  displayOrder: number;
+  sortOrder: number;
   isActive: boolean;
   districts?: District[];
+  _count?: {
+    districts: number;
+  };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface District {
   id: string;
   provinceId: string;
   name: string;
+  nameEn?: string;
   code: string;
-  displayOrder: number;
+  sortOrder: number;
   isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Interest {

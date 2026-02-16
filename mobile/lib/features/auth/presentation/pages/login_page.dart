@@ -97,6 +97,8 @@ class _LoginPageState extends State<LoginPage> {
 
         return Scaffold(
           body: SafeArea(
+            bottom: false,
+
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: Form(
@@ -109,7 +111,11 @@ class _LoginPageState extends State<LoginPage> {
                     // Welcome Text
                     Row(
                       children: [
-                        Icon(Icons.waving_hand, size: 28, color: AppColors.primary),
+                        Icon(
+                          Icons.waving_hand,
+                          size: 28,
+                          color: AppColors.primary,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           'Chào mừng trở lại!',
@@ -320,7 +326,9 @@ class _SocialLoginButton extends StatelessWidget {
           children: [
             // Using Icon instead of image for now
             Icon(
-              icon.contains('google') ? Ionicons.logo_google : Ionicons.logo_facebook,
+              icon.contains('google')
+                  ? Ionicons.logo_google
+                  : Ionicons.logo_facebook,
               size: 24,
               color: fg,
             ),

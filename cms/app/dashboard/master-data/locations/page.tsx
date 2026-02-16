@@ -54,7 +54,6 @@ import { District, Province } from "@/types";
 
 export default function LocationsPage() {
   const queryClient = useQueryClient();
-  const [expandedProvinces, setExpandedProvinces] = useState<string[]>([]);
   const [isProvinceFormOpen, setIsProvinceFormOpen] = useState(false);
   const [isDistrictFormOpen, setIsDistrictFormOpen] = useState(false);
   const [editingProvince, setEditingProvince] = useState<Province | null>(null);
@@ -65,7 +64,8 @@ export default function LocationsPage() {
   const [provinceForm, setProvinceForm] = useState({
     code: "",
     name: "",
-    displayOrder: 0,
+    nameEn: "",
+    sortOrder: 0,
     isActive: true,
   });
 
@@ -73,7 +73,8 @@ export default function LocationsPage() {
     provinceId: "",
     code: "",
     name: "",
-    displayOrder: 0,
+    nameEn: "",
+    sortOrder: 0,
     isActive: true,
   });
 
@@ -121,6 +122,8 @@ export default function LocationsPage() {
   const createDistrictMutation = useMutation({
     mutationFn: (data: Partial<District>) => districtsApi.create(data),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["districts"] });
+      // Also invalidate provinces to update counts if needed
       queryClient.invalidateQueries({ queryKey: ["provinces"] });
       toast.success("Đã tạo quận/huyện");
       setIsDistrictFormOpen(false);
@@ -132,7 +135,7 @@ export default function LocationsPage() {
     mutationFn: ({ id, data }: { id: string; data: Partial<District> }) =>
       districtsApi.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["provinces"] });
+      queryClient.invalidateQueries({ queryKey: ["districts"] });
       toast.success("Đã cập nhật quận/huyện");
       setIsDistrictFormOpen(false);
       setEditingDistrict(null);
@@ -143,18 +146,13 @@ export default function LocationsPage() {
   const deleteDistrictMutation = useMutation({
     mutationFn: (id: string) => districtsApi.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["provinces"] });
+        queryClient.invalidateQueries({ queryKey: ["districts"] });
+        queryClient.invalidateQueries({ queryKey: ["provinces"] });
       toast.success("Đã xóa quận/huyện");
       setDeleteItem(null);
     },
     onError: () => toast.error("Failed to delete district"),
   });
-
-  const toggleProvince = (id: string) => {
-    setExpandedProvinces((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
-    );
-  };
 
   // Province handlers
   const openCreateProvince = () => {
@@ -162,7 +160,8 @@ export default function LocationsPage() {
     setProvinceForm({
       code: "",
       name: "",
-      displayOrder: provinces.length + 1,
+      nameEn: "",
+      sortOrder: provinces.length + 1,
       isActive: true,
     });
     setIsProvinceFormOpen(true);
@@ -173,7 +172,8 @@ export default function LocationsPage() {
     setProvinceForm({
       code: province.code,
       name: province.name,
-      displayOrder: province.displayOrder,
+      nameEn: province.nameEn || "",
+      sortOrder: province.sortOrder,
       isActive: province.isActive,
     });
     setIsProvinceFormOpen(true);
@@ -194,12 +194,16 @@ export default function LocationsPage() {
   const openCreateDistrict = (provinceId: string) => {
     setEditingDistrict(null);
     setSelectedProvinceId(provinceId);
-    const province = provinces.find((p) => p.id === provinceId);
+    // Logic for sortOrder depends on fetching districts, which we might not have here.
+    // Default to 1 or try to find max order if districts are loaded?
+    // Since we fetch districts on expand, we might not have them.
+    // Let's set default to 1.
     setDistrictForm({
       provinceId,
       code: "",
       name: "",
-      displayOrder: (province?.districts?.length || 0) + 1,
+      nameEn: "",
+      sortOrder: 1,
       isActive: true,
     });
     setIsDistrictFormOpen(true);
@@ -212,7 +216,8 @@ export default function LocationsPage() {
       provinceId: district.provinceId,
       code: district.code,
       name: district.name,
-      displayOrder: district.displayOrder,
+      nameEn: district.nameEn || "",
+      sortOrder: district.sortOrder,
       isActive: district.isActive,
     });
     setIsDistrictFormOpen(true);
@@ -264,127 +269,15 @@ export default function LocationsPage() {
           ) : (
             <div className="divide-y">
               {provinces.map((province) => (
-                <Collapsible
-                  key={province.id}
-                  open={expandedProvinces.includes(province.id)}
-                  onOpenChange={() => toggleProvince(province.id)}
-                >
-                  <div className="flex items-center justify-between p-4 hover:bg-muted/50">
-                    <CollapsibleTrigger className="flex flex-1 items-center gap-3">
-                      <ChevronRight
-                        className={`h-4 w-4 transition-transform ${
-                          expandedProvinces.includes(province.id)
-                            ? "rotate-90"
-                            : ""
-                        }`}
-                      />
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <div className="text-left">
-                        <p className="font-medium">{province.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {province.code} • {province.districts?.length || 0} districts
-                        </p>
-                      </div>
-                    </CollapsibleTrigger>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={province.isActive ? "default" : "secondary"}>
-                        {province.isActive ? "Hoạt động" : "Ẩn"}
-                      </Badge>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openEditProvince(province);
-                        }}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeleteItem({ type: "province", item: province });
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  <CollapsibleContent>
-                    <div className="border-t bg-muted/30 p-4">
-                      <div className="mb-3 flex items-center justify-between">
-                        <p className="text-sm font-medium">Quận/Huyện</p>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openCreateDistrict(province.id)}
-                        >
-                          <Plus className="mr-1 h-3 w-3" />
-                          Thêm quận/huyện
-                        </Button>
-                      </div>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Code</TableHead>
-                            <TableHead>Name</TableHead>
-                            <TableHead className="w-24">Order</TableHead>
-                            <TableHead className="w-24">Status</TableHead>
-                            <TableHead className="w-24">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {province.districts?.map((district) => (
-                            <TableRow key={district.id}>
-                              <TableCell className="font-mono">
-                                {district.code}
-                              </TableCell>
-                              <TableCell>{district.name}</TableCell>
-                              <TableCell>{district.displayOrder}</TableCell>
-                              <TableCell>
-                                <Badge
-                                  variant={
-                                    district.isActive ? "default" : "secondary"
-                                  }
-                                >
-                                  {district.isActive ? "Hoạt động" : "Ẩn"}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-1">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    onClick={() => openEditDistrict(district)}
-                                  >
-                                    <Pencil className="h-3 w-3" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    onClick={() =>
-                                      setDeleteItem({
-                                        type: "district",
-                                        item: district,
-                                      })
-                                    }
-                                  >
-                                    <Trash2 className="h-3 w-3 text-destructive" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
+                <ProvinceRow
+                    key={province.id}
+                    province={province}
+                    onEditProvince={openEditProvince}
+                    onDeleteProvince={(p) => setDeleteItem({ type: "province", item: p })}
+                    onAddDistrict={openCreateDistrict}
+                    onEditDistrict={openEditDistrict}
+                    onDeleteDistrict={(d) => setDeleteItem({ type: "district", item: d })}
+                />
               ))}
             </div>
           )}
@@ -415,7 +308,7 @@ export default function LocationsPage() {
               <div className="space-y-2">
                 <Label>Name</Label>
                 <Input
-                  placeholder="e.g., Ho Chi Minh City"
+                  placeholder="e.g., Hồ Chí Minh"
                   value={provinceForm.name}
                   onChange={(e) =>
                     setProvinceForm({ ...provinceForm, name: e.target.value })
@@ -423,17 +316,28 @@ export default function LocationsPage() {
                 />
               </div>
             </div>
+            
+            <div className="space-y-2">
+                <Label>Name (EN)</Label>
+                <Input
+                  placeholder="e.g., Ho Chi Minh City"
+                  value={provinceForm.nameEn}
+                  onChange={(e) =>
+                    setProvinceForm({ ...provinceForm, nameEn: e.target.value })
+                  }
+                />
+            </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Display Order</Label>
+                <Label>Sort Order</Label>
                 <Input
                   type="number"
-                  value={provinceForm.displayOrder}
+                  value={provinceForm.sortOrder}
                   onChange={(e) =>
                     setProvinceForm({
                       ...provinceForm,
-                      displayOrder: parseInt(e.target.value) || 0,
+                      sortOrder: parseInt(e.target.value) || 0,
                     })
                   }
                 />
@@ -517,7 +421,7 @@ export default function LocationsPage() {
               <div className="space-y-2">
                 <Label>Name</Label>
                 <Input
-                  placeholder="e.g., District 1"
+                  placeholder="e.g., Quận 1"
                   value={districtForm.name}
                   onChange={(e) =>
                     setDistrictForm({ ...districtForm, name: e.target.value })
@@ -525,17 +429,28 @@ export default function LocationsPage() {
                 />
               </div>
             </div>
+            
+            <div className="space-y-2">
+                <Label>Name (EN)</Label>
+                <Input
+                  placeholder="e.g., District 1"
+                  value={districtForm.nameEn}
+                  onChange={(e) =>
+                    setDistrictForm({ ...districtForm, nameEn: e.target.value })
+                  }
+                />
+            </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Display Order</Label>
+                <Label>Sort Order</Label>
                 <Input
                   type="number"
-                  value={districtForm.displayOrder}
+                  value={districtForm.sortOrder}
                   onChange={(e) =>
                     setDistrictForm({
                       ...districtForm,
-                      displayOrder: parseInt(e.target.value) || 0,
+                      sortOrder: parseInt(e.target.value) || 0,
                     })
                   }
                 />
@@ -604,4 +519,169 @@ export default function LocationsPage() {
       </AlertDialog>
     </div>
   );
+}
+
+function ProvinceRow({
+    province,
+    onEditProvince,
+    onDeleteProvince,
+    onAddDistrict,
+    onEditDistrict,
+    onDeleteDistrict
+}: {
+    province: Province;
+    onEditProvince: (p: Province) => void;
+    onDeleteProvince: (p: Province) => void;
+    onAddDistrict: (provinceId: string) => void;
+    onEditDistrict: (d: District) => void;
+    onDeleteDistrict: (d: District) => void;
+}) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    const { data: districtsData, isLoading } = useQuery({
+        queryKey: ["districts", province.id],
+        queryFn: () => districtsApi.getAll(province.id, true),
+        enabled: isOpen,
+    });
+
+    const districts = districtsData?.data || [];
+
+    return (
+        <Collapsible
+            open={isOpen}
+            onOpenChange={setIsOpen}
+        >
+            <div className="flex items-center justify-between p-4 hover:bg-muted/50">
+            <CollapsibleTrigger className="flex flex-1 items-center gap-3">
+                <ChevronRight
+                className={`h-4 w-4 transition-transform ${
+                    isOpen
+                    ? "rotate-90"
+                    : ""
+                }`}
+                />
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <div className="text-left">
+                <div className="flex items-center gap-2">
+                    <p className="font-medium">{province.name}</p>
+                    {province.nameEn && <span className="text-xs text-muted-foreground">({province.nameEn})</span>}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                    {province.code} • {province._count?.districts || 0} districts
+                </p>
+                </div>
+            </CollapsibleTrigger>
+            <div className="flex items-center gap-2">
+                <Badge variant={province.isActive ? "default" : "secondary"}>
+                {province.isActive ? "Hoạt động" : "Ẩn"}
+                </Badge>
+                <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onEditProvince(province);
+                }}
+                >
+                <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteProvince(province);
+                }}
+                >
+                <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+            </div>
+            </div>
+
+            <CollapsibleContent>
+            <div className="border-t bg-muted/30 p-4">
+                <div className="mb-3 flex items-center justify-between">
+                <p className="text-sm font-medium">Quận/Huyện</p>
+                <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onAddDistrict(province.id)}
+                >
+                    <Plus className="mr-1 h-3 w-3" />
+                    Thêm quận/huyện
+                </Button>
+                </div>
+                
+                {isLoading ? (
+                    <div className="flex justify-center p-4">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                ) : (
+                    <Table>
+                    <TableHeader>
+                        <TableRow>
+                        <TableHead>Code</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead className="w-24">Order</TableHead>
+                        <TableHead className="w-24">Status</TableHead>
+                        <TableHead className="w-24">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {districts.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={5} className="text-center text-muted-foreground">
+                                    Chưa có quận/huyện nào
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            districts.map((district) => (
+                            <TableRow key={district.id}>
+                                <TableCell className="font-mono">
+                                {district.code}
+                                </TableCell>
+                                <TableCell>
+                                    <div>{district.name}</div>
+                                    {district.nameEn && <div className="text-xs text-muted-foreground">{district.nameEn}</div>}
+                                </TableCell>
+                                <TableCell>{district.sortOrder}</TableCell>
+                                <TableCell>
+                                <Badge
+                                    variant={
+                                    district.isActive ? "default" : "secondary"
+                                    }
+                                >
+                                    {district.isActive ? "Hoạt động" : "Ẩn"}
+                                </Badge>
+                                </TableCell>
+                                <TableCell>
+                                <div className="flex items-center gap-1">
+                                    <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={() => onEditDistrict(district)}
+                                    >
+                                    <Pencil className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={() => onDeleteDistrict(district)}
+                                    >
+                                    <Trash2 className="h-3 w-3 text-destructive" />
+                                    </Button>
+                                </div>
+                                </TableCell>
+                            </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                    </Table>
+                )}
+            </div>
+            </CollapsibleContent>
+        </Collapsible>
+    );
 }

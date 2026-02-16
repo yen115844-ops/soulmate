@@ -38,19 +38,23 @@ class FavoritesBloc extends Bloc<FavoritesEvent, FavoritesState> {
           ? response.data
           : [...state.favorites, ...response.data];
 
-      emit(state.copyWith(
-        status: FavoritesStatus.loaded,
-        favorites: favorites,
-        total: response.total,
-        page: event.page,
-        limit: event.limit,
-        hasReachedMax: hasReachedMax,
-      ));
+      emit(
+        state.copyWith(
+          status: FavoritesStatus.loaded,
+          favorites: favorites,
+          total: response.total,
+          page: event.page,
+          limit: event.limit,
+          hasReachedMax: hasReachedMax,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        status: FavoritesStatus.error,
-        errorMessage: getErrorMessage(e),
-      ));
+      emit(
+        state.copyWith(
+          status: FavoritesStatus.error,
+          errorMessage: getErrorMessage(e),
+        ),
+      );
     }
   }
 
@@ -58,7 +62,7 @@ class FavoritesBloc extends Bloc<FavoritesEvent, FavoritesState> {
     FavoritesRefreshRequested event,
     Emitter<FavoritesState> emit,
   ) async {
-    add(const FavoritesLoadRequested(page: 1));
+    add(FavoritesLoadRequested(page: 1, limit: state.limit));
   }
 
   Future<void> _onRemoveRequested(
@@ -71,19 +75,14 @@ class FavoritesBloc extends Bloc<FavoritesEvent, FavoritesState> {
           .where((f) => f.partnerId != event.partnerId)
           .toList();
 
-      emit(state.copyWith(
-        favorites: updatedFavorites,
-        total: state.total - 1,
-      ));
+      emit(state.copyWith(favorites: updatedFavorites, total: state.total - 1));
 
       // Call API
       await _repository.removeFavorite(event.partnerId);
     } catch (e) {
       // Refresh on error to restore state
       add(const FavoritesRefreshRequested());
-      emit(state.copyWith(
-        errorMessage: getErrorMessage(e),
-      ));
+      emit(state.copyWith(errorMessage: getErrorMessage(e)));
     }
   }
 
@@ -96,9 +95,7 @@ class FavoritesBloc extends Bloc<FavoritesEvent, FavoritesState> {
       // Refresh list to get updated data
       add(const FavoritesRefreshRequested());
     } catch (e) {
-      emit(state.copyWith(
-        errorMessage: getErrorMessage(e),
-      ));
+      emit(state.copyWith(errorMessage: getErrorMessage(e)));
     }
   }
 }

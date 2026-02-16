@@ -24,7 +24,7 @@ class ServiceCategoriesSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
             child: Text(
               'Dịch vụ',
               style: AppTypography.titleMedium.copyWith(
@@ -36,8 +36,7 @@ class ServiceCategoriesSection extends StatelessWidget {
             height: 100,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               itemCount: serviceCategories.length,
               itemBuilder: (context, index) {
                 final cat = serviceCategories[index];
@@ -61,14 +60,12 @@ class ServiceCategoriesSection extends StatelessWidget {
                                       : cat.color.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(16),
                                   border: isSelected
-                                      ? Border.all(
-                                          color: cat.color, width: 2)
+                                      ? Border.all(color: cat.color, width: 2)
                                       : null,
                                 ),
                                 child: Icon(
                                   cat.icon,
-                                  color:
-                                      isSelected ? Colors.white : cat.color,
+                                  color: isSelected ? Colors.white : cat.color,
                                   size: 26,
                                 ),
                               ),

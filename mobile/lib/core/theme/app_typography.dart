@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'app_colors.dart';
-
 /// App Typography - Modern & Clean Text Styles
 class AppTypography {
   AppTypography._();
@@ -18,7 +16,6 @@ class AppTypography {
     fontWeight: FontWeight.bold,
     letterSpacing: -0.25,
     height: 1.12,
-    color: AppColors.textPrimary,
   );
 
   static TextStyle displayMedium = TextStyle(
@@ -27,7 +24,6 @@ class AppTypography {
     fontWeight: FontWeight.bold,
     letterSpacing: 0,
     height: 1.16,
-    color: AppColors.textPrimary,
   );
 
   static TextStyle displaySmall = TextStyle(
@@ -36,7 +32,6 @@ class AppTypography {
     fontWeight: FontWeight.bold,
     letterSpacing: 0,
     height: 1.22,
-    color: AppColors.textPrimary,
   );
 
   // === Headline Styles ===
@@ -46,7 +41,6 @@ class AppTypography {
     fontWeight: FontWeight.w700,
     letterSpacing: 0,
     height: 1.25,
-    color: AppColors.textPrimary,
   );
 
   static TextStyle headlineMedium = TextStyle(
@@ -55,7 +49,6 @@ class AppTypography {
     fontWeight: FontWeight.w600,
     letterSpacing: 0,
     height: 1.29,
-    color: AppColors.textPrimary,
   );
 
   static TextStyle headlineSmall = TextStyle(
@@ -64,7 +57,6 @@ class AppTypography {
     fontWeight: FontWeight.w600,
     letterSpacing: 0,
     height: 1.33,
-    color: AppColors.textPrimary,
   );
 
   // === Title Styles ===
@@ -74,7 +66,6 @@ class AppTypography {
     fontWeight: FontWeight.w600,
     letterSpacing: 0,
     height: 1.27,
-    color: AppColors.textPrimary,
   );
 
   static TextStyle titleMedium = TextStyle(
@@ -83,7 +74,6 @@ class AppTypography {
     fontWeight: FontWeight.w600,
     letterSpacing: 0.15,
     height: 1.5,
-    color: AppColors.textPrimary,
   );
 
   static TextStyle titleSmall = TextStyle(
@@ -92,7 +82,6 @@ class AppTypography {
     fontWeight: FontWeight.w600,
     letterSpacing: 0.1,
     height: 1.43,
-    color: AppColors.textPrimary,
   );
 
   // === Body Styles ===
@@ -102,7 +91,6 @@ class AppTypography {
     fontWeight: FontWeight.w400,
     letterSpacing: 0.5,
     height: 1.5,
-    color: AppColors.textPrimary,
   );
 
   static TextStyle bodyMedium = TextStyle(
@@ -111,7 +99,6 @@ class AppTypography {
     fontWeight: FontWeight.w400,
     letterSpacing: 0.25,
     height: 1.43,
-    color: AppColors.textPrimary,
   );
 
   static TextStyle bodySmall = TextStyle(
@@ -120,7 +107,6 @@ class AppTypography {
     fontWeight: FontWeight.w400,
     letterSpacing: 0.4,
     height: 1.33,
-    color: AppColors.textSecondary,
   );
 
   // === Label Styles ===
@@ -130,7 +116,6 @@ class AppTypography {
     fontWeight: FontWeight.w600,
     letterSpacing: 0.1,
     height: 1.43,
-    color: AppColors.textPrimary,
   );
 
   static TextStyle labelMedium = TextStyle(
@@ -139,7 +124,6 @@ class AppTypography {
     fontWeight: FontWeight.w500,
     letterSpacing: 0.5,
     height: 1.33,
-    color: AppColors.textPrimary,
   );
 
   static TextStyle labelSmall = TextStyle(
@@ -148,7 +132,6 @@ class AppTypography {
     fontWeight: FontWeight.w500,
     letterSpacing: 0.5,
     height: 1.45,
-    color: AppColors.textSecondary,
   );
 
   // === Custom Styles ===
@@ -158,7 +141,6 @@ class AppTypography {
     fontWeight: FontWeight.w600,
     letterSpacing: 0.5,
     height: 1.5,
-    color: AppColors.textWhite,
   );
 
   static TextStyle caption = TextStyle(
@@ -167,7 +149,6 @@ class AppTypography {
     fontWeight: FontWeight.w400,
     letterSpacing: 0.4,
     height: 1.33,
-    color: AppColors.textHint,
   );
 
   static TextStyle price = TextStyle(
@@ -176,7 +157,6 @@ class AppTypography {
     fontWeight: FontWeight.w700,
     letterSpacing: 0,
     height: 1.33,
-    color: AppColors.primary,
   );
 
   static TextStyle rating = TextStyle(
@@ -185,6 +165,5 @@ class AppTypography {
     fontWeight: FontWeight.w600,
     letterSpacing: 0,
     height: 1.43,
-    color: AppColors.starFilled,
   );
 }

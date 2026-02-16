@@ -29,6 +29,7 @@ import '../../features/safety/data/kyc_repository.dart';
 import '../../features/safety/presentation/bloc/emergency_contacts_bloc.dart';
 import '../../features/safety/presentation/bloc/kyc_bloc.dart';
 import '../../features/settings/data/settings_repository.dart';
+import '../../features/settings/data/terms_repository.dart';
 import '../../features/settings/presentation/bloc/settings_bloc.dart';
 import '../../features/wallet/data/wallet_repository.dart';
 import '../../features/wallet/presentation/bloc/wallet_bloc.dart';
@@ -116,6 +117,11 @@ Future<void> setupDependencies() async {
     () => SettingsRepository(apiClient: getIt<ApiClient>()),
   );
 
+  // Terms Repository
+  getIt.registerLazySingleton<TermsRepository>(
+    () => TermsRepository(apiClient: getIt<ApiClient>()),
+  );
+
   // Favorites Repository
   getIt.registerLazySingleton<FavoritesRepository>(
     () => FavoritesRepository(getIt<ApiClient>()),
@@ -160,9 +166,7 @@ Future<void> setupDependencies() async {
 
   // Auth BLoC - Lazy singleton to share auth state globally
   getIt.registerLazySingleton<AuthBloc>(
-    () => AuthBloc(
-      authRepository: getIt<AuthRepository>(),
-    ),
+    () => AuthBloc(authRepository: getIt<AuthRepository>()),
   );
 
   // Profile BLoC - Singleton to share profile state across pages
@@ -230,7 +234,7 @@ Future<void> setupDependencies() async {
   );
 
   // Favorites BLoC
-  getIt.registerFactory<FavoritesBloc>(
+  getIt.registerLazySingleton<FavoritesBloc>(
     () => FavoritesBloc(repository: getIt<FavoritesRepository>()),
   );
 
