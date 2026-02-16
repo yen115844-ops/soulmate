@@ -13,6 +13,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'app.dart';
 import 'core/di/injection.dart';
 import 'core/network/api_client.dart';
+import 'core/services/app_deep_link_service.dart';
 import 'core/services/connectivity_service.dart';
 import 'core/services/deep_link_service.dart';
 import 'core/services/local_notification_service.dart';
@@ -118,6 +119,9 @@ void main() {
         overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
       );
       FlutterNativeSplash.remove();
+
+      // Initialize URL-based deep link handling (App Links / Universal Links)
+      await AppDeepLinkService().init();
 
       // Pre-warm location detection (non-blocking)
       // Result gets cached so HomeAppBar picks it up instantly

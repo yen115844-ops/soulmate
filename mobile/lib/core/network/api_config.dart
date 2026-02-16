@@ -16,6 +16,18 @@ class ApiConfig {
   static const String _defaultReleaseUrl =
       'https://gomate-backend.trancongtien.io.vn/api'; // TODO: Replace with real production URL
 
+  /// Web/CMS URL for sharing links & deep linking
+  static const String _envWebUrl = String.fromEnvironment('WEB_URL');
+  static const String _defaultDebugWebUrl = 'http://localhost:3000';
+  static const String _defaultReleaseWebUrl =
+      'https://gomate-cms.vercel.app'; // TODO: Replace with real production URL
+
+  /// Deep link domain (without scheme) - used for App Links / Universal Links
+  static const String deepLinkDomain = 'gomate-cms.vercel.app';
+
+  /// Custom URL scheme for fallback deep linking
+  static const String deepLinkScheme = 'matesocial';
+
   static String get baseUrl {
     if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
 
@@ -25,6 +37,21 @@ class ApiConfig {
 
     return _defaultReleaseUrl;
   }
+
+  /// Web URL for generating shareable links
+  static String get webUrl {
+    if (_envWebUrl.isNotEmpty) return _envWebUrl;
+
+    if (!kDebugMode) {
+      return _defaultDebugWebUrl;
+    }
+
+    return _defaultReleaseWebUrl;
+  }
+
+  /// Generate a shareable partner profile URL
+  static String partnerShareUrl(String partnerId) =>
+      '$webUrl/partner/$partnerId';
 
   // Timeouts
   static const Duration connectTimeout = Duration(seconds: 30);

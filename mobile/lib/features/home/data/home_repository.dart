@@ -87,7 +87,7 @@ class HomeRepository with BaseRepositoryMixin {
           if (lat != null) 'lat': lat,
           if (lng != null) 'lng': lng,
           if (radius != null) 'radius': radius,
-          if (provinceId != null) 'provinceId': provinceId,
+          if (provinceId != null) 'cityId': provinceId,
           if (districtId != null) 'districtId': districtId,
           if (verifiedOnly != null) 'verifiedOnly': verifiedOnly,
           if (availableNow != null) 'availableNow': availableNow,

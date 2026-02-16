@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
-const publicRoutes = ["/login", "/forgot-password", "/terms-of-service", "/terms-and-conditions"];
+const publicRoutes = ["/login", "/forgot-password", "/terms-of-service", "/terms-and-conditions", "/partner"];
 const redirectWhenAuth = ["/login", "/forgot-password"];
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {

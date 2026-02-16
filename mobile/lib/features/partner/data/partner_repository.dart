@@ -420,7 +420,7 @@ class PartnerRepository with BaseRepositoryMixin {
         if (gender != null) 'gender': gender,
         if (minRate != null) 'minRate': minRate,
         if (maxRate != null) 'maxRate': maxRate,
-        if (city != null) 'city': city,
+        if (city != null) 'cityId': city,
         if (verifiedOnly != null) 'verifiedOnly': verifiedOnly,
         if (sortBy != null) 'sortBy': sortBy,
       },

@@ -8,6 +8,22 @@
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
 		<string>SoulMate</string>
+		
+		<!-- Custom URL scheme for deep linking -->
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+				<key>CFBundleURLName</key>
+				<string>soulmate.vn</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>matesocial</string>
+				</array>
+			</dict>
+		</array>
+		
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>
@@ -57,6 +73,8 @@
 		</array>
 		<key>FirebaseAppDelegateProxyEnabled</key>
 		<false/>
+		<key>FlutterDeepLinkingEnabled</key>
+		<true/>
 		<key>BGTaskSchedulerPermittedIdentifiers</key>
 		<array>
 			<string>com.google.firebase.messaging</string>

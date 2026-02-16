@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection.dart';
+import '../../../../core/services/app_deep_link_service.dart';
 import '../../../../core/services/deep_link_service.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../shared/widgets/auth_guard.dart';
@@ -76,6 +77,11 @@ class _HomePageViewState extends State<_HomePageView> {
         deepLink.processPendingDeepLink();
       });
     }
+
+    // Process pending URL-based deep links (App Links / Universal Links)
+    Future.delayed(const Duration(milliseconds: 500), () {
+      AppDeepLinkService().processPendingDeepLink();
+    });
   }
 
   @override

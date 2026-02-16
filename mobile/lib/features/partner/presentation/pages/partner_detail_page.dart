@@ -6,9 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ionicons/ionicons.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/service_type_emoji.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/network/api_config.dart';
 import '../../../../core/services/local_storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -16,10 +18,10 @@ import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../shared/widgets/auth_guard.dart';
 import '../../../favorites/data/favorites_repository.dart';
-import '../../../home/data/home_repository.dart';
-import '../../domain/entities/partner_entity.dart';
 import '../../../favorites/presentation/bloc/favorites_bloc.dart';
 import '../../../favorites/presentation/bloc/favorites_event.dart';
+import '../../../home/data/home_repository.dart';
+import '../../domain/entities/partner_entity.dart';
 
 /// Trang chi tiết Partner - Modern UI Design 2026
 /// Không dùng SliverAppBar, hiển thị gallery rõ ràng hơn
@@ -2004,10 +2006,14 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
 
   void _showShareSheet() {
     HapticFeedback.mediumImpact();
+    final shareUrl = ApiConfig.partnerShareUrl(widget.partnerId);
+    final partnerName = _partner?.name ?? 'Partner';
+    final shareText = 'Xem hồ sơ của $partnerName trên Mate Social:\n$shareUrl';
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
+      builder: (ctx) => Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: context.appColors.surface,
@@ -2039,18 +2045,61 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
                   Ionicons.copy_outline,
                   'Sao chép',
                   const Color(0xFF6366F1),
+                  onTap: () {
+                    Clipboard.setData(ClipboardData(text: shareUrl));
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Đã sao chép liên kết'),
+                        backgroundColor: const Color(0xFF6366F1),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  },
                 ),
                 _shareOption(
                   Ionicons.chatbubble_outline,
                   'Tin nhắn',
                   const Color(0xFF10B981),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    SharePlus.instance.share(
+                      ShareParams(
+                        text: shareText,
+                      ),
+                    );
+                  },
                 ),
                 _shareOption(
                   Icons.facebook,
                   'Facebook',
                   const Color(0xFF1877F2),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    SharePlus.instance.share(
+                      ShareParams(
+                        text: shareText,
+                      ),
+                    );
+                  },
                 ),
-                _shareOption(Icons.share, 'Khác', const Color(0xFF64748B)),
+                _shareOption(
+                  Icons.share,
+                  'Khác',
+                  const Color(0xFF64748B),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    SharePlus.instance.share(
+                      ShareParams(
+                        text: shareText,
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
             SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
@@ -2060,7 +2109,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
     );
   }
 
-  Widget _shareOption(IconData icon, String label, Color color) {
+  Widget _shareOption(IconData icon, String label, Color color, {VoidCallback? onTap}) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -2068,7 +2117,7 @@ class _PartnerDetailPageState extends State<PartnerDetailPage>
           color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(18),
           child: InkWell(
-            onTap: () => Navigator.pop(context),
+            onTap: onTap ?? () => Navigator.pop(context),
             borderRadius: BorderRadius.circular(18),
             child: Container(
               width: 60,

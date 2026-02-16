@@ -1,0 +1,14 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "HD27T77BMR.soulmate.vn",
+        "paths": ["/partner/*"]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["HD27T77BMR.soulmate.vn"]
+  }
+}
