@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { NotificationType } from '@prisma/client';
 import { PrismaService } from '../../database/prisma/prisma.service';
+import { NotificationType } from '../../generated/prisma/client';
 import { NotificationsService } from '../notifications';
 import { CreateReportDto, ReportQueryDto, ResolveReportDto } from './dto';
 

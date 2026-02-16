@@ -6,8 +6,8 @@ import {
     Logger,
     NotFoundException,
 } from '@nestjs/common';
-import { BookingStatus } from '@prisma/client';
 import { PrismaService } from '../../database/prisma/prisma.service';
+import { BookingStatus } from '../../generated/prisma/client';
 import {
     CreateReviewDto,
     CreateReviewResponseDto,

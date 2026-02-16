@@ -161,8 +161,7 @@ class _LoginPromptSheet extends StatelessWidget {
               // Login button
               SizedBox(
                 width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
+                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
                     context.push(RouteNames.login);
@@ -186,7 +185,6 @@ class _LoginPromptSheet extends StatelessWidget {
               // Register button
               SizedBox(
                 width: double.infinity,
-                height: 52,
                 child: OutlinedButton(
                   onPressed: () {
                     Navigator.of(context).pop();

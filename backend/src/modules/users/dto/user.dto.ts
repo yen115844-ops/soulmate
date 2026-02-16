@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Gender, KycStatus, UserRole, UserStatus } from '@prisma/client';
 import { Type } from 'class-transformer';
 import { IsArray, IsDateString, IsEnum, IsNumber, IsOptional, IsString, IsUrl, IsUUID, Max, MaxLength, Min } from 'class-validator';
+import { Gender, KycStatus, UserRole, UserStatus } from '../../../generated/prisma/client';
 
 export class UpdateProfileDto {
   @ApiPropertyOptional({ example: 'Nguyen Van A' })
@@ -29,7 +29,7 @@ export class UpdateProfileDto {
   @IsString()
   bio?: string;
 
-  @ApiPropertyOptional({ enum: Gender })
+  @ApiPropertyOptional({ enum: Object.values(Gender) })
   @IsOptional()
   @IsEnum(Gender)
   gender?: Gender;
@@ -140,7 +140,7 @@ export class UpdateLocationDto {
 }
 
 export class UpdateUserStatusDto {
-  @ApiProperty({ example: 'ACTIVE', enum: UserStatus })
+  @ApiProperty({ example: 'ACTIVE', enum: Object.values(UserStatus) })
   @IsEnum(UserStatus)
   status: UserStatus;
 
@@ -171,12 +171,12 @@ export class AdminUserQueryDto {
   @IsString()
   search?: string;
 
-  @ApiPropertyOptional({ enum: UserRole })
+  @ApiPropertyOptional({ enum: Object.values(UserRole) })
   @IsOptional()
   @IsEnum(UserRole)
   role?: UserRole;
 
-  @ApiPropertyOptional({ enum: UserStatus })
+  @ApiPropertyOptional({ enum: Object.values(UserStatus) })
   @IsOptional()
   @IsEnum(UserStatus)
   status?: UserStatus;
@@ -214,7 +214,7 @@ export class AdminKycQueryDto {
   @IsString()
   search?: string;
 
-  @ApiPropertyOptional({ enum: KycStatus })
+  @ApiPropertyOptional({ enum: Object.values(KycStatus) })
   @IsOptional()
   @IsEnum(KycStatus)
   status?: KycStatus;
@@ -231,7 +231,7 @@ export class AdminKycQueryDto {
 }
 
 export class ReviewKycDto {
-  @ApiProperty({ enum: KycStatus, example: 'VERIFIED' })
+  @ApiProperty({ enum: Object.values(KycStatus), example: 'VERIFIED' })
   @IsEnum(KycStatus)
   status: KycStatus;
 

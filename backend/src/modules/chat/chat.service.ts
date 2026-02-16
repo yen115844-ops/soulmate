@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { ConversationStatus, MessageStatus, MessageType, NotificationType } from '@prisma/client';
 import { PrismaService } from '../../database/prisma/prisma.service';
+import { ConversationStatus, MessageStatus, MessageType, NotificationType } from '../../generated/prisma/client';
 import { NotificationsService } from '../notifications';
 import {
     CreateConversationDto,

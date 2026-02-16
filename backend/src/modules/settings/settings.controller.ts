@@ -1,13 +1,12 @@
 import { Body, Controller, Get, Put, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { UserRole } from '@prisma/client';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { UserRole } from '../../generated/prisma/client';
 import {
-  AppSettingsResponseDto,
-  UpdateAppSettingsDto,
-  UpdateTermsDto,
+    UpdateAppSettingsDto,
+    UpdateTermsDto
 } from './dto';
 import { SettingsService } from './settings.service';
 

@@ -5,9 +5,8 @@ import {
     Logger,
     NotFoundException,
 } from '@nestjs/common';
-import { BookingStatus, NotificationType } from '@prisma/client';
-import { Decimal } from '@prisma/client/runtime/library';
 import { PrismaService } from '../../database/prisma/prisma.service';
+import { BookingStatus, NotificationType, Prisma } from '../../generated/prisma/client';
 import { NotificationsService } from '../notifications';
 import { SettingsService } from '../settings/settings.service';
 import { WalletService } from '../wallet/wallet.service';
@@ -129,7 +128,7 @@ export class BookingsService {
     }
 
     const hourlyRate = partnerProfile.hourlyRate;
-    const subtotal = new Decimal(hourlyRate.toString()).mul(durationHours);
+    const subtotal = new Prisma.Decimal(hourlyRate.toString()).mul(durationHours);
     const serviceFee = subtotal.mul(serviceFeePercent).div(100);
     const totalAmount = subtotal.add(serviceFee);
 

@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { EscrowStatus, TransactionStatus, TransactionType } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../../database/prisma/prisma.service';
+import { EscrowStatus, TransactionStatus, TransactionType } from '../../generated/prisma/client';
 
 @Injectable()
 export class WalletService {

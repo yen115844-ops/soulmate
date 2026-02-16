@@ -7,7 +7,7 @@
 export {
     BookingStatus, ConversationStatus, EscrowStatus, Gender, KycStatus, MessageStatus, MessageType, NotificationType, SlotStatus, SosStatus, TransactionStatus, TransactionType, UserRole,
     UserStatus
-} from '@prisma/client';
+} from '../../generated/prisma/client';
 
 // Additional enums không có trong Prisma schema
 

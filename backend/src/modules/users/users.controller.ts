@@ -17,12 +17,12 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { UserRole } from '@prisma/client';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { UserRole } from '../../generated/prisma/client';
 import { AdminKycQueryDto, AdminUserQueryDto, CreateEmergencyContactDto, ReviewKycDto, SubmitKycDto, UpdateEmergencyContactDto, UpdateLocationDto, UpdateProfileDto, UpdateSettingsDto, UpdateUserStatusDto } from './dto';
 import { UsersService } from './users.service';
 
@@ -320,12 +320,12 @@ export class UsersController {
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Get all users (Admin only)' })
-  @ApiQuery({ name: 'role', required: false, enum: UserRole })
+  @ApiQuery({ name: 'role', required: false, enum: Object.values(UserRole) })
   @ApiQuery({ name: 'search', required: false })
   @ApiResponse({ status: 200, description: 'Users list retrieved' })
   async findAll(
     @Query() paginationDto: PaginationDto,
-    @Query('role') role?: UserRole,
+    @Query('role') role?: string,
     @Query('search') search?: string,
   ) {
     return this.usersService.findAll(paginationDto, { role, search });

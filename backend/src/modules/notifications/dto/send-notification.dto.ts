@@ -1,5 +1,4 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { NotificationType } from '@prisma/client';
 import {
     IsArray,
     IsEnum,
@@ -8,6 +7,7 @@ import {
     IsOptional,
     IsString,
 } from 'class-validator';
+import { NotificationType } from '../../../generated/prisma/client';
 
 export class SendPushNotificationDto {
   @ApiProperty({
@@ -19,7 +19,7 @@ export class SendPushNotificationDto {
 
   @ApiProperty({
     description: 'Notification type',
-    enum: NotificationType,
+    enum: Object.values(NotificationType),
   })
   @IsEnum(NotificationType)
   type: NotificationType;
@@ -82,7 +82,7 @@ export class SendBatchNotificationDto {
 
   @ApiProperty({
     description: 'Notification type',
-    enum: NotificationType,
+    enum: Object.values(NotificationType),
   })
   @IsEnum(NotificationType)
   type: NotificationType;

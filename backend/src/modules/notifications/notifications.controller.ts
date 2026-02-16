@@ -10,10 +10,10 @@ import {
     UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { UserRole } from '@prisma/client';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { UserRole } from '../../generated/prisma/client';
 import { AdminQueryNotificationsDto, AdminSendNotificationDto } from './dto/admin-notification.dto';
 import { MarkReadDto } from './dto/mark-read.dto';
 import { QueryNotificationsDto } from './dto/query-notifications.dto';

@@ -19,7 +19,7 @@ class ApiConfig {
   static String get baseUrl {
     if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
 
-    if (kDebugMode) {
+    if (!kDebugMode) {
       return _defaultDebugUrl;
     }
 

@@ -146,9 +146,10 @@ class _EditProfileContentState extends State<_EditProfileContent> {
         _selectedProvinceId = null;
       }
     } else if (_savedCityName != null && _savedCityName!.isNotEmpty) {
-      // Fallback: find province by name (for backward compatibility)
+      // Fallback: find province by name or nameEn (for backward compatibility)
       final province = state.provinces.firstWhere(
-        (p) => p.name == _savedCityName || p.code == _savedCityName,
+        (p) => p.name == _savedCityName || p.code == _savedCityName ||
+               (p.nameEn != null && p.nameEn!.toLowerCase() == _savedCityName!.toLowerCase()),
         orElse: () => ProvinceModel(id: '', code: '', name: ''),
       );
       
@@ -174,9 +175,10 @@ class _EditProfileContentState extends State<_EditProfileContent> {
     
     if (_savedDistrictName == null || _savedDistrictName!.isEmpty) return;
     
-    // Fallback: find district by name
+    // Fallback: find district by name or nameEn
     final district = state.districts.firstWhere(
-      (d) => d.name == _savedDistrictName || d.code == _savedDistrictName,
+      (d) => d.name == _savedDistrictName || d.code == _savedDistrictName ||
+             (d.nameEn != null && d.nameEn!.toLowerCase() == _savedDistrictName!.toLowerCase()),
       orElse: () => DistrictModel(id: '', provinceId: '', code: '', name: ''),
     );
     

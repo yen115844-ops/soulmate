@@ -11,8 +11,8 @@ import {
     WebSocketGateway,
     WebSocketServer,
 } from '@nestjs/websockets';
-import { Notification } from '@prisma/client';
 import { Server, Socket } from 'socket.io';
+import { Notification } from '../../generated/prisma/client';
 
 // Events from client
 export const NOTIFICATION_CLIENT_EVENTS = {

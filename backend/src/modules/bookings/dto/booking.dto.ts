@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { BookingStatus } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
 import { IsArray, IsDateString, IsEnum, IsNumber, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
+import { BookingStatus } from '../../../generated/prisma/client';
 
 export class CreateBookingDto {
   @ApiProperty({ description: 'Partner user ID' })
@@ -48,7 +48,7 @@ export class CreateBookingDto {
 }
 
 export class UpdateBookingStatusDto {
-  @ApiProperty({ example: 'CONFIRMED', enum: BookingStatus })
+  @ApiProperty({ example: 'CONFIRMED', enum: Object.values(BookingStatus) })
   @IsEnum(BookingStatus)
   status: BookingStatus;
 
@@ -87,7 +87,7 @@ export class BookingQueryDto {
   @Max(50)
   limit?: number;
 
-  @ApiPropertyOptional({ enum: BookingStatus, isArray: true, description: 'Filter by status (can be comma-separated)' })
+  @ApiPropertyOptional({ enum: Object.values(BookingStatus), isArray: true, description: 'Filter by status (can be comma-separated)' })
   @IsOptional()
   @Transform(({ value }) => {
     if (typeof value === 'string') {

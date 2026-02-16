@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { SlotStatus, UserRole, UserStatus } from '@prisma/client';
 import { PrismaService } from '../../database/prisma/prisma.service';
+import { SlotStatus, UserRole, UserStatus } from '../../generated/prisma/client';
 import {
     AdminPartnerQueryDto,
     CreateAvailabilitySlotDto,

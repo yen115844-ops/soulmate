@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { NotificationType, SosStatus } from '@prisma/client';
 import { PrismaService } from '../../database/prisma/prisma.service';
+import { NotificationType, SosStatus } from '../../generated/prisma/client';
 import { NotificationsService } from '../notifications';
 import {
     CreateEmergencyContactDto,

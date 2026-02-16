@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { BookingStatus, KycStatus, UserStatus } from '@prisma/client';
 import { PrismaService } from '../../database/prisma/prisma.service';
+import { BookingStatus, KycStatus, UserStatus } from '../../generated/prisma/client';
 import { QueryStatsDto } from './dto';
 
 type DateRange = { from: Date; to: Date };

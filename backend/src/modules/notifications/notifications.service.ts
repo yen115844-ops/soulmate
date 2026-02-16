@@ -1,8 +1,8 @@
 import { InjectQueue } from '@nestjs/bull';
 import { Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
-import { NotificationType } from '@prisma/client';
 import type { Queue } from 'bull';
 import { PrismaService } from '../../database/prisma/prisma.service';
+import { NotificationType } from '../../generated/prisma/client';
 import { SettingsService } from '../settings/settings.service';
 import { AdminQueryNotificationsDto, AdminSendNotificationDto, NotificationStats } from './dto/admin-notification.dto';
 import { QueryNotificationsDto } from './dto/query-notifications.dto';

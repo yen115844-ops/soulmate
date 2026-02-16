@@ -233,40 +233,52 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> with BaseRepositoryMixin {
   ) async {
     emit(state.copyWith(locationStatus: LocationDetectionStatus.detecting));
 
-    // Step 1: Load provinces from API
-    final provinces = await _repository.getProvinces();
-    emit(state.copyWith(provinces: provinces));
+    try {
+      // Step 1: Load provinces from API
+      final provinces = await _repository.getProvinces();
+      emit(state.copyWith(provinces: provinces));
 
-    // Step 2: Detect GPS location
-    final info = await LocationService.instance.detectCurrentLocation();
+      // Step 2: Detect GPS location
+      final info = await LocationService.instance.detectCurrentLocation();
 
-    if (info == null) {
-      // Permission denied or location unavailable → default to first province
-      final firstProvince = provinces.isNotEmpty ? provinces.first : null;
-      if (firstProvince != null) {
-        final newFilter = state.filter.copyWith(
-          provinceId: firstProvince.id,
-          city: firstProvince.name,
-        );
-        emit(
-          state.copyWith(
-            locationStatus: LocationDetectionStatus.permissionDenied,
-            filter: newFilter,
-          ),
-        );
+      if (info == null) {
+        // Permission denied or location unavailable → default to first province
+        final firstProvince = provinces.isNotEmpty ? provinces.first : null;
+        if (firstProvince != null) {
+          final newFilter = state.filter.copyWith(
+            provinceId: firstProvince.id,
+            city: firstProvince.name,
+          );
+          emit(
+            state.copyWith(
+              locationStatus: LocationDetectionStatus.permissionDenied,
+              filter: newFilter,
+            ),
+          );
+        } else {
+          // No provinces available → load partners without location filter
+          emit(
+            state.copyWith(
+              locationStatus: LocationDetectionStatus.permissionDenied,
+            ),
+          );
+        }
         add(const HomeLoadPartners(refresh: true));
-      } else {
-        emit(
-          state.copyWith(
-            locationStatus: LocationDetectionStatus.permissionDenied,
-          ),
-        );
+        return;
       }
-      return;
-    }
 
-    // Step 3: Match geocoded names against province data
-    await _matchAndApplyLocation(info, provinces, emit);
+      // Step 3: Match geocoded names against province data
+      await _matchAndApplyLocation(info, provinces, emit);
+    } catch (e) {
+      debugPrint('HomeBloc: Location detection error: $e');
+      // If location detection fails, still load partners without location filter
+      emit(
+        state.copyWith(
+          locationStatus: LocationDetectionStatus.permissionDenied,
+        ),
+      );
+      add(const HomeLoadPartners(refresh: true));
+    }
   }
 
   /// Retry location detection (clears cache first)
@@ -304,11 +316,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> with BaseRepositoryMixin {
     final rawCity = info.city;
     final rawDistrict = info.district;
 
-    // Match city against provinces list
+    // Match city against provinces list (check both Vietnamese name and English name)
     ProvinceModel? matchedProvince;
     if (rawCity != null && provinces.isNotEmpty) {
       for (final p in provinces) {
-        if (_fuzzyMatch(rawCity, p.name)) {
+        if (_fuzzyMatch(rawCity, p.name) ||
+            (p.nameEn != null && _fuzzyMatch(rawCity, p.nameEn!))) {
           matchedProvince = p;
           break;
         }
@@ -322,7 +335,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> with BaseRepositoryMixin {
         matchedProvince.id,
       );
       for (final d in districts) {
-        if (_fuzzyMatch(rawDistrict, d.name)) {
+        if (_fuzzyMatch(rawDistrict, d.name) ||
+            (d.nameEn != null && _fuzzyMatch(rawDistrict, d.nameEn!))) {
           matchedDistrict = d;
           break;
         }
@@ -336,12 +350,15 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> with BaseRepositoryMixin {
     );
 
     if (matchedProvince != null) {
-      final newFilter = state.filter.copyWith(
-        provinceId: matchedProvince.id,
-        city: matchedProvince.name,
-        districtId: matchedDistrict?.id,
-        district: matchedDistrict?.name,
-      );
+      // Use clear() first to remove old district if no match, then set new values
+      final newFilter = state.filter
+          .clear(clearDistrict: matchedDistrict == null)
+          .copyWith(
+            provinceId: matchedProvince.id,
+            city: matchedProvince.name,
+            districtId: matchedDistrict?.id,
+            district: matchedDistrict?.name,
+          );
       emit(
         state.copyWith(
           filter: newFilter,
@@ -386,6 +403,11 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> with BaseRepositoryMixin {
     final b = _normalize(apiName);
     if (a == b) return true;
     if (b.contains(a) || a.contains(b)) return true;
+    // Also compare without spaces (e.g. "hanoi" vs "ha noi")
+    final aNoSpace = a.replaceAll(' ', '');
+    final bNoSpace = b.replaceAll(' ', '');
+    if (aNoSpace == bNoSpace) return true;
+    if (bNoSpace.contains(aNoSpace) || aNoSpace.contains(bNoSpace)) return true;
     return false;
   }
 

@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { SlotStatus, UserStatus } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
 import { IsArray, IsBoolean, IsEnum, IsNumber, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
+import { SlotStatus, UserStatus } from '../../../generated/prisma/client';
 
 export class CreatePartnerProfileDto {
   @ApiProperty({ example: 500000, description: 'Hourly rate in VND' })
@@ -162,7 +162,7 @@ export class CreateAvailabilitySlotDto {
 }
 
 export class UpdateAvailabilitySlotDto {
-  @ApiPropertyOptional({ enum: SlotStatus })
+  @ApiPropertyOptional({ enum: Object.values(SlotStatus) })
   @IsOptional()
   @IsEnum(SlotStatus)
   status?: SlotStatus;
@@ -306,7 +306,7 @@ export class AdminPartnerQueryDto {
   @IsString()
   search?: string;
 
-  @ApiPropertyOptional({ enum: UserStatus })
+  @ApiPropertyOptional({ enum: Object.values(UserStatus) })
   @IsOptional()
   @IsEnum(UserStatus)
   status?: UserStatus;
@@ -334,7 +334,7 @@ export class AdminPartnerQueryDto {
 }
 
 export class UpdatePartnerStatusDto {
-  @ApiProperty({ enum: UserStatus })
+  @ApiProperty({ enum: Object.values(UserStatus) })
   @IsEnum(UserStatus)
   status: UserStatus;
 

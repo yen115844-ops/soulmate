@@ -1,5 +1,4 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { NotificationType } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
 import {
     IsArray,
@@ -12,6 +11,7 @@ import {
     Min,
     MinLength,
 } from 'class-validator';
+import { NotificationType } from '../../../generated/prisma/client';
 
 export class AdminQueryNotificationsDto {
   @ApiPropertyOptional()
@@ -33,7 +33,7 @@ export class AdminQueryNotificationsDto {
   @IsString()
   search?: string;
 
-  @ApiPropertyOptional({ enum: NotificationType })
+  @ApiPropertyOptional({ enum: Object.values(NotificationType) })
   @IsOptional()
   @IsEnum(NotificationType)
   type?: NotificationType;
@@ -73,7 +73,7 @@ export class AdminSendNotificationDto {
   @MaxLength(2000)
   body: string;
 
-  @ApiPropertyOptional({ enum: NotificationType })
+  @ApiPropertyOptional({ enum: Object.values(NotificationType) })
   @IsOptional()
   @IsEnum(NotificationType)
   type?: NotificationType = NotificationType.SYSTEM;
