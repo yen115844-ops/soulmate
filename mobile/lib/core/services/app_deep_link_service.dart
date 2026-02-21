@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:flutter/foundation.dart';
 
-import '../../config/routes/app_router.dart';
 import '../network/api_config.dart';
 
 /// Service for handling URL-based deep links (App Links / Universal Links).
@@ -100,16 +99,18 @@ class AppDeepLinkService {
     return null;
   }
 
-  /// Navigate via GoRouter. Goes to /home first then pushes the target.
+  /// Navigate via GoRouter directly to the target route.
+  /// Uses `go()` to replace the entire stack — avoids double navigation
+  /// that would happen if we did go('/home') then push(route).
   void _navigateToRoute(String route) {
     try {
-      final router = AppRouter.router;
-      Future.microtask(() {
-        router.go('/home');
-        Future.delayed(const Duration(milliseconds: 200), () {
-          router.push(route);
-        });
-      });
+      // final router = AppRouter.router;
+      // Future.microtask(() {
+      //   router.go('/home');
+      //   Future.delayed(const Duration(milliseconds: 200), () {
+      //     router.push(route);
+      //   });
+      // });
     } catch (e) {
       debugPrint('AppDeepLinkService: Navigation failed for $route: $e');
     }

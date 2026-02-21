@@ -22,19 +22,18 @@ import {
     Users,
 } from "lucide-react";
 
-// Helper to format currency
-const formatCurrency = (amount: number) => {
+// Helper to format credits
+const formatCredits = (amount: number) => {
   if (amount >= 1000000000) {
-    return `₫${(amount / 1000000000).toFixed(1)}B`;
+    return `${(amount / 1000000000).toFixed(1)}B Credits`;
   }
   if (amount >= 1000000) {
-    return `₫${(amount / 1000000).toFixed(1)}M`;
+    return `${(amount / 1000000).toFixed(1)}M Credits`;
   }
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
+  if (amount >= 1000) {
+    return `${(amount / 1000).toFixed(0)}K Credits`;
+  }
+  return `${new Intl.NumberFormat("vi-VN").format(amount)} Credits`;
 };
 
 // Helper to format number
@@ -207,7 +206,7 @@ export default function DashboardPage() {
     { title: "Tổng đặt chỗ", value: formatNumber(bookings.total || 0), description: `${formatNumber(bookings.completed || 0)} hoàn thành`, icon: Calendar },
     { title: "KYC chờ duyệt", value: formatNumber(kyc.pending || 0), description: `${formatNumber(kyc.verified || 0)} đã xác minh`, icon: ShieldCheck },
     { title: "Đặt chỗ hôm nay", value: formatNumber(bookings.todayCount || 0), description: "Đặt chỗ trong ngày", icon: Activity },
-    { title: "Doanh thu tháng", value: formatCurrency(bookings.monthlyRevenue || 0), description: "Tháng này", icon: DollarSign },
+    { title: "Doanh thu tháng", value: formatCredits(bookings.monthlyRevenue || 0), description: "Tháng này", icon: DollarSign },
     { title: "Đặt chỗ chờ xử lý", value: formatNumber(bookings.pending || 0), description: "Chờ xác nhận", icon: TrendingUp },
     { title: "Điểm đánh giá TB", value: Number(partners.averageRating || 0).toFixed(1), description: "Trung bình đối tác", icon: TrendingUp },
   ];
@@ -277,7 +276,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium">{formatCurrency(booking.totalAmount)}</p>
+                      <p className="font-medium">{formatCredits(booking.totalAmount)}</p>
                       <BookingStatusBadge status={booking.status} />
                     </div>
                   </div>

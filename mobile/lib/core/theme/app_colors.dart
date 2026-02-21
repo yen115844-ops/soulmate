@@ -70,6 +70,13 @@ class AppColors {
   static const Color offline = Color(0xFF6B7280);
   static const Color busy = Color(0xFFF59E0B);
 
+  // === Verified Badge ===
+  static const Color verified = Color(0xFF3B82F6);
+
+  // === Premium Badge ===
+  static const Color premium = Color(0xFFFFD700);
+  static const Color premiumGold = Color(0xFFFFA500);
+
   // === Rating Colors ===
   static const Color starFilled = Color(0xFFFBBF24);
   static const Color starEmpty = Color(0xFFE5E7EB);

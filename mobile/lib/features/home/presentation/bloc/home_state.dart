@@ -26,6 +26,7 @@ class HomeState extends Equatable {
   // Location detection
   final LocationDetectionStatus locationStatus;
   final List<ProvinceModel> provinces;
+  final List<ServiceTypeModel> serviceTypes;
 
   const HomeState({
     this.status = HomeStatus.initial,
@@ -38,6 +39,7 @@ class HomeState extends Equatable {
     this.favoriteIds = const {},
     this.locationStatus = LocationDetectionStatus.initial,
     this.provinces = const [],
+    this.serviceTypes = const [],
   });
 
   /// Initial state
@@ -70,6 +72,7 @@ class HomeState extends Equatable {
     bool clearError = false,
     LocationDetectionStatus? locationStatus,
     List<ProvinceModel>? provinces,
+    List<ServiceTypeModel>? serviceTypes,
   }) {
     return HomeState(
       status: status ?? this.status,
@@ -82,6 +85,7 @@ class HomeState extends Equatable {
       favoriteIds: favoriteIds ?? this.favoriteIds,
       locationStatus: locationStatus ?? this.locationStatus,
       provinces: provinces ?? this.provinces,
+      serviceTypes: serviceTypes ?? this.serviceTypes,
     );
   }
 
@@ -97,6 +101,7 @@ class HomeState extends Equatable {
         favoriteIds,
         locationStatus,
         provinces,
+        serviceTypes,
       ];
 }
 

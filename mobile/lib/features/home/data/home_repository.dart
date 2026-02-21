@@ -30,6 +30,23 @@ class HomeRepository with BaseRepositoryMixin {
     }
   }
 
+  /// Load all service types from master data
+  Future<List<ServiceTypeModel>> getServiceTypes() async {
+    try {
+      final response = await _apiClient.get('/master-data/service-types');
+      final data = extractRawData(response.data);
+      if (data is List) {
+        return data
+            .map((e) => ServiceTypeModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('HomeRepository: Load service types error: $e');
+      return [];
+    }
+  }
+
   /// Load districts for a province
   Future<List<DistrictModel>> getDistrictsByProvinceId(
     String provinceId,

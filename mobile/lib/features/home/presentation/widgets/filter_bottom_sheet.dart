@@ -54,8 +54,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
       filter.maxAge?.toDouble() ?? 35,
     );
     _priceRange = RangeValues(
-      filter.minRate?.toDouble() ?? 100000,
-      filter.maxRate?.toDouble() ?? 1000000,
+      filter.minRate?.toDouble() ?? 10,
+      filter.maxRate?.toDouble() ?? 500,
     );
     _selectedServices = filter.serviceType != null ? {filter.serviceType!} : {};
     _selectedGender = filter.gender;
@@ -72,6 +72,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   static const _genders = [
     (code: 'MALE', label: 'Nam', icon: Ionicons.male_outline),
     (code: 'FEMALE', label: 'Nữ', icon: Ionicons.female_outline),
+    (code: 'LGBT', label: 'LGBT', icon: Ionicons.transgender_outline),
   ];
 
   static const _sortOptions = [
@@ -91,11 +92,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final priceFormat = NumberFormat.currency(
-      locale: 'vi_VN',
-      symbol: '₫',
-      decimalDigits: 0,
-    );
+    final creditsFormat = NumberFormat('#,###', 'vi_VN');
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
@@ -296,22 +293,22 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
 
                   // ── Price Range ──
                   _buildSection(
-                    title: 'Mức giá',
+                    title: 'Mức giá (Credits)',
                     icon: Ionicons.cash_outline,
                     value:
-                        '${priceFormat.format(_priceRange.start.round())} - ${priceFormat.format(_priceRange.end.round())}',
+                        '${creditsFormat.format(_priceRange.start.round())} - ${creditsFormat.format(_priceRange.end.round())} credits',
                     child: Column(
                       children: [
                         SliderTheme(
                           data: _sliderTheme,
                           child: RangeSlider(
                             values: _priceRange,
-                            min: 50000,
-                            max: 2000000,
-                            divisions: 39,
+                            min: 10,
+                            max: 1000,
+                            divisions: 99,
                             labels: RangeLabels(
-                              priceFormat.format(_priceRange.start.round()),
-                              priceFormat.format(_priceRange.end.round()),
+                              '${creditsFormat.format(_priceRange.start.round())} credits',
+                              '${creditsFormat.format(_priceRange.end.round())} credits',
                             ),
                             onChanged: (v) => setState(() => _priceRange = v),
                           ),
@@ -322,14 +319,14 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                '50K',
+                                '10',
                                 style: AppTypography.labelSmall.copyWith(
                                   color: context.appColors.textSecondary,
                                   fontSize: 11,
                                 ),
                               ),
                               Text(
-                                '2.000K',
+                                '1,000',
                                 style: AppTypography.labelSmall.copyWith(
                                   color: context.appColors.textSecondary,
                                   fontSize: 11,
@@ -346,19 +343,28 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                   _buildSection(
                     title: 'Dịch vụ',
                     icon: Ionicons.grid_outline,
-                    child: Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: serviceCategories.map((s) {
-                        final selected = _selectedServices.contains(s.code);
-                        return _FilterServiceChip(
-                          label: s.label,
-                          icon: s.icon,
-                          color: s.color,
-                          selected: selected,
-                          onTap: () => _toggleService(s.code),
+                    child: Builder(
+                      builder: (context) {
+                        // Get service types from HomeBloc state
+                        final homeState = context.read<HomeBloc>().state;
+                        final categories = homeState.serviceTypes.isNotEmpty
+                            ? homeState.serviceTypes.map((s) => ServiceCategoryData.fromServiceType(s)).toList()
+                            : serviceCategories;
+                        return Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: categories.map((s) {
+                            final selected = _selectedServices.contains(s.code);
+                            return _FilterServiceChip(
+                              label: s.label,
+                              icon: s.icon,
+                              color: s.color,
+                              selected: selected,
+                              onTap: () => _toggleService(s.code),
+                            );
+                          }).toList(),
                         );
-                      }).toList(),
+                      },
                     ),
                   ),
 
@@ -513,7 +519,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     setState(() {
       _distance = 10;
       _ageRange = const RangeValues(18, 35);
-      _priceRange = const RangeValues(100000, 1000000);
+      _priceRange = const RangeValues(10, 500);
       _selectedServices = {};
       _selectedGender = null;
       // Note: city and district are NOT cleared as they are mandatory
@@ -826,7 +832,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     if (_selectedGender != null) count++;
     if (_distance != 10) count++;
     if (_ageRange.start != 18 || _ageRange.end != 35) count++;
-    if (_priceRange.start != 100000 || _priceRange.end != 1000000) count++;
+    if (_priceRange.start != 10 || _priceRange.end != 500) count++;;
     if (_selectedServices.isNotEmpty) count++;
     if (_selectedProvinceId != null || _selectedDistrictId != null) count++;
     if (_verifiedOnly) count++;
@@ -908,10 +914,10 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
       radius: _distance.round() != 10 ? _distance.round() : null,
       minAge: _ageRange.start.round() != 18 ? _ageRange.start.round() : null,
       maxAge: _ageRange.end.round() != 35 ? _ageRange.end.round() : null,
-      minRate: _priceRange.start.round() != 100000
+      minRate: _priceRange.start.round() != 10
           ? _priceRange.start.round()
           : null,
-      maxRate: _priceRange.end.round() != 1000000
+      maxRate: _priceRange.end.round() != 500
           ? _priceRange.end.round()
           : null,
       serviceType: _selectedServices.isNotEmpty

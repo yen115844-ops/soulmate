@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -22,12 +21,6 @@ class PartnerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final priceFormat = NumberFormat.currency(
-      locale: 'vi_VN',
-      symbol: '₫',
-      decimalDigits: 0,
-    );
-
     return Container(
       decoration: BoxDecoration(
         color: context.appColors.surface,
@@ -47,7 +40,7 @@ class PartnerCard extends StatelessWidget {
           _buildImageSection(context),
 
           // Info section
-          _buildInfoSection(context, priceFormat),
+          _buildInfoSection(context),
         ],
       ),
     );
@@ -204,7 +197,7 @@ class PartnerCard extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoSection(BuildContext context, NumberFormat priceFormat) {
+  Widget _buildInfoSection(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(14),
       child: Column(
@@ -348,7 +341,7 @@ class PartnerCard extends StatelessWidget {
               const Spacer(),
               // Price
               Text(
-                priceFormat.format(partner.hourlyRate),
+                '${partner.hourlyRate}',
                 style: AppTypography.titleMedium.copyWith(
                   fontWeight: FontWeight.w800,
                   color: AppColors.primary,
@@ -356,7 +349,7 @@ class PartnerCard extends StatelessWidget {
                 ),
               ),
               Text(
-                '/giờ',
+                ' credits/giờ',
                 style: AppTypography.bodySmall.copyWith(
                   color: context.appColors.textSecondary,
                 ),

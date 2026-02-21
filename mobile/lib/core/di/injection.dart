@@ -8,6 +8,8 @@ import '../../features/booking/data/booking_repository.dart';
 import '../../features/booking/presentation/bloc/booking_bloc.dart';
 import '../../features/chat/data/chat_repository.dart';
 import '../../features/chat/presentation/bloc/chat_bloc.dart';
+import '../../features/credits/data/credits_repository.dart';
+import '../../features/credits/presentation/bloc/credits_bloc.dart';
 import '../../features/favorites/data/favorites_repository.dart';
 import '../../features/favorites/presentation/bloc/favorites_bloc.dart';
 import '../../features/home/data/home_repository.dart';
@@ -25,14 +27,15 @@ import '../../features/profile/presentation/bloc/profile_bloc.dart';
 import '../../features/rating/data/reviews_repository.dart';
 import '../../features/rating/presentation/bloc/my_reviews_bloc.dart';
 import '../../features/safety/data/emergency_contacts_repository.dart';
-import '../../features/safety/data/kyc_repository.dart';
 import '../../features/safety/presentation/bloc/emergency_contacts_bloc.dart';
-import '../../features/safety/presentation/bloc/kyc_bloc.dart';
 import '../../features/settings/data/settings_repository.dart';
 import '../../features/settings/data/terms_repository.dart';
 import '../../features/settings/presentation/bloc/settings_bloc.dart';
-import '../../features/wallet/data/wallet_repository.dart';
-import '../../features/wallet/presentation/bloc/wallet_bloc.dart';
+import '../../features/subscription/data/repositories/subscription_repository_impl.dart';
+import '../../features/subscription/data/services/iap_service.dart';
+import '../../features/subscription/presentation/bloc/subscription_bloc.dart';
+import '../../features/verification/data/repositories/verification_repository_impl.dart';
+import '../../features/verification/presentation/bloc/verification_bloc.dart';
 import '../../shared/bloc/master_data_bloc.dart';
 import '../../shared/data/repositories/master_data_repository.dart';
 import '../../shared/data/repositories/notification_repository.dart';
@@ -57,6 +60,11 @@ Future<void> setupDependencies() async {
 
   // Auth Service (global singleton)
   getIt.registerLazySingleton<AuthService>(() => AuthService.instance);
+
+  // Chat Socket Service (singleton)
+  getIt.registerLazySingleton<ChatSocketService>(
+    () => ChatSocketService.instance,
+  );
 
   // Push Notification Service (singleton)
   getIt.registerLazySingleton<PushNotificationService>(
@@ -107,11 +115,6 @@ Future<void> setupDependencies() async {
     () => NotificationRepository(apiClient: getIt<ApiClient>()),
   );
 
-  // Wallet Repository
-  getIt.registerLazySingleton<WalletRepository>(
-    () => WalletRepository(apiClient: getIt<ApiClient>()),
-  );
-
   // Settings Repository
   getIt.registerLazySingleton<SettingsRepository>(
     () => SettingsRepository(apiClient: getIt<ApiClient>()),
@@ -130,11 +133,6 @@ Future<void> setupDependencies() async {
   // Reviews Repository
   getIt.registerLazySingleton<ReviewsRepository>(
     () => ReviewsRepository(getIt<ApiClient>()),
-  );
-
-  // KYC Repository
-  getIt.registerLazySingleton<KycRepository>(
-    () => KycRepository(getIt<ApiClient>()),
   );
 
   // Emergency Contacts Repository
@@ -161,6 +159,24 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton<BookingRepository>(
     () => BookingRepository(apiClient: getIt<ApiClient>()),
   );
+
+  // Verification Repository (Soft Verification - Selfie + Liveness)
+  getIt.registerLazySingleton<VerificationRepositoryImpl>(
+    () => VerificationRepositoryImpl(apiClient: getIt<ApiClient>()),
+  );
+
+  // Subscription Repository (Premium IAP)
+  getIt.registerLazySingleton<SubscriptionRepositoryImpl>(
+    () => SubscriptionRepositoryImpl(apiClient: getIt<ApiClient>()),
+  );
+
+  // Credits Repository (Credits/Wallet system)
+  getIt.registerLazySingleton<CreditsRepository>(
+    () => CreditsRepository(apiClient: getIt<ApiClient>()),
+  );
+
+  // IAP Service (In-App Purchase)
+  getIt.registerLazySingleton<IAPService>(() => IAPService());
 
   // ==================== BLoCs ====================
 
@@ -220,11 +236,6 @@ Future<void> setupDependencies() async {
     () => NotificationBloc(repository: getIt<NotificationRepository>()),
   );
 
-  // Wallet BLoC
-  getIt.registerFactory<WalletBloc>(
-    () => WalletBloc(repository: getIt<WalletRepository>()),
-  );
-
   // Settings BLoC
   getIt.registerFactory<SettingsBloc>(
     () => SettingsBloc(
@@ -242,9 +253,6 @@ Future<void> setupDependencies() async {
   getIt.registerFactory<MyReviewsBloc>(
     () => MyReviewsBloc(getIt<ReviewsRepository>()),
   );
-
-  // KYC BLoC
-  getIt.registerFactory<KycBloc>(() => KycBloc(getIt<KycRepository>()));
 
   // Emergency Contacts BLoC
   getIt.registerFactory<EmergencyContactsBloc>(
@@ -275,6 +283,21 @@ Future<void> setupDependencies() async {
   // Booking BLoC
   getIt.registerFactory<BookingBloc>(
     () => BookingBloc(bookingRepository: getIt<BookingRepository>()),
+  );
+
+  // Verification BLoC (Soft Verification)
+  getIt.registerFactory<VerificationBloc>(
+    () => VerificationBloc(repository: getIt<VerificationRepositoryImpl>()),
+  );
+
+  // Subscription BLoC (Premium IAP)
+  getIt.registerFactory<SubscriptionBloc>(
+    () => SubscriptionBloc(repository: getIt<SubscriptionRepositoryImpl>()),
+  );
+
+  // Credits BLoC (Credits/Wallet system)
+  getIt.registerFactory<CreditsBloc>(
+    () => CreditsBloc(repository: getIt<CreditsRepository>()),
   );
 
   // Theme Cubit (singleton - persists across app)

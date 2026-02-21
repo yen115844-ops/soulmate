@@ -34,54 +34,6 @@ export class ResolveSosDto {
   isFalseAlarm?: boolean;
 }
 
-export class CreateEmergencyContactDto {
-  @ApiProperty({ description: 'Contact name' })
-  @IsNotEmpty()
-  @IsString()
-  @MaxLength(100)
-  name: string;
-
-  @ApiProperty({ description: 'Phone number' })
-  @IsNotEmpty()
-  @IsString()
-  @MaxLength(20)
-  phone: string;
-
-  @ApiPropertyOptional({ description: 'Relationship (parent, friend, spouse, sibling)' })
-  @IsOptional()
-  @IsString()
-  relationship?: string;
-
-  @ApiPropertyOptional({ description: 'Set as primary contact' })
-  @IsOptional()
-  @IsBoolean()
-  isPrimary?: boolean;
-}
-
-export class UpdateEmergencyContactDto {
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  name?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @MaxLength(20)
-  phone?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  relationship?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsBoolean()
-  isPrimary?: boolean;
-}
-
 export class LogLocationDto {
   @ApiProperty()
   @IsNotEmpty()
@@ -108,3 +60,6 @@ export class LogLocationDto {
   @IsString()
   bookingId: string;
 }
+
+// Re-export from users module
+export { CreateEmergencyContactDto, UpdateEmergencyContactDto } from '../../users/dto';

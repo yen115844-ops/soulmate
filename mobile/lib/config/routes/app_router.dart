@@ -15,12 +15,13 @@ import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/booking/presentation/pages/booking_confirmation_page.dart';
 import '../../features/booking/presentation/pages/booking_detail_page.dart';
-import '../../features/booking/presentation/pages/booking_payment_page.dart';
 import '../../features/booking/presentation/pages/bookings_page.dart';
 import '../../features/booking/presentation/pages/create_booking_page.dart';
 import '../../features/chat/presentation/pages/chat_list_page.dart';
 import '../../features/chat/presentation/pages/chat_room_page.dart';
 import '../../features/chat/presentation/pages/chat_with_user_page.dart';
+import '../../features/credits/presentation/pages/credits_history_page.dart';
+import '../../features/credits/presentation/pages/credits_page.dart';
 import '../../features/favorites/presentation/pages/favorites_page.dart';
 import '../../features/home/presentation/pages/swipeable_home_page.dart';
 import '../../features/notification/presentation/pages/notifications_page.dart';
@@ -41,18 +42,14 @@ import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/rating/presentation/pages/my_reviews_page.dart';
 import '../../features/rating/presentation/pages/write_review_page.dart';
 import '../../features/safety/presentation/pages/emergency_contacts_page.dart';
-import '../../features/safety/presentation/pages/kyc_page.dart';
 import '../../features/safety/presentation/pages/sos_page.dart';
 import '../../features/settings/presentation/pages/blocked_users_page.dart';
 import '../../features/settings/presentation/pages/help_center_page.dart';
 import '../../features/settings/presentation/pages/privacy_policy_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/settings/presentation/pages/terms_of_service_page.dart';
-// Feature Pages
-import '../../features/wallet/presentation/pages/transactions_page.dart';
-import '../../features/wallet/presentation/pages/wallet_page.dart';
-import '../../features/wallet/presentation/pages/wallet_topup_page.dart';
-import '../../features/wallet/presentation/pages/wallet_withdraw_page.dart';
+import '../../features/subscription/presentation/pages/premium_page.dart';
+import '../../features/verification/presentation/pages/soft_verification_page.dart';
 import 'route_names.dart';
 
 /// Converts a [Stream] into a [Listenable] so GoRouter can
@@ -97,6 +94,7 @@ class AppRouter {
       initialLocation: '/',
       debugLogDiagnostics: true,
       refreshListenable: _GoRouterRefreshStream(authBloc.stream),
+      overridePlatformDefaultLocation: true, // Use URL paths on all platforms
       routes: [
       // Lightweight loading screen shown while AuthBloc resolves
       GoRoute(
@@ -294,28 +292,6 @@ class AppRouter {
         builder: (context, state) => const NotificationsPage(),
       ),
 
-      // Wallet Routes
-      GoRoute(
-        path: RouteNames.wallet,
-        name: 'wallet',
-        builder: (context, state) => const WalletPage(),
-      ),
-      GoRoute(
-        path: RouteNames.walletTopUp,
-        name: 'wallet-topup',
-        builder: (context, state) => const WalletTopUpPage(),
-      ),
-      GoRoute(
-        path: RouteNames.walletWithdraw,
-        name: 'wallet-withdraw',
-        builder: (context, state) => const WalletWithdrawPage(),
-      ),
-      GoRoute(
-        path: RouteNames.transactions,
-        name: 'transactions',
-        builder: (context, state) => const TransactionsPage(),
-      ),
-
       // Profile Routes
       GoRoute(
         path: RouteNames.editProfile,
@@ -348,11 +324,32 @@ class AppRouter {
         builder: (context, state) => const EmergencyContactsPage(),
       ),
 
-      // KYC Page
+      // Soft Verification Page (Selfie + Liveness)
       GoRoute(
-        path: RouteNames.kyc,
-        name: 'kyc',
-        builder: (context, state) => const KycPage(),
+        path: RouteNames.verification,
+        name: 'verification',
+        builder: (context, state) => const SoftVerificationPage(),
+      ),
+
+      // Premium Subscription Page
+      GoRoute(
+        path: RouteNames.premium,
+        name: 'premium',
+        builder: (context, state) => const PremiumPage(),
+      ),
+
+      // Credits Page (Wallet/Credits system)
+      GoRoute(
+        path: RouteNames.credits,
+        name: 'credits',
+        builder: (context, state) => const CreditsPage(),
+      ),
+
+      // Credits History Page
+      GoRoute(
+        path: RouteNames.creditsHistory,
+        name: 'credits-history',
+        builder: (context, state) => const CreditsHistoryPage(),
       ),
 
       // SOS Page
@@ -410,15 +407,6 @@ class AppRouter {
         builder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
           return BookingDetailPage(bookingId: id);
-        },
-      ),
-      // Booking Payment
-      GoRoute(
-        path: RouteNames.bookingPayment,
-        name: 'booking-payment',
-        builder: (context, state) {
-          final id = state.pathParameters['id'] ?? '';
-          return BookingPaymentPage(bookingId: id);
         },
       ),
 
@@ -526,7 +514,7 @@ class AppRouter {
       final location = state.matchedLocation;
 
       // --- Onboarding gate -----------------------------------------------
-      final storage = LocalStorageService.instance;
+      final storage = getIt<LocalStorageService>();
       if (!storage.isOnboardingComplete && location != RouteNames.onboarding) {
         return RouteNames.onboarding;
       }

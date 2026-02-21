@@ -35,7 +35,7 @@ class PartnerEarningsPeriodChanged extends PartnerEarningsEvent {
 
 /// Request withdrawal
 class PartnerEarningsWithdrawRequested extends PartnerEarningsEvent {
-  final double amount;
+  final int amount; // Credits amount
   final String? note;
 
   const PartnerEarningsWithdrawRequested({

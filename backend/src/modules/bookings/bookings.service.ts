@@ -1,15 +1,16 @@
 import {
-    BadRequestException,
-    ForbiddenException,
-    Injectable,
-    Logger,
-    NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma/prisma.service';
-import { BookingStatus, NotificationType, Prisma } from '../../generated/prisma/client';
+import { BookingStatus, NotificationType } from '../../generated/prisma/client';
+import { CreditsService } from '../credits/credits.service';
 import { NotificationsService } from '../notifications';
 import { SettingsService } from '../settings/settings.service';
-import { WalletService } from '../wallet/wallet.service';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { AdminBookingQueryDto, BookingQueryDto, CancelBookingDto, CreateBookingDto, UpdateBookingStatusDto } from './dto';
 
 /** Combine date with time-only (DB Time → full DateTime for API) */
@@ -43,8 +44,21 @@ export class BookingsService {
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
     private readonly settingsService: SettingsService,
-    private readonly walletService: WalletService,
+    private readonly subscriptionsService: SubscriptionsService,
+    private readonly creditsService: CreditsService,
   ) {}
+
+  /**
+   * Check if user has active premium subscription
+   */
+  private async requirePremium(userId: string): Promise<void> {
+    const status = await this.subscriptionsService.getStatus(userId);
+    if (!status.isPremium) {
+      throw new ForbiddenException(
+        'Tính năng booking yêu cầu gói Premium. Vui lòng nâng cấp để tiếp tục.',
+      );
+    }
+  }
 
   /**
    * Generate unique booking code
@@ -59,6 +73,9 @@ export class BookingsService {
    * Create a new booking
    */
   async createBooking(userId: string, dto: CreateBookingDto) {
+    // Check premium subscription
+    await this.requirePremium(userId);
+
     // Check if either user has blocked the other
     const blockExists = await this.prisma.userBlacklist.findFirst({
       where: {
@@ -128,9 +145,9 @@ export class BookingsService {
     }
 
     const hourlyRate = partnerProfile.hourlyRate;
-    const subtotal = new Prisma.Decimal(hourlyRate.toString()).mul(durationHours);
-    const serviceFee = subtotal.mul(serviceFeePercent).div(100);
-    const totalAmount = subtotal.add(serviceFee);
+    const subtotal = Math.round(hourlyRate * durationHours);
+    const serviceFee = Math.round((subtotal * serviceFeePercent) / 100);
+    const totalAmount = subtotal + serviceFee;
 
     const initialStatus = autoConfirmBooking ? BookingStatus.CONFIRMED : BookingStatus.PENDING;
 
@@ -384,76 +401,6 @@ export class BookingsService {
   }
 
   /**
-   * Pay for a confirmed booking — deducts from wallet and creates escrow
-   */
-  async payBooking(bookingId: string, userId: string) {
-    const booking = await this.prisma.booking.findUnique({
-      where: { id: bookingId },
-    });
-
-    if (!booking) {
-      throw new NotFoundException('Booking not found');
-    }
-
-    if (booking.userId !== userId) {
-      throw new ForbiddenException('Only the customer can pay for the booking');
-    }
-
-    if (booking.status !== BookingStatus.CONFIRMED) {
-      throw new BadRequestException('Booking must be confirmed before payment');
-    }
-
-    const totalAmount = Number(booking.totalAmount);
-    const serviceFee = Number(booking.serviceFee);
-    const subtotal = Number(booking.subtotal);
-
-    // Deduct from wallet and create escrow holding
-    await this.walletService.deductPaymentAndCreateEscrow(
-      userId,
-      booking.partnerId,
-      subtotal,
-      serviceFee,
-      bookingId,
-    );
-
-    const updatedBooking = await this.prisma.booking.update({
-      where: { id: bookingId },
-      data: {
-        status: BookingStatus.PAID,
-        paidAt: new Date(),
-      },
-      include: {
-        user: {
-          include: { profile: true },
-          omit: { passwordHash: true },
-        },
-        partner: {
-          include: { profile: true, partnerProfile: true },
-          omit: { passwordHash: true },
-        },
-      },
-    });
-
-    this.logger.log(`Booking paid: ${booking.bookingCode}, amount: ${totalAmount}`);
-
-    // Send notification to partner
-    const userName = updatedBooking.user.profile?.displayName || 'Khách hàng';
-    void this.notificationsService
-      .sendNotification({
-        userId: booking.partnerId,
-        type: NotificationType.BOOKING,
-        title: 'Booking đã được thanh toán',
-        body: `${userName} đã thanh toán cho lịch hẹn ${booking.bookingCode}`,
-        actionType: 'booking',
-        actionId: bookingId,
-        data: { bookingCode: booking.bookingCode },
-      })
-      .catch((err) => this.logger.warn(`Failed to send pay notification: ${err?.message}`));
-
-    return withCombinedDateTime(updatedBooking);
-  }
-
-  /**
    * Cancel booking
    */
   async cancelBooking(bookingId: string, userId: string, dto: CancelBookingDto) {
@@ -474,7 +421,6 @@ export class BookingsService {
     const cancellableStatuses: BookingStatus[] = [
       BookingStatus.PENDING,
       BookingStatus.CONFIRMED,
-      BookingStatus.PAID,
     ];
 
     if (!cancellableStatuses.includes(booking.status as BookingStatus)) {
@@ -505,15 +451,9 @@ export class BookingsService {
       return updated;
     });
 
-    // Refund escrow if already paid (outside prisma tx — walletService has its own)
-    if (booking.status === BookingStatus.PAID) {
-      try {
-        await this.walletService.refundEscrow(bookingId);
-        this.logger.log(`Escrow refunded for cancelled booking ${booking.bookingCode}`);
-      } catch (err) {
-        this.logger.error(`Failed to refund escrow for ${booking.bookingCode}: ${err?.message}`);
-      }
-    }
+    // Refund escrow if exists (in case booking was paid)
+    await this.creditsService.refundEscrow(bookingId)
+      .catch((err) => this.logger.warn(`Failed to refund escrow: ${err?.message}`));
 
     this.logger.log(`Booking cancelled: ${booking.bookingCode} by ${userId}`);
 
@@ -540,6 +480,67 @@ export class BookingsService {
         });
       })
       .catch((err) => this.logger.warn(`Failed to send cancel notification: ${err?.message}`));
+
+    return withCombinedDateTime(updatedBooking);
+  }
+
+  /**
+   * Pay for a booking with credits
+   */
+  async payBooking(bookingId: string, userId: string) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+    });
+
+    if (!booking) {
+      throw new NotFoundException('Booking not found');
+    }
+
+    if (booking.userId !== userId) {
+      throw new ForbiddenException('Only the customer can pay for the booking');
+    }
+
+    if (booking.status !== BookingStatus.CONFIRMED) {
+      throw new BadRequestException('Booking must be confirmed before payment');
+    }
+
+    // Check user has enough credits
+    const hasBalance = await this.creditsService.checkBalance(userId, booking.totalAmount);
+    if (!hasBalance) {
+      throw new BadRequestException('Số dư credits không đủ. Vui lòng nạp thêm credits.');
+    }
+
+    // Process payment (deduct credits, create escrow)
+    await this.creditsService.payBooking(
+      bookingId,
+      userId,
+      booking.partnerId,
+      booking.totalAmount,
+    );
+
+    // Update booking status
+    const updatedBooking = await this.prisma.booking.update({
+      where: { id: bookingId },
+      data: {
+        status: BookingStatus.PAID,
+        paidAt: new Date(),
+      },
+    });
+
+    this.logger.log(`Booking paid: ${booking.bookingCode}, amount: ${booking.totalAmount} credits`);
+
+    // Notify partner
+    void this.notificationsService
+      .sendNotification({
+        userId: booking.partnerId,
+        type: NotificationType.BOOKING,
+        title: 'Booking đã thanh toán',
+        body: `Khách hàng đã thanh toán ${booking.totalAmount} credits cho booking ${booking.bookingCode}`,
+        actionType: 'booking',
+        actionId: bookingId,
+        data: { bookingCode: booking.bookingCode },
+      })
+      .catch((err) => this.logger.warn(`Failed to send payment notification: ${err?.message}`));
 
     return withCombinedDateTime(updatedBooking);
   }
@@ -620,13 +621,9 @@ export class BookingsService {
       return updated;
     });
 
-    // Release escrow to partner (outside prisma tx — walletService has its own)
-    try {
-      await this.walletService.releaseEscrow(bookingId);
-      this.logger.log(`Escrow released for completed booking ${booking.bookingCode}`);
-    } catch (err) {
-      this.logger.error(`Failed to release escrow for ${booking.bookingCode}: ${err?.message}`);
-    }
+    // Release escrow to partner
+    await this.creditsService.releaseEscrow(bookingId)
+      .catch((err) => this.logger.warn(`Failed to release escrow: ${err?.message}`));
 
     this.logger.log(`Booking completed: ${booking.bookingCode}`);
 
@@ -636,7 +633,7 @@ export class BookingsService {
         userId: booking.partnerId,
         type: NotificationType.BOOKING,
         title: 'Booking đã hoàn thành',
-        body: `Booking ${booking.bookingCode} đã được hoàn thành. Tiền đã được chuyển vào ví của bạn.`,
+        body: `Booking ${booking.bookingCode} đã được hoàn thành.`,
         actionType: 'booking',
         actionId: bookingId,
         data: { bookingCode: booking.bookingCode },
@@ -657,7 +654,7 @@ export class BookingsService {
       this.prisma.booking.count({
         where: {
           userId,
-          status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.PAID] },
+          status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
         },
       }),
     ]);
@@ -691,7 +688,7 @@ export class BookingsService {
       this.prisma.booking.count({
         where: {
           partnerId,
-          status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.PAID] },
+          status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
         },
       }),
     ]);

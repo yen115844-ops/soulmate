@@ -16,6 +16,7 @@ import 'core/network/api_client.dart';
 import 'core/services/app_deep_link_service.dart';
 import 'core/services/connectivity_service.dart';
 import 'core/services/deep_link_service.dart';
+import 'core/services/iap_service.dart';
 import 'core/services/local_notification_service.dart';
 import 'core/services/local_storage_service.dart';
 import 'core/services/location_service.dart';
@@ -122,6 +123,9 @@ void main() {
 
       // Initialize URL-based deep link handling (App Links / Universal Links)
       await AppDeepLinkService().init();
+
+      // Initialize IAP service
+      await IAPService.instance.initialize();
 
       // Pre-warm location detection (non-blocking)
       // Result gets cached so HomeAppBar picks it up instantly

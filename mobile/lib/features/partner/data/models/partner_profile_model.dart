@@ -157,11 +157,17 @@ class PartnerUserProfileInfo {
   final String? avatarUrl;
   final String? bio;
   final String? gender;
+  final String? dateOfBirth;
+  final int? heightCm;
+  final int? weightKg;
   final String? city;
   final String? district;
   final List<String> photos;
   final List<String> languages;
   final List<String> interests;
+  final List<String> talents;
+  final List<Map<String, dynamic>> interestsDetail;
+  final List<Map<String, dynamic>> talentsDetail;
 
   PartnerUserProfileInfo({
     this.fullName,
@@ -169,12 +175,35 @@ class PartnerUserProfileInfo {
     this.avatarUrl,
     this.bio,
     this.gender,
+    this.dateOfBirth,
+    this.heightCm,
+    this.weightKg,
     this.city,
     this.district,
     this.photos = const [],
     this.languages = const [],
     this.interests = const [],
+    this.talents = const [],
+    this.interestsDetail = const [],
+    this.talentsDetail = const [],
   });
+
+  /// Calculate age from dateOfBirth
+  int? get age {
+    if (dateOfBirth == null) return null;
+    try {
+      final dob = DateTime.parse(dateOfBirth!);
+      final now = DateTime.now();
+      int years = now.year - dob.year;
+      if (now.month < dob.month ||
+          (now.month == dob.month && now.day < dob.day)) {
+        years--;
+      }
+      return years;
+    } catch (_) {
+      return null;
+    }
+  }
 
   factory PartnerUserProfileInfo.fromJson(Map<String, dynamic> json) {
     return PartnerUserProfileInfo(
@@ -183,6 +212,10 @@ class PartnerUserProfileInfo {
       avatarUrl: json['avatarUrl'] is String ? json['avatarUrl'] : null,
       bio: json['bio'] is String ? json['bio'] : null,
       gender: json['gender'] is String ? json['gender'] : null,
+      dateOfBirth:
+          json['dateOfBirth'] is String ? json['dateOfBirth'] : null,
+      heightCm: json['heightCm'] is int ? json['heightCm'] : null,
+      weightKg: json['weightKg'] is int ? json['weightKg'] : null,
       city: json['city'] is String ? json['city'] : null,
       district: json['district'] is String ? json['district'] : null,
       photos: (json['photos'] is List)
@@ -198,6 +231,21 @@ class PartnerUserProfileInfo {
               (json['interests'] as List).map((e) => e.toString()),
             )
           : <String>[],
+      talents: (json['talents'] is List)
+          ? List<String>.from(
+              (json['talents'] as List).map((e) => e.toString()),
+            )
+          : <String>[],
+      interestsDetail: (json['interestsDetail'] is List)
+          ? (json['interestsDetail'] as List)
+              .whereType<Map<String, dynamic>>()
+              .toList()
+          : <Map<String, dynamic>>[],
+      talentsDetail: (json['talentsDetail'] is List)
+          ? (json['talentsDetail'] as List)
+              .whereType<Map<String, dynamic>>()
+              .toList()
+          : <Map<String, dynamic>>[],
     );
   }
 }
@@ -207,11 +255,13 @@ class PartnerDetailResponse {
   final PartnerProfileResponse profile;
   final PartnerUserInfo? userInfo;
   final PartnerUserProfileInfo? userProfile;
+  final List<Map<String, dynamic>> serviceTypesDetail;
 
   PartnerDetailResponse({
     required this.profile,
     this.userInfo,
     this.userProfile,
+    this.serviceTypesDetail = const [],
   });
 
   /// Get display name
@@ -244,6 +294,26 @@ class PartnerDetailResponse {
   /// Get interests list
   List<String> get interests => userProfile?.interests ?? [];
 
+  /// Get interests detail (with icon, name, etc.)
+  List<Map<String, dynamic>> get interestsDetail =>
+      userProfile?.interestsDetail ?? [];
+
+  /// Get talents detail (with icon, name, etc.)
+  List<Map<String, dynamic>> get talentsDetail =>
+      userProfile?.talentsDetail ?? [];
+
+  /// Get height
+  int? get heightCm => userProfile?.heightCm;
+
+  /// Get weight
+  int? get weightKg => userProfile?.weightKg;
+
+  /// Get age
+  int? get age => userProfile?.age;
+
+  /// Get gender
+  String? get gender => userProfile?.gender;
+
   factory PartnerDetailResponse.fromJson(Map<String, dynamic> json) {
     final profile = PartnerProfileResponse.fromJson(json);
 
@@ -262,10 +332,18 @@ class PartnerDetailResponse {
       }
     }
 
+    // Parse serviceTypesDetail from top-level
+    final serviceTypesDetail = (json['serviceTypesDetail'] is List)
+        ? (json['serviceTypesDetail'] as List)
+            .whereType<Map<String, dynamic>>()
+            .toList()
+        : <Map<String, dynamic>>[];
+
     return PartnerDetailResponse(
       profile: profile,
       userInfo: userInfo,
       userProfile: userProfile,
+      serviceTypesDetail: serviceTypesDetail,
     );
   }
 }

@@ -3,21 +3,29 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../shared/data/models/master_data_models.dart';
 import '../models/service_category_data.dart';
 
 /// Horizontal scrollable service categories section
 class ServiceCategoriesSection extends StatelessWidget {
   final String? selectedService;
   final ValueChanged<String> onServiceTap;
+  final List<ServiceTypeModel> serviceTypes;
 
   const ServiceCategoriesSection({
     super.key,
     required this.selectedService,
     required this.onServiceTap,
+    this.serviceTypes = const [],
   });
 
   @override
   Widget build(BuildContext context) {
+    // Use backend service types if available, otherwise fall back to hardcoded
+    final categories = serviceTypes.isNotEmpty
+        ? serviceTypes.map((s) => ServiceCategoryData.fromServiceType(s)).toList()
+        : serviceCategories;
+
     return Container(
       color: context.appColors.surface,
       child: Column(
@@ -37,9 +45,9 @@ class ServiceCategoriesSection extends StatelessWidget {
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: serviceCategories.length,
+              itemCount: categories.length,
               itemBuilder: (context, index) {
-                final cat = serviceCategories[index];
+                final cat = categories[index];
                 final isSelected = selectedService == cat.code;
                 return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),

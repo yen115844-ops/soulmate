@@ -1,7 +1,5 @@
 import 'package:intl/intl.dart';
 
-import 'partner_stats_model.dart';
-
 /// Partner Booking model
 class PartnerBooking {
   final String id;
@@ -13,10 +11,10 @@ class PartnerBooking {
   final String startTime;
   final String endTime;
   final int duration;
-  final double hourlyRate;
-  final double subtotal;
-  final double serviceFee;
-  final double totalAmount;
+  final int hourlyRate; // Credits
+  final int subtotal; // Credits
+  final int serviceFee; // Credits
+  final int totalAmount; // Credits
   final String? meetingLocation;
   final String? userNote;
   final List<String> activities;
@@ -82,10 +80,10 @@ class PartnerBooking {
       duration: json['duration'] is int
           ? json['duration']
           : int.tryParse(json['duration']?.toString() ?? '') ?? 0,
-      hourlyRate: PartnerStats.parseDouble(json['hourlyRate']),
-      subtotal: PartnerStats.parseDouble(json['subtotal']),
-      serviceFee: PartnerStats.parseDouble(json['serviceFee']),
-      totalAmount: PartnerStats.parseDouble(json['totalAmount']),
+      hourlyRate: (json['hourlyRate'] as num?)?.toInt() ?? 0,
+      subtotal: (json['subtotal'] as num?)?.toInt() ?? 0,
+      serviceFee: (json['serviceFee'] as num?)?.toInt() ?? 0,
+      totalAmount: (json['totalAmount'] as num?)?.toInt() ?? 0,
       meetingLocation:
           json['meetingLocation'] is String ? json['meetingLocation'] : null,
       userNote: json['userNote'] is String ? json['userNote'] : null,

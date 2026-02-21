@@ -833,6 +833,183 @@ async function main() {
   }
   console.log(`Updated ${updatedCount} profiles with provinceId/districtId`);
 
+  // Seed Subscription Plans
+  // Pricing Strategy:
+  // - Weekly: Higher per-day cost to encourage longer subscriptions
+  // - Monthly: Standard baseline
+  // - 3 Months: ~16% savings
+  // - 12 Months: ~41% savings (best value)
+  const subscriptionPlans = [
+    {
+      code: 'premium_1w',
+      name: 'Premium 1 Week',
+      nameVi: 'Premium 1 tuần',
+      description: 'Try premium features for 1 week',
+      durationMonths: 0, // Special case: 7 days
+      durationDays: 7,
+      priceVnd: 49000,
+      appleProductId: 'premium_1w',
+      googleProductId: 'premium_weekly',
+      sortOrder: 1,
+    },
+    {
+      code: 'premium_1m',
+      name: 'Premium 1 Month',
+      nameVi: 'Premium 1 tháng',
+      description: 'Unlock all premium features for 1 month',
+      durationMonths: 1,
+      priceVnd: 99000,
+      appleProductId: 'premium_1m',
+      googleProductId: 'premium_monthly',
+      sortOrder: 2,
+    },
+    {
+      code: 'premium_3m',
+      name: 'Premium 3 Months',
+      nameVi: 'Premium 3 tháng',
+      description: 'Unlock all premium features for 3 months. Save 16%!',
+      durationMonths: 3,
+      priceVnd: 249000,
+      originalPrice: 297000,
+      discountPercent: 16,
+      appleProductId: 'premium_3m',
+      googleProductId: 'premium_quarterly',
+      sortOrder: 3,
+    },
+    {
+      code: 'premium_12m',
+      name: 'Premium 12 Months',
+      nameVi: 'Premium 12 tháng',
+      description: 'Unlock all premium features for 1 year. Best value - Save 41%!',
+      durationMonths: 12,
+      priceVnd: 699000,
+      originalPrice: 1188000,
+      discountPercent: 41,
+      appleProductId: 'premium_12m',
+      googleProductId: 'premium_yearly',
+      sortOrder: 4,
+    },
+  ];
+
+  for (const plan of subscriptionPlans) {
+    await prisma.subscriptionPlan.upsert({
+      where: { code: plan.code },
+      update: plan,
+      create: plan,
+    });
+  }
+  console.log(`Seeded ${subscriptionPlans.length} subscription plans`);
+
+  // Seed Credit Packages (IAP Consumables)
+  // Pricing: 1 Credit = 1,000 VND
+  // Larger packages get bonus credits
+  const creditPackages = [
+    {
+      code: 'credits_10',
+      name: '10 Credits',
+      nameVi: '10 Credits',
+      description: 'Starter pack - 10 credits',
+      creditAmount: 10,
+      bonusCredits: 0,
+      priceVnd: 10000, // 10 x 1,000 = 10K
+      appleProductId: 'credits_10',
+      googleProductId: 'credits_10',
+      sortOrder: 1,
+    },
+    {
+      code: 'credits_30',
+      name: '30 Credits',
+      nameVi: '30 Credits',
+      description: 'Get 30 credits for booking services',
+      creditAmount: 30,
+      bonusCredits: 0,
+      priceVnd: 30000, // 30K
+      appleProductId: 'credits_30',
+      googleProductId: 'credits_30',
+      sortOrder: 2,
+    },
+    {
+      code: 'credits_50',
+      name: '50 Credits',
+      nameVi: '50 Credits',
+      description: 'Get 50 credits + 3 bonus credits!',
+      creditAmount: 50,
+      bonusCredits: 3,
+      priceVnd: 50000, // 50K
+      originalPrice: 53000,
+      discountPercent: 6,
+      appleProductId: 'credits_50',
+      googleProductId: 'credits_50',
+      sortOrder: 3,
+    },
+    {
+      code: 'credits_100',
+      name: '100 Credits',
+      nameVi: '100 Credits',
+      description: 'Get 100 credits + 8 bonus credits!',
+      creditAmount: 100,
+      bonusCredits: 8,
+      priceVnd: 100000, // 100K
+      originalPrice: 108000,
+      discountPercent: 7,
+      appleProductId: 'credits_100',
+      googleProductId: 'credits_100',
+      sortOrder: 4,
+    },
+    {
+      code: 'credits_300',
+      name: '300 Credits',
+      nameVi: '300 Credits',
+      description: 'Get 300 credits + 30 bonus credits!',
+      creditAmount: 300,
+      bonusCredits: 30,
+      priceVnd: 300000, // 300K
+      originalPrice: 330000,
+      discountPercent: 9,
+      appleProductId: 'credits_300',
+      googleProductId: 'credits_300',
+      sortOrder: 5,
+    },
+    {
+      code: 'credits_500',
+      name: '500 Credits',
+      nameVi: '500 Credits',
+      description: 'Get 500 credits + 60 bonus credits!',
+      creditAmount: 500,
+      bonusCredits: 60,
+      priceVnd: 500000, // 500K
+      originalPrice: 560000,
+      discountPercent: 11,
+      appleProductId: 'credits_500',
+      googleProductId: 'credits_500',
+      isBestValue: true,
+      sortOrder: 6,
+    },
+    {
+      code: 'credits_1000',
+      name: '1000 Credits',
+      nameVi: '1000 Credits',
+      description: 'Get 1000 credits + 150 bonus credits! Best value!',
+      creditAmount: 1000,
+      bonusCredits: 150,
+      priceVnd: 1000000, // 1M
+      originalPrice: 1150000,
+      discountPercent: 13,
+      appleProductId: 'credits_1000',
+      googleProductId: 'credits_1000',
+      sortOrder: 7,
+    },
+  ];
+
+  for (const pkg of creditPackages) {
+    await prisma.creditPackage.upsert({
+      where: { code: pkg.code },
+      update: pkg,
+      create: pkg,
+    });
+  }
+  console.log(`Seeded ${creditPackages.length} credit packages`);
+
   console.log('Seeding completed!');
 }
 

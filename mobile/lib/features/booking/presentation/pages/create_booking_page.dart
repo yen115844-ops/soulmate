@@ -15,8 +15,10 @@ import '../../../../core/utils/image_utils.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/common/step_indicator.dart';
+import '../../../credits/data/credits_repository.dart';
 import '../../../partner/data/partner_repository.dart';
 import '../../../partner/domain/models/partner_schedule.dart';
+import '../../../subscription/presentation/widgets/premium_guard.dart';
 import '../../data/booking_repository.dart';
 
 class CreateBookingPage extends StatefulWidget {
@@ -31,6 +33,7 @@ class CreateBookingPage extends StatefulWidget {
 class _CreateBookingPageState extends State<CreateBookingPage> {
   PartnerRepository get _partnerRepository => getIt<PartnerRepository>();
   BookingRepository get _bookingRepository => getIt<BookingRepository>();
+  CreditsRepository get _creditsRepository => getIt<CreditsRepository>();
 
   bool _isLoadingPartner = true;
   bool _isSubmitting = false;
@@ -64,6 +67,25 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
   @override
   void initState() {
     super.initState();
+    // Delay premium check to after build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkPremiumAndLoad();
+    });
+  }
+
+  void _checkPremiumAndLoad() {
+    // Check premium subscription before allowing booking
+    if (!PremiumGuard.isPremium(context)) {
+      PremiumGuard.showPremiumDialog(
+        context,
+        title: 'Cần đăng ký Premium',
+        message: 'Tính năng booking yêu cầu gói Premium. Nâng cấp để đặt lịch với partner!',
+        onUpgrade: () {
+          context.push('/premium');
+        },
+      );
+      return;
+    }
     _loadPartnerData();
     _loadPartnerSchedule();
   }
@@ -285,7 +307,25 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
     }
   }
 
-  void _confirmBooking() {
+  void _confirmBooking() async {
+    // Check credit balance first
+    try {
+      final wallet = await _creditsRepository.getWallet();
+      if (wallet.balance < _totalAmount) {
+        _showInsufficientCreditsDialog(wallet.balance);
+        return;
+      }
+    } catch (e) {
+      debugPrint('Error checking credits: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Không thể kiểm tra số dư credits: ${e.toString()}'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+    
     final serviceName = ServiceTypeEmoji.get(_selectedService!).nameVi;
     showModalBottomSheet(
       context: context,
@@ -372,6 +412,70 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
           Navigator.pop(dialogContext);
           context.go(RouteNames.home);
         },
+      ),
+    );
+  }
+
+  void _showInsufficientCreditsDialog(int currentBalance) {
+    final needed = _totalAmount - currentBalance;
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(Ionicons.wallet_outline, color: AppColors.warning, size: 28),
+            const SizedBox(width: 12),
+            const Text('Không đủ Credits'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Bạn cần $_totalAmount credits cho booking này.',
+              style: AppTypography.bodyMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Số dư hiện tại: $currentBalance credits',
+              style: AppTypography.bodyMedium.copyWith(
+                color: context.appColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Cần thêm: $needed credits',
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.error,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(
+              'Đóng',
+              style: TextStyle(color: context.appColors.textSecondary),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              context.push(RouteNames.credits);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text('Mua Credits', style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }
@@ -526,7 +630,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '${_formatPrice(_hourlyRate)}đ',
+                      '$_hourlyRate credits',
                       style: AppTypography.titleSmall.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w700,
@@ -592,7 +696,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                           ),
                         ),
                         Text(
-                          '${_formatPrice(_totalAmount)}đ',
+                          '$_totalAmount credits',
                           style: AppTypography.titleLarge.copyWith(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w700,
@@ -982,13 +1086,13 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
             child: Column(
               children: [
                 _PriceRow(
-                  label: '${_formatPrice(_hourlyRate)}đ x $_duration giờ',
-                  value: '${_formatPrice(_subtotal)}đ',
+                  label: '$_hourlyRate credits x $_duration giờ',
+                  value: '$_subtotal credits',
                 ),
                 const SizedBox(height: 8),
                 _PriceRow(
                   label: 'Phí dịch vụ (15%)',
-                  value: '${_formatPrice(_serviceFee)}đ',
+                  value: '$_serviceFee credits',
                 ),
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
@@ -996,7 +1100,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                 ),
                 _PriceRow(
                   label: 'Tổng cộng',
-                  value: '${_formatPrice(_totalAmount)}đ',
+                  value: '$_totalAmount credits',
                   isTotal: true,
                 ),
               ],
@@ -1187,12 +1291,12 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
               children: [
                 _PriceRow(
                   label: 'Dịch vụ ($_duration giờ)',
-                  value: '${_formatPrice(_subtotal)}đ',
+                  value: '$_subtotal credits',
                 ),
                 const SizedBox(height: 8),
                 _PriceRow(
                   label: 'Phí dịch vụ',
-                  value: '${_formatPrice(_serviceFee)}đ',
+                  value: '$_serviceFee credits',
                 ),
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
@@ -1200,7 +1304,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                 ),
                 _PriceRow(
                   label: 'Tổng cộng',
-                  value: '${_formatPrice(_totalAmount)}đ',
+                  value: '$_totalAmount credits',
                   isTotal: true,
                 ),
               ],
@@ -1231,13 +1335,6 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
           ),
         ],
       ),
-    );
-  }
-
-  String _formatPrice(int price) {
-    return price.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]}.',
     );
   }
 
@@ -1941,13 +2038,6 @@ class _ConfirmationBottomSheet extends StatelessWidget {
     required this.onConfirm,
   });
 
-  String _formatPrice(int price) {
-    return price.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]}.',
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -1993,7 +2083,7 @@ class _ConfirmationBottomSheet extends StatelessWidget {
           const SizedBox(height: 8),
 
           Text(
-            'Bạn sẽ thanh toán ${_formatPrice(totalAmount)}đ cho lịch hẹn này',
+            'Bạn sẽ thanh toán $totalAmount credits cho lịch hẹn này',
             style: AppTypography.bodyMedium.copyWith(
               color: context.appColors.textSecondary,
             ),

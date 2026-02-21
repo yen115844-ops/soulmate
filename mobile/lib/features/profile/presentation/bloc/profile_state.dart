@@ -117,7 +117,6 @@ class ProfileStats extends Equatable {
   final int totalBookings;
   final int totalReviews;
   final double averageRating;
-  final double walletBalance;
   final bool isPartner;
   final PartnerStatus? partnerStatus;
 
@@ -125,7 +124,6 @@ class ProfileStats extends Equatable {
     this.totalBookings = 0,
     this.totalReviews = 0,
     this.averageRating = 0.0,
-    this.walletBalance = 0.0,
     this.isPartner = false,
     this.partnerStatus,
   });
@@ -135,7 +133,6 @@ class ProfileStats extends Equatable {
       totalBookings: json['totalBookings'] as int? ?? 0,
       totalReviews: json['totalReviews'] as int? ?? 0,
       averageRating: _parseDouble(json['averageRating']),
-      walletBalance: _parseDouble(json['walletBalance']),
       isPartner: json['isPartner'] as bool? ?? false,
       partnerStatus: json['partnerStatus'] != null
           ? PartnerStatus.fromJson(json['partnerStatus'])
@@ -157,7 +154,6 @@ class ProfileStats extends Equatable {
         totalBookings,
         totalReviews,
         averageRating,
-        walletBalance,
         isPartner,
         partnerStatus,
       ];

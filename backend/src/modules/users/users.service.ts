@@ -1,10 +1,10 @@
 import { BadRequestException, ForbiddenException, Inject, Injectable, Logger, NotFoundException, forwardRef } from '@nestjs/common';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { PrismaService } from '../../database/prisma/prisma.service';
-import { KycStatus, UserStatus } from '../../generated/prisma/client';
+import { UserStatus } from '../../generated/prisma/client';
 import { ChatGateway } from '../chat/chat.gateway';
 import { NotificationsService } from '../notifications/notifications.service';
-import { AdminKycQueryDto, AdminUserQueryDto, ReviewKycDto, UpdateLocationDto, UpdateProfileDto, UpdateSettingsDto, UpdateUserStatusDto } from './dto';
+import { AdminUserQueryDto, UpdateLocationDto, UpdateProfileDto, UpdateSettingsDto, UpdateUserStatusDto } from './dto';
 
 @Injectable()
 export class UsersService {
@@ -44,12 +44,6 @@ export class UsersService {
       include: {
         profile: true,
         partnerProfile: true,
-        wallet: {
-          select: {
-            balance: true,
-            pendingBalance: true,
-          },
-        },
       },
     });
 
@@ -399,7 +393,7 @@ export class UsersService {
    * Get profile statistics
    */
   async getProfileStats(userId: string) {
-    const [bookingsCount, reviewsCount, wallet, reviewsData, partnerProfile] = await Promise.all([
+    const [bookingsCount, reviewsCount, reviewsData, partnerProfile] = await Promise.all([
       // Total bookings as user
       this.prisma.booking.count({
         where: { userId },
@@ -407,11 +401,6 @@ export class UsersService {
       // Total reviews written
       this.prisma.review.count({
         where: { reviewerId: userId },
-      }),
-      // Wallet balance
-      this.prisma.wallet.findUnique({
-        where: { userId },
-        select: { balance: true },
       }),
       // Average rating received (reviews about this user)
       this.prisma.review.aggregate({
@@ -438,7 +427,6 @@ export class UsersService {
       totalBookings: bookingsCount,
       totalReviews: reviewsCount,
       averageRating: reviewsData._avg?.overallRating ?? 0,
-      walletBalance: wallet?.balance ?? 0,
       // Partner info
       isPartner: !!partnerProfile,
       partnerStatus: partnerProfile ? {
@@ -581,185 +569,6 @@ export class UsersService {
     this.logger.log(`Admin updated user ${userId} status to ${dto.status}`);
 
     return updatedUser;
-  }
-
-  // ==================== KYC Admin Methods ====================
-
-  /**
-   * Admin: Get KYC stats
-   */
-  async adminGetKycStats() {
-    const [total, pending, verified, rejected, none] = await Promise.all([
-      this.prisma.kycVerification.count(),
-      this.prisma.kycVerification.count({ where: { status: KycStatus.PENDING } }),
-      this.prisma.kycVerification.count({ where: { status: KycStatus.VERIFIED } }),
-      this.prisma.kycVerification.count({ where: { status: KycStatus.REJECTED } }),
-      this.prisma.user.count({ where: { kycStatus: KycStatus.NONE } }),
-    ]);
-
-    return {
-      total,
-      pending,
-      verified,
-      rejected,
-      none,
-    };
-  }
-
-  /**
-   * Admin: Get all KYC verifications with pagination
-   */
-  async adminGetAllKyc(dto: AdminKycQueryDto) {
-    const {
-      page = 1,
-      limit = 10,
-      search,
-      status,
-      sortBy = 'submittedAt',
-      sortOrder = 'desc',
-    } = dto;
-
-    const skip = (page - 1) * limit;
-
-    const where: any = {};
-
-    if (status) {
-      where.status = status;
-    }
-
-    if (search) {
-      where.OR = [
-        { user: { email: { contains: search, mode: 'insensitive' } } },
-        { user: { profile: { fullName: { contains: search, mode: 'insensitive' } } } },
-        { idCardName: { contains: search, mode: 'insensitive' } },
-        { idCardNumber: { contains: search } },
-      ];
-    }
-
-    const [kycList, total] = await Promise.all([
-      this.prisma.kycVerification.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { [sortBy]: sortOrder },
-        include: {
-          user: {
-            include: {
-              profile: {
-                select: {
-                  fullName: true,
-                  avatarUrl: true,
-                  gender: true,
-                  dateOfBirth: true,
-                },
-              },
-            },
-            omit: {
-              passwordHash: true,
-            },
-          },
-        },
-      }),
-      this.prisma.kycVerification.count({ where }),
-    ]);
-
-    const totalPages = Math.ceil(total / limit);
-
-    return {
-      data: kycList,
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
-      },
-    };
-  }
-
-  /**
-   * Admin: Get KYC by ID
-   */
-  async adminGetKycById(kycId: string) {
-    const kyc = await this.prisma.kycVerification.findUnique({
-      where: { id: kycId },
-      include: {
-        user: {
-          include: {
-            profile: true,
-          },
-          omit: {
-            passwordHash: true,
-          },
-        },
-      },
-    });
-
-    if (!kyc) {
-      throw new NotFoundException('KYC verification not found');
-    }
-
-    return kyc;
-  }
-
-  /**
-   * Admin: Review KYC (approve/reject)
-   */
-  async adminReviewKyc(kycId: string, adminId: string, dto: ReviewKycDto) {
-    const kyc = await this.prisma.kycVerification.findUnique({
-      where: { id: kycId },
-      include: { user: true },
-    });
-
-    if (!kyc) {
-      throw new NotFoundException('KYC verification not found');
-    }
-
-    if (kyc.status !== KycStatus.PENDING) {
-      throw new BadRequestException('KYC verification has already been reviewed');
-    }
-
-    if (dto.status === KycStatus.REJECTED && !dto.rejectionReason) {
-      throw new BadRequestException('Rejection reason is required');
-    }
-
-    const result = await this.prisma.$transaction(async (tx) => {
-      // Update KYC verification
-      const updatedKyc = await tx.kycVerification.update({
-        where: { id: kycId },
-        data: {
-          status: dto.status,
-          rejectionReason: dto.status === KycStatus.REJECTED ? dto.rejectionReason : null,
-          reviewNote: dto.reviewNote,
-          verifiedAt: dto.status === KycStatus.VERIFIED ? new Date() : null,
-          verifiedBy: dto.status === KycStatus.VERIFIED ? adminId : null,
-        },
-        include: {
-          user: {
-            include: { profile: true },
-            omit: { passwordHash: true },
-          },
-        },
-      });
-
-      // Update user kycStatus
-      await tx.user.update({
-        where: { id: kyc.userId },
-        data: {
-          kycStatus: dto.status,
-        },
-      });
-
-      return updatedKyc;
-    });
-
-    this.logger.log(`Admin ${adminId} reviewed KYC ${kycId}: ${dto.status}`);
-
-    return {
-      message: `KYC verification ${dto.status === KycStatus.VERIFIED ? 'approved' : 'rejected'}`,
-      data: result,
-    };
   }
 
   // ==================== USER SETTINGS ====================
@@ -905,110 +714,6 @@ export class UsersService {
     this.logger.log(`Emergency contact deleted: ${contactId}`);
     return {
       message: 'Xóa liên hệ khẩn cấp thành công',
-    };
-  }
-
-  // ==================== USER KYC ====================
-
-  /**
-   * Get user KYC status
-   */
-  async getKycStatus(userId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { kycStatus: true },
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    const kyc = await this.prisma.kycVerification.findUnique({
-      where: { userId },
-      select: {
-        status: true,
-        idCardFrontUrl: true,
-        idCardBackUrl: true,
-        selfieUrl: true,
-        rejectionReason: true,
-        submittedAt: true,
-        verifiedAt: true,
-      },
-    });
-
-    return {
-      status: user.kycStatus,
-      ...kyc,
-    };
-  }
-
-  /**
-   * Submit KYC verification
-   */
-  async submitKyc(userId: string, dto: any) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { kycStatus: true },
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (user.kycStatus === KycStatus.VERIFIED) {
-      throw new BadRequestException('KYC already verified');
-    }
-
-    if (user.kycStatus === KycStatus.PENDING) {
-      throw new BadRequestException('KYC submission is pending review');
-    }
-
-    // Create or update KYC verification
-    const kyc = await this.prisma.kycVerification.upsert({
-      where: { userId },
-      create: {
-        userId,
-        idCardFrontUrl: dto.idCardFrontUrl,
-        idCardBackUrl: dto.idCardBackUrl,
-        selfieUrl: dto.selfieUrl,
-        idCardNumber: dto.idCardNumber,
-        idCardName: dto.idCardName,
-        status: KycStatus.PENDING,
-        submittedAt: new Date(),
-      },
-      update: {
-        idCardFrontUrl: dto.idCardFrontUrl,
-        idCardBackUrl: dto.idCardBackUrl,
-        selfieUrl: dto.selfieUrl,
-        idCardNumber: dto.idCardNumber,
-        idCardName: dto.idCardName,
-        status: KycStatus.PENDING,
-        submittedAt: new Date(),
-        rejectionReason: null,
-      },
-    });
-
-    // Update user KYC status
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { kycStatus: KycStatus.PENDING },
-    });
-
-    const userWithEmail = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { email: true },
-    });
-    await this.notificationsService
-      .notifyAdminsIfEnabled('kyc_pending_alert', 'KYC chờ duyệt', `Người dùng ${userWithEmail?.email ?? userId} vừa gửi yêu cầu xác minh KYC.`, { userId })
-      .catch((err) => this.logger.warn(`Failed to notify admins: ${err?.message}`));
-
-    this.logger.log(`KYC submitted for user: ${userId}`);
-    return {
-      message: 'Đã gửi yêu cầu xác minh thành công. Vui lòng chờ phê duyệt.',
-      data: {
-        status: KycStatus.PENDING,
-        submittedAt: kyc.submittedAt,
-      },
     };
   }
 

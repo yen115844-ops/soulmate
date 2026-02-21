@@ -3,77 +3,77 @@
 import { extractPaginatedData } from "@/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  SortingState,
-  useReactTable,
+    ColumnDef,
+    flexRender,
+    getCoreRowModel,
+    getPaginationRowModel,
+    getSortedRowModel,
+    SortingState,
+    useReactTable,
 } from "@tanstack/react-table";
 import { format } from "date-fns";
 import {
-  ArrowUpDown,
-  Calendar as CalendarIcon,
-  CheckCircle,
-  Clock,
-  Eye,
-  Loader2,
-  MapPin,
-  MoreHorizontal,
-  RefreshCcw,
-  Search,
-  XCircle,
+    ArrowUpDown,
+    Calendar as CalendarIcon,
+    CheckCircle,
+    Clock,
+    Eye,
+    Loader2,
+    MapPin,
+    MoreHorizontal,
+    RefreshCcw,
+    Search,
+    XCircle,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Pagination } from "@/components/ui/pagination";
 import { Label } from "@/components/ui/label";
+import { Pagination } from "@/components/ui/pagination";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -268,10 +268,7 @@ export default function BookingsPage() {
       ),
       cell: ({ row }) => {
         const amount = row.getValue("totalAmount") as number;
-        return new Intl.NumberFormat("vi-VN", {
-          style: "currency",
-          currency: "VND",
-        }).format(amount);
+        return `${new Intl.NumberFormat("vi-VN").format(amount)} Credits`;
       },
     },
     {
@@ -446,10 +443,8 @@ export default function BookingsPage() {
           <CardContent>
             <div className="text-lg font-bold">
               {new Intl.NumberFormat("vi-VN", {
-                style: "currency",
-                currency: "VND",
                 notation: "compact",
-              }).format(displayStats.monthlyRevenue)}
+              }).format(displayStats.monthlyRevenue)} Credits
             </div>
           </CardContent>
         </Card>
@@ -740,10 +735,7 @@ export default function BookingsPage() {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Giá/giờ</span>
                     <span>
-                      {new Intl.NumberFormat("vi-VN", {
-                        style: "currency",
-                        currency: "VND",
-                      }).format(selectedBooking.hourlyRate)}
+                      {new Intl.NumberFormat("vi-VN").format(selectedBooking.hourlyRate)} Credits
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -753,29 +745,20 @@ export default function BookingsPage() {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Tạm tính</span>
                     <span>
-                      {new Intl.NumberFormat("vi-VN", {
-                        style: "currency",
-                        currency: "VND",
-                      }).format(selectedBooking.subtotal)}
+                      {new Intl.NumberFormat("vi-VN").format(selectedBooking.subtotal)} Credits
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Phí dịch vụ (15%)</span>
                     <span>
-                      {new Intl.NumberFormat("vi-VN", {
-                        style: "currency",
-                        currency: "VND",
-                      }).format(selectedBooking.serviceFee)}
+                      {new Intl.NumberFormat("vi-VN").format(selectedBooking.serviceFee)} Credits
                     </span>
                   </div>
                   <div className="border-t pt-3">
                     <div className="flex justify-between text-lg font-bold">
                       <span>Tổng cộng</span>
                       <span>
-                        {new Intl.NumberFormat("vi-VN", {
-                          style: "currency",
-                          currency: "VND",
-                        }).format(selectedBooking.totalAmount)}
+                        {new Intl.NumberFormat("vi-VN").format(selectedBooking.totalAmount)} Credits
                       </span>
                     </div>
                   </div>

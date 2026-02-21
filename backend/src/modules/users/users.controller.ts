@@ -23,7 +23,7 @@ import { PaginationDto } from '../../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { UserRole } from '../../generated/prisma/client';
-import { AdminKycQueryDto, AdminUserQueryDto, CreateEmergencyContactDto, ReviewKycDto, SubmitKycDto, UpdateEmergencyContactDto, UpdateLocationDto, UpdateProfileDto, UpdateSettingsDto, UpdateUserStatusDto } from './dto';
+import { AdminUserQueryDto, CreateEmergencyContactDto, UpdateEmergencyContactDto, UpdateLocationDto, UpdateProfileDto, UpdateSettingsDto, UpdateUserStatusDto } from './dto';
 import { UsersService } from './users.service';
 
 @ApiTags('Users')
@@ -64,49 +64,6 @@ export class UsersController {
     @Body() dto: UpdateUserStatusDto,
   ) {
     return this.usersService.adminUpdateUserStatus(id, dto);
-  }
-
-  // ==================== KYC ADMIN ENDPOINTS ====================
-
-  @Get('admin/kyc/stats')
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Admin: Get KYC statistics' })
-  @ApiResponse({ status: 200, description: 'KYC stats retrieved' })
-  async adminGetKycStats() {
-    return this.usersService.adminGetKycStats();
-  }
-
-  @Get('admin/kyc/list')
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Admin: Get all KYC verifications' })
-  @ApiResponse({ status: 200, description: 'KYC list retrieved' })
-  async adminGetKycList(@Query() query: AdminKycQueryDto) {
-    return this.usersService.adminGetAllKyc(query);
-  }
-
-  @Get('admin/kyc/:id')
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Admin: Get KYC by ID' })
-  @ApiResponse({ status: 200, description: 'KYC details retrieved' })
-  async adminGetKycById(@Param('id') id: string) {
-    return this.usersService.adminGetKycById(id);
-  }
-
-  @Patch('admin/kyc/:id/review')
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Admin: Review KYC (approve/reject)' })
-  @ApiResponse({ status: 200, description: 'KYC reviewed successfully' })
-  async adminReviewKyc(
-    @Param('id') id: string,
-    @CurrentUser('id') adminId: string,
-    @Body() dto: ReviewKycDto,
-  ) {
-    return this.usersService.adminReviewKyc(id, adminId, dto);
   }
 
   // ==================== USER ENDPOINTS ====================
@@ -293,26 +250,6 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'Blocked users retrieved' })
   async getBlockedUsers(@CurrentUser('id') userId: string) {
     return this.usersService.getBlockedUsers(userId);
-  }
-
-  // ==================== USER KYC ====================
-
-  @Get('kyc')
-  @ApiOperation({ summary: 'Get my KYC status' })
-  @ApiResponse({ status: 200, description: 'KYC status retrieved' })
-  async getMyKycStatus(@CurrentUser('id') userId: string) {
-    return this.usersService.getKycStatus(userId);
-  }
-
-  @Post('kyc')
-  @ApiOperation({ summary: 'Submit KYC verification' })
-  @ApiResponse({ status: 201, description: 'KYC submitted' })
-  @ApiResponse({ status: 400, description: 'KYC already verified or pending' })
-  async submitKyc(
-    @CurrentUser('id') userId: string,
-    @Body() dto: SubmitKycDto,
-  ) {
-    return this.usersService.submitKyc(userId, dto);
   }
 
   // Admin routes

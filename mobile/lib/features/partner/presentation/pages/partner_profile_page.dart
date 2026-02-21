@@ -14,7 +14,7 @@ import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
-import '../../data/partner_repository.dart';
+import '../../data/partner_repository.dart'; // for PartnerProfileResponse model
 import '../bloc/partner_profile_bloc.dart';
 import '../bloc/partner_profile_event.dart';
 import '../bloc/partner_profile_state.dart';
@@ -25,9 +25,8 @@ class PartnerProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) =>
-          PartnerProfileBloc(partnerRepository: getIt<PartnerRepository>())
-            ..add(const PartnerProfileLoadRequested()),
+      create: (_) =>
+          getIt<PartnerProfileBloc>()..add(const PartnerProfileLoadRequested()),
       child: const _PartnerProfileContent(),
     );
   }
@@ -40,7 +39,14 @@ class _PartnerProfileContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Hồ sơ Partner'),
+        title: Text(
+          'Hồ sơ Partner',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: context.theme.colorScheme.onSurface,
+          ),
+        ),
         actions: [
           IconButton(
             onPressed: () => _showSettingsMenu(context),
@@ -120,7 +126,7 @@ class _PartnerProfileContent extends StatelessWidget {
                           _InfoRow(
                             icon: Ionicons.cash_outline,
                             label: 'Giá theo giờ',
-                            value: _formatCurrency(profile.hourlyRate),
+                            value: _formatCreditsPerHour(profile.hourlyRate),
                           ),
                           const SizedBox(height: 12),
                           _InfoRow(
@@ -249,9 +255,9 @@ class _PartnerProfileContent extends StatelessWidget {
     );
   }
 
-  String _formatCurrency(double amount) {
+  String _formatCreditsPerHour(double amount) {
     final formatter = NumberFormat('#,###', 'vi_VN');
-    return '${formatter.format(amount)}đ/giờ';
+    return '${formatter.format(amount)} credits/giờ';
   }
 
   void _showSettingsMenu(BuildContext context) {
@@ -270,7 +276,14 @@ class _PartnerProfileContent extends StatelessWidget {
             const SizedBox(height: 8),
             ListTile(
               leading: const Icon(Ionicons.eye_outline),
-              title: const Text('Xem hồ sơ công khai'),
+              title: Text(
+                'Xem hồ sơ công khai',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: context.theme.colorScheme.onSurface,
+                ),
+              ),
               onTap: () {
                 Navigator.pop(ctx);
                 // TODO: Preview public profile
@@ -278,7 +291,14 @@ class _PartnerProfileContent extends StatelessWidget {
             ),
             ListTile(
               leading: const Icon(Ionicons.notifications_outline),
-              title: const Text('Cài đặt thông báo'),
+              title: Text(
+                'Cài đặt thông báo',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: context.theme.colorScheme.onSurface,
+                ),
+              ),
               onTap: () {
                 Navigator.pop(ctx);
                 context.push(RouteNames.settings);
@@ -286,10 +306,17 @@ class _PartnerProfileContent extends StatelessWidget {
             ),
             ListTile(
               leading: const Icon(Ionicons.shield_checkmark_outline),
-              title: const Text('Xác minh danh tính'),
+              title: Text(
+                'Xác minh danh tính',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: context.theme.colorScheme.onSurface,
+                ),
+              ),
               onTap: () {
                 Navigator.pop(ctx);
-                context.push(RouteNames.kyc);
+                context.push(RouteNames.verification);
               },
             ),
             ListTile(
@@ -378,7 +405,7 @@ class _PartnerProfileContent extends StatelessWidget {
             const SizedBox(height: 24),
             AppTextField(
               controller: hourlyRateController,
-              label: 'Giá theo giờ (VNĐ)',
+              label: 'Giá theo giờ (Credits)',
               hint: 'Nhập giá',
               prefixIcon: Ionicons.cash_outline,
               keyboardType: TextInputType.number,

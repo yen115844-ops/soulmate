@@ -3,7 +3,6 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ionicons/ionicons.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 
@@ -147,9 +146,7 @@ class _SwipeableHomePageState extends State<SwipeableHomePage>
     final isDark = context.isDarkMode;
 
     return Scaffold(
-      body: BlocProvider.value(
-        value: getIt<FavoritesBloc>(),
-        child: Stack(
+      body: Stack(
           children: [
             IndexedStack(index: _currentIndex, children: _pages),
 
@@ -242,7 +239,6 @@ class _SwipeableHomePageState extends State<SwipeableHomePage>
               ),
             ),
           ],
-        ),
       ),
     );
   }

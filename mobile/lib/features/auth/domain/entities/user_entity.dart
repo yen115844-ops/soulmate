@@ -11,6 +11,8 @@ class UserEntity extends Equatable {
   final UserRole role;
   final UserStatus status;
   final KycStatus kycStatus;
+  final bool isPremium;
+  final DateTime? premiumUntil;
   final ProfileEntity? profile;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -22,6 +24,8 @@ class UserEntity extends Equatable {
     this.role = UserRole.user,
     this.status = UserStatus.pending,
     this.kycStatus = KycStatus.notSubmitted,
+    this.isPremium = false,
+    this.premiumUntil,
     this.profile,
     this.createdAt,
     this.updatedAt,
@@ -46,6 +50,8 @@ class UserEntity extends Equatable {
     UserRole? role,
     UserStatus? status,
     KycStatus? kycStatus,
+    bool? isPremium,
+    DateTime? premiumUntil,
     ProfileEntity? profile,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -57,6 +63,8 @@ class UserEntity extends Equatable {
       role: role ?? this.role,
       status: status ?? this.status,
       kycStatus: kycStatus ?? this.kycStatus,
+      isPremium: isPremium ?? this.isPremium,
+      premiumUntil: premiumUntil ?? this.premiumUntil,
       profile: profile ?? this.profile,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -71,6 +79,8 @@ class UserEntity extends Equatable {
         role,
         status,
         kycStatus,
+        isPremium,
+        premiumUntil,
         profile,
         createdAt,
         updatedAt,

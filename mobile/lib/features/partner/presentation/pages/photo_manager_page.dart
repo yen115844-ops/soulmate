@@ -222,7 +222,11 @@ class _PhotoManagerPageState extends State<PhotoManagerPage> {
       child: Scaffold(
         appBar: AppBar(
           leading: const AppBackButton(),
-          title: const Text('Quản lý ảnh'),
+          title:   Text('Quản lý ảnh', style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: context.theme.colorScheme.onSurface,
+            ),),
           actions: [
             if (_hasChanges)
               TextButton(

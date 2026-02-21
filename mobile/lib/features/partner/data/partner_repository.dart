@@ -163,19 +163,19 @@ class PartnerRepository with BaseRepositoryMixin {
     int limit = 20,
   }) async {
     try {
-      // Fetch stats and wallet transactions
+      // Fetch stats and credits wallet/transactions
       final results = await Future.wait([
         _apiClient.get('/bookings/stats/partner'),
-        _apiClient.get('/wallet'),
+        _apiClient.get('/credits/wallet'),
         _apiClient.get(
-          '/wallet/transactions',
-          queryParameters: {'page': page, 'limit': limit, 'period': period},
+          '/credits/transactions',
+          queryParameters: {'page': page, 'limit': limit},
         ),
       ]);
 
       final statsData = extractRawData(results[0].data);
       final walletData = extractRawData(results[1].data);
-      final transactionsData = extractRawData(results[2].data);
+      final transactionsData = results[2].data as Map<String, dynamic>;
 
       return PartnerEarningsData(
         stats: PartnerStats.fromJson(statsData),
@@ -190,6 +190,7 @@ class PartnerRepository with BaseRepositoryMixin {
 
   /// Parse transactions from API response
   List<WalletTransaction> _parseTransactions(dynamic data) {
+    // The new API returns { data: [...], pagination: {...} }
     if (data is Map && data.containsKey('data')) {
       data = data['data'];
     }
@@ -201,10 +202,10 @@ class PartnerRepository with BaseRepositoryMixin {
     return [];
   }
 
-  /// Request withdrawal
-  Future<void> requestWithdrawal({required double amount, String? note}) async {
+  /// Request withdrawal (now uses credits endpoint)
+  Future<void> requestWithdrawal({required int amount, String? note}) async {
     await _apiClient.post(
-      '/wallet/withdraw',
+      '/credits/withdraw',
       data: {'amount': amount, if (note != null) 'note': note},
     );
   }
@@ -336,14 +337,14 @@ class PartnerRepository with BaseRepositoryMixin {
     return PartnerProfileResponse.fromJson(extractRawData(response.data));
   }
 
-  /// Update bank account information
+  /// Update bank account information (now in credits wallet)
   Future<void> updateBankInfo({
     required String bankName,
     required String bankAccountNo,
     required String bankAccountName,
   }) async {
     await _apiClient.put(
-      '/partners/me/profile',
+      '/credits/bank-info',
       data: {
         'bankName': bankName,
         'bankAccountNo': bankAccountNo,
@@ -378,17 +379,23 @@ class PartnerRepository with BaseRepositoryMixin {
     );
   }
 
-  /// Get bank account information
+  /// Get bank account information (now from credits wallet)
   Future<BankAccountInfo?> getBankAccountInfo() async {
     try {
-      final response = await _apiClient.get('/wallet');
+      final response = await _apiClient.get('/credits/wallet');
       final data = extractRawData(response.data) as Map<String, dynamic>;
 
-      if (data['bankName'] != null || data['bankAccountNo'] != null) {
+      // Bank info can be nested or flat
+      final bankInfo = data['bankInfo'] as Map<String, dynamic>?;
+      final bankName = bankInfo?['bankName'] ?? data['bankName'];
+      final bankAccountNo = bankInfo?['bankAccountNo'] ?? data['bankAccountNo'];
+      final bankAccountName = bankInfo?['bankAccountName'] ?? data['bankAccountName'];
+
+      if (bankName != null || bankAccountNo != null) {
         return BankAccountInfo(
-          bankName: data['bankName'] as String? ?? '',
-          bankAccountNo: data['bankAccountNo'] as String? ?? '',
-          bankAccountName: data['bankAccountName'] as String? ?? '',
+          bankName: bankName as String? ?? '',
+          bankAccountNo: bankAccountNo as String? ?? '',
+          bankAccountName: bankAccountName as String? ?? '',
         );
       }
       return null;

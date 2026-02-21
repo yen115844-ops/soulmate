@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/network/api_client.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/services/local_storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
+import '../../../subscription/presentation/widgets/premium_guard.dart';
 import '../../data/chat_repository.dart';
 
 class ChatWithUserPage extends StatefulWidget {
@@ -32,14 +33,31 @@ class _ChatWithUserPageState extends State<ChatWithUserPage> {
   void initState() {
     super.initState();
     _initRepository();
-    _openConversation();
+    // Delay premium check to after build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkPremiumAndOpenConversation();
+    });
   }
 
   void _initRepository() {
-    final storage = LocalStorageService.instance;
-    final apiClient = ApiClient(storage: storage);
-    _chatRepository = ChatRepository(apiClient: apiClient);
-    _currentUserId = storage.userId;
+    _chatRepository = getIt<ChatRepository>();
+    _currentUserId = getIt<LocalStorageService>().userId;
+  }
+
+  void _checkPremiumAndOpenConversation() {
+    // Check premium subscription before allowing chat
+    if (!PremiumGuard.isPremium(context)) {
+      PremiumGuard.showPremiumDialog(
+        context,
+        title: 'Cần đăng ký Premium',
+        message: 'Tính năng chat yêu cầu gói Premium. Nâng cấp để nhắn tin không giới hạn!',
+        onUpgrade: () {
+          context.push('/premium');
+        },
+      );
+      return;
+    }
+    _openConversation();
   }
 
   Future<void> _openConversation() async {

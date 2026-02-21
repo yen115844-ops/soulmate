@@ -51,7 +51,7 @@ interface PartnerProfileViewProps {
   talents: string[];
 }
 
-function formatCurrency(amount: number): string {
+function formatCredits(amount: number): string {
   if (amount >= 1_000_000) {
     return `${(amount / 1_000_000).toFixed(amount % 1_000_000 === 0 ? 0 : 1)}M`;
   }
@@ -193,7 +193,7 @@ export default function PartnerProfileView({
           </div>
           <div className="text-center">
             <p className="text-xl font-bold text-indigo-600">
-              {formatCurrency(hourlyRate)}đ
+              {formatCredits(hourlyRate)} Credits
             </p>
             <p className="text-xs text-gray-500">/giờ</p>
           </div>

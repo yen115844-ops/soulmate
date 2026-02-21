@@ -8,9 +8,8 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/services/app_deep_link_service.dart';
 import '../../../../core/services/deep_link_service.dart';
 import '../../../../core/theme/theme_context.dart';
-import '../../../../shared/widgets/auth_guard.dart';
 import '../../../partner/domain/entities/partner_entity.dart';
-import '../../../profile/profile.dart';
+import '../../../subscription/presentation/widgets/premium_banner.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
@@ -30,22 +29,11 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final profileBloc = getIt<ProfileBloc>();
-
-    // Only load profile when user is authenticated
-    if (AuthGuard.isAuthenticated && profileBloc.state is ProfileInitial) {
-      profileBloc.add(const ProfileLoadRequested());
-    }
-
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (_) => getIt<HomeBloc>()
-            ..add(const HomeDetectLocation())
-            ..add(const HomeLoadPartners()),
-        ),
-        BlocProvider.value(value: profileBloc),
-      ],
+    return BlocProvider(
+      create: (_) => getIt<HomeBloc>()
+        ..add(const HomeLoadServiceTypes())
+        ..add(const HomeDetectLocation())
+        ..add(const HomeLoadPartners()),
       child: const _HomePageView(),
     );
   }
@@ -192,7 +180,13 @@ class _HomePageViewState extends State<_HomePageView> {
                 child: ServiceCategoriesSection(
                   selectedService: _selectedService,
                   onServiceTap: _onServiceTap,
+                  serviceTypes: state.serviceTypes,
                 ),
+              ),
+
+              // Premium banner - promotes Premium subscription
+              const SliverToBoxAdapter(
+                child: PremiumBanner(),
               ),
 
               // Quick filter chips

@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsArray, IsDateString, IsEnum, IsNumber, IsOptional, IsString, IsUrl, IsUUID, Max, MaxLength, Min } from 'class-validator';
-import { Gender, KycStatus, UserRole, UserStatus } from '../../../generated/prisma/client';
+import { IsArray, IsDateString, IsEnum, IsNumber, IsOptional, IsString, IsUrl, IsUUID, Max, Min } from 'class-validator';
+import { Gender, UserRole, UserStatus } from '../../../generated/prisma/client';
 
 export class UpdateProfileDto {
   @ApiPropertyOptional({ example: 'Nguyen Van A' })
@@ -190,60 +190,4 @@ export class AdminUserQueryDto {
   @IsOptional()
   @IsString()
   sortOrder?: 'asc' | 'desc';
-}
-
-// KYC Admin DTOs
-export class AdminKycQueryDto {
-  @ApiPropertyOptional({ example: 1 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Min(1)
-  page?: number;
-
-  @ApiPropertyOptional({ example: 10 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Min(1)
-  @Max(100)
-  limit?: number;
-
-  @ApiPropertyOptional({ description: 'Search by user email or name' })
-  @IsOptional()
-  @IsString()
-  search?: string;
-
-  @ApiPropertyOptional({ enum: Object.values(KycStatus) })
-  @IsOptional()
-  @IsEnum(KycStatus)
-  status?: KycStatus;
-
-  @ApiPropertyOptional({ description: 'Sort by field', example: 'submittedAt' })
-  @IsOptional()
-  @IsString()
-  sortBy?: string;
-
-  @ApiPropertyOptional({ description: 'Sort order', enum: ['asc', 'desc'] })
-  @IsOptional()
-  @IsString()
-  sortOrder?: 'asc' | 'desc';
-}
-
-export class ReviewKycDto {
-  @ApiProperty({ enum: Object.values(KycStatus), example: 'VERIFIED' })
-  @IsEnum(KycStatus)
-  status: KycStatus;
-
-  @ApiPropertyOptional({ example: 'ID card information does not match' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(500)
-  rejectionReason?: string;
-
-  @ApiPropertyOptional({ example: 'Reviewed and approved by admin' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(500)
-  reviewNote?: string;
 }

@@ -30,6 +30,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> with BaseRepositoryMixin {
     on<HomeDetectLocation>(_onDetectLocation);
     on<HomeSelectCity>(_onSelectCity);
     on<HomeRetryLocation>(_onRetryLocation);
+    on<HomeLoadServiceTypes>(_onLoadServiceTypes);
   }
 
   /// Load partners with current filter
@@ -288,6 +289,19 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> with BaseRepositoryMixin {
   ) async {
     LocationService.instance.clearCache();
     add(const HomeDetectLocation());
+  }
+
+  /// Load service types from backend
+  Future<void> _onLoadServiceTypes(
+    HomeLoadServiceTypes event,
+    Emitter<HomeState> emit,
+  ) async {
+    try {
+      final serviceTypes = await _repository.getServiceTypes();
+      emit(state.copyWith(serviceTypes: serviceTypes));
+    } catch (e) {
+      debugPrint('HomeBloc: Load service types error: $e');
+    }
   }
 
   /// User manually selected a city from the picker

@@ -34,6 +34,7 @@ import {
     Briefcase,
     Calendar,
     ChevronDown,
+    Coins,
     Database,
     FileText,
     Globe,
@@ -56,7 +57,8 @@ const mainMenuItems = [
   { title: "Người dùng", icon: Users, href: "/dashboard/users" },
   { title: "Đối tác", icon: UserCheck, href: "/dashboard/partners" },
   { title: "Đặt chỗ", icon: Calendar, href: "/dashboard/bookings" },
-  { title: "Xác minh KYC", icon: ShieldCheck, href: "/dashboard/kyc" },
+  { title: "Gói Credits", icon: Coins, href: "/dashboard/credits" },
+  { title: "Xác minh", icon: ShieldCheck, href: "/dashboard/verification" },
   { title: "Thông báo", icon: Bell, href: "/dashboard/notifications" },
 ];
 

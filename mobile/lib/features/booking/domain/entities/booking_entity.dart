@@ -20,7 +20,7 @@ class BookingEntity extends Equatable {
   final String serviceType;
   final DateTime startTime;
   final DateTime endTime;
-  final String status; // PENDING, CONFIRMED, PAID, IN_PROGRESS, COMPLETED, CANCELLED, REJECTED
+  final String status; // PENDING, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED, REJECTED
   final int totalAmount;
   final String? note;
   final String? location;
@@ -123,7 +123,6 @@ class BookingEntity extends Equatable {
   bool get isUpcoming {
     return status == 'PENDING' ||
         status == 'CONFIRMED' ||
-        status == 'PAID' ||
         status == 'IN_PROGRESS';
   }
 
@@ -165,7 +164,6 @@ class BookingEntity extends Equatable {
   String get statusColor {
     switch (status) {
       case 'CONFIRMED':
-      case 'PAID':
         return 'success';
       case 'PENDING':
         return 'warning';

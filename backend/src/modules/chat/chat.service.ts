@@ -2,6 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundEx
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { ConversationStatus, MessageStatus, MessageType, NotificationType } from '../../generated/prisma/client';
 import { NotificationsService } from '../notifications';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import {
     CreateConversationDto,
     QueryConversationsDto,
@@ -19,7 +20,22 @@ export class ChatService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
+    private readonly subscriptionsService: SubscriptionsService,
   ) {}
+
+  // ==================== Premium Validation ====================
+
+  /**
+   * Check if user has active premium subscription
+   */
+  private async requirePremium(userId: string): Promise<void> {
+    const status = await this.subscriptionsService.getStatus(userId);
+    if (!status.isPremium) {
+      throw new ForbiddenException(
+        'Tính năng chat yêu cầu gói Premium. Vui lòng nâng cấp để tiếp tục.',
+      );
+    }
+  }
 
   // ==================== Online Status ====================
 
@@ -279,6 +295,9 @@ export class ChatService {
    * Get or create a conversation with another user
    */
   async getOrCreateConversation(userId: string, dto: CreateConversationDto) {
+    // Check premium subscription for creating/messaging
+    await this.requirePremium(userId);
+
     const { participantId, initialMessage } = dto;
 
     // Check if user is not talking to themselves
@@ -525,6 +544,9 @@ export class ChatService {
     participantId: string,
     message: string,
   ) {
+    // Check premium subscription
+    await this.requirePremium(userId);
+
     // Check if user is not talking to themselves
     if (userId === participantId) {
       throw new BadRequestException('Cannot create conversation with yourself');
@@ -706,6 +728,9 @@ export class ChatService {
    * Send a message
    */
   async sendMessage(userId: string, conversationId: string, dto: SendMessageWithMediaDto) {
+    // Check premium subscription
+    await this.requirePremium(userId);
+
     // Check user is participant
     const participant = await this.prisma.conversationParticipant.findUnique({
       where: {

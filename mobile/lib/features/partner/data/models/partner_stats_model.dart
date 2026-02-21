@@ -7,7 +7,7 @@ class PartnerStats {
   final int completed;
   final int cancelled;
   final int pending;
-  final double totalEarned;
+  final int totalEarned; // Changed to int for credits
 
   PartnerStats({
     this.total = 0,
@@ -23,7 +23,7 @@ class PartnerStats {
       completed: json['completed'] ?? 0,
       cancelled: json['cancelled'] ?? 0,
       pending: json['pending'] ?? 0,
-      totalEarned: parseDouble(json['totalEarned']),
+      totalEarned: (json['totalEarned'] as num?)?.toInt() ?? 0,
     );
   }
 

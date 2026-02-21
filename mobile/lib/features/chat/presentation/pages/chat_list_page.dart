@@ -8,8 +8,8 @@ import 'package:ionicons/ionicons.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/services/chat_socket_service.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../data/chat_repository.dart';
 
@@ -22,7 +22,7 @@ class ChatListPage extends StatefulWidget {
 
 class _ChatListPageState extends State<ChatListPage> {
   late ChatRepository _chatRepository;
-  final ChatSocketService _socketService = ChatSocketService.instance;
+  final ChatSocketService _socketService = getIt<ChatSocketService>();
 
   bool _isLoading = true;
   List<ConversationEntity> _conversations = [];

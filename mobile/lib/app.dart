@@ -17,9 +17,11 @@ import 'core/theme/theme_cubit.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
 import 'features/auth/presentation/bloc/auth_state.dart' as auth_state;
+import 'features/favorites/presentation/bloc/favorites_bloc.dart';
 import 'features/partner/data/partner_repository.dart';
 import 'features/profile/presentation/bloc/profile_bloc.dart';
 import 'features/profile/presentation/bloc/profile_event.dart';
+import 'features/profile/presentation/bloc/profile_state.dart';
 import 'shared/bloc/master_data_bloc.dart';
 
 /// The main application widget
@@ -103,6 +105,9 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       providers: [
         BlocProvider<ThemeCubit>.value(value: getIt<ThemeCubit>()),
         BlocProvider<AuthBloc>.value(value: authBloc),
+        BlocProvider<FavoritesBloc>.value(value: getIt<FavoritesBloc>()),
+        BlocProvider<ProfileBloc>.value(value: getIt<ProfileBloc>()),
+        BlocProvider<MasterDataBloc>.value(value: getIt<MasterDataBloc>()),
       ],
       child: BlocListener<AuthBloc, auth_state.AuthState>(
         listener: (context, state) {
@@ -112,17 +117,22 @@ class _AppState extends State<App> with WidgetsBindingObserver {
             // → reset blocs, disconnect, and navigate to login
             getIt<ProfileBloc>().add(const ProfileResetRequested());
             getIt<MasterDataBloc>().add(const MasterDataResetRequested());
-            ChatSocketService.instance.disconnect();
+            getIt<ChatSocketService>().disconnect();
             AppRouter.router.go(RouteNames.login);
           } else if (state is auth_state.AuthUnauthenticated) {
             // Session expired or token invalid — clear data
             // but stay on browsable route (guest mode)
             getIt<ProfileBloc>().add(const ProfileResetRequested());
             getIt<MasterDataBloc>().add(const MasterDataResetRequested());
-            ChatSocketService.instance.disconnect();
+            getIt<ChatSocketService>().disconnect();
           } else if (state is auth_state.AuthAuthenticated ||
               state is auth_state.AuthNeedsProfileSetup) {
-            ChatSocketService.instance.connect();
+            getIt<ChatSocketService>().connect();
+            // Auto-load profile when authenticated
+            final profileBloc = getIt<ProfileBloc>();
+            if (profileBloc.state is ProfileInitial) {
+              profileBloc.add(const ProfileLoadRequested());
+            }
             _updatePresence();
           }
         },

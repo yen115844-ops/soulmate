@@ -73,8 +73,6 @@
 		</array>
 		<key>FirebaseAppDelegateProxyEnabled</key>
 		<false/>
-		<key>FlutterDeepLinkingEnabled</key>
-		<true/>
 		<key>BGTaskSchedulerPermittedIdentifiers</key>
 		<array>
 			<string>com.google.firebase.messaging</string>

@@ -44,6 +44,13 @@ export enum NotificationType {
   REVIEW = "REVIEW",
 }
 
+export enum SubscriptionStatus {
+  ACTIVE = "ACTIVE",
+  EXPIRED = "EXPIRED",
+  CANCELLED = "CANCELLED",
+  GRACE_PERIOD = "GRACE_PERIOD",
+}
+
 export enum PartnerStatus {
   PENDING = "PENDING",
   ACTIVE = "ACTIVE",
@@ -89,6 +96,8 @@ export interface User {
   role: UserRole;
   status: UserStatus;
   kycStatus: KycStatus;
+  isPremium?: boolean;
+  premiumUntil?: string;
   createdAt: string;
   updatedAt: string;
   profile?: Profile;
@@ -179,31 +188,81 @@ export interface Booking {
   partner?: User;
 }
 
-// ==================== KYC ====================
+// ==================== KYC (Soft Verification) ====================
 export interface KycVerification {
   id: string;
   userId: string;
-  idCardFrontUrl?: string;
-  idCardBackUrl?: string;
-  idCardNumber?: string;
-  idCardName?: string;
-  idCardDob?: string;
-  idCardGender?: Gender;
-  idCardAddress?: string;
-  idCardExpiry?: string;
-  videoUrl?: string;
   selfieUrl?: string;
+  livenessScore?: number;
+  livenessCheckId?: string;
   status: KycStatus;
   rejectionReason?: string;
-  livenessScore?: number;
-  faceMatchScore?: number;
-  ocrConfidence?: number;
+  isAutoVerified?: boolean;
   verifiedAt?: string;
   verifiedBy?: string;
   submittedAt?: string;
   reviewNote?: string;
+  deviceInfo?: string;
   createdAt: string;
   user?: User;
+}
+
+// ==================== SUBSCRIPTION ====================
+export interface SubscriptionPlan {
+  id: string;
+  code: string;
+  name: string;
+  nameVi: string;
+  description?: string;
+  durationMonths: number;
+  priceVnd: number;
+  appleProductId?: string;
+  googleProductId?: string;
+  originalPrice?: number;
+  discountPercent?: number;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Subscription {
+  id: string;
+  userId: string;
+  planId: string;
+  plan?: SubscriptionPlan;
+  status: SubscriptionStatus;
+  startDate: string;
+  endDate: string;
+  platform: string;
+  originalTxId?: string;
+  latestTxId?: string;
+  isAutoRenew: boolean;
+  cancelledAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  user?: User;
+}
+
+// ==================== CREDIT PACKAGES ====================
+export interface CreditPackage {
+  id: string;
+  code: string;
+  name: string;
+  nameVi: string;
+  description?: string;
+  creditAmount: number;
+  bonusCredits: number;
+  priceVnd: number;
+  appleProductId?: string;
+  googleProductId?: string;
+  originalPrice?: number;
+  discountPercent?: number;
+  isBestValue: boolean;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ==================== MASTER DATA ====================

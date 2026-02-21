@@ -80,3 +80,8 @@ class HomeSelectCity extends HomeEvent {
 class HomeRetryLocation extends HomeEvent {
   const HomeRetryLocation();
 }
+
+/// Load service types from backend
+class HomeLoadServiceTypes extends HomeEvent {
+  const HomeLoadServiceTypes();
+}

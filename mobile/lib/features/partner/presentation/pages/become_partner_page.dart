@@ -288,12 +288,8 @@ class _BecomePartnerPageState extends State<BecomePartnerPage> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        // MasterDataBloc is singleton - use .value to avoid dispose (would close it, causing error on re-enter)
-        BlocProvider.value(value: getIt<MasterDataBloc>()),
-        BlocProvider(create: (_) => getIt<PartnerRegistrationBloc>()),
-      ],
+    return BlocProvider(
+      create: (_) => getIt<PartnerRegistrationBloc>(),
       child: BlocListener<PartnerRegistrationBloc, PartnerRegistrationState>(
         listener: (context, state) {
           if (state is PartnerRegistrationLoading) {
@@ -817,8 +813,8 @@ class _ServicesStep extends StatelessWidget {
 
           AppTextField(
             controller: hourlyRateController,
-            label: 'Giá mỗi giờ (VNĐ)',
-            hint: 'Nhập số tiền',
+            label: 'Giá mỗi giờ (Credits)',
+            hint: 'Nhập số credits',
             keyboardType: TextInputType.number,
             prefixIcon: Ionicons.cash_outline,
             onChanged: (_) => onChanged(),
@@ -837,7 +833,7 @@ class _ServicesStep extends StatelessWidget {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: [200000, 300000, 400000, 500000].map((price) {
+            children: [50, 100, 150, 200].map((price) {
               return GestureDetector(
                 onTap: () {
                   hourlyRateController.text = price.toString();
@@ -854,7 +850,7 @@ class _ServicesStep extends StatelessWidget {
                     border: Border.all(color: context.appColors.border),
                   ),
                   child: Text(
-                    '${(price / 1000).toInt()}k/giờ',
+                    '$price credits/giờ',
                     style: AppTypography.labelMedium,
                   ),
                 ),

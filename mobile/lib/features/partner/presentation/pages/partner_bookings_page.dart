@@ -9,7 +9,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
-import '../../data/partner_repository.dart';
+import '../../data/partner_repository.dart'; // for PartnerBooking model
 import '../bloc/partner_bookings_bloc.dart';
 import '../bloc/partner_bookings_event.dart';
 import '../bloc/partner_bookings_state.dart';
@@ -20,9 +20,8 @@ class PartnerBookingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => PartnerBookingsBloc(
-        partnerRepository: getIt<PartnerRepository>(),
-      )..add(const PartnerBookingsLoadRequested()),
+      create: (_) => getIt<PartnerBookingsBloc>()
+        ..add(const PartnerBookingsLoadRequested()),
       child: const _PartnerBookingsContent(),
     );
   }
@@ -75,7 +74,11 @@ class _PartnerBookingsContentState extends State<_PartnerBookingsContent>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-         title: const Text('Quản lý lịch hẹn'),
+         title:   Text('Quản lý lịch hẹn', style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: context.theme.colorScheme.onSurface,
+            ),),
         bottom: TabBar(
           controller: _tabController,
           tabs: [
@@ -344,13 +347,13 @@ class _PartnerBookingCard extends StatelessWidget {
     }
   }
 
-  String _formatCurrency(double amount) {
-    if (amount >= 1000000) {
-      return '${(amount / 1000000).toStringAsFixed(1)}M';
-    } else if (amount >= 1000) {
-      return '${(amount / 1000).toStringAsFixed(0)}K';
+  String _formatCredits(int credits) {
+    if (credits >= 1000000) {
+      return '${(credits / 1000000).toStringAsFixed(1)}M';
+    } else if (credits >= 1000) {
+      return '${(credits / 1000).toStringAsFixed(0)}K';
     }
-    return amount.toStringAsFixed(0);
+    return credits.toString();
   }
 
   @override
@@ -415,7 +418,7 @@ class _PartnerBookingCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${_formatCurrency(booking.subtotal)}đ',
+                      '${_formatCredits(booking.subtotal)} credits',
                       style: AppTypography.titleMedium.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.bold,

@@ -126,6 +126,20 @@ class BookingRepository with BaseRepositoryMixin {
     }
   }
 
+  /// Pay for a booking with credits
+  Future<BookingEntity> payBooking(String bookingId) async {
+    try {
+      final response = await _apiClient.put(
+        '/bookings/$bookingId/pay',
+      );
+      return BookingEntity.fromJson(extractRawData(response.data));
+    } catch (e, stackTrace) {
+      debugPrint('Pay booking error: $e');
+      debugPrint('Stack trace: $stackTrace');
+      rethrow;
+    }
+  }
+
   /// Get user booking statistics
   Future<BookingStatsResponse> getUserBookingStats() async {
     try {

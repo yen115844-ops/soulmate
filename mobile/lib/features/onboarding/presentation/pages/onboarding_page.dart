@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ionicons/ionicons.dart';
 
 import '../../../../config/routes/route_names.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/services/local_storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -18,7 +19,7 @@ class OnboardingPage extends StatefulWidget {
 
 class _OnboardingPageState extends State<OnboardingPage> {
   final PageController _pageController = PageController();
-  final _storage = LocalStorageService.instance;
+  final _storage = getIt<LocalStorageService>();
   int _currentPage = 0;
 
   final List<OnboardingItem> _items = [
@@ -37,10 +38,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
       color: AppColors.secondary,
     ),
     OnboardingItem(
-      icon: Ionicons.wallet_outline,
-      title: 'Thanh Toán Dễ Dàng',
+      icon: Ionicons.diamond_outline,
+      title: 'Đăng Ký Premium',
       description:
-          'Thanh toán an toàn qua ví điện tử. Tiền được giữ escrow đến khi hoàn thành dịch vụ.',
+          'Nâng cấp lên Premium để nhắn tin và đặt lịch hẹn với Partner. Thanh toán dễ dàng qua App Store.',
       color: AppColors.accent,
     ),
   ];

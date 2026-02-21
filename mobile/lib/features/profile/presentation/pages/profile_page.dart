@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 import 'package:ionicons/ionicons.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
@@ -159,7 +158,11 @@ class _ProfilePageContentState extends State<_ProfilePageContent> {
           children: [
             ListTile(
               leading: const Icon(Ionicons.camera_outline),
-              title: const Text('Chụp ảnh'),
+              title:   Text('Chụp ảnh',  style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500 ,
+                color: context.theme.colorScheme.onSurface
+                )),
               onTap: () async {
                 Navigator.pop(bottomSheetContext);
                 try {
@@ -190,7 +193,11 @@ class _ProfilePageContentState extends State<_ProfilePageContent> {
             ),
             ListTile(
               leading: const Icon(Ionicons.image_outline),
-              title: const Text('Chọn từ thư viện'),
+              title:   Text('Chọn từ thư viện',  style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500 ,
+                color: context.theme.colorScheme.onSurface
+                )),
               onTap: () async {
                 Navigator.pop(bottomSheetContext);
                 try {
@@ -296,11 +303,6 @@ class _ProfileContent extends StatelessWidget {
     this.onAvatarTap,
   });
 
-  String _formatCurrency(double amount) {
-    final formatter = NumberFormat('#,###', 'vi_VN');
-    return '${formatter.format(amount)}đ';
-  }
-
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -349,19 +351,19 @@ class _ProfileContent extends StatelessWidget {
                   title: 'Tài khoản',
                   items: [
                     _ModernMenuItem(
+                      icon: Ionicons.wallet_outline,
+                      iconBgColor: const Color(0xFFF3E5F5),
+                      iconColor: const Color(0xFF9C27B0),
+                      title: 'Ví Credits',
+                      subtitle: 'Nạp và quản lý credits',
+                      onTap: () => context.push(RouteNames.credits),
+                    ),
+                    _ModernMenuItem(
                       icon: Ionicons.create_outline,
                       iconBgColor: const Color(0xFFE8F5E9),
                       iconColor: const Color(0xFF43A047),
                       title: 'Chỉnh sửa hồ sơ',
                       onTap: () => context.push(RouteNames.editProfile),
-                    ),
-                    _ModernMenuItem(
-                      icon: Ionicons.wallet_outline,
-                      iconBgColor: const Color(0xFFFFF3E0),
-                      iconColor: const Color(0xFFFF9800),
-                      title: 'Ví của tôi',
-                      subtitle: _formatCurrency(stats.walletBalance),
-                      onTap: () => context.push(RouteNames.wallet),
                     ),
                     _ModernMenuItem(
                       icon: Ionicons.heart_outline,
@@ -394,7 +396,7 @@ class _ProfileContent extends StatelessWidget {
                       subtitleColor: isKycVerified
                           ? AppColors.success
                           : AppColors.warning,
-                      onTap: () => context.push(RouteNames.kyc),
+                      onTap: () => context.push(RouteNames.verification),
                     ),
                     _ModernMenuItem(
                       icon: Ionicons.call_outline,
@@ -1311,7 +1313,7 @@ class _GuestProfileView extends StatelessWidget {
                                   ? 'Đang bật'
                                   : 'Đang tắt',
                               onTap: () {
-                                getIt<ThemeCubit>().setDarkMode(
+                                context.read<ThemeCubit>().setDarkMode(
                                   !themeState.isDarkMode,
                                 );
                               },
@@ -1330,11 +1332,11 @@ class _GuestProfileView extends StatelessWidget {
                                   : 'Đang tắt',
                               onTap: () {
                                 if (themeState.isSystemMode) {
-                                  getIt<ThemeCubit>().setThemeMode(
+                                  context.read<ThemeCubit>().setThemeMode(
                                     ThemeMode.light,
                                   );
                                 } else {
-                                  getIt<ThemeCubit>().setThemeMode(
+                                  context.read<ThemeCubit>().setThemeMode(
                                     ThemeMode.system,
                                   );
                                 }

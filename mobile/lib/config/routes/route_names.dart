@@ -31,7 +31,6 @@ class RouteNames {
   static const String createBooking = '/booking/create';
   static const String bookingDetail = '/booking/:id';
   static const String bookingConfirmation = '/booking/confirmation';
-  static const String bookingPayment = '/booking/:id/payment';
   static const String writeReview = '/booking/:id/review';
 
   // Chat
@@ -43,11 +42,10 @@ class RouteNames {
   static const String editProfile = '/profile/edit';
   static const String settings = '/settings';
   static const String blockedUsers = '/blocked-users';
-  static const String wallet = '/wallet';
-  static const String walletTopUp = '/wallet/top-up';
-  static const String walletWithdraw = '/wallet/withdraw';
-  static const String transactions = '/wallet/transactions';
-  static const String kyc = '/kyc';
+  static const String verification = '/verification';
+  static const String premium = '/premium';
+  static const String credits = '/credits';
+  static const String creditsHistory = '/credits/history';
   static const String emergencyContacts = '/emergency-contacts';
   static const String favorites = '/favorites';
   static const String myReviews = '/my-reviews';

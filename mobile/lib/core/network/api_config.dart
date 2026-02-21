@@ -31,7 +31,7 @@ class ApiConfig {
   static String get baseUrl {
     if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
 
-    if (!kDebugMode) {
+    if (kDebugMode) {
       return _defaultDebugUrl;
     }
 
@@ -42,7 +42,7 @@ class ApiConfig {
   static String get webUrl {
     if (_envWebUrl.isNotEmpty) return _envWebUrl;
 
-    if (!kDebugMode) {
+    if (kDebugMode) {
       return _defaultDebugWebUrl;
     }
 
@@ -69,7 +69,6 @@ class ApiConfig {
   static const String bookings = '/bookings';
   static const String chat = '/chat';
   static const String reviews = '/reviews';
-  static const String wallet = '/wallet';
   static const String notifications = '/notifications';
   static const String safety = '/safety';
   static const String publicTerms = '/public/terms';

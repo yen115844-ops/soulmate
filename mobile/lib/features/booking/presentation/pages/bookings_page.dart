@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ionicons/ionicons.dart';
 import 'package:intl/intl.dart';
+import 'package:ionicons/ionicons.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../shared/widgets/cards/booking_card.dart';
 import '../../../../shared/widgets/common/pull_to_refresh.dart';
 import '../../../../shared/widgets/loading/shimmer_loading.dart';
@@ -885,7 +885,6 @@ class _BookingsPageContentState extends State<_BookingsPageContent>
   static const List<({String label, String status})> _statusFilterOptions = [
     (label: 'Chờ xác nhận', status: 'PENDING'),
     (label: 'Đã xác nhận', status: 'CONFIRMED'),
-    (label: 'Đã thanh toán', status: 'PAID'),
     (label: 'Đang diễn ra', status: 'IN_PROGRESS'),
     (label: 'Hoàn thành', status: 'COMPLETED'),
     (label: 'Đã hủy', status: 'CANCELLED'),

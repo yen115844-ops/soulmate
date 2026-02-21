@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { NotificationsModule } from '../notifications';
+import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { ChatController } from './chat.controller';
 import { ChatGateway } from './chat.gateway';
 import { ChatService } from './chat.service';
@@ -8,6 +9,7 @@ import { ChatService } from './chat.service';
 @Module({
   imports: [
     NotificationsModule,
+    SubscriptionsModule,
     JwtModule.register({}), // For WsJwtGuard
   ],
   controllers: [ChatController],

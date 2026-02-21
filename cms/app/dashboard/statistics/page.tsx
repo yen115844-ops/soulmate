@@ -3,52 +3,51 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  statisticsApi,
-  type StatisticsReport,
-  type StatsOverview,
+    statisticsApi,
+    type StatisticsReport
 } from "@/lib/api/statistics";
 import { useQuery } from "@tanstack/react-query";
 import { format, subDays } from "date-fns";
 import {
-  Calendar,
-  DollarSign,
-  TrendingUp,
-  Users,
-  UserCheck,
-  ShieldCheck,
-  Briefcase,
+    Briefcase,
+    Calendar,
+    DollarSign,
+    ShieldCheck,
+    TrendingUp,
+    UserCheck,
+    Users,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
+    Area,
+    AreaChart,
+    Bar,
+    BarChart,
+    CartesianGrid,
+    Cell,
+    Pie,
+    PieChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
 } from "recharts";
 
 const BOOKING_STATUS_LABELS: Record<string, string> = {
@@ -72,16 +71,12 @@ const CHART_COLORS = [
   "#f59e0b",
 ];
 
-function formatCurrency(amount: number) {
+function formatCredits(amount: number) {
   if (amount >= 1_000_000_000)
-    return `₫${(amount / 1_000_000_000).toFixed(1)}B`;
-  if (amount >= 1_000_000) return `₫${(amount / 1_000_000).toFixed(1)}M`;
-  if (amount >= 1_000) return `₫${(amount / 1_000).toFixed(0)}K`;
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
+    return `${(amount / 1_000_000_000).toFixed(1)}B Credits`;
+  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)}M Credits`;
+  if (amount >= 1_000) return `${(amount / 1_000).toFixed(0)}K Credits`;
+  return `${new Intl.NumberFormat("vi-VN").format(amount)} Credits`;
 }
 
 function formatNumber(n: number) {
@@ -264,7 +259,7 @@ export default function StatisticsPage() {
               />
               <StatCard
                 title="Doanh thu (phí nền tảng)"
-                value={formatCurrency(overview.bookings.totalRevenue)}
+                value={formatCredits(overview.bookings.totalRevenue)}
                 sub={`Điểm TB đối tác: ${Number(overview.partners.averageRating).toFixed(1)}`}
                 icon={DollarSign}
               />
@@ -316,7 +311,7 @@ export default function StatisticsPage() {
                               v >= 1e6 ? `${v / 1e6}M` : v >= 1e3 ? `${v / 1e3}K` : v}
                           />
                           <Tooltip
-                            formatter={(value: number | undefined) => [formatCurrency(value ?? 0), "Doanh thu"]}
+                            formatter={(value: number | undefined) => [formatCredits(value ?? 0), "Doanh thu"]}
                             labelFormatter={(label) =>
                               typeof label === "string"
                                 ? format(new Date(label), "dd/MM/yyyy")
@@ -432,7 +427,7 @@ export default function StatisticsPage() {
                                 {formatNumber(row.count)}
                               </TableCell>
                               <TableCell className="text-right">
-                                {formatCurrency(row.totalAmount)}
+                                {formatCredits(row.totalAmount)}
                               </TableCell>
                             </TableRow>
                           ))}
@@ -608,10 +603,10 @@ export default function StatisticsPage() {
                                 {formatNumber(row.bookingCount)}
                               </TableCell>
                               <TableCell className="text-right">
-                                {formatCurrency(row.totalRevenue)}
+                                {formatCredits(row.totalRevenue)}
                               </TableCell>
                               <TableCell className="text-right">
-                                {formatCurrency(row.platformFee)}
+                                {formatCredits(row.platformFee)}
                               </TableCell>
                             </TableRow>
                           ))}

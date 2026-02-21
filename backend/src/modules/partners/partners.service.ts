@@ -63,24 +63,6 @@ export class PartnersService {
         });
       }
 
-      // Create or update wallet with bank info
-      if (dto.bankName || dto.bankAccountNo || dto.bankAccountName) {
-        await tx.wallet.upsert({
-          where: { userId },
-          create: {
-            userId,
-            bankName: dto.bankName,
-            bankAccountNo: dto.bankAccountNo,
-            bankAccountName: dto.bankAccountName,
-          },
-          update: {
-            bankName: dto.bankName,
-            bankAccountNo: dto.bankAccountNo,
-            bankAccountName: dto.bankAccountName,
-          },
-        });
-      }
-
       // Create partner profile
       const partnerProfile = await tx.partnerProfile.create({
         data: {
@@ -192,24 +174,6 @@ export class PartnersService {
           lastActiveAt: new Date(),
         },
       });
-
-      // Update bank info in wallet if provided
-      if (bankName !== undefined || bankAccountNo !== undefined || bankAccountName !== undefined) {
-        await tx.wallet.upsert({
-          where: { userId },
-          create: {
-            userId,
-            bankName,
-            bankAccountNo,
-            bankAccountName,
-          },
-          update: {
-            bankName,
-            bankAccountNo,
-            bankAccountName,
-          },
-        });
-      }
 
       // Update photos in user's profile
       if (photoUrls || removePhotoUrls) {

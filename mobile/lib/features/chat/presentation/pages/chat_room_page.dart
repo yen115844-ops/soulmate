@@ -118,7 +118,7 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
   }
 
   Future<void> _loadCurrentUserId() async {
-    final userId = LocalStorageService.instance.userId;
+    final userId = getIt<LocalStorageService>().userId;
     if (mounted) {
       setState(() => _currentUserId = userId);
     }
@@ -873,8 +873,7 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
               ],
             ),
           ),
-          IconButton(icon: const Icon(Ionicons.call_outline), onPressed: () {}),
-          IconButton(
+           IconButton(
             icon: const Icon(Ionicons.ellipsis_horizontal_outline),
             onPressed: () => _showOptionsMenu(),
           ),

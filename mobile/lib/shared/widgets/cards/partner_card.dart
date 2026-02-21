@@ -253,7 +253,7 @@ class PartnerCard extends StatelessWidget {
 
                   // Price
                   Text(
-                    '$hourlyRate/giờ',
+                    '$hourlyRate credits/giờ',
                     style: AppTypography.labelLarge.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w700,
@@ -468,14 +468,14 @@ class PartnerListItem extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  '${_formatPrice(hourlyRate)}đ',
+                  '$hourlyRate',
                   style: AppTypography.titleSmall.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 Text(
-                  '/giờ',
+                  'credits/giờ',
                   style: AppTypography.labelSmall.copyWith(
                     color: context.appColors.textHint,
                   ),

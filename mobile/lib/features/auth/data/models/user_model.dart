@@ -8,6 +8,8 @@ class UserModel extends Equatable {
   final String? role;
   final String? status;
   final String? kycStatus;
+  final bool isPremium;
+  final DateTime? premiumUntil;
   final ProfileModel? profile;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -19,6 +21,8 @@ class UserModel extends Equatable {
     this.role,
     this.status,
     this.kycStatus,
+    this.isPremium = false,
+    this.premiumUntil,
     this.profile,
     this.createdAt,
     this.updatedAt,
@@ -32,6 +36,10 @@ class UserModel extends Equatable {
       role: json['role']?.toString(),
       status: json['status']?.toString(),
       kycStatus: json['kycStatus']?.toString(),
+      isPremium: json['isPremium'] as bool? ?? false,
+      premiumUntil: json['premiumUntil'] != null 
+          ? DateTime.tryParse(json['premiumUntil'].toString()) 
+          : null,
       profile: json['profile'] != null
           ? ProfileModel.fromJson(json['profile'] as Map<String, dynamic>)
           : null,
@@ -52,6 +60,8 @@ class UserModel extends Equatable {
       'role': role,
       'status': status,
       'kycStatus': kycStatus,
+      'isPremium': isPremium,
+      'premiumUntil': premiumUntil?.toIso8601String(),
       'profile': profile?.toJson(),
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
@@ -65,6 +75,8 @@ class UserModel extends Equatable {
     String? role,
     String? status,
     String? kycStatus,
+    bool? isPremium,
+    DateTime? premiumUntil,
     ProfileModel? profile,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -76,6 +88,8 @@ class UserModel extends Equatable {
       role: role ?? this.role,
       status: status ?? this.status,
       kycStatus: kycStatus ?? this.kycStatus,
+      isPremium: isPremium ?? this.isPremium,
+      premiumUntil: premiumUntil ?? this.premiumUntil,
       profile: profile ?? this.profile,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -94,6 +108,8 @@ class UserModel extends Equatable {
         role,
         status,
         kycStatus,
+        isPremium,
+        premiumUntil,
         profile,
         createdAt,
         updatedAt,

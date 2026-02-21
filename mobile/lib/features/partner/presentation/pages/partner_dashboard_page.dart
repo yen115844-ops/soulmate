@@ -11,9 +11,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
-import '../../../../shared/data/repositories/notification_repository.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
-import '../../../profile/presentation/bloc/profile_event.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
 import '../../data/partner_repository.dart';
 import '../bloc/partner_dashboard_bloc.dart';
@@ -25,22 +23,9 @@ class PartnerDashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Ensure ProfileBloc is loaded for avatar sync
-    final profileBloc = getIt<ProfileBloc>();
-    if (profileBloc.state is ProfileInitial) {
-      profileBloc.add(const ProfileLoadRequested());
-    }
-
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (context) => PartnerDashboardBloc(
-            partnerRepository: getIt<PartnerRepository>(),
-            notificationRepository: getIt<NotificationRepository>(),
-          )..add(const PartnerDashboardLoadRequested()),
-        ),
-        BlocProvider.value(value: profileBloc),
-      ],
+    return BlocProvider(
+      create: (_) => getIt<PartnerDashboardBloc>()
+        ..add(const PartnerDashboardLoadRequested()),
       child: const _PartnerDashboardContent(),
     );
   }
@@ -88,7 +73,13 @@ class _PartnerDashboardContent extends StatelessWidget {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Partner Dashboard'),
+          title:   Text('Partner Dashboard',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: context.theme.colorScheme.onSurface,
+            ),
+          ),
           actions: [
             BlocBuilder<PartnerDashboardBloc, PartnerDashboardState>(
               buildWhen: (prev, curr) {
@@ -325,7 +316,7 @@ class _VerificationBanner extends StatelessWidget {
             ),
           ),
           IconButton(
-            onPressed: () => context.push(RouteNames.kyc),
+            onPressed: () => context.push(RouteNames.verification),
             icon: const Icon(
               Ionicons.chevron_forward_outline,
               color: AppColors.warning,
@@ -468,13 +459,13 @@ class _QuickStats extends StatelessWidget {
 
   const _QuickStats({required this.profile, required this.stats});
 
-  String _formatCurrency(double amount) {
-    if (amount >= 1000000) {
-      return '${(amount / 1000000).toStringAsFixed(1)}M';
-    } else if (amount >= 1000) {
-      return '${(amount / 1000).toStringAsFixed(0)}K';
+  String _formatCredits(int credits) {
+    if (credits >= 1000000) {
+      return '${(credits / 1000000).toStringAsFixed(1)}M';
+    } else if (credits >= 1000) {
+      return '${(credits / 1000).toStringAsFixed(0)}K';
     }
-    return amount.toStringAsFixed(0);
+    return credits.toString();
   }
 
   @override
@@ -493,7 +484,7 @@ class _QuickStats extends StatelessWidget {
                 child: _StatItem(
                   icon: Ionicons.swap_horizontal_outline,
                   label: 'Tổng thu',
-                  value: '${_formatCurrency(stats.totalEarned)}đ',
+                  value: '${_formatCredits(stats.totalEarned)} credits',
                 ),
               ),
               Container(
@@ -644,13 +635,13 @@ class _BookingCard extends StatelessWidget {
 
   const _BookingCard({required this.booking});
 
-  String _formatCurrency(double amount) {
-    if (amount >= 1000000) {
-      return '${(amount / 1000000).toStringAsFixed(1)}M';
-    } else if (amount >= 1000) {
-      return '${(amount / 1000).toStringAsFixed(0)}K';
+  String _formatCredits(int credits) {
+    if (credits >= 1000000) {
+      return '${(credits / 1000000).toStringAsFixed(1)}M';
+    } else if (credits >= 1000) {
+      return '${(credits / 1000).toStringAsFixed(0)}K';
     }
-    return amount.toStringAsFixed(0);
+    return credits.toString();
   }
 
   @override
@@ -763,7 +754,7 @@ class _BookingCard extends StatelessWidget {
             ),
           ),
           Text(
-            '${_formatCurrency(booking.subtotal)}đ',
+            '${_formatCredits(booking.subtotal)} credits',
             style: AppTypography.titleSmall.copyWith(
               color: AppColors.primary,
               fontWeight: FontWeight.bold,
@@ -820,7 +811,7 @@ class _QuickActions extends StatelessWidget {
                 icon: Ionicons.swap_horizontal_outline,
                 label: 'Thu nhập',
                 color: AppColors.success,
-                onTap: () => context.push(RouteNames.partnerEarnings),
+                onTap: () => context.go(RouteNames.partnerEarnings),
               ),
             ),
             const SizedBox(width: 12),

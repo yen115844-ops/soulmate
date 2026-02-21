@@ -5,8 +5,8 @@ import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
@@ -39,8 +39,9 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
       case 'PENDING':
         return AppColors.warning;
       case 'CONFIRMED':
-      case 'PAID':
         return AppColors.info;
+      case 'PAID':
+        return AppColors.success;
       case 'IN_PROGRESS':
         return AppColors.primary;
       case 'COMPLETED':
@@ -59,8 +60,9 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
       case 'PENDING':
         return Ionicons.time_outline;
       case 'CONFIRMED':
-      case 'PAID':
         return Ionicons.checkmark_circle_outline;
+      case 'PAID':
+        return Ionicons.card_outline;
       case 'IN_PROGRESS':
         return Ionicons.play_circle_outline;
       case 'COMPLETED':
@@ -110,12 +112,8 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
   }
 
   String _formatCurrency(int amount) {
-    if (amount >= 1000000) {
-      return '${(amount / 1000000).toStringAsFixed(1)}M đ';
-    } else if (amount >= 1000) {
-      return '${(amount / 1000).toStringAsFixed(0)}K đ';
-    }
-    return '$amount đ';
+    // Now showing credits instead of VND
+    return '$amount credits';
   }
 
   int get _duration {
@@ -579,10 +577,9 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
               ),
             ),
 
-          // Action Buttons - Cancel / Message
+          // Action Buttons - Cancel / Message / Pay
           if (booking.status == 'CONFIRMED' ||
-              booking.status == 'PENDING' ||
-              booking.status == 'PAID')
+              booking.status == 'PENDING')
             Positioned(
               left: 0,
               right: 0,
@@ -615,16 +612,66 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    // Primary action
+                    // Primary action - Pay for CONFIRMED, Wait for PENDING
                     Expanded(
                       flex: 2,
                       child: AppButton(
                         text: booking.status == 'PENDING'
                             ? 'Chờ xác nhận'
-                            : 'Nhắn tin',
+                            : 'Thanh toán',
+                        icon: booking.status == 'CONFIRMED'
+                            ? Ionicons.wallet_outline
+                            : null,
                         onPressed: booking.status == 'PENDING'
                             ? null
-                            : () => context.push('/chat/user/${booking.partnerId}'),
+                            : () => _showPaymentDialog(booking),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+          // Action Buttons for PAID - Message / Start
+          if (booking.status == 'PAID')
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  16,
+                  20,
+                  MediaQuery.of(context).padding.bottom + 16,
+                ),
+                decoration: BoxDecoration(
+                  color: context.appColors.surface,
+                  boxShadow: [
+                    BoxShadow(
+                      color: context.appColors.shadow,
+                      blurRadius: 10,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: AppButton(
+                        text: 'Nhắn tin',
+                        isOutlined: true,
+                        onPressed: () =>
+                            context.push('/chat/user/${booking.partnerId}'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: AppButton(
+                        text: 'Đã thanh toán',
+                        icon: Ionicons.checkmark_circle_outline,
+                        onPressed: null,
                       ),
                     ),
                   ],
@@ -819,6 +866,111 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Lỗi: $e')),
+        );
+      }
+    }
+  }
+
+  void _showPaymentDialog(BookingEntity booking) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Thanh toán'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Bạn sẽ thanh toán ${booking.totalAmount} credits cho lịch hẹn này.',
+              style: AppTypography.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '(~${_formatCreditsToVnd(booking.totalAmount)})',
+              style: AppTypography.bodySmall.copyWith(
+                color: context.appColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.info.withAlpha(20),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.info.withAlpha(50)),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Ionicons.information_circle_outline,
+                    size: 18,
+                    color: AppColors.info,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Số tiền sẽ được giữ lại cho đến khi hoàn thành lịch hẹn.',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.info,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Hủy'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _payForBooking();
+            },
+            child: const Text('Thanh toán'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatCreditsToVnd(int credits) {
+    final vnd = credits * 10000;
+    if (vnd >= 1000000) {
+      return '${(vnd / 1000000).toStringAsFixed(1)}M đ';
+    } else if (vnd >= 1000) {
+      return '${(vnd / 1000).toStringAsFixed(0)}K đ';
+    }
+    return '$vnd đ';
+  }
+
+  Future<void> _payForBooking() async {
+    if (_booking == null) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final updated = await _bookingRepository.payBooking(_booking!.id);
+      if (mounted) {
+        setState(() {
+          _booking = updated;
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Thanh toán thành công!'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi thanh toán: $e')),
         );
       }
     }

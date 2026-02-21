@@ -66,7 +66,7 @@ class AppTypography {
     fontWeight: FontWeight.w600,
     letterSpacing: 0,
     height: 1.27,
-  );
+   );
 
   static TextStyle titleMedium = TextStyle(
     fontFamily: _fontFamily,

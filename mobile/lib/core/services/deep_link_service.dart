@@ -139,9 +139,6 @@ class DeepLinkService {
           _goHomeThenPush(router, '/chat/$actionId');
         }
         break;
-      case 'wallet':
-        _goHomeThenPush(router, '/wallet');
-        break;
       case 'profile':
         if (actionId != null && actionId.isNotEmpty) {
           _goHomeThenPush(router, '/partner/$actionId');

@@ -35,6 +35,7 @@ enum KycStatus {
 enum Gender {
   MALE
   FEMALE
+  LGBT
   OTHER
 }
 
@@ -49,12 +50,16 @@ enum BookingStatus {
 }
 
 enum TransactionType {
+  CREDIT_PURCHASE   // Mua credits qua IAP
+  BOOKING_PAYMENT   // User thanh toán booking bằng credits
+  PARTNER_EARNING   // Partner nhận credits từ booking
+  WITHDRAWAL        // Rút credits ra VND
+  ESCROW_HOLD       // Giữ credits trong escrow
+  ESCROW_RELEASE    // Giải phóng credits cho partner
+  ESCROW_REFUND     // Hoàn credits cho user
+  SERVICE_FEE       // Phí platform
+  // Legacy - keep for migration
   DEPOSIT
-  WITHDRAWAL
-  ESCROW_HOLD
-  ESCROW_RELEASE
-  ESCROW_REFUND
-  SERVICE_FEE
 }
 
 enum TransactionStatus {
@@ -114,6 +119,13 @@ enum NotificationType {
   REVIEW
 }
 
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  GRACE_PERIOD
+}
+
 // ==================== MODELS ====================
 
 // Users - Bảng người dùng chính
@@ -126,6 +138,10 @@ model User {
   status       UserStatus @default(PENDING)
   kycStatus    KycStatus  @default(NONE) @map("kyc_status")
   
+  // Premium subscription
+  isPremium         Boolean   @default(false) @map("is_premium")
+  premiumUntil      DateTime? @map("premium_until")
+  
   failedLoginAttempts Int      @default(0) @map("failed_login_attempts")
   lockedUntil         DateTime? @map("locked_until")
   
@@ -137,6 +153,8 @@ model User {
   partnerProfile    PartnerProfile?
   kycVerification   KycVerification?
   wallet            Wallet?
+  subscriptions     Subscription[]
+  creditPurchases   CreditPurchase[]
   
   bookingsAsUser    Booking[]     @relation("UserBookings")
   bookingsAsPartner Booking[]     @relation("PartnerBookings")
@@ -240,10 +258,10 @@ model PartnerProfile {
   userId           String   @unique @map("user_id")
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  // Pricing
-  hourlyRate       Decimal  @map("hourly_rate") @db.Decimal(10, 2)
+  // Pricing - Giá bằng Credits
+  hourlyRate       Int      @map("hourly_rate") // Credits/giờ
   minimumHours     Int      @default(3) @map("minimum_hours")
-  currency         String   @default("VND")
+  currency         String   @default("CREDITS")
   
   // Service Types - các loại dịch vụ partner cung cấp
   serviceTypes     Json     @default("[]") @map("service_types") // ["walking", "movie", "party", "event", "travel"]
@@ -302,49 +320,162 @@ model AvailabilitySlot {
   @@map("availability_slots")
 }
 
-// KYC Verification - Xác thực danh tính
+// Soft Verification - Xác thực Selfie + Liveness (không lưu giấy tờ)
 model KycVerification {
   id              String   @id @default(uuid())
   userId          String   @unique @map("user_id")
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  // CCCD/CMND
-  idCardFrontUrl  String?  @map("id_card_front_url")
-  idCardBackUrl   String?  @map("id_card_back_url")
-  idCardNumber    String?  @map("id_card_number")
-  idCardName      String?  @map("id_card_name")
-  idCardDob       DateTime? @map("id_card_dob")
-  idCardGender    Gender?  @map("id_card_gender")
-  idCardAddress   String?  @map("id_card_address") @db.Text
-  idCardExpiry    DateTime? @map("id_card_expiry")
-  
-  // Video xác thực
-  videoUrl        String?  @map("video_url")
-  
-  // Selfie xác thực
+  // Selfie verification (SOFT - NO ID CARD)
   selfieUrl       String?  @map("selfie_url")
+  
+  // Liveness check results
+  livenessScore   Decimal? @map("liveness_score") @db.Decimal(5, 4)
+  livenessCheckId String?  @map("liveness_check_id") // External provider ID
   
   // Trạng thái
   status          KycStatus @default(PENDING)
   rejectionReason String?  @map("rejection_reason") @db.Text
   
-  // AI Scores
-  livenessScore   Decimal? @map("liveness_score") @db.Decimal(5, 4)
-  faceMatchScore  Decimal? @map("face_match_score") @db.Decimal(5, 4)
-  ocrConfidence   Decimal? @map("ocr_confidence") @db.Decimal(5, 4)
+  // Auto vs manual verification
+  isAutoVerified  Boolean  @default(false) @map("is_auto_verified")
   
   // Thông tin xác nhận
   verifiedAt      DateTime? @map("verified_at")
-  verifiedBy      String?  @map("verified_by") // Admin ID
+  verifiedBy      String?  @map("verified_by") // Admin ID (null if auto)
   
   // Metadata
   submittedAt     DateTime? @map("submitted_at")
-  reviewNote      String?  @map("review_note") @db.Text // Ghi chú của admin
+  reviewNote      String?  @map("review_note") @db.Text
+  deviceInfo      String?  @map("device_info") // Device fingerprint
   
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
   
   @@map("kyc_verifications")
+}
+
+// Subscription Plans - Các gói Premium
+model SubscriptionPlan {
+  id              String   @id @default(uuid())
+  code            String   @unique // "premium_1w", "premium_1m", "premium_3m", "premium_12m"
+  name            String   // "Premium 1 Week"
+  nameVi          String   @map("name_vi") // "Gói Premium 1 tuần"
+  description     String?  @db.Text
+  
+  durationMonths  Int      @default(0) @map("duration_months") // 0 for weekly plans
+  durationDays    Int?     @map("duration_days") // For plans < 1 month (e.g., 7 days)
+  priceVnd        Decimal  @map("price_vnd") @db.Decimal(12, 2)
+  
+  // IAP identifiers
+  appleProductId  String?  @unique @map("apple_product_id")
+  googleProductId String?  @unique @map("google_product_id")
+  
+  // Discount info
+  originalPrice   Decimal? @map("original_price") @db.Decimal(12, 2)
+  discountPercent Int?     @map("discount_percent")
+  
+  isActive        Boolean  @default(true) @map("is_active")
+  sortOrder       Int      @default(0) @map("sort_order")
+  
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  subscriptions   Subscription[]
+  
+  @@map("subscription_plans")
+}
+
+// Credit Packages - Gói Credits IAP Consumable
+model CreditPackage {
+  id              String   @id @default(uuid())
+  code            String   @unique // "credits_10", "credits_50", "credits_100"
+  name            String   // "10 Credits"
+  nameVi          String   @map("name_vi") // "10 Credits"
+  description     String?  @db.Text
+  
+  creditAmount    Int      @map("credit_amount") // Số credits nhận được
+  bonusCredits    Int      @default(0) @map("bonus_credits") // Credits bonus thêm
+  
+  priceVnd        Decimal  @map("price_vnd") @db.Decimal(12, 2) // Giá hiển thị (tham khảo)
+  
+  // IAP identifiers
+  appleProductId  String?  @unique @map("apple_product_id")
+  googleProductId String?  @unique @map("google_product_id")
+  
+  // Discount/Promotion
+  originalPrice   Decimal? @map("original_price") @db.Decimal(12, 2)
+  discountPercent Int?     @map("discount_percent")
+  
+  isActive        Boolean  @default(true) @map("is_active")
+  isBestValue     Boolean  @default(false) @map("is_best_value") // Highlight "Best Value"
+  sortOrder       Int      @default(0) @map("sort_order")
+  
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  purchases       CreditPurchase[]
+  
+  @@map("credit_packages")
+}
+
+// Credit Purchases - Lịch sử mua Credits qua IAP
+model CreditPurchase {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  packageId       String   @map("package_id")
+  package         CreditPackage @relation(fields: [packageId], references: [id])
+  
+  creditsReceived Int      @map("credits_received") // Total credits (amount + bonus)
+  
+  // IAP info
+  platform        String   // "ios", "android"
+  transactionId   String   @unique @map("transaction_id") // Apple/Google transaction ID
+  receiptData     String?  @map("receipt_data") @db.Text
+  
+  status          TransactionStatus @default(PENDING)
+  
+  createdAt       DateTime @default(now()) @map("created_at")
+  verifiedAt      DateTime? @map("verified_at")
+  
+  @@index([userId])
+  @@index([status])
+  @@map("credit_purchases")
+}
+
+// User Subscriptions - Đăng ký Premium
+model Subscription {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  planId          String   @map("plan_id")
+  plan            SubscriptionPlan @relation(fields: [planId], references: [id])
+  
+  status          SubscriptionStatus @default(ACTIVE)
+  
+  // Dates
+  startDate       DateTime @map("start_date")
+  endDate         DateTime @map("end_date")
+  
+  // IAP info
+  platform        String   // "ios", "android"
+  originalTxId    String?  @map("original_transaction_id") // Apple/Google original tx
+  latestTxId      String?  @map("latest_transaction_id")
+  receiptData     String?  @map("receipt_data") @db.Text
+  
+  // Auto-renewal
+  isAutoRenew     Boolean  @default(true) @map("is_auto_renew")
+  cancelledAt     DateTime? @map("cancelled_at")
+  
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  @@index([userId, status])
+  @@index([endDate])
+  @@map("subscriptions")
 }
 
 // Bookings - Đặt lịch
@@ -370,12 +501,12 @@ model Booking {
   meetingLat      Decimal?    @map("meeting_lat") @db.Decimal(10, 8)
   meetingLng      Decimal?    @map("meeting_lng") @db.Decimal(11, 8)
   
-  // Pricing - Giá tiền
-  hourlyRate      Decimal     @map("hourly_rate") @db.Decimal(10, 2)
+  // Pricing - Giá bằng Credits
+  hourlyRate      Int         @map("hourly_rate") // Credits/giờ
   totalHours      Decimal     @map("total_hours") @db.Decimal(4, 2)
-  subtotal        Decimal     @db.Decimal(12, 2) // hourlyRate * totalHours
-  serviceFee      Decimal     @map("service_fee") @db.Decimal(12, 2) // Phí platform (15%)
-  totalAmount     Decimal     @map("total_amount") @db.Decimal(12, 2) // subtotal + serviceFee
+  subtotal        Int         // hourlyRate * totalHours
+  serviceFee      Int         @map("service_fee") // Phí platform (15%)
+  totalAmount     Int         @map("total_amount") // subtotal + serviceFee
   
   status          BookingStatus @default(PENDING)
   
@@ -427,17 +558,17 @@ model BookingStatusHistory {
   @@map("booking_status_history")
 }
 
-// Wallet - Ví tiền
+// Wallet - Ví Credits
 model Wallet {
   id             String   @id @default(uuid())
   userId         String   @unique @map("user_id")
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  balance        Decimal  @default(0) @db.Decimal(15, 2) // Số dư khả dụng
-  pendingBalance Decimal  @default(0) @map("pending_balance") @db.Decimal(15, 2) // Số dư đang giữ (escrow)
-  totalEarnings  Decimal  @default(0) @map("total_earnings") @db.Decimal(15, 2) // Tổng thu nhập (Partner)
-  totalSpent     Decimal  @default(0) @map("total_spent") @db.Decimal(15, 2) // Tổng chi tiêu (User)
-  currency       String   @default("VND")
+  balance        Int      @default(0) // Số dư credits khả dụng
+  pendingBalance Int      @default(0) @map("pending_balance") // Credits đang giữ (escrow)
+  totalEarnings  Int      @default(0) @map("total_earnings") // Tổng credits thu nhập (Partner)
+  totalSpent     Int      @default(0) @map("total_spent") // Tổng credits chi tiêu (User)
+  currency       String   @default("CREDITS")
   
   // Bank account info cho rút tiền
   bankName       String?  @map("bank_name")
@@ -453,7 +584,7 @@ model Wallet {
   @@map("wallets")
 }
 
-// Transaction - Giao dịch
+// Transaction - Giao dịch Credits
 model Transaction {
   id               String            @id @default(uuid())
   transactionCode  String            @unique @map("transaction_code") // TXN-XXXXXX
@@ -464,12 +595,12 @@ model Transaction {
   bookingId        String?           @map("booking_id")
   
   type             TransactionType
-  amount           Decimal           @db.Decimal(15, 2)
-  fee              Decimal           @default(0) @db.Decimal(15, 2) // Phí giao dịch
+  amount           Int               // Số credits
+  fee              Int               @default(0) // Phí giao dịch (credits)
   
   // Balance snapshots
-  balanceBefore    Decimal?          @map("balance_before") @db.Decimal(15, 2)
-  balanceAfter     Decimal?          @map("balance_after") @db.Decimal(15, 2)
+  balanceBefore    Int?              @map("balance_before")
+  balanceAfter     Int?              @map("balance_after")
   
   status           TransactionStatus @default(PENDING)
   
@@ -493,7 +624,7 @@ model Transaction {
   @@map("transactions")
 }
 
-// Escrow Holding - Giữ tiền trung gian
+// Escrow Holding - Giữ Credits trung gian
 model EscrowHolding {
   id                  String       @id @default(uuid())
   bookingId           String       @unique @map("booking_id")
@@ -502,9 +633,9 @@ model EscrowHolding {
   payerId             String       @map("payer_id") // User ID
   payeeId             String       @map("payee_id") // Partner ID
   
-  amount              Decimal      @db.Decimal(15, 2) // Số tiền Partner nhận
-  platformFee         Decimal      @map("platform_fee") @db.Decimal(15, 2) // Phí platform
-  totalAmount         Decimal      @map("total_amount") @db.Decimal(15, 2) // Tổng số tiền giữ
+  amount              Int          // Số credits Partner nhận
+  platformFee         Int          @map("platform_fee") // Phí platform (credits)
+  totalAmount         Int          @map("total_amount") // Tổng credits giữ
   
   status              EscrowStatus @default(HELD)
   

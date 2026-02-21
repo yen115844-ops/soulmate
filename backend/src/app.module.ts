@@ -25,6 +25,7 @@ import { PrismaModule } from './database/prisma';
 import { AuthModule } from './modules/auth';
 import { BookingsModule } from './modules/bookings';
 import { ChatModule } from './modules/chat';
+import { CreditsModule } from './modules/credits';
 import { MasterDataModule } from './modules/master-data/master-data.module';
 import { NotificationsModule } from './modules/notifications';
 import { PartnersModule } from './modules/partners';
@@ -33,9 +34,10 @@ import { ReviewsModule } from './modules/reviews';
 import { SafetyModule } from './modules/safety';
 import { SettingsModule } from './modules/settings';
 import { StatisticsModule } from './modules/statistics';
+import { SubscriptionsModule } from './modules/subscriptions';
 import { UploadModule } from './modules/upload';
 import { UsersModule } from './modules/users';
-import { WalletModule } from './modules/wallet';
+import { VerificationModule } from './modules/verification';
 
 @Module({
   imports: [
@@ -112,7 +114,6 @@ import { WalletModule } from './modules/wallet';
     BookingsModule,
     MasterDataModule,
     UploadModule,
-    WalletModule,
     NotificationsModule,
     ReviewsModule,
     ChatModule,
@@ -120,6 +121,9 @@ import { WalletModule } from './modules/wallet';
     StatisticsModule,
     SafetyModule,
     ReportsModule,
+    VerificationModule,
+    SubscriptionsModule,
+    CreditsModule,
     // PaymentModule,
   ],
   controllers: [AppController],

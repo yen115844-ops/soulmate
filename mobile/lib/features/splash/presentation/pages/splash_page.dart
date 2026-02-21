@@ -20,7 +20,7 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
-  final _storage = LocalStorageService.instance;
+  final _storage = getIt<LocalStorageService>();
   final _deepLinkService = DeepLinkService();
 
   @override

@@ -210,10 +210,7 @@ export default function PartnersPage() {
       ),
       cell: ({ row }) => {
         const rate = row.getValue("hourlyRate") as number;
-        return new Intl.NumberFormat("vi-VN", {
-          style: "currency",
-          currency: "VND",
-        }).format(rate);
+        return `${new Intl.NumberFormat("vi-VN").format(rate)} Credits`;
       },
     },
     {
@@ -725,10 +722,7 @@ export default function PartnersPage() {
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Giá theo giờ</p>
                     <p className="text-xl font-bold">
-                      {new Intl.NumberFormat("vi-VN", {
-                        style: "currency",
-                        currency: "VND",
-                      }).format(selectedPartner.hourlyRate)}
+                      {new Intl.NumberFormat("vi-VN").format(selectedPartner.hourlyRate)} Credits
                     </p>
                   </div>
                   <div>

@@ -30,19 +30,8 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final profileBloc = getIt<ProfileBloc>();
-    if (profileBloc.state is ProfileInitial) {
-      profileBloc.add(const ProfileLoadRequested());
-    }
-
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (context) =>
-              getIt<SettingsBloc>()..add(const SettingsLoadRequested()),
-        ),
-        BlocProvider.value(value: profileBloc),
-      ],
+    return BlocProvider(
+      create: (_) => getIt<SettingsBloc>()..add(const SettingsLoadRequested()),
       child: const _SettingsPageContent(),
     );
   }
@@ -64,7 +53,11 @@ class _SettingsPageContentState extends State<_SettingsPageContent> {
           children: [
             ListTile(
               leading: const Icon(Ionicons.camera_outline),
-              title: const Text('Chụp ảnh'),
+              title:   Text('Chụp ảnh',  style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500 ,
+                color: context.theme.colorScheme.onSurface
+                )),
               onTap: () async {
                 Navigator.pop(bottomSheetContext);
                 try {
@@ -95,7 +88,11 @@ class _SettingsPageContentState extends State<_SettingsPageContent> {
             ),
             ListTile(
               leading: const Icon(Ionicons.image_outline),
-              title: const Text('Chọn từ thư viện'),
+              title:   Text('Chọn từ thư viện',  style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500 ,
+                color: context.theme.colorScheme.onSurface
+                )),
               onTap: () async {
                 Navigator.pop(bottomSheetContext);
                 try {
@@ -349,6 +346,34 @@ class _SettingsContent extends StatelessWidget {
             },
           ),
           const Divider(height: 1, indent: 92),
+
+          // Premium & Verification Section
+          _SectionHeader(title: 'Premium & Xác minh'),
+          _SettingsTile(
+            icon: Ionicons.diamond_outline,
+            title: 'Nâng cấp Premium',
+            subtitle: 'Nhắn tin không giới hạn, ưu tiên ghép cặp',
+            iconColor: const Color(0xFFFFD700), // Gold color
+            onTap: () => context.push(RouteNames.premium),
+            trailing: Icon(
+              Ionicons.chevron_forward_outline,
+              color: context.appColors.textHint,
+              size: 18,
+            ),
+          ),
+          const Divider(height: 1, indent: 72),
+          _SettingsTile(
+            icon: Ionicons.shield_checkmark_outline,
+            title: 'Xác minh danh tính',
+            subtitle: 'Nhận huy hiệu tick xanh',
+            iconColor: const Color(0xFF3B82F6), // Blue color
+            onTap: () => context.push(RouteNames.verification),
+            trailing: Icon(
+              Ionicons.chevron_forward_outline,
+              color: context.appColors.textHint,
+              size: 18,
+            ),
+          ),
 
           // Notifications Section
           _SectionHeader(title: 'Thông báo'),
@@ -860,6 +885,7 @@ class _SettingsTile extends StatelessWidget {
   final Widget? trailing;
   final VoidCallback? onTap;
   final Color? titleColor;
+  final Color? iconColor;
 
   const _SettingsTile({
     required this.icon,
@@ -868,6 +894,7 @@ class _SettingsTile extends StatelessWidget {
     this.trailing,
     this.onTap,
     this.titleColor,
+    this.iconColor,
   });
 
   @override
@@ -891,7 +918,7 @@ class _SettingsTile extends StatelessWidget {
                 ),
                 child: Icon(
                   icon,
-                  color: titleColor ?? colorScheme.onSurfaceVariant,
+                  color: iconColor ?? titleColor ?? colorScheme.onSurfaceVariant,
                   size: 22,
                 ),
               ),

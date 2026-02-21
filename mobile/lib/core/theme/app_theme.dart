@@ -37,11 +37,11 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0.5,
         centerTitle: true,
+        
         backgroundColor: AppColors.surface,
         foregroundColor: AppColors.textPrimary,
         systemOverlayStyle: SystemUiOverlayStyle.dark,
-        titleTextStyle: AppTypography.titleLarge,
-        iconTheme: const IconThemeData(color: AppColors.textPrimary, size: 24),
+         iconTheme: const IconThemeData(color: AppColors.textPrimary, size: 24),
       ),
 
       // Bottom Navigation Bar Theme

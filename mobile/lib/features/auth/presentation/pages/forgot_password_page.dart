@@ -69,7 +69,14 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       return Scaffold(
         appBar: AppBar(
           leading: const AppBackButton(),
-          title: const Text('Quên mật khẩu'),
+          title: Text(
+            'Quên mật khẩu',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: context.theme.colorScheme.onSurface,
+            ),
+          ),
         ),
         body: SafeArea(
           bottom: false,

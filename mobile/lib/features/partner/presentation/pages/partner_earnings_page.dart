@@ -9,7 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
-import '../../data/partner_repository.dart';
+import '../../data/partner_repository.dart'; // for PartnerEarningsData model
 import '../bloc/partner_earnings_bloc.dart';
 import '../bloc/partner_earnings_event.dart';
 import '../bloc/partner_earnings_state.dart';
@@ -20,39 +20,54 @@ class PartnerEarningsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => PartnerEarningsBloc(
-        partnerRepository: getIt<PartnerRepository>(),
-      )..add(const PartnerEarningsLoadRequested()),
+      create: (_) => getIt<PartnerEarningsBloc>()
+        ..add(const PartnerEarningsLoadRequested()),
       child: const _PartnerEarningsContent(),
     );
   }
 }
 
+// Exchange rate: 1 credit = 1,000 VND (100 credits = 100K)
+const int _creditToVndRate = 1000;
+
 class _PartnerEarningsContent extends StatelessWidget {
   const _PartnerEarningsContent();
 
-  String _formatCurrency(double amount) {
-    if (amount.abs() >= 1000000) {
-      return '${(amount / 1000000).toStringAsFixed(1)}M';
-    } else if (amount.abs() >= 1000) {
-      return '${(amount / 1000).toStringAsFixed(0)}K';
+  String _formatCredits(int credits) {
+    if (credits.abs() >= 1000000) {
+      return '${(credits / 1000000).toStringAsFixed(1)}M';
+    } else if (credits.abs() >= 1000) {
+      return '${(credits / 1000).toStringAsFixed(0)}K';
     }
-    return amount.toStringAsFixed(0);
+    return credits.toString();
   }
 
-  String _formatFullCurrency(double amount) {
-    final formatted = amount.toStringAsFixed(0).replaceAllMapped(
+  String _formatFullCredits(int credits) {
+    final formatted = credits.toString().replaceAllMapped(
           RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
           (Match m) => '${m[1]}.',
         );
     return formatted;
   }
 
+  String _formatVnd(int credits) {
+    final vnd = credits * _creditToVndRate;
+    final formatted = vnd.toString().replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]}.',
+        );
+    return '${formatted}đ';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-         title: const Text('Thu nhập'),
+         title:   Text('Thu nhập', style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: context.theme.colorScheme.onSurface,
+            ),),
       ),
       body: BlocConsumer<PartnerEarningsBloc, PartnerEarningsState>(
         listener: (context, state) {
@@ -135,7 +150,7 @@ class _PartnerEarningsContent extends StatelessWidget {
                           child: _StatCard(
                             icon: Ionicons.swap_horizontal_outline,
                             label: 'Tổng thu',
-                            value: '${_formatCurrency(stats.totalEarned)}đ',
+                            value: '${_formatCredits(stats.totalEarned)} credits',
                             color: AppColors.success,
                           ),
                         ),
@@ -198,7 +213,7 @@ class _PartnerEarningsContent extends StatelessWidget {
                           const Divider(height: 24),
                           _SummaryRow(
                             label: 'Tổng thu nhập',
-                            value: '${_formatFullCurrency(stats.totalEarned)}đ',
+                            value: '${_formatFullCredits(stats.totalEarned)} credits',
                             valueColor: AppColors.primary,
                             isBold: true,
                           ),
@@ -304,12 +319,12 @@ class _PartnerEarningsContent extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Rút tiền',
+              'Rút credits',
               style: AppTypography.titleLarge,
             ),
             const SizedBox(height: 8),
             Text(
-              'Số dư khả dụng: ${_formatFullCurrency(wallet.balance)}đ',
+              'Số dư khả dụng: ${_formatFullCredits(wallet.balance)} credits (${_formatVnd(wallet.balance)})',
               style: AppTypography.bodyMedium.copyWith(
                 color: context.appColors.textSecondary,
               ),
@@ -319,10 +334,10 @@ class _PartnerEarningsContent extends StatelessWidget {
               controller: amountController,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                labelText: 'Số tiền rút',
-                hintText: 'Nhập số tiền',
+                labelText: 'Số credits rút',
+                hintText: 'Nhập số credits',
                 prefixIcon: const Icon(Ionicons.cash_outline),
-                suffixText: 'đ',
+                suffixText: 'credits',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -333,9 +348,9 @@ class _PartnerEarningsContent extends StatelessWidget {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: [500000.0, 1000000.0, 2000000.0].map((amount) {
+              children: [50, 100, 200].map((amount) {
                 return GestureDetector(
-                  onTap: () => amountController.text = amount.toStringAsFixed(0),
+                  onTap: () => amountController.text = amount.toString(),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -347,7 +362,7 @@ class _PartnerEarningsContent extends StatelessWidget {
                       border: Border.all(color: context.appColors.border),
                     ),
                     child: Text(
-                      '${_formatCurrency(amount)}đ',
+                      '$amount credits',
                       style: AppTypography.labelMedium,
                     ),
                   ),
@@ -407,13 +422,13 @@ class _PartnerEarningsContent extends StatelessWidget {
               ),
             const SizedBox(height: 24),
             AppButton(
-              text: 'Xác nhận rút tiền',
+              text: 'Xác nhận rút credits',
               onPressed: () {
-                final amount = double.tryParse(amountController.text);
+                final amount = int.tryParse(amountController.text);
                 if (amount == null || amount <= 0) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Vui lòng nhập số tiền hợp lệ'),
+                      content: Text('Vui lòng nhập số credits hợp lệ'),
                       backgroundColor: AppColors.error,
                     ),
                   );
@@ -422,7 +437,7 @@ class _PartnerEarningsContent extends StatelessWidget {
                 if (amount > wallet.balance) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Số tiền vượt quá số dư khả dụng'),
+                      content: Text('Số credits vượt quá số dư khả dụng'),
                       backgroundColor: AppColors.error,
                     ),
                   );
@@ -483,8 +498,8 @@ class _ErrorView extends StatelessWidget {
 }
 
 class _BalanceCard extends StatelessWidget {
-  final double availableBalance;
-  final double totalEarned;
+  final int availableBalance; // Credits
+  final int totalEarned; // Credits
   final bool isWithdrawing;
   final VoidCallback onWithdraw;
 
@@ -495,12 +510,21 @@ class _BalanceCard extends StatelessWidget {
     required this.onWithdraw,
   });
 
-  String _formatCurrency(double amount) {
-    final formatted = amount.toStringAsFixed(0).replaceAllMapped(
+  String _formatCredits(int credits) {
+    final formatted = credits.toString().replaceAllMapped(
           RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
           (Match m) => '${m[1]}.',
         );
     return formatted;
+  }
+
+  String _formatVnd(int credits) {
+    final vnd = credits * _creditToVndRate;
+    final formatted = vnd.toString().replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]}.',
+        );
+    return '${formatted}đ';
   }
 
   @override
@@ -523,10 +547,17 @@ class _BalanceCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '${_formatCurrency(availableBalance)}đ',
+            '${_formatCredits(availableBalance)} credits',
             style: AppTypography.displaySmall.copyWith(
               color: AppColors.textWhite,
               fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '\u2248 ${_formatVnd(availableBalance)}',
+            style: AppTypography.labelSmall.copyWith(
+              color: AppColors.textWhite.withAlpha(180),
             ),
           ),
           const SizedBox(height: 24),
@@ -547,14 +578,14 @@ class _BalanceCard extends StatelessWidget {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Ionicons.swap_horizontal_outline),
-                  label: Text(isWithdrawing ? 'Đang xử lý...' : 'Rút tiền'),
+                  label: Text(isWithdrawing ? 'Đang xử lý...' : 'Rút credits'),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () {
-                    context.push(RouteNames.transactions);
+                    context.push(RouteNames.credits);
                   },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.textWhite,

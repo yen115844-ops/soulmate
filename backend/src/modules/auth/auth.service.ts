@@ -78,9 +78,6 @@ export class AuthService {
       await tx.profile.create({
         data: { userId: newUser.id, fullName: dto.fullName },
       });
-      await tx.wallet.create({
-        data: { userId: newUser.id, balance: 0, pendingBalance: 0 },
-      });
       const expiresAt = new Date(Date.now() + this.OTP_EXPIRY_MINUTES * 60 * 1000);
       await tx.otpCode.create({
         data: {

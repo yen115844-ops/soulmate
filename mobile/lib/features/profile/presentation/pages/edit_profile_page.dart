@@ -14,7 +14,6 @@ import '../../../../shared/bloc/master_data_bloc.dart';
 import '../../../../shared/data/models/master_data_models.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../auth/data/models/user_model.dart';
-import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
@@ -43,14 +42,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider.value(value: getIt<ProfileBloc>()),
-        BlocProvider.value(value: getIt<MasterDataBloc>()),
-        BlocProvider.value(value: getIt<AuthBloc>()),
-      ],
-      child: const _EditProfileContent(),
-    );
+    return const _EditProfileContent();
   }
 }
 
@@ -839,6 +831,7 @@ class _EditProfileContentState extends State<_EditProfileContent> {
     final genders = [
       ('MALE', 'Nam'),
       ('FEMALE', 'Nữ'),
+      ('LGBT', 'LGBT'),
       ('OTHER', 'Khác'),
     ];
 
@@ -849,9 +842,7 @@ class _EditProfileContentState extends State<_EditProfileContent> {
           child: GestureDetector(
             onTap: () => setState(() => _gender = g.$1),
             child: Container(
-              margin: EdgeInsets.only(
-                right: g.$1 != 'OTHER' ? 12 : 0,
-              ),
+              margin: const EdgeInsets.only(right: 8),
               padding: const EdgeInsets.symmetric(vertical: 16),
               decoration: BoxDecoration(
                 color: isSelected ? AppColors.primary : context.appColors.card,
@@ -918,7 +909,11 @@ class _EditProfileContentState extends State<_EditProfileContent> {
           children: [
             ListTile(
               leading: const Icon(Ionicons.camera_outline),
-              title: const Text('Chụp ảnh'),
+              title:   Text('Chụp ảnh',  style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500 ,
+                color: context.theme.colorScheme.onSurface
+                )),
               onTap: () async {
                 Navigator.pop(bottomSheetContext);
                 try {
@@ -947,7 +942,13 @@ class _EditProfileContentState extends State<_EditProfileContent> {
             ),
             ListTile(
               leading: const Icon(Ionicons.image_outline),
-              title: const Text('Chọn từ thư viện'),
+              title:   Text('Chọn từ thư viện',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500 ,
+                color: context.theme.colorScheme.onSurface
+                )
+              ),
               onTap: () async {
                 Navigator.pop(bottomSheetContext);
                 try {

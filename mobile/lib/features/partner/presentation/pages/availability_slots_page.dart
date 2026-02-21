@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ionicons/ionicons.dart';
 import 'package:intl/intl.dart';
+import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../data/partner_repository.dart';
+import '../../../../core/theme/theme_context.dart';
+import '../../data/partner_repository.dart'; // for AvailabilitySlot model
 import '../bloc/schedule_settings_bloc.dart';
 import '../bloc/schedule_settings_event.dart';
 import '../bloc/schedule_settings_state.dart';
@@ -22,9 +22,9 @@ class AvailabilitySlotsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => ScheduleSettingsBloc(
-        partnerRepository: getIt<PartnerRepository>(),
-      )..add(const ScheduleSettingsLoadRequested()),
+      create: (_) =>
+          getIt<ScheduleSettingsBloc>()
+            ..add(const ScheduleSettingsLoadRequested()),
       child: const _AvailabilitySlotsContent(),
     );
   }
@@ -84,7 +84,8 @@ class _AvailabilitySlotsContentState extends State<_AvailabilitySlotsContent> {
             slots = state.slots;
           } else if (state is ScheduleSettingsSlotOperationSuccess) {
             slots = state.slots;
-          } else if (state is ScheduleSettingsError && state.previousSlots != null) {
+          } else if (state is ScheduleSettingsError &&
+              state.previousSlots != null) {
             slots = state.previousSlots!;
           }
 
@@ -150,20 +151,24 @@ class _AvailabilitySlotsContentState extends State<_AvailabilitySlotsContent> {
     final endDate = DateTime(month.year, month.month + 1, 0);
 
     context.read<ScheduleSettingsBloc>().add(
-          ScheduleSettingsGetSlotsRequested(
-            startDate: startDate.toIso8601String().split('T').first,
-            endDate: endDate.toIso8601String().split('T').first,
-          ),
-        );
+      ScheduleSettingsGetSlotsRequested(
+        startDate: startDate.toIso8601String().split('T').first,
+        endDate: endDate.toIso8601String().split('T').first,
+      ),
+    );
   }
 
   List<AvailabilitySlot> _getSlotsForDate(
-      List<AvailabilitySlot> slots, DateTime date) {
+    List<AvailabilitySlot> slots,
+    DateTime date,
+  ) {
     return slots
-        .where((slot) =>
-            slot.date.year == date.year &&
-            slot.date.month == date.month &&
-            slot.date.day == date.day)
+        .where(
+          (slot) =>
+              slot.date.year == date.year &&
+              slot.date.month == date.month &&
+              slot.date.day == date.day,
+        )
         .toList()
       ..sort((a, b) => a.startTime.compareTo(b.startTime));
   }
@@ -193,10 +198,7 @@ class _AvailabilitySlotsContentState extends State<_AvailabilitySlotsContent> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Thêm khung giờ rảnh',
-                style: AppTypography.titleLarge,
-              ),
+              Text('Thêm khung giờ rảnh', style: AppTypography.titleLarge),
               const SizedBox(height: 8),
               Text(
                 DateFormat('EEEE, dd/MM/yyyy', 'vi_VN').format(date),
@@ -219,7 +221,10 @@ class _AvailabilitySlotsContentState extends State<_AvailabilitySlotsContent> {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  Icon(Ionicons.chevron_forward_outline, color: context.appColors.textHint),
+                  Icon(
+                    Ionicons.chevron_forward_outline,
+                    color: context.appColors.textHint,
+                  ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: _TimePickerField(
@@ -299,13 +304,13 @@ class _AvailabilitySlotsContentState extends State<_AvailabilitySlotsContent> {
         '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}';
 
     context.read<ScheduleSettingsBloc>().add(
-          ScheduleSettingsCreateSlotRequested(
-            date: dateStr,
-            startTime: startTimeStr,
-            endTime: endTimeStr,
-            note: note,
-          ),
-        );
+      ScheduleSettingsCreateSlotRequested(
+        date: dateStr,
+        startTime: startTimeStr,
+        endTime: endTimeStr,
+        note: note,
+      ),
+    );
   }
 
   void _deleteSlot(String slotId) {
@@ -323,12 +328,10 @@ class _AvailabilitySlotsContentState extends State<_AvailabilitySlotsContent> {
             onPressed: () {
               Navigator.pop(context);
               context.read<ScheduleSettingsBloc>().add(
-                    ScheduleSettingsDeleteSlotRequested(slotId: slotId),
-                  );
+                ScheduleSettingsDeleteSlotRequested(slotId: slotId),
+              );
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('Xóa'),
           ),
         ],
@@ -347,19 +350,54 @@ class _AvailabilitySlotsContentState extends State<_AvailabilitySlotsContent> {
             Text('Hướng dẫn'),
           ],
         ),
-        content: const Column(
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('• Chọn ngày trên lịch để xem và quản lý lịch rảnh'),
+            Text(
+              '• Chọn ngày trên lịch để xem và quản lý lịch rảnh',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: context.theme.colorScheme.onSurface,
+              ),
+            ),
             SizedBox(height: 8),
-            Text('• Nhấn nút "Thêm lịch" để thêm khung giờ mới'),
+            Text(
+              '• Nhấn nút "Thêm lịch" để thêm khung giờ mới',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: context.theme.colorScheme.onSurface,
+              ),
+            ),
             SizedBox(height: 8),
-            Text('• Kéo sang trái để xóa một khung giờ'),
+            Text(
+              '• Kéo sang trái để xóa một khung giờ',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: context.theme.colorScheme.onSurface,
+              ),
+            ),
             SizedBox(height: 8),
-            Text('• Ngày có lịch rảnh sẽ được đánh dấu màu xanh'),
+            Text(
+              '• Ngày có lịch rảnh sẽ được đánh dấu màu xanh',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: context.theme.colorScheme.onSurface,
+              ),
+            ),
             SizedBox(height: 8),
-            Text('• Khách hàng chỉ có thể đặt lịch trong các khung giờ bạn đã tạo'),
+            Text(
+              '• Khách hàng chỉ có thể đặt lịch trong các khung giờ bạn đã tạo',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: context.theme.colorScheme.onSurface,
+              ),
+            ),
           ],
         ),
         actions: [
@@ -438,9 +476,16 @@ class _CalendarView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final firstDayOfMonth = DateTime(selectedMonth.year, selectedMonth.month, 1);
-    final lastDayOfMonth =
-        DateTime(selectedMonth.year, selectedMonth.month + 1, 0);
+    final firstDayOfMonth = DateTime(
+      selectedMonth.year,
+      selectedMonth.month,
+      1,
+    );
+    final lastDayOfMonth = DateTime(
+      selectedMonth.year,
+      selectedMonth.month + 1,
+      0,
+    );
     final firstWeekday = firstDayOfMonth.weekday;
     final daysInMonth = lastDayOfMonth.day;
 
@@ -459,7 +504,9 @@ class _CalendarView extends StatelessWidget {
                   child: Text(
                     day,
                     style: AppTypography.labelMedium.copyWith(
-                      color: isWeekend ? AppColors.error : context.appColors.textSecondary,
+                      color: isWeekend
+                          ? AppColors.error
+                          : context.appColors.textSecondary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -493,17 +540,22 @@ class _CalendarView extends StatelessWidget {
                 dayOffset,
               );
               final isToday = _isToday(date);
-              final isPast = date.isBefore(DateTime.now().subtract(const Duration(days: 1)));
-              final isSelected = selectedDate != null &&
+              final isPast = date.isBefore(
+                DateTime.now().subtract(const Duration(days: 1)),
+              );
+              final isSelected =
+                  selectedDate != null &&
                   date.year == selectedDate!.year &&
                   date.month == selectedDate!.month &&
                   date.day == selectedDate!.day;
 
               // Check if date has slots
-              final hasSlots = slots.any((slot) =>
-                  slot.date.year == date.year &&
-                  slot.date.month == date.month &&
-                  slot.date.day == date.day);
+              final hasSlots = slots.any(
+                (slot) =>
+                    slot.date.year == date.year &&
+                    slot.date.month == date.month &&
+                    slot.date.day == date.day,
+              );
 
               return GestureDetector(
                 onTap: isPast ? null : () => onDateSelected(date),
@@ -512,10 +564,10 @@ class _CalendarView extends StatelessWidget {
                     color: isSelected
                         ? AppColors.primary
                         : hasSlots
-                            ? AppColors.primary.withAlpha(30)
-                            : isPast
-                                ? context.appColors.shimmerBase
-                                : null,
+                        ? AppColors.primary.withAlpha(30)
+                        : isPast
+                        ? context.appColors.shimmerBase
+                        : null,
                     borderRadius: BorderRadius.circular(8),
                     border: isToday
                         ? Border.all(color: AppColors.primary, width: 2)
@@ -530,10 +582,10 @@ class _CalendarView extends StatelessWidget {
                           color: isSelected
                               ? AppColors.textWhite
                               : isPast
-                                  ? context.appColors.textHint
-                                  : hasSlots
-                                      ? AppColors.primary
-                                      : context.appColors.textPrimary,
+                              ? context.appColors.textHint
+                              : hasSlots
+                              ? AppColors.primary
+                              : context.appColors.textPrimary,
                           fontWeight: isToday || isSelected
                               ? FontWeight.bold
                               : FontWeight.normal,
@@ -654,7 +706,8 @@ class _SlotsListView extends StatelessWidget {
                           builder: (context) => AlertDialog(
                             title: const Text('Xóa lịch rảnh'),
                             content: const Text(
-                                'Bạn có chắc muốn xóa khung giờ này?'),
+                              'Bạn có chắc muốn xóa khung giờ này?',
+                            ),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context, false),
@@ -810,7 +863,9 @@ class _TimePickerField extends StatelessWidget {
           initialTime: time,
           builder: (context, child) {
             return MediaQuery(
-              data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+              data: MediaQuery.of(
+                context,
+              ).copyWith(alwaysUse24HourFormat: true),
               child: child!,
             );
           },
@@ -838,7 +893,11 @@ class _TimePickerField extends StatelessWidget {
             const SizedBox(height: 4),
             Row(
               children: [
-                const Icon(Ionicons.time_outline, size: 18, color: AppColors.primary),
+                const Icon(
+                  Ionicons.time_outline,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
