@@ -12,6 +12,9 @@ jobs:
   deploy:
     name: Build & Deploy Backend
     runs-on: ubuntu-latest
+    env:
+      # Prisma generate chỉ cần DATABASE_URL tồn tại khi load config, không kết nối DB thật
+      DATABASE_URL: "postgresql://localhost:5432/ci_placeholder?schema=public"
 
     steps:
       - name: Checkout code

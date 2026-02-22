@@ -54,6 +54,8 @@ jobs:
           # Import certificate
           security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           security list-keychain -d user -s $KEYCHAIN_PATH
+          security default-keychain -s $KEYCHAIN_PATH
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
           # Apply provisioning profile
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
@@ -68,15 +70,18 @@ jobs:
           # Force tắt Automatic Signing
           sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PROJECT_PATH"
           
-          # Chuyển về Distribution Certificate
-          sed -i '' 's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "Apple Distribution";/g' "$PROJECT_PATH"
+          # Distribution: Xcode có thể hiển thị là "iOS Distribution" hoặc "Apple Distribution"
+          sed -i '' 's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "iOS Distribution";/g' "$PROJECT_PATH"
           
           # Set Team ID & Profile Specifier
-          # Lưu ý: Lệnh sed này tìm chuỗi DEVELOPMENT_TEAM cũ để thay thế.
-          # Nếu trong code bạn chưa set team, lệnh này có thể fail.
-          # Tốt nhất là gán đè trực tiếp nếu có thể, nhưng cách dưới đây an toàn hơn cho cấu trúc file
           sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = "";/PROVISIONING_PROFILE_SPECIFIER = "${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}";/g' "$PROJECT_PATH"
           sed -i '' 's/DEVELOPMENT_TEAM = [A-Z0-9]*;/DEVELOPMENT_TEAM = ${{ secrets.APPLE_TEAM_ID }};/g' "$PROJECT_PATH"
+
+      # Nếu provisioning profile KHÔNG có Associated Domains: dùng entitlements không có capability này để build chạy.
+      # Sau khi tạo lại profile có bật Associated Domains trong Apple Developer, có thể xóa step này.
+      - name: Use CI entitlements (no Associated Domains)
+        run: |
+          cp mobile/ios/Runner/RunnerReleaseCI.entitlements mobile/ios/Runner/RunnerRelease.entitlements
 
       - name: Create ExportOptions.plist
         run: |
