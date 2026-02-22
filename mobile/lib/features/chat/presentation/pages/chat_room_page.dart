@@ -497,6 +497,7 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
               ),
             );
           } else {
+            print('Chat error: ${state.errorMessage}');
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.errorMessage!),

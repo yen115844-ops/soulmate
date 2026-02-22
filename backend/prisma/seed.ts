@@ -911,7 +911,7 @@ async function main() {
       description: 'Starter pack - 10 credits',
       creditAmount: 10,
       bonusCredits: 0,
-      priceVnd: 10000, // 10 x 1,000 = 10K
+      priceVnd: 9000, // 10 x 1,000 = 10K
       appleProductId: 'credits_10',
       googleProductId: 'credits_10',
       sortOrder: 1,
@@ -923,7 +923,7 @@ async function main() {
       description: 'Get 30 credits for booking services',
       creditAmount: 30,
       bonusCredits: 0,
-      priceVnd: 30000, // 30K
+      priceVnd: 29000, // 30K
       appleProductId: 'credits_30',
       googleProductId: 'credits_30',
       sortOrder: 2,
@@ -935,7 +935,7 @@ async function main() {
       description: 'Get 50 credits + 3 bonus credits!',
       creditAmount: 50,
       bonusCredits: 3,
-      priceVnd: 50000, // 50K
+      priceVnd: 49000, // 50K
       originalPrice: 53000,
       discountPercent: 6,
       appleProductId: 'credits_50',
@@ -949,7 +949,7 @@ async function main() {
       description: 'Get 100 credits + 8 bonus credits!',
       creditAmount: 100,
       bonusCredits: 8,
-      priceVnd: 100000, // 100K
+      priceVnd: 99000, // 100K
       originalPrice: 108000,
       discountPercent: 7,
       appleProductId: 'credits_100',
@@ -963,7 +963,7 @@ async function main() {
       description: 'Get 300 credits + 30 bonus credits!',
       creditAmount: 300,
       bonusCredits: 30,
-      priceVnd: 300000, // 300K
+      priceVnd: 299000, // 300K
       originalPrice: 330000,
       discountPercent: 9,
       appleProductId: 'credits_300',
@@ -977,7 +977,7 @@ async function main() {
       description: 'Get 500 credits + 60 bonus credits!',
       creditAmount: 500,
       bonusCredits: 60,
-      priceVnd: 500000, // 500K
+      priceVnd: 499000, // 500K
       originalPrice: 560000,
       discountPercent: 11,
       appleProductId: 'credits_500',
@@ -992,7 +992,7 @@ async function main() {
       description: 'Get 1000 credits + 150 bonus credits! Best value!',
       creditAmount: 1000,
       bonusCredits: 150,
-      priceVnd: 1000000, // 1M
+      priceVnd: 999000, // 1M
       originalPrice: 1150000,
       discountPercent: 13,
       appleProductId: 'credits_1000',

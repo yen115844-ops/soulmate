@@ -413,7 +413,7 @@ class _PartnerDetailView extends StatelessWidget {
 
   void _navigateToChat(BuildContext context, PartnerDetailResponse detail) {
     final userId = detail.profile.userId;
-    context.push('/chat/$userId');
+    context.push('/chat/user/$userId');
   }
 
   void _navigateToBooking(BuildContext context, PartnerDetailResponse detail) {

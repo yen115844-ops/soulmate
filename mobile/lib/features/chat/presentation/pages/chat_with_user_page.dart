@@ -44,17 +44,24 @@ class _ChatWithUserPageState extends State<ChatWithUserPage> {
     _currentUserId = getIt<LocalStorageService>().userId;
   }
 
-  void _checkPremiumAndOpenConversation() {
+  void _checkPremiumAndOpenConversation() async {
     // Check premium subscription before allowing chat
     if (!PremiumGuard.isPremium(context)) {
-      PremiumGuard.showPremiumDialog(
+      final wantUpgrade = await PremiumGuard.showPremiumDialog(
         context,
         title: 'Cần đăng ký Premium',
         message: 'Tính năng chat yêu cầu gói Premium. Nâng cấp để nhắn tin không giới hạn!',
-        onUpgrade: () {
-          context.push('/premium');
-        },
       );
+
+      if (wantUpgrade && mounted) {
+        // Navigate to premium page and wait for return
+        await context.push('/premium');
+        // Re-check premium status after returning
+        if (mounted) _checkPremiumAndOpenConversation();
+      } else if (mounted) {
+        // User dismissed dialog - go back
+        context.pop();
+      }
       return;
     }
     _openConversation();

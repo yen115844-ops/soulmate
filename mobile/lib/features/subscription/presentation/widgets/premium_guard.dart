@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -44,20 +43,23 @@ class PremiumGuard {
   }
 
   /// Show premium upgrade dialog
-  static void showPremiumDialog(
+  /// Returns true if user chose to upgrade, false if dismissed
+  static Future<bool> showPremiumDialog(
     BuildContext context, {
     String? title,
     String? message,
     VoidCallback? onUpgrade,
-  }) {
-    showDialog(
+  }) async {
+    final result = await showDialog<bool>(
       context: context,
+      barrierDismissible: false,
       builder: (context) => PremiumUpgradeDialog(
         title: title ?? 'Tính năng Premium',
         message: message ?? 'Nâng cấp Premium để sử dụng tính năng này.',
-        onUpgrade: onUpgrade ?? () => context.push('/premium'),
+        onUpgrade: onUpgrade,
       ),
     );
+    return result ?? false;
   }
 }
 
@@ -125,7 +127,7 @@ class PremiumUpgradeDialog extends StatelessWidget {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(true);
                 onUpgrade?.call();
               },
               style: ElevatedButton.styleFrom(
@@ -144,7 +146,7 @@ class PremiumUpgradeDialog extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(context).pop(false),
             child: Text(
               'Để sau',
               style: TextStyle(color: Colors.grey[600]),

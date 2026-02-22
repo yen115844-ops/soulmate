@@ -73,17 +73,24 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
     });
   }
 
-  void _checkPremiumAndLoad() {
+  void _checkPremiumAndLoad() async {
     // Check premium subscription before allowing booking
     if (!PremiumGuard.isPremium(context)) {
-      PremiumGuard.showPremiumDialog(
+      final wantUpgrade = await PremiumGuard.showPremiumDialog(
         context,
         title: 'Cần đăng ký Premium',
         message: 'Tính năng booking yêu cầu gói Premium. Nâng cấp để đặt lịch với partner!',
-        onUpgrade: () {
-          context.push('/premium');
-        },
       );
+
+      if (wantUpgrade && mounted) {
+        // Navigate to premium page and wait for return
+        await context.push('/premium');
+        // Re-check premium status after returning
+        if (mounted) _checkPremiumAndLoad();
+      } else if (mounted) {
+        // User dismissed dialog - go back
+        context.pop();
+      }
       return;
     }
     _loadPartnerData();

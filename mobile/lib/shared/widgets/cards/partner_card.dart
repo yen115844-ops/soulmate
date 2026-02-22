@@ -304,16 +304,7 @@ class PartnerListItem extends StatelessWidget {
     this.isFavorite = false,
   });
 
-  String _formatPrice(int price) {
-    if (price >= 1000000) {
-      return '${(price / 1000000).toStringAsFixed(1)}M';
-    } else if (price >= 1000) {
-      return '${(price / 1000).toStringAsFixed(0)}K';
-    }
-    return price.toString();
-  }
-
-  @override
+   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap ?? () => context.push('/partner/$id'),

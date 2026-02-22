@@ -34,6 +34,8 @@ export const verificationApi = {
     params: GetVerificationParams = {}
   ): Promise<PaginatedResponse<KycVerification>> => {
     const response = await apiClient.get("/verification/admin/list", { params });
+    // Backend wraps in { success, data, timestamp } via TransformInterceptor
+    // response.data = { success, data: { data: [], total, page, limit, totalPages }, timestamp }
     return response.data;
   },
 
@@ -52,7 +54,10 @@ export const verificationApi = {
 
   getStats: async (): Promise<VerificationStats> => {
     const response = await apiClient.get("/verification/admin/stats");
-    return response.data;
+    // Backend wraps: { success: true, data: { total, pending, ... } }
+    // We need to unwrap .data to get the actual stats object
+    const body = response.data;
+    return body?.data ?? body;
   },
 };
 
