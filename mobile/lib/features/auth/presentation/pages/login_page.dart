@@ -209,52 +209,7 @@ class _LoginPageState extends State<LoginPage> {
 
                     const SizedBox(height: 32),
 
-                    Row(
-                      mainAxisSize: MainAxisSize.max,
-                      children: [
-                        const Expanded(child: Divider()),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Text(
-                            'hoặc',
-                            style: AppTypography.bodySmall.copyWith(
-                              color: context.appColors.textHint,
-                            ),
-                          ),
-                        ),
-                        const Expanded(child: Divider()),
-                      ],
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Social Login Buttons
-                    _SocialLoginButton(
-                      icon: 'google',
-                      text: 'Tiếp tục với Google',
-                      onPressed: isLoading
-                          ? null
-                          : () {
-                              // TODO: Google login
-                            },
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    _SocialLoginButton(
-                      icon: 'facebook',
-                      text: 'Tiếp tục với Facebook',
-                      backgroundColor: AppColors.facebook,
-                      textColor: Colors.white,
-                      onPressed: isLoading
-                          ? null
-                          : () {
-                              // TODO: Facebook login
-                            },
-                    ),
-
-                    const SizedBox(height: 40),
-
+ 
                     // Register Link
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,

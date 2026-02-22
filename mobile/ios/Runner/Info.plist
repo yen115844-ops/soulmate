@@ -7,7 +7,7 @@
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
-		<string>SoulMate</string>
+		<string>MiMate</string>
 		
 		<!-- Custom URL scheme for deep linking -->
 		<key>CFBundleURLTypes</key>

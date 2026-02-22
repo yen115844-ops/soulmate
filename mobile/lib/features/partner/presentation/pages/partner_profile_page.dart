@@ -257,7 +257,7 @@ class _PartnerProfileContent extends StatelessWidget {
 
   String _formatCreditsPerHour(double amount) {
     final formatter = NumberFormat('#,###', 'vi_VN');
-    return '${formatter.format(amount)} credits/giờ';
+    return '${formatter.format(amount)} xu/giờ';
   }
 
   void _showSettingsMenu(BuildContext context) {
@@ -405,7 +405,7 @@ class _PartnerProfileContent extends StatelessWidget {
             const SizedBox(height: 24),
             AppTextField(
               controller: hourlyRateController,
-              label: 'Giá theo giờ (Credits)',
+              label: 'Giá theo giờ (Xu)',
               hint: 'Nhập giá',
               prefixIcon: Ionicons.cash_outline,
               keyboardType: TextInputType.number,

@@ -405,7 +405,187 @@ private async verifyGoogleReceipt(purchaseToken: string, productId: string) {
 
 ---
 
-## 🔄 Flow Diagram
+## � App Store Server Notifications & Google Play RTDN
+
+### Tổng Quan
+
+Apple/Google gửi **server-to-server notifications** cho backend khi có sự kiện liên quan đến subscription:
+- Gia hạn thành công
+- Gia hạn thất bại (billing issue)
+- Hủy subscription
+- Hoàn tiền (refund)
+- Hết hạn
+- Grace period
+
+**Đây là cách duy nhất đáng tin cậy để backend biết trạng thái thực sự của subscription** — không chỉ dựa vào client gửi receipt.
+
+### Apple App Store Server Notifications V2
+
+#### Cấu hình trong App Store Connect
+
+1. Truy cập [App Store Connect](https://appstoreconnect.apple.com)
+2. Chọn App → **App Information** (trong General)
+3. Scroll xuống phần **App Store Server Notifications**
+4. Nhập 2 URL:
+
+| Field | URL |
+|-------|-----|
+| **Production Server URL** | `https://your-domain.com/api/v1/webhooks/apple/notifications` |
+| **Sandbox Server URL** | `https://your-domain.com/api/v1/webhooks/apple/notifications/sandbox` |
+
+5. Chọn **Version 2** cho notifications
+6. Click **Save**
+
+> **Lưu ý:** Có thể mất đến 1 giờ để thay đổi có hiệu lực trong sandbox environment.
+
+#### Apple Notification Types được xử lý
+
+| Notification Type | Ý nghĩa | Hành động Backend |
+|-------------------|----------|-------------------|
+| `TEST` | Test notification | Log OK |
+| `SUBSCRIBED` | Đăng ký mới / Tái đăng ký | Activate subscription |
+| `DID_RENEW` | Gia hạn thành công | Extend endDate, notify user |
+| `DID_CHANGE_RENEWAL_STATUS` | Bật/tắt auto-renew | Update isAutoRenew |
+| `DID_FAIL_TO_RENEW` | Billing issue | Set GRACE_PERIOD, notify user |
+| `EXPIRED` | Hết hạn | Set EXPIRED, revoke premium |
+| `GRACE_PERIOD_EXPIRED` | Grace period kết thúc | Set EXPIRED, revoke premium |
+| `REFUND` | Apple hoàn tiền | Set CANCELLED, revoke premium |
+| `REVOKE` | Family sharing bị thu hồi | Set CANCELLED, revoke premium |
+| `DID_CHANGE_RENEWAL_PREF` | Đổi gói (upgrade/downgrade) | Log for analytics |
+
+#### Cách Apple gửi notification
+
+Apple gửi POST request với body:
+```json
+{
+  "signedPayload": "<JWS signed string>"
+}
+```
+
+JWS (JSON Web Signature) chứa 3 parts: `header.payload.signature`
+- **header**: Certificate chain (x5c) để verify
+- **payload**: Notification data (type, transaction info, renewal info)
+- **signature**: Chữ ký bởi Apple
+
+### Google Play Real-time Developer Notifications (RTDN)
+
+#### Cấu hình trong Google Play Console
+
+1. Tạo **Cloud Pub/Sub topic** trong Google Cloud Console:
+   ```bash
+   # Tạo topic
+   gcloud pubsub topics create play-subscription-notifications
+   
+   # Cấp quyền cho Google Play service account
+   gcloud pubsub topics add-iam-policy-binding play-subscription-notifications \
+     --member="serviceAccount:google-play-developer-notifications@system.gserviceaccount.com" \
+     --role="roles/pubsub.publisher"
+   ```
+
+2. Tạo **Push subscription** cho topic:
+   ```bash
+   gcloud pubsub subscriptions create play-subscription-push \
+     --topic=play-subscription-notifications \
+     --push-endpoint=https://your-domain.com/api/v1/webhooks/google/notifications
+   ```
+
+3. Trong **Google Play Console**:
+   - Monetization setup → Real-time developer notifications
+   - Enable RTDN
+   - Topic name: `projects/{project-id}/topics/play-subscription-notifications`
+
+#### Google Notification Types được xử lý
+
+| Type | Ý nghĩa | Hành động Backend |
+|------|----------|-------------------|
+| `SUBSCRIPTION_PURCHASED` (4) | Mua mới | Already via verifyPurchase |
+| `SUBSCRIPTION_RENEWED` (2) | Gia hạn thành công | Extend endDate, notify user |
+| `SUBSCRIPTION_CANCELED` (3) | Hủy auto-renew | Update isAutoRenew=false |
+| `SUBSCRIPTION_ON_HOLD` (5) | Account hold (billing) | Set GRACE_PERIOD, revoke |
+| `SUBSCRIPTION_IN_GRACE_PERIOD` (6) | Grace period | Notify user |
+| `SUBSCRIPTION_RECOVERED` (1) | Khôi phục từ hold | Set ACTIVE, restore premium |
+| `SUBSCRIPTION_REVOKED` (12) | Thu hồi trước hạn | Set CANCELLED, revoke |
+| `SUBSCRIPTION_EXPIRED` (13) | Hết hạn | Set EXPIRED, revoke |
+| `SUBSCRIPTION_RESTARTED` (7) | Kích hoạt lại từ pause | Set ACTIVE, restore |
+
+### Backend Implementation
+
+#### Files
+
+| File | Mô tả |
+|------|--------|
+| `src/modules/subscriptions/webhook.controller.ts` | Controller nhận webhook từ Apple/Google |
+| `src/modules/subscriptions/subscription-webhook.service.ts` | Xử lý business logic cho notifications |
+| `src/modules/subscriptions/dto/webhook.dto.ts` | DTOs và interfaces cho webhook payloads |
+
+#### Webhook Endpoints
+
+```
+POST /api/v1/webhooks/apple/notifications          ← Apple Production
+POST /api/v1/webhooks/apple/notifications/sandbox   ← Apple Sandbox
+POST /api/v1/webhooks/google/notifications          ← Google Play RTDN
+```
+
+> **Quan trọng:** Các endpoint này là **PUBLIC** (không cần JWT auth) vì Apple/Google gọi trực tiếp. Security được đảm bảo bằng cách verify JWS signature (Apple) và Pub/Sub authentication (Google).
+
+#### Environment Variables
+
+```bash
+# Apple
+APPLE_SHARED_SECRET=your_shared_secret
+APPLE_VERIFY_RECEIPT_URL=https://buy.itunes.apple.com/verifyReceipt
+APPLE_VERIFY_RECEIPT_SANDBOX_URL=https://sandbox.itunes.apple.com/verifyReceipt
+APPLE_BUNDLE_ID=com.yourcompany.soulmate
+
+# Google
+GOOGLE_SERVICE_ACCOUNT_KEY_PATH=./google-service-account.json
+GOOGLE_PACKAGE_NAME=com.yourcompany.soulmate
+```
+
+### Flow Diagram (với Server Notifications)
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                Server Notification Flow                              │
+├──────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  ┌─────────┐    Purchase    ┌──────────┐   Verify    ┌─────────┐    │
+│  │  Mobile  │ ──────────── │  Backend  │ ──────────│ Apple/   │    │
+│  │   App    │   Receipt     │  Server   │   Receipt  │ Google   │    │
+│  └─────────┘               └──────────┘            └─────────┘    │
+│                                   ▲                       │          │
+│                                   │                       │          │
+│                                   │  Webhook (async)      │          │
+│                                   │                       │          │
+│                                   │  • DID_RENEW          │          │
+│                                   │  • EXPIRED            │          │
+│                                   │  • REFUND             │          │
+│                                   │  • DID_FAIL_TO_RENEW  │          │
+│                                   │  • etc.               │          │
+│                                   │                       │          │
+│                                   └───────────────────────┘          │
+│                                                                      │
+│  → Client-initiated: Purchase & Restore (synchronous)                │
+│  → Server-initiated: Renewal, Expiry, Refund (asynchronous webhook)  │
+│                                                                      │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+### Checklist App Store Server Notifications
+
+- [ ] App Store Connect: Production Server URL configured
+- [ ] App Store Connect: Sandbox Server URL configured
+- [ ] App Store Connect: Version 2 selected
+- [ ] Backend: webhook.controller.ts deployed
+- [ ] Backend: subscription-webhook.service.ts deployed
+- [ ] Backend: Test notification received successfully (send from App Store Connect)
+- [ ] Google Play Console: RTDN enabled with Pub/Sub topic
+- [ ] Google Cloud: Push subscription pointing to backend webhook URL
+- [ ] Backend: Google RTDN test notification received
+
+---
+
+## �🔄 Flow Diagram
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -461,16 +641,23 @@ private async verifyGoogleReceipt(purchaseToken: string, productId: string) {
 - [ ] App Store Connect: Subscription Group configured
 - [ ] App Store Connect: Subscription pricing set
 - [ ] App Store Connect: Localizations added (Vietnamese)
+- [ ] App Store Connect: **Production Server URL** set for App Store Server Notifications
+- [ ] App Store Connect: **Sandbox Server URL** set for App Store Server Notifications
+- [ ] App Store Connect: **Version 2** selected for notifications
 - [ ] Backend: Apple shared secret configured
 - [ ] Backend: Receipt verification implemented
+- [ ] Backend: Webhook endpoint deployed and accessible
 - [ ] Terms of Use and Privacy Policy links in app
 - [ ] "Restore Purchases" button visible
 
 ### Android
 - [ ] Play Console: Subscriptions created & activated
 - [ ] Play Console: Service account with API access
+- [ ] Play Console: **RTDN enabled** with Pub/Sub topic
+- [ ] Google Cloud: Push subscription pointing to webhook URL
 - [ ] Backend: Google service account JSON configured
 - [ ] Backend: Google receipt verification implemented
+- [ ] Backend: Webhook endpoint deployed and accessible
 - [ ] Terms of Use and Privacy Policy links in app
 - [ ] "Restore Purchases" button visible
 
@@ -478,6 +665,7 @@ private async verifyGoogleReceipt(purchaseToken: string, productId: string) {
 - [ ] Test purchase flow in sandbox/test mode
 - [ ] Test restore purchases
 - [ ] Test subscription expiration
+- [ ] Test server notification (send test from App Store Connect)
 - [ ] Handle edge cases (network errors, canceled, pending)
 
 ---
@@ -514,3 +702,7 @@ SUBSCRIPTION INFORMATION:
 
 ### Backend
 - `src/modules/subscriptions/subscriptions.service.ts` - Receipt verification (needs production implementation)
+- `src/modules/subscriptions/webhook.controller.ts` - **NEW** Apple & Google webhook endpoints
+- `src/modules/subscriptions/subscription-webhook.service.ts` - **NEW** Webhook business logic
+- `src/modules/subscriptions/dto/webhook.dto.ts` - **NEW** Webhook DTOs & interfaces
+- `src/modules/subscriptions/subscriptions.module.ts` - Updated with webhook controller & service

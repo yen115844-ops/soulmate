@@ -69,8 +69,7 @@ class PartnerCard extends StatelessWidget {
               children: [
                 // Avatar
                 Container(
-                  height: 160,
-                  width: double.infinity,
+                   width: double.infinity,
                   decoration: BoxDecoration(
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(20),
@@ -253,7 +252,7 @@ class PartnerCard extends StatelessWidget {
 
                   // Price
                   Text(
-                    '$hourlyRate credits/giờ',
+                    '$hourlyRate xu/giờ',
                     style: AppTypography.labelLarge.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w700,
@@ -466,7 +465,7 @@ class PartnerListItem extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'credits/giờ',
+                  'xu/giờ',
                   style: AppTypography.labelSmall.copyWith(
                     color: context.appColors.textHint,
                   ),

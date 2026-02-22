@@ -67,7 +67,7 @@ class WalletTransaction {
   String get typeText {
     switch (type) {
       case 'CREDIT_PURCHASE':
-        return 'Nạp credits';
+        return 'Nạp xu';
       case 'BOOKING_PAYMENT':
         return 'Thanh toán booking';
       case 'PARTNER_EARNING':

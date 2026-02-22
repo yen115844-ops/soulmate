@@ -217,7 +217,7 @@ class CreditsBloc extends Bloc<CreditsEvent, CreditsState> {
       // Find the package by unique ID
       final package = _packages.firstWhere(
         (p) => p.id == event.packageId,
-        orElse: () => throw Exception('Không tìm thấy gói credits'),
+        orElse: () => throw Exception('Không tìm thấy gói xu'),
       );
 
       // Get the correct product ID based on platform

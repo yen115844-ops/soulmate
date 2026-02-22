@@ -60,7 +60,7 @@ class _CreditsPageState extends State<CreditsPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  'Đã nhận ${state.creditsReceived} credits!',
+                  'Đã nhận ${state.creditsReceived} xu!',
                 ),
                 backgroundColor: AppColors.success,
               ),
@@ -83,7 +83,7 @@ class _CreditsPageState extends State<CreditsPage> {
                 leadingWidth: 56,
                 leading: const AppBackButton(),
                 title: Text(
-                  'Credits',
+                  'Xu',
                   style: AppTypography.titleLarge.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -193,7 +193,7 @@ class _CreditsPageState extends State<CreditsPage> {
                       ),
                     ),
                     Text(
-                      ' credits',
+                      ' xu',
                       style: AppTypography.titleMedium.copyWith(
                         color: Colors.white70,
                       ),
@@ -216,7 +216,7 @@ class _CreditsPageState extends State<CreditsPage> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      '${wallet.pendingBalance} credits đang giữ (escrow)',
+                      '${wallet.pendingBalance} xu đang giữ (escrow)',
                       style: AppTypography.bodySmall.copyWith(
                         color: Colors.white70,
                       ),
@@ -233,7 +233,7 @@ class _CreditsPageState extends State<CreditsPage> {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
             child: Text(
-              'Mua Credits',
+              'Mua Xu',
               style: AppTypography.titleMedium.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -273,7 +273,7 @@ class _CreditsPageState extends State<CreditsPage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      '1 Credit = ${_formatCurrency(creditToVndRate)}',
+                      '1 Xu = ${_formatCurrency(creditToVndRate)}',
                       style: AppTypography.bodyMedium.copyWith(
                         color: context.appColors.textSecondary,
                       ),
@@ -332,7 +332,7 @@ class _CreditsPageState extends State<CreditsPage> {
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Text(
-                        '${package.totalCredits} Credits',
+                        '${package.totalCredits} Xu',
                         style: AppTypography.titleMedium.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -468,7 +468,7 @@ class _PurchaseConfirmSheet extends StatelessWidget {
     
             // Title
             Text(
-              'Xác nhận mua Credits',
+              'Xác nhận mua Xu',
               style: AppTypography.titleLarge.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -493,7 +493,7 @@ class _PurchaseConfirmSheet extends StatelessWidget {
     
             // Package name
             Text(
-              '${package.totalCredits} Credits',
+              '${package.totalCredits} Xu',
               style: AppTypography.headlineSmall.copyWith(
                 fontWeight: FontWeight.bold,
               ),

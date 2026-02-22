@@ -293,10 +293,10 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
 
                   // ── Price Range ──
                   _buildSection(
-                    title: 'Mức giá (Credits)',
+                    title: 'Mức giá (Xu)',
                     icon: Ionicons.cash_outline,
                     value:
-                        '${creditsFormat.format(_priceRange.start.round())} - ${creditsFormat.format(_priceRange.end.round())} credits',
+                        '${creditsFormat.format(_priceRange.start.round())} - ${creditsFormat.format(_priceRange.end.round())} xu',
                     child: Column(
                       children: [
                         SliderTheme(
@@ -307,8 +307,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                             max: 1000,
                             divisions: 99,
                             labels: RangeLabels(
-                              '${creditsFormat.format(_priceRange.start.round())} credits',
-                              '${creditsFormat.format(_priceRange.end.round())} credits',
+                              '${creditsFormat.format(_priceRange.start.round())} xu',
+                              '${creditsFormat.format(_priceRange.end.round())} xu',
                             ),
                             onChanged: (v) => setState(() => _priceRange = v),
                           ),

@@ -354,8 +354,8 @@ class _ProfileContent extends StatelessWidget {
                       icon: Ionicons.wallet_outline,
                       iconBgColor: const Color(0xFFF3E5F5),
                       iconColor: const Color(0xFF9C27B0),
-                      title: 'Ví Credits',
-                      subtitle: 'Nạp và quản lý credits',
+                      title: 'Ví Xu',
+                      subtitle: 'Nạp và quản lý xu',
                       onTap: () => context.push(RouteNames.credits),
                     ),
                     _ModernMenuItem(
@@ -505,8 +505,10 @@ class _ProfileContent extends StatelessWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Đăng xuất'),
-        content: const Text('Bạn có chắc chắn muốn đăng xuất?'),
+        title: const Text('Đăng xuất', style: TextStyle(fontWeight: FontWeight.w600,color: AppColors.error)),
+        content:   Text('Bạn có chắc chắn muốn đăng xuất?',
+            style: TextStyle(color: context.theme.colorScheme.onSurface)
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),

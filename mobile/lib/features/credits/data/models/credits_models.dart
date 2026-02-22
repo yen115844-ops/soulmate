@@ -181,7 +181,7 @@ class CreditTransaction extends Equatable {
   String get typeText {
     switch (type) {
       case 'CREDIT_PURCHASE':
-        return 'Mua credits';
+        return 'Mua xu';
       case 'BOOKING_PAYMENT':
         return 'Thanh toán booking';
       case 'PARTNER_EARNING':

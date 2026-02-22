@@ -113,7 +113,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
 
   String _formatCurrency(int amount) {
     // Now showing credits instead of VND
-    return '$amount credits';
+    return '$amount xu';
   }
 
   int get _duration {
@@ -881,7 +881,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Bạn sẽ thanh toán ${booking.totalAmount} credits cho lịch hẹn này.',
+              'Bạn sẽ thanh toán ${booking.totalAmount} xu cho lịch hẹn này.',
               style: AppTypography.bodyMedium,
             ),
             const SizedBox(height: 12),

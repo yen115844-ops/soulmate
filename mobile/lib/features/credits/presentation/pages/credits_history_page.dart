@@ -200,7 +200,7 @@ class _CreditsHistoryPageState extends State<CreditsHistoryPage> {
                 ),
               ),
               Text(
-                'credits',
+                'xu',
                 style: AppTypography.bodySmall.copyWith(
                   color: context.appColors.textSecondary,
                 ),

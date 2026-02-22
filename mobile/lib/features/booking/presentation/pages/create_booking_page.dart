@@ -326,7 +326,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
       debugPrint('Error checking credits: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Không thể kiểm tra số dư credits: ${e.toString()}'),
+          content: Text('Không thể kiểm tra số dư xu: ${e.toString()}'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -433,7 +433,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
           children: [
             Icon(Ionicons.wallet_outline, color: AppColors.warning, size: 28),
             const SizedBox(width: 12),
-            const Text('Không đủ Credits'),
+            const Text('Không đủ Xu'),
           ],
         ),
         content: Column(
@@ -441,19 +441,19 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Bạn cần $_totalAmount credits cho booking này.',
+              'Bạn cần $_totalAmount xu cho booking này.',
               style: AppTypography.bodyMedium,
             ),
             const SizedBox(height: 8),
             Text(
-              'Số dư hiện tại: $currentBalance credits',
+              'Số dư hiện tại: $currentBalance xu',
               style: AppTypography.bodyMedium.copyWith(
                 color: context.appColors.textSecondary,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              'Cần thêm: $needed credits',
+              'Cần thêm: $needed xu',
               style: AppTypography.bodyMedium.copyWith(
                 color: AppColors.error,
                 fontWeight: FontWeight.w600,
@@ -480,7 +480,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text('Mua Credits', style: TextStyle(color: Colors.white)),
+            child: const Text('Mua Xu', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -637,7 +637,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '$_hourlyRate credits',
+                      '$_hourlyRate xu',
                       style: AppTypography.titleSmall.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w700,
@@ -703,7 +703,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                           ),
                         ),
                         Text(
-                          '$_totalAmount credits',
+                          '$_totalAmount xu',
                           style: AppTypography.titleLarge.copyWith(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w700,
@@ -1093,13 +1093,13 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
             child: Column(
               children: [
                 _PriceRow(
-                  label: '$_hourlyRate credits x $_duration giờ',
-                  value: '$_subtotal credits',
+                  label: '$_hourlyRate xu x $_duration giờ',
+                  value: '$_subtotal xu',
                 ),
                 const SizedBox(height: 8),
                 _PriceRow(
                   label: 'Phí dịch vụ (15%)',
-                  value: '$_serviceFee credits',
+                  value: '$_serviceFee xu',
                 ),
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
@@ -1298,12 +1298,12 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
               children: [
                 _PriceRow(
                   label: 'Dịch vụ ($_duration giờ)',
-                  value: '$_subtotal credits',
+                  value: '$_subtotal xu',
                 ),
                 const SizedBox(height: 8),
                 _PriceRow(
                   label: 'Phí dịch vụ',
-                  value: '$_serviceFee credits',
+                  value: '$_serviceFee xu',
                 ),
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
@@ -1311,7 +1311,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                 ),
                 _PriceRow(
                   label: 'Tổng cộng',
-                  value: '$_totalAmount credits',
+                  value: '$_totalAmount xu',
                   isTotal: true,
                 ),
               ],
@@ -2090,7 +2090,7 @@ class _ConfirmationBottomSheet extends StatelessWidget {
           const SizedBox(height: 8),
 
           Text(
-            'Bạn sẽ thanh toán $totalAmount credits cho lịch hẹn này',
+            'Bạn sẽ thanh toán $totalAmount xu cho lịch hẹn này',
             style: AppTypography.bodyMedium.copyWith(
               color: context.appColors.textSecondary,
             ),

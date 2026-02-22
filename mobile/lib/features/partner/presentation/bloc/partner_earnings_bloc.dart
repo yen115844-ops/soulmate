@@ -91,7 +91,7 @@ class PartnerEarningsBloc
       );
 
       emit(PartnerEarningsWithdrawSuccess(
-        message: 'Yêu cầu rút credits đã được gửi',
+        message: 'Yêu cầu rút xu đã được gửi',
         earningsData: updatedData,
       ));
     } catch (e) {

@@ -150,7 +150,7 @@ class _PartnerEarningsContent extends StatelessWidget {
                           child: _StatCard(
                             icon: Ionicons.swap_horizontal_outline,
                             label: 'Tổng thu',
-                            value: '${_formatCredits(stats.totalEarned)} credits',
+                            value: '${_formatCredits(stats.totalEarned)} xu',
                             color: AppColors.success,
                           ),
                         ),
@@ -213,7 +213,7 @@ class _PartnerEarningsContent extends StatelessWidget {
                           const Divider(height: 24),
                           _SummaryRow(
                             label: 'Tổng thu nhập',
-                            value: '${_formatFullCredits(stats.totalEarned)} credits',
+                            value: '${_formatFullCredits(stats.totalEarned)} xu',
                             valueColor: AppColors.primary,
                             isBold: true,
                           ),
@@ -319,12 +319,12 @@ class _PartnerEarningsContent extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Rút credits',
+              'Rút xu',
               style: AppTypography.titleLarge,
             ),
             const SizedBox(height: 8),
             Text(
-              'Số dư khả dụng: ${_formatFullCredits(wallet.balance)} credits (${_formatVnd(wallet.balance)})',
+              'Số dư khả dụng: ${_formatFullCredits(wallet.balance)} xu (${_formatVnd(wallet.balance)})',
               style: AppTypography.bodyMedium.copyWith(
                 color: context.appColors.textSecondary,
               ),
@@ -334,10 +334,10 @@ class _PartnerEarningsContent extends StatelessWidget {
               controller: amountController,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                labelText: 'Số credits rút',
-                hintText: 'Nhập số credits',
+                labelText: 'Số xu rút',
+                hintText: 'Nhập số xu',
                 prefixIcon: const Icon(Ionicons.cash_outline),
-                suffixText: 'credits',
+                suffixText: 'xu',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -362,7 +362,7 @@ class _PartnerEarningsContent extends StatelessWidget {
                       border: Border.all(color: context.appColors.border),
                     ),
                     child: Text(
-                      '$amount credits',
+                      '$amount xu',
                       style: AppTypography.labelMedium,
                     ),
                   ),
@@ -422,13 +422,13 @@ class _PartnerEarningsContent extends StatelessWidget {
               ),
             const SizedBox(height: 24),
             AppButton(
-              text: 'Xác nhận rút credits',
+              text: 'Xác nhận rút xu',
               onPressed: () {
                 final amount = int.tryParse(amountController.text);
                 if (amount == null || amount <= 0) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Vui lòng nhập số credits hợp lệ'),
+                      content: Text('Vui lòng nhập số xu hợp lệ'),
                       backgroundColor: AppColors.error,
                     ),
                   );
@@ -437,7 +437,7 @@ class _PartnerEarningsContent extends StatelessWidget {
                 if (amount > wallet.balance) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Số credits vượt quá số dư khả dụng'),
+                      content: Text('Số xu vượt quá số dư khả dụng'),
                       backgroundColor: AppColors.error,
                     ),
                   );
@@ -547,7 +547,7 @@ class _BalanceCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '${_formatCredits(availableBalance)} credits',
+            '${_formatCredits(availableBalance)} xu',
             style: AppTypography.displaySmall.copyWith(
               color: AppColors.textWhite,
               fontWeight: FontWeight.bold,
@@ -578,7 +578,7 @@ class _BalanceCard extends StatelessWidget {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Ionicons.swap_horizontal_outline),
-                  label: Text(isWithdrawing ? 'Đang xử lý...' : 'Rút credits'),
+                  label: Text(isWithdrawing ? 'Đang xử lý...' : 'Rút xu'),
                 ),
               ),
               const SizedBox(width: 12),

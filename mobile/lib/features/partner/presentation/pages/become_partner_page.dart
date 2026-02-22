@@ -813,8 +813,8 @@ class _ServicesStep extends StatelessWidget {
 
           AppTextField(
             controller: hourlyRateController,
-            label: 'Giá mỗi giờ (Credits)',
-            hint: 'Nhập số credits',
+            label: 'Giá mỗi giờ (Xu)',
+            hint: 'Nhập số xu',
             keyboardType: TextInputType.number,
             prefixIcon: Ionicons.cash_outline,
             onChanged: (_) => onChanged(),
@@ -850,7 +850,7 @@ class _ServicesStep extends StatelessWidget {
                     border: Border.all(color: context.appColors.border),
                   ),
                   child: Text(
-                    '$price credits/giờ',
+                    '$price xu/giờ',
                     style: AppTypography.labelMedium,
                   ),
                 ),

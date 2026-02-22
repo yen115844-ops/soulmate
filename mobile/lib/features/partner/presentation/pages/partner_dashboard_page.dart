@@ -484,7 +484,7 @@ class _QuickStats extends StatelessWidget {
                 child: _StatItem(
                   icon: Ionicons.swap_horizontal_outline,
                   label: 'Tổng thu',
-                  value: '${_formatCredits(stats.totalEarned)} credits',
+                  value: '${_formatCredits(stats.totalEarned)} xu',
                 ),
               ),
               Container(
@@ -754,7 +754,7 @@ class _BookingCard extends StatelessWidget {
             ),
           ),
           Text(
-            '${_formatCredits(booking.subtotal)} credits',
+            '${_formatCredits(booking.subtotal)} xu',
             style: AppTypography.titleSmall.copyWith(
               color: AppColors.primary,
               fontWeight: FontWeight.bold,

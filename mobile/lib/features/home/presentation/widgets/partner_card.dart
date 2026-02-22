@@ -349,7 +349,7 @@ class PartnerCard extends StatelessWidget {
                 ),
               ),
               Text(
-                ' credits/giờ',
+                ' xu/giờ',
                 style: AppTypography.bodySmall.copyWith(
                   color: context.appColors.textSecondary,
                 ),

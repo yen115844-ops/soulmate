@@ -418,7 +418,7 @@ class _PartnerBookingCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${_formatCredits(booking.subtotal)} credits',
+                      '${_formatCredits(booking.subtotal)} xu',
                       style: AppTypography.titleMedium.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.bold,

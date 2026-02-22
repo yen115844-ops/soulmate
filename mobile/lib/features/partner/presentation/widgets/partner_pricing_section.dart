@@ -75,7 +75,7 @@ class PartnerPricingSection extends StatelessWidget {
                         Padding(
                           padding: const EdgeInsets.only(bottom: 2),
                           child: Text(
-                            'credits / giờ',
+                            'xu / giờ',
                             style: AppTypography.bodySmall.copyWith(
                               color: context.appColors.textSecondary,
                             ),
@@ -132,7 +132,7 @@ class PartnerPricingSection extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '${hourlyRate * minimumHours} credits',
+                  '${hourlyRate * minimumHours} xu',
                   style: AppTypography.labelLarge.copyWith(
                     color: AppColors.primaryDark,
                     fontWeight: FontWeight.w700,
