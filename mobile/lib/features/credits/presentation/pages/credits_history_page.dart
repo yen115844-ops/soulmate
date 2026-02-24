@@ -7,6 +7,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../data/credits_repository.dart';
@@ -116,7 +117,7 @@ class _CreditsHistoryPageState extends State<CreditsHistoryPage> {
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.all(16),
+      padding: ResponsiveLayout.pagePadding(context),
       itemCount: transactions.length,
       separatorBuilder: (context, index) => const SizedBox(height: 8),
       itemBuilder: (context, index) {

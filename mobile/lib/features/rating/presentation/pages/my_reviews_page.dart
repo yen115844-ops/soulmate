@@ -6,6 +6,7 @@ import 'package:ionicons/ionicons.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../data/models/review_model.dart';
@@ -132,7 +133,7 @@ class _MyReviewsViewState extends State<_MyReviewsView>
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(20),
+      padding: ResponsiveLayout.pagePadding(context),
       itemCount: reviews.length,
       itemBuilder: (context, index) {
         final review = reviews[index];
@@ -172,7 +173,7 @@ class _ReviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: ResponsiveLayout.pagePadding(context),
       decoration: BoxDecoration(
         color: context.appColors.card,
         borderRadius: BorderRadius.circular(16),

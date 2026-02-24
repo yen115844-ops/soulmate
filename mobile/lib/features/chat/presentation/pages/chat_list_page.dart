@@ -11,6 +11,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../data/chat_repository.dart';
 
 class ChatListPage extends StatefulWidget {
@@ -265,7 +266,7 @@ class _ChatListPageState extends State<ChatListPage> {
           : _filteredConversations.isEmpty
           ? _buildNoResultsState()
           : ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: EdgeInsets.symmetric(horizontal: ResponsiveLayout.horizontalPadding(context), vertical: 8),
               itemCount: _filteredConversations.length,
               itemBuilder: (context, index) {
                 final conversation = _filteredConversations[index];

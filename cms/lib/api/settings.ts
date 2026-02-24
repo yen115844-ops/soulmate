@@ -20,6 +20,7 @@ export const SETTINGS_KEY_MAP = {
   appDescription: "app_description",
   supportEmail: "support_email",
   supportPhone: "support_phone",
+  supportUrl: "support_url",
   defaultCurrency: "default_currency",
   defaultLanguage: "default_language",
   timezone: "timezone",

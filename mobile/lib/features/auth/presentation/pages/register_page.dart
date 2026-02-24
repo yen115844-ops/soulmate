@@ -8,6 +8,7 @@ import '../../../../config/routes/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
@@ -125,10 +126,13 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
           body: SafeArea(
             bottom: false,
-
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Form(
+            child: ResponsiveCenterWrapper(
+              child: SingleChildScrollView(
+                padding: ResponsiveLayout.pagePadding(context).copyWith(
+                  top: 24,
+                  bottom: 24,
+                ),
+                child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -370,6 +374,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ],
                 ),
               ),
+            ),
             ),
           ),
         );

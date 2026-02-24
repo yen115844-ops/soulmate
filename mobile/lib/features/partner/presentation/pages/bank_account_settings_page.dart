@@ -6,6 +6,7 @@ import 'package:ionicons/ionicons.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
@@ -152,7 +153,7 @@ class _BankAccountSettingsPageState extends State<BankAccountSettingsPage> {
         builder: (context, scrollController) => Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: ResponsiveLayout.pagePadding(context),
               child: Text(
                 'Chọn ngân hàng',
                 style: AppTypography.headlineSmall,
@@ -212,7 +213,7 @@ class _BankAccountSettingsPageState extends State<BankAccountSettingsPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: ResponsiveLayout.pagePadding(context),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -220,7 +221,7 @@ class _BankAccountSettingsPageState extends State<BankAccountSettingsPage> {
                   children: [
                     // Info card
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: ResponsiveLayout.pagePadding(context),
                       decoration: BoxDecoration(
                         color: AppColors.info.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),

@@ -113,7 +113,6 @@ class QuickFilterBar extends StatelessWidget {
     int count = 0;
     if (filter.gender != null) count++;
     if (filter.minAge != null || filter.maxAge != null) count++;
-    if (filter.minRate != null || filter.maxRate != null) count++;
     if (filter.radius != null) count++;
     if (filter.verifiedOnly) count++;
     if (filter.availableNow) count++;
@@ -125,12 +124,10 @@ class QuickFilterBar extends StatelessWidget {
     switch (sortBy) {
       case 'rating':
         return 'Đánh giá cao';
-      case 'price_low':
-        return 'Giá thấp → cao';
-      case 'price_high':
-        return 'Giá cao → thấp';
       case 'newest':
         return 'Mới nhất';
+      case 'distance':
+        return 'Gần nhất';
       default:
         return 'Sắp xếp';
     }

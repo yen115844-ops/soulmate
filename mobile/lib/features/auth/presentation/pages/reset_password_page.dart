@@ -8,6 +8,7 @@ import '../../../../core/network/api_exceptions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
@@ -127,10 +128,13 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       ),
       body: SafeArea(
         bottom: false,
-
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Form(
+        child: ResponsiveCenterWrapper(
+          child: SingleChildScrollView(
+            padding: ResponsiveLayout.pagePadding(context).copyWith(
+              top: 24,
+              bottom: 24,
+            ),
+            child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,8 +155,9 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                   maxLength: 6,
                   enabled: !_isLoading,
                   validator: (v) {
-                    if (v == null || v.isEmpty)
+                    if (v == null || v.isEmpty) {
                       return 'Vui lòng nhập mã xác nhận';
+                    }
                     if (v.length < 4) return 'Mã xác nhận không hợp lệ';
                     return null;
                   },
@@ -175,15 +180,19 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                   ),
                   enabled: !_isLoading,
                   validator: (v) {
-                    if (v == null || v.isEmpty)
+                    if (v == null || v.isEmpty) {
                       return 'Vui lòng nhập mật khẩu mới';
+                    }
                     if (v.length < 8) return 'Mật khẩu phải có ít nhất 8 ký tự';
-                    if (!v.contains(RegExp(r'[A-Z]')))
+                    if (!v.contains(RegExp(r'[A-Z]'))) {
                       return 'Cần ít nhất 1 chữ hoa';
-                    if (!v.contains(RegExp(r'[a-z]')))
+                    }
+                    if (!v.contains(RegExp(r'[a-z]'))) {
                       return 'Cần ít nhất 1 chữ thường';
-                    if (!v.contains(RegExp(r'[0-9]')))
+                    }
+                    if (!v.contains(RegExp(r'[0-9]'))) {
                       return 'Cần ít nhất 1 số';
+                    }
                     return null;
                   },
                 ),
@@ -206,10 +215,12 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                   ),
                   enabled: !_isLoading,
                   validator: (v) {
-                    if (v == null || v.isEmpty)
+                    if (v == null || v.isEmpty) {
                       return 'Vui lòng xác nhận mật khẩu';
-                    if (v != _newPasswordController.text)
+                    }
+                    if (v != _newPasswordController.text) {
                       return 'Mật khẩu không khớp';
+                    }
                     return null;
                   },
                 ),
@@ -222,6 +233,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               ],
             ),
           ),
+        ),
         ),
       ),
     );

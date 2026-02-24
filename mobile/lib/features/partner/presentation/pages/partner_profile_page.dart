@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:ionicons/ionicons.dart';
 
 import '../../../../config/routes/route_names.dart';
@@ -12,6 +11,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
 import '../../data/partner_repository.dart'; // for PartnerProfileResponse model
@@ -184,7 +184,7 @@ class _PartnerProfileContent extends StatelessWidget {
 
                     // Services Section
                     _SectionTitle(
-                      title: 'Dịch vụ cung cấp',
+                      title: 'Hoạt động yêu thích',
                       actionText: 'Chỉnh sửa',
                       onAction: () =>
                           _showEditServices(context, profile.serviceTypes),
@@ -214,7 +214,7 @@ class _PartnerProfileContent extends StatelessWidget {
                       child: _MenuCard(
                         icon: Ionicons.business_outline,
                         title: 'Tài khoản ngân hàng',
-                        subtitle: 'Quản lý thông tin thanh toán',
+                        subtitle: 'Quản lý thông tin cá nhân',
                         onTap: () => _showBankAccountSettings(context),
                       ),
                     ),
@@ -256,8 +256,7 @@ class _PartnerProfileContent extends StatelessWidget {
   }
 
   String _formatCreditsPerHour(double amount) {
-    final formatter = NumberFormat('#,###', 'vi_VN');
-    return '${formatter.format(amount)} xu/giờ';
+    return '';
   }
 
   void _showSettingsMenu(BuildContext context) {
@@ -473,10 +472,10 @@ class _PartnerProfileContent extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Chọn dịch vụ', style: AppTypography.titleLarge),
+              Text('Chọn hoạt động', style: AppTypography.titleLarge),
               const SizedBox(height: 8),
               Text(
-                'Chọn các dịch vụ bạn muốn cung cấp',
+                'Chọn các hoạt động bạn quan tâm',
                 style: AppTypography.bodyMedium.copyWith(
                   color: context.appColors.textSecondary,
                 ),
@@ -484,8 +483,14 @@ class _PartnerProfileContent extends StatelessWidget {
               const SizedBox(height: 24),
               Expanded(
                 child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: ResponsiveLayout.gridCrossAxisCount(
+                      context,
+                      minCellWidth: 140,
+                      horizontalPadding: 32,
+                      spacing: 12,
+                      maxColumns: 4,
+                    ),
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                     childAspectRatio: 2.5,
@@ -776,7 +781,7 @@ class _StatsSection extends StatelessWidget {
           Expanded(
             child: _StatItem(
               value: '${profile.totalBookings}',
-              label: 'Đơn hàng',
+              label: 'Hoạt động',
             ),
           ),
           Container(width: 1, height: 40, color: context.appColors.border),
@@ -938,7 +943,7 @@ class _ServicesGrid extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Text(
-          'Chưa chọn dịch vụ nào',
+          'Chưa chọn hoạt động nào',
           style: AppTypography.bodyMedium.copyWith(
             color: context.appColors.textHint,
           ),

@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 
 class SosPage extends StatefulWidget {
@@ -165,7 +166,7 @@ class _SosPageState extends State<SosPage> with SingleTickerProviderStateMixin {
         bottom: false,
 
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: ResponsiveLayout.pagePadding(context),
           child: Column(
             children: [
               // Info Banner

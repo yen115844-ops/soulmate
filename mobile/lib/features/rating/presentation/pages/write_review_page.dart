@@ -5,6 +5,7 @@ import 'package:ionicons/ionicons.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
@@ -145,7 +146,7 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
           : _errorMessage != null
           ? Center(child: Text(_errorMessage!))
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: ResponsiveLayout.pagePadding(context),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -259,7 +260,7 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
 
                   // Anonymous Option
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: ResponsiveLayout.pagePadding(context),
                     decoration: BoxDecoration(
                       color: context.appColors.background,
                       borderRadius: BorderRadius.circular(12),
@@ -300,7 +301,7 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
             ),
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: ResponsiveLayout.pagePadding(context),
           child: AppButton(
             text: _isLoading ? 'Đang gửi...' : 'Gửi đánh giá',
             isLoading: _isLoading,
@@ -313,7 +314,7 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
 
   Widget _buildPartnerCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: ResponsiveLayout.pagePadding(context),
       decoration: BoxDecoration(
         color: context.appColors.card,
         borderRadius: BorderRadius.circular(16),

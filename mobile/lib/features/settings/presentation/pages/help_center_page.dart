@@ -3,8 +3,9 @@ import 'package:ionicons/ionicons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
 
@@ -44,45 +45,45 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
     },
     {
       'icon': Ionicons.calendar_outline,
-      'title': 'Đặt lịch',
+      'title': 'Hoạt động',
       'color': AppColors.secondary,
       'faqs': [
         {
-          'question': 'Làm sao để đặt lịch với Partner?',
+          'question': 'Làm sao để tham gia hoạt động?',
           'answer':
-              'Chọn Partner bạn muốn, nhấn vào nút "Đặt lịch", chọn ngày giờ và dịch vụ, sau đó xác nhận đặt lịch.',
+              'Duyệt danh sách hoạt động trên trang chủ, chọn hoạt động bạn quan tâm, nhấn "Tham gia" và chờ người tạo xác nhận.',
         },
         {
-          'question': 'Tôi có thể hủy lịch hẹn không?',
+          'question': 'Tôi có thể hủy tham gia hoạt động không?',
           'answer':
-              'Có, bạn có thể hủy lịch hẹn trước 2 giờ so với giờ hẹn. Vào Lịch hẹn > Chọn lịch hẹn > Hủy lịch hẹn. Lưu ý: Việc hủy lịch nhiều lần có thể ảnh hưởng đến điểm đánh giá của bạn.',
+              'Có, bạn có thể hủy tham gia trước 2 giờ so với giờ hẹn. Vào Hoạt động > Chọn hoạt động > Hủy tham gia. Lưu ý: Việc hủy nhiều lần có thể ảnh hưởng đến đánh giá của bạn.',
         },
         {
-          'question': 'Phí hủy lịch hẹn như thế nào?',
+          'question': 'Làm sao để tạo hoạt động mới?',
           'answer':
-              'Hủy trước 24 giờ: Miễn phí\nHủy trước 2-24 giờ: 10% phí dịch vụ\nHủy trong vòng 2 giờ: 50% phí dịch vụ\nKhông đến: 100% phí dịch vụ',
+              'Nhấn nút "+" trên trang chủ, chọn loại hoạt động, đặt thời gian và địa điểm, sau đó đăng hoạt động để mọi người tham gia.',
         },
       ],
     },
     {
-      'icon': Ionicons.wallet_outline,
-      'title': 'Thanh toán & Ví',
+      'icon': Ionicons.diamond_outline,
+      'title': 'Premium',
       'color': AppColors.accent,
       'faqs': [
         {
-          'question': 'Các phương thức thanh toán được hỗ trợ?',
+          'question': 'Premium có những tính năng gì?',
           'answer':
-              'Chúng tôi hỗ trợ thanh toán qua: Ví Mate Social, Thẻ ngân hàng (Visa, Mastercard), Chuyển khoản ngân hàng, Ví điện tử (Momo, ZaloPay, VNPay).',
+              'Premium bao gồm: Nhắn tin không giới hạn, Bộ lọc nâng cao, Badge Premium, Ưu tiên hiển thị, Xem ai quan tâm đến bạn.',
         },
         {
-          'question': 'Làm sao để nạp tiền vào ví?',
+          'question': 'Làm sao để đăng ký Premium?',
           'answer':
-              'Vào Ví của tôi > Nạp tiền > Chọn phương thức nạp tiền và nhập số tiền muốn nạp.',
+              'Vào Hồ sơ > Premium > Chọn gói phù hợp và thanh toán qua App Store hoặc Google Play.',
         },
         {
-          'question': 'Thời gian hoàn tiền là bao lâu?',
+          'question': 'Làm sao để hủy Premium?',
           'answer':
-              'Tiền hoàn trả sẽ được cộng vào ví Mate Social trong vòng 24 giờ. Nếu bạn muốn rút về tài khoản ngân hàng, thời gian xử lý là 1-3 ngày làm việc.',
+              'Bạn có thể hủy đăng ký trong cài đặt App Store hoặc Google Play. Gói sẽ còn hiệu lực đến hết chu kỳ hiện tại.',
         },
       ],
     },
@@ -102,31 +103,31 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
               'Khi gặp tình huống khẩn cấp, giữ nút SOS trong 5 giây. Vị trí của bạn sẽ được gửi đến các liên hệ khẩn cấp và đội ngũ hỗ trợ của chúng tôi.',
         },
         {
-          'question': 'Làm sao để báo cáo Partner không phù hợp?',
+          'question': 'Làm sao để báo cáo người dùng không phù hợp?',
           'answer':
-              'Vào trang hồ sơ Partner > Nhấn biểu tượng "..." > Chọn "Báo cáo". Chọn lý do và mô tả chi tiết vấn đề. Chúng tôi sẽ xem xét và phản hồi trong vòng 24 giờ.',
+              'Vào trang hồ sơ người dùng > Nhấn biểu tượng "..." > Chọn "Báo cáo". Chọn lý do và mô tả chi tiết vấn đề. Chúng tôi sẽ xem xét và phản hồi trong vòng 24 giờ.',
         },
       ],
     },
     {
       'icon': Ionicons.people_outline,
-      'title': 'Trở thành Partner',
+      'title': 'Tạo hoạt động',
       'color': AppColors.info,
       'faqs': [
         {
-          'question': 'Điều kiện để trở thành Partner?',
+          'question': 'Ai có thể tạo hoạt động?',
           'answer':
-              'Để trở thành Partner, bạn cần: Trên 18 tuổi, Đã xác minh danh tính (eKYC), Có tài khoản ngân hàng để nhận thanh toán.',
+              'Tất cả người dùng đã xác minh danh tính đều có thể tạo hoạt động. Bạn cần trên 18 tuổi và đã hoàn tất xác minh.',
         },
         {
-          'question': 'Phí hoa hồng của Partner là bao nhiêu?',
+          'question': 'Có những loại hoạt động nào?',
           'answer':
-              'Partner nhận 80% giá trị mỗi đơn hàng. 20% còn lại là phí dịch vụ của nền tảng.',
+              'Bạn có thể tạo nhiều loại hoạt động: Cà phê, Xem phim, Thể thao, Du lịch, Ăn uống, Mua sắm, Tiệc tùng và nhiều hoạt động khác.',
         },
         {
-          'question': 'Làm sao để rút tiền về tài khoản ngân hàng?',
+          'question': 'Hoạt động có mất phí không?',
           'answer':
-              'Vào Ví của tôi > Rút tiền > Nhập số tiền muốn rút > Xác nhận. Tiền sẽ được chuyển trong 1-3 ngày làm việc.',
+              'Việc tham gia hoạt động trên nền tảng là miễn phí. Chi phí cá nhân (như đồ uống, vé xem phim...) mỗi người tự chi trả.',
         },
       ],
     },
@@ -153,7 +154,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
     Uri uri;
     switch (method) {
       case 'email':
-        uri = Uri(scheme: 'mailto', path: 'support@matesocial.vn');
+        uri = Uri(scheme: 'mailto', path: 'ngocbinhan8888@gmail.com');
         break;
       case 'phone':
         uri = Uri(scheme: 'tel', path: '19001234');
@@ -191,7 +192,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
           children: [
             // Search Section
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: ResponsiveLayout.pagePadding(context),
               decoration: BoxDecoration(
                 color: AppColors.primary.withAlpha(10),
               ),
@@ -224,7 +225,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
 
             // FAQ Categories
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: ResponsiveLayout.pagePadding(context),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -271,8 +272,8 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
 
             // Contact Support Section
             Container(
-              margin: const EdgeInsets.all(20),
-              padding: const EdgeInsets.all(20),
+              margin: ResponsiveLayout.pagePadding(context),
+              padding: ResponsiveLayout.pagePadding(context),
               decoration: BoxDecoration(
                 color: context.appColors.card,
                 borderRadius: BorderRadius.circular(16),
@@ -326,7 +327,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
 
             // Support Hours
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              padding: ResponsiveLayout.pagePadding(context).copyWith(top: 0, bottom: 20),
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -445,7 +446,7 @@ class _FaqItem extends StatelessWidget {
           ),
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: EdgeInsets.fromLTRB(ResponsiveLayout.horizontalPadding(context), 0, ResponsiveLayout.horizontalPadding(context), 16),
               child: Text(
                 faq['answer']!,
                 style: AppTypography.bodySmall.copyWith(

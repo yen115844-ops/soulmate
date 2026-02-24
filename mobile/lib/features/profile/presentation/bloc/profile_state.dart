@@ -48,7 +48,7 @@ class ProfileLoaded extends ProfileState {
   String get roleText {
     switch (user.role) {
       case 'PARTNER':
-        return 'Partner';
+        return 'Người tổ chức';
       case 'ADMIN':
         return 'Admin';
       default:

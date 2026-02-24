@@ -1,8 +1,7 @@
-/// Credits Feature - Virtual currency for booking payments
+/// Credits Feature - Virtual currency for premium features
 /// 
 /// Users purchase credits via IAP consumables.
-/// Partners set prices in credits.
-/// 1 Credit = 10,000 VND (exchange rate)
+/// Credits are used for premium features on the platform.
 library;
 
 export 'data/credits_repository.dart';

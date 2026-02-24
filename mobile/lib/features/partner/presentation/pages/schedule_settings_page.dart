@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../domain/models/partner_schedule.dart';
 
 /// Trang cài đặt lịch làm việc cho Partner
@@ -173,7 +174,7 @@ class _ScheduleSettingsPageState extends State<ScheduleSettingsPage>
 
   Widget _buildWeeklyScheduleTab(ThemeData theme) {
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: ResponsiveLayout.pagePadding(context),
       itemCount: DayOfWeek.values.length,
       itemBuilder: (context, index) {
         final day = DayOfWeek.values[index];
@@ -312,7 +313,7 @@ class _ScheduleSettingsPageState extends State<ScheduleSettingsPage>
       children: [
         // Month navigation
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: ResponsiveLayout.pagePadding(context),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -355,7 +356,7 @@ class _ScheduleSettingsPageState extends State<ScheduleSettingsPage>
         
         // Legend
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: ResponsiveLayout.pagePadding(context),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

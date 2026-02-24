@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/di/injection.dart';
@@ -28,7 +27,6 @@ class FilterBottomSheet extends StatefulWidget {
 class _FilterBottomSheetState extends State<FilterBottomSheet> {
   late double _distance;
   late RangeValues _ageRange;
-  late RangeValues _priceRange;
   late Set<String> _selectedServices;
   late String? _selectedGender;
   late String? _selectedCity;
@@ -53,10 +51,6 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
       filter.minAge?.toDouble() ?? 18,
       filter.maxAge?.toDouble() ?? 35,
     );
-    _priceRange = RangeValues(
-      filter.minRate?.toDouble() ?? 10,
-      filter.maxRate?.toDouble() ?? 500,
-    );
     _selectedServices = filter.serviceType != null ? {filter.serviceType!} : {};
     _selectedGender = filter.gender;
     _selectedCity = filter.city;
@@ -77,23 +71,12 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
 
   static const _sortOptions = [
     (code: 'rating', label: 'Đánh giá cao', icon: Ionicons.star_outline),
-    (
-      code: 'price_low',
-      label: 'Giá thấp → cao',
-      icon: Ionicons.trending_up_outline,
-    ),
-    (
-      code: 'price_high',
-      label: 'Giá cao → thấp',
-      icon: Ionicons.trending_down_outline,
-    ),
     (code: 'newest', label: 'Mới nhất', icon: Ionicons.time_outline),
+    (code: 'distance', label: 'Gần nhất', icon: Ionicons.navigate_outline),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final creditsFormat = NumberFormat('#,###', 'vi_VN');
-
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: BoxDecoration(
@@ -291,57 +274,9 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                     ),
                   ),
 
-                  // ── Price Range ──
-                  _buildSection(
-                    title: 'Mức giá (Xu)',
-                    icon: Ionicons.cash_outline,
-                    value:
-                        '${creditsFormat.format(_priceRange.start.round())} - ${creditsFormat.format(_priceRange.end.round())} xu',
-                    child: Column(
-                      children: [
-                        SliderTheme(
-                          data: _sliderTheme,
-                          child: RangeSlider(
-                            values: _priceRange,
-                            min: 10,
-                            max: 1000,
-                            divisions: 99,
-                            labels: RangeLabels(
-                              '${creditsFormat.format(_priceRange.start.round())} xu',
-                              '${creditsFormat.format(_priceRange.end.round())} xu',
-                            ),
-                            onChanged: (v) => setState(() => _priceRange = v),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '10',
-                                style: AppTypography.labelSmall.copyWith(
-                                  color: context.appColors.textSecondary,
-                                  fontSize: 11,
-                                ),
-                              ),
-                              Text(
-                                '1,000',
-                                style: AppTypography.labelSmall.copyWith(
-                                  color: context.appColors.textSecondary,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
                   // ── Services ──
                   _buildSection(
-                    title: 'Dịch vụ',
+                    title: 'Hoạt động',
                     icon: Ionicons.grid_outline,
                     child: Builder(
                       builder: (context) {
@@ -519,7 +454,6 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     setState(() {
       _distance = 10;
       _ageRange = const RangeValues(18, 35);
-      _priceRange = const RangeValues(10, 500);
       _selectedServices = {};
       _selectedGender = null;
       // Note: city and district are NOT cleared as they are mandatory
@@ -832,7 +766,6 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     if (_selectedGender != null) count++;
     if (_distance != 10) count++;
     if (_ageRange.start != 18 || _ageRange.end != 35) count++;
-    if (_priceRange.start != 10 || _priceRange.end != 500) count++;;
     if (_selectedServices.isNotEmpty) count++;
     if (_selectedProvinceId != null || _selectedDistrictId != null) count++;
     if (_verifiedOnly) count++;
@@ -914,12 +847,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
       radius: _distance.round() != 10 ? _distance.round() : null,
       minAge: _ageRange.start.round() != 18 ? _ageRange.start.round() : null,
       maxAge: _ageRange.end.round() != 35 ? _ageRange.end.round() : null,
-      minRate: _priceRange.start.round() != 10
-          ? _priceRange.start.round()
-          : null,
-      maxRate: _priceRange.end.round() != 500
-          ? _priceRange.end.round()
-          : null,
+      minRate: null,
+      maxRate: null,
       serviceType: _selectedServices.isNotEmpty
           ? _selectedServices.first
           : null,

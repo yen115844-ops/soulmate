@@ -69,7 +69,7 @@ class _PartnerBottomNavigationBar extends StatelessWidget {
               ),
               _NavItem(
                 icon: Ionicons.calendar_outline,
-                label: 'Lịch hẹn',
+                label: 'Hoạt động',
                 isSelected: currentIndex == 1,
                 onTap: () => onTap(1),
               ),

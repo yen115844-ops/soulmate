@@ -34,7 +34,7 @@ class ServiceCategoriesSection extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
             child: Text(
-              'Dịch vụ',
+              'Hoạt động',
               style: AppTypography.titleMedium.copyWith(
                 fontWeight: FontWeight.w700,
               ),

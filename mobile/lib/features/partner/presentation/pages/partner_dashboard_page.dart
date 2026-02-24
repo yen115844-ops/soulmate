@@ -11,6 +11,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
 import '../../data/partner_repository.dart';
@@ -73,7 +74,7 @@ class _PartnerDashboardContent extends StatelessWidget {
       },
       child: Scaffold(
         appBar: AppBar(
-          title:   Text('Partner Dashboard',
+          title:   Text('Quản lý hoạt động',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -165,7 +166,7 @@ class _PartnerDashboardContent extends StatelessWidget {
                 await Future.delayed(const Duration(milliseconds: 500));
               },
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
+                padding: ResponsiveLayout.pagePadding(context),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -191,7 +192,7 @@ class _PartnerDashboardContent extends StatelessWidget {
 
                     // Today's Bookings
                     _SectionHeader(
-                      title: 'Lịch hẹn sắp tới',
+                      title: 'Hoạt động sắp tới',
                       action: 'Xem tất cả',
                       onActionTap: () async {
                         context.go(RouteNames.partnerBookings);
@@ -241,7 +242,7 @@ class _ErrorView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: ResponsiveLayout.pagePadding(context),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -307,7 +308,7 @@ class _VerificationBanner extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Xác minh tài khoản để tăng độ tin cậy với khách hàng',
+                  'Xác minh tài khoản để tăng độ tin cậy',
                   style: AppTypography.labelSmall.copyWith(
                     color: context.appColors.textSecondary,
                   ),
@@ -344,7 +345,7 @@ class _WelcomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayName = userInfo?.name ?? 'Partner';
+    final displayName = userInfo?.name ?? 'Bạn';
 
     return BlocBuilder<ProfileBloc, ProfileState>(
       builder: (context, profileState) {
@@ -459,19 +460,11 @@ class _QuickStats extends StatelessWidget {
 
   const _QuickStats({required this.profile, required this.stats});
 
-  String _formatCredits(int credits) {
-    if (credits >= 1000000) {
-      return '${(credits / 1000000).toStringAsFixed(1)}M';
-    } else if (credits >= 1000) {
-      return '${(credits / 1000).toStringAsFixed(0)}K';
-    }
-    return credits.toString();
-  }
-
   @override
   Widget build(BuildContext context) {
+    final h = ResponsiveLayout.horizontalPadding(context);
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.fromLTRB(h, 20, h, 20),
       decoration: BoxDecoration(
         gradient: AppColors.primaryGradient,
         borderRadius: BorderRadius.circular(20),
@@ -483,8 +476,8 @@ class _QuickStats extends StatelessWidget {
               Expanded(
                 child: _StatItem(
                   icon: Ionicons.swap_horizontal_outline,
-                  label: 'Tổng thu',
-                  value: '${_formatCredits(stats.totalEarned)} xu',
+                  label: 'Tổng',
+                  value: '${stats.total}',
                 ),
               ),
               Container(
@@ -509,7 +502,7 @@ class _QuickStats extends StatelessWidget {
               Expanded(
                 child: _StatItem(
                   icon: Ionicons.calendar_outline,
-                  label: 'Đơn hàng',
+                  label: 'Hoạt động',
                   value: '${stats.completed}/${stats.total}',
                 ),
               ),
@@ -604,7 +597,7 @@ class _EmptyBookings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: ResponsiveLayout.pagePadding(context),
       decoration: BoxDecoration(
         color: context.appColors.card,
         borderRadius: BorderRadius.circular(16),
@@ -619,7 +612,7 @@ class _EmptyBookings extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Không có lịch hẹn sắp tới',
+            'Không có hoạt động sắp tới',
             style: AppTypography.bodyMedium.copyWith(
               color: context.appColors.textSecondary,
             ),
@@ -634,15 +627,6 @@ class _BookingCard extends StatelessWidget {
   final PartnerBooking booking;
 
   const _BookingCard({required this.booking});
-
-  String _formatCredits(int credits) {
-    if (credits >= 1000000) {
-      return '${(credits / 1000000).toStringAsFixed(1)}M';
-    } else if (credits >= 1000) {
-      return '${(credits / 1000).toStringAsFixed(0)}K';
-    }
-    return credits.toString();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -677,7 +661,7 @@ class _BookingCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  user?.displayName ?? 'Khách hàng',
+                  user?.displayName ?? 'Người tham gia',
                   style: AppTypography.titleSmall,
                 ),
                 const SizedBox(height: 4),
@@ -753,13 +737,6 @@ class _BookingCard extends StatelessWidget {
               ],
             ),
           ),
-          Text(
-            '${_formatCredits(booking.subtotal)} xu',
-            style: AppTypography.titleSmall.copyWith(
-              color: AppColors.primary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
         ],
       ),
     );
@@ -808,8 +785,8 @@ class _QuickActions extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: _ActionButton(
-                icon: Ionicons.swap_horizontal_outline,
-                label: 'Thu nhập',
+                icon: Ionicons.stats_chart_outline,
+                label: 'Thống kê',
                 color: AppColors.success,
                 onTap: () => context.go(RouteNames.partnerEarnings),
               ),
@@ -849,10 +826,10 @@ class _QuickActions extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: _ActionButton(
-                icon: Ionicons.business_outline,
-                label: 'Ngân hàng',
+                icon: Ionicons.chatbubbles_outline,
+                label: 'Tin nhắn',
                 color: AppColors.secondary,
-                onTap: () => context.push(RouteNames.partnerBankAccount),
+                onTap: () => context.push(RouteNames.partnerBookings),
               ),
             ),
           ],

@@ -11,7 +11,7 @@ export class UpdateAppSettingsDto {
     description: 'Key-value map of setting keys to values (all strings)',
     example: {
       app_name: 'Mate Social',
-      support_email: 'support@matesocial.vn',
+      support_email: 'ngocbinhan8888@gmail.com',
       min_booking_hours: '1',
     },
   })

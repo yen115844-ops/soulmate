@@ -6,6 +6,7 @@ import 'package:ionicons/ionicons.dart';
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
@@ -98,10 +99,13 @@ class _LoginPageState extends State<LoginPage> {
         return Scaffold(
           body: SafeArea(
             bottom: false,
-
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Form(
+            child: ResponsiveCenterWrapper(
+              child: SingleChildScrollView(
+                padding: ResponsiveLayout.pagePadding(context).copyWith(
+                  top: 24,
+                  bottom: 24,
+                ),
+                child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -235,69 +239,10 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
             ),
+            ),
           ),
         );
       },
-    );
-  }
-}
-
-class _SocialLoginButton extends StatelessWidget {
-  final String icon;
-  final String text;
-  final VoidCallback? onPressed;
-  final Color? backgroundColor;
-  final Color? textColor;
-
-  const _SocialLoginButton({
-    required this.icon,
-    required this.text,
-    this.onPressed,
-    this.backgroundColor,
-    this.textColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final bg = backgroundColor ?? context.appColors.surface;
-    final fg = textColor ?? context.appColors.textPrimary;
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          backgroundColor: bg,
-          foregroundColor: fg,
-          side: backgroundColor == null
-              ? BorderSide(color: context.appColors.border)
-              : BorderSide.none,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Using Icon instead of image for now
-            Icon(
-              icon.contains('google')
-                  ? Ionicons.logo_google
-                  : Ionicons.logo_facebook,
-              size: 24,
-              color: fg,
-            ),
-            const SizedBox(width: 12),
-            Flexible(
-              child: Text(
-                text,
-                style: AppTypography.labelLarge.copyWith(color: fg),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

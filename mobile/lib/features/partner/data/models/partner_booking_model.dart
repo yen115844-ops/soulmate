@@ -109,7 +109,7 @@ class PartnerBooking {
       case 'CONFIRMED':
         return 'Đã xác nhận';
       case 'PAID':
-        return 'Đã thanh toán';
+        return 'Đã xác nhận';
       case 'ONGOING':
         return 'Đang diễn ra';
       case 'COMPLETED':

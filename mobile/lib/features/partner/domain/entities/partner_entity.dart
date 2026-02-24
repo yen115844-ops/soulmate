@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-/// Partner Entity - Represents a partner/companion in the app
+/// Partner Entity - Represents a user in the app
 class PartnerEntity extends Equatable {
   final String id;
   final String name;
@@ -75,7 +75,8 @@ class PartnerEntity extends Equatable {
     this.userId,
   });
 
-  /// Format hourly rate as Vietnamese currency
+  /// Format hourly rate (deprecated - kept for backward compatibility)
+  @Deprecated('Pricing removed from UI')
   String get formattedHourlyRate {
     if (hourlyRate >= 1000000) {
       return '${(hourlyRate / 1000000).toStringAsFixed(1)}M';

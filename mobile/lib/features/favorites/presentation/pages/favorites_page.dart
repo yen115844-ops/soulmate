@@ -6,6 +6,7 @@ import 'package:ionicons/ionicons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/cards/partner_card.dart';
 import '../bloc/favorites_bloc.dart';
 import '../bloc/favorites_event.dart';
@@ -59,47 +60,59 @@ class _FavoritesView extends StatelessWidget {
             return const _EmptyState();
           }
 
+          final crossAxisCount = ResponsiveLayout.gridCrossAxisCount(
+            context,
+            minCellWidth: 320,
+            horizontalPadding: ResponsiveLayout.horizontalPadding(context) * 2,
+            spacing: 16,
+          );
+          final padding = ResponsiveLayout.pagePadding(context);
           return RefreshIndicator(
             onRefresh: () async {
               context.read<FavoritesBloc>().add(
                 const FavoritesRefreshRequested(),
               );
             },
-            child: ListView.builder(
-              padding: const EdgeInsets.all(20),
+            child: GridView.builder(
+              padding: padding.copyWith(
+                top: padding.top,
+                bottom: padding.bottom + 24,
+              ),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                childAspectRatio: 0.72,
+              ),
               itemCount: state.favorites.length,
               itemBuilder: (context, index) {
                 final favorite = state.favorites[index];
                 final partner = favorite.partner;
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: PartnerCard(
-                    id: partner.id,
-                    name: partner.name,
-                    age: partner.age,
-                    avatarUrl: partner.avatarUrl,
-                    rating: partner.rating,
-                    reviews: partner.reviewCount,
-                    hourlyRate: partner.formattedHourlyRate,
-                    isOnline: partner.isOnline,
-                    isVerified: partner.isVerified,
-                    isFavorite: true,
-                    onTap: () {
-                      context.push('/partner/${partner.id}');
-                    },
-                    onFavorite: () {
-                      context.read<FavoritesBloc>().add(
-                        FavoriteRemoveRequested(partner.id),
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Đã xóa khỏi danh sách yêu thích'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
-                  ),
+                return PartnerCard(
+                  id: partner.id,
+                  name: partner.name,
+                  age: partner.age,
+                  avatarUrl: partner.avatarUrl,
+                  rating: partner.rating,
+                  reviews: partner.reviewCount,
+                  hourlyRate: partner.formattedHourlyRate,
+                  isOnline: partner.isOnline,
+                  isVerified: partner.isVerified,
+                  isFavorite: true,
+                  onTap: () {
+                    context.push('/partner/${partner.id}');
+                  },
+                  onFavorite: () {
+                    context.read<FavoritesBloc>().add(
+                      FavoriteRemoveRequested(partner.id),
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Đã xóa khỏi danh sách yêu thích'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
                 );
               },
             ),

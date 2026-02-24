@@ -10,6 +10,7 @@ import '../../../../core/network/api_config.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../data/partner_repository.dart';
@@ -388,10 +389,17 @@ class _PhotoManagerPageState extends State<PhotoManagerPage> {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: ResponsiveLayout.gridCrossAxisCount(
+          context,
+          minCellWidth: 90,
+          horizontalPadding: 40,
+          spacing: 8,
+          maxColumns: 6,
+        ),
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
+        childAspectRatio: 1,
       ),
       itemCount: items.length,
       itemBuilder: (context, index) {
@@ -414,10 +422,17 @@ class _PhotoManagerPageState extends State<PhotoManagerPage> {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: ResponsiveLayout.gridCrossAxisCount(
+          context,
+          minCellWidth: 90,
+          horizontalPadding: 40,
+          spacing: 8,
+          maxColumns: 6,
+        ),
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
+        childAspectRatio: 1,
       ),
       itemCount: _newPhotos.length,
       itemBuilder: (context, index) {

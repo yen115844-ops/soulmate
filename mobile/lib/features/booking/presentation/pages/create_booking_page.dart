@@ -12,6 +12,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/common/step_indicator.dart';
@@ -79,7 +80,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
       final wantUpgrade = await PremiumGuard.showPremiumDialog(
         context,
         title: 'Cần đăng ký Premium',
-        message: 'Tính năng booking yêu cầu gói Premium. Nâng cấp để đặt lịch với partner!',
+        message: 'Tính năng này yêu cầu gói Premium. Nâng cấp để tạo hoạt động!',
       );
 
       if (wantUpgrade && mounted) {
@@ -251,7 +252,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
     'TRAVEL': 'Đi chơi xa, du lịch',
     'SHOPPING': 'Đi mua sắm cùng',
     'SPORTS': 'Hoạt động thể thao',
-    'OTHER': 'Dịch vụ khác',
+    'OTHER': 'Hoạt động khác',
   };
 
   List<Map<String, dynamic>> get _services {
@@ -500,7 +501,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
     // Loading state
     if (_isLoadingPartner) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Đặt lịch hẹn')),
+        appBar: AppBar(title: const Text('Tạo hoạt động')),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -508,7 +509,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
     // Error state
     if (_errorMessage != null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Đặt lịch hẹn')),
+        appBar: AppBar(title: const Text('Tạo hoạt động')),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -533,7 +534,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
         backgroundColor: context.appColors.surface,
         leading: AppBackButton(onPressed: _previousStep),
         title: Text(
-          'Đặt lịch hẹn',
+          'Tạo hoạt động',
           style: AppTypography.titleMedium.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -546,7 +547,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
               currentStep: _currentStep,
               totalSteps: 4,
               stepLabels: const [
-                'Dịch vụ',
+                'Hoạt động',
                 'Thời gian',
                 'Địa điểm',
                 'Xác nhận',
@@ -633,24 +634,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                     ],
                   ),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      '$_hourlyRate xu',
-                      style: AppTypography.titleSmall.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      '/giờ',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: context.appColors.textHint,
-                      ),
-                    ),
-                  ],
-                ),
+                const SizedBox.shrink(),
               ],
             ),
           ),
@@ -689,36 +673,11 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
             ),
             child: Row(
               children: [
-                // Price Summary
-                if (_currentStep >= 1) ...[
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Tổng tiền',
-                          style: AppTypography.labelSmall.copyWith(
-                            color: context.appColors.textSecondary,
-                          ),
-                        ),
-                        Text(
-                          '$_totalAmount xu',
-                          style: AppTypography.titleLarge.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                ],
                 // Action Button
                 Expanded(
-                  flex: _currentStep >= 1 ? 1 : 2,
+                  flex: 2,
                   child: AppButton(
-                    text: _currentStep == 3 ? 'Xác nhận đặt lịch' : 'Tiếp tục',
+                    text: _currentStep == 3 ? 'Gửi lời mời' : 'Tiếp tục',
                     onPressed: _isSubmitting || !_canProceed
                         ? null
                         : (_currentStep == 3 ? _confirmBooking : _nextStep),
@@ -740,14 +699,14 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Chọn dịch vụ',
+            'Chọn hoạt động',
             style: AppTypography.titleMedium.copyWith(
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Bạn muốn làm gì cùng ${_partner?.displayName ?? 'Partner'}?',
+            'Chọn hoạt động bạn muốn tham gia',
             style: AppTypography.bodyMedium.copyWith(
               color: context.appColors.textSecondary,
             ),
@@ -878,7 +837,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Tối thiểu ${_partner?.profile.minimumHours ?? 3} giờ cho mỗi lịch hẹn',
+            'Thời lượng hoạt động',
             style: AppTypography.bodyMedium.copyWith(
               color: context.appColors.textSecondary,
             ),
@@ -1081,38 +1040,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
             ),
           ),
 
-          const SizedBox(height: 24),
 
-          // Price Breakdown
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: [
-                _PriceRow(
-                  label: '$_hourlyRate xu x $_duration giờ',
-                  value: '$_subtotal xu',
-                ),
-                const SizedBox(height: 8),
-                _PriceRow(
-                  label: 'Phí dịch vụ (15%)',
-                  value: '$_serviceFee xu',
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Divider(),
-                ),
-                _PriceRow(
-                  label: 'Tổng cộng',
-                  value: '$_totalAmount credits',
-                  isTotal: true,
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
@@ -1205,7 +1133,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Kiểm tra lại thông tin trước khi đặt lịch',
+            'Kiểm tra lại thông tin trước khi gửi',
             style: AppTypography.bodyMedium.copyWith(
               color: context.appColors.textSecondary,
             ),
@@ -1224,7 +1152,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
               children: [
                 _SummaryRow(
                   icon: Ionicons.apps_outline,
-                  label: 'Dịch vụ',
+                  label: 'Hoạt động',
                   value: _selectedService != null
                       ? ServiceTypeEmoji.get(_selectedService!).nameVi
                       : '-',
@@ -1287,37 +1215,6 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
 
           const SizedBox(height: 24),
 
-          // Price Breakdown
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: [
-                _PriceRow(
-                  label: 'Dịch vụ ($_duration giờ)',
-                  value: '$_subtotal xu',
-                ),
-                const SizedBox(height: 8),
-                _PriceRow(
-                  label: 'Phí dịch vụ',
-                  value: '$_serviceFee xu',
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Divider(),
-                ),
-                _PriceRow(
-                  label: 'Tổng cộng',
-                  value: '$_totalAmount xu',
-                  isTotal: true,
-                ),
-              ],
-            ),
-          ),
-
           const SizedBox(height: 16),
 
           // Terms
@@ -1332,7 +1229,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Bằng việc đặt lịch, bạn đồng ý với Điều khoản sử dụng và Chính sách bảo mật của Mate Social',
+                  'Bằng việc gửi lời mời, bạn đồng ý với Điều khoản sử dụng và Chính sách bảo mật của Mate Social',
                   style: AppTypography.bodySmall.copyWith(
                     color: context.appColors.textHint,
                   ),
@@ -1785,8 +1682,14 @@ class _TimeSelectionBottomSheet extends StatelessWidget {
             child: GridView.builder(
               padding: const EdgeInsets.all(16),
               shrinkWrap: true,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: ResponsiveLayout.gridCrossAxisCount(
+                  context,
+                  minCellWidth: 72,
+                  horizontalPadding: 32,
+                  spacing: 8,
+                  maxColumns: 8,
+                ),
                 childAspectRatio: 2,
                 crossAxisSpacing: 8,
                 mainAxisSpacing: 8,
@@ -1859,44 +1762,6 @@ class _DurationButton extends StatelessWidget {
           size: 18,
         ),
       ),
-    );
-  }
-}
-
-class _PriceRow extends StatelessWidget {
-  final String label;
-  final String value;
-  final bool isTotal;
-
-  const _PriceRow({
-    required this.label,
-    required this.value,
-    this.isTotal = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: isTotal
-              ? AppTypography.titleSmall.copyWith(fontWeight: FontWeight.w600)
-              : AppTypography.bodyMedium.copyWith(
-                  color: context.appColors.textSecondary,
-                ),
-        ),
-        Text(
-          value,
-          style: isTotal
-              ? AppTypography.titleMedium.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w700,
-                )
-              : AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w500),
-        ),
-      ],
     );
   }
 }
@@ -2072,7 +1937,7 @@ class _ConfirmationBottomSheet extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: const Icon(
-              Ionicons.wallet_outline,
+              Ionicons.send_outline,
               size: 40,
               color: AppColors.primary,
             ),
@@ -2081,7 +1946,7 @@ class _ConfirmationBottomSheet extends StatelessWidget {
           const SizedBox(height: 20),
 
           Text(
-            'Xác nhận thanh toán',
+            'Xác nhận',
             style: AppTypography.titleLarge.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -2090,7 +1955,7 @@ class _ConfirmationBottomSheet extends StatelessWidget {
           const SizedBox(height: 8),
 
           Text(
-            'Bạn sẽ thanh toán $totalAmount xu cho lịch hẹn này',
+            'Gửi lời mời tham gia hoạt động này?',
             style: AppTypography.bodyMedium.copyWith(
               color: context.appColors.textSecondary,
             ),
@@ -2168,7 +2033,7 @@ class _ConfirmationBottomSheet extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: AppButton(text: 'Thanh toán', onPressed: onConfirm),
+                child: AppButton(text: 'Xác nhận', onPressed: onConfirm),
               ),
             ],
           ),
@@ -2210,7 +2075,7 @@ class _SuccessDialog extends StatelessWidget {
             const SizedBox(height: 24),
 
             Text(
-              'Đặt lịch thành công!',
+              'Gửi lời mời thành công!',
               style: AppTypography.titleLarge.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -2219,7 +2084,7 @@ class _SuccessDialog extends StatelessWidget {
             const SizedBox(height: 12),
 
             Text(
-              'Lịch hẹn của bạn đã được gửi đến Partner. Vui lòng chờ xác nhận.',
+              'Lời mời của bạn đã được gửi. Vui lòng chờ xác nhận.',
               style: AppTypography.bodyMedium.copyWith(
                 color: context.appColors.textSecondary,
               ),
@@ -2229,7 +2094,7 @@ class _SuccessDialog extends StatelessWidget {
             const SizedBox(height: 32),
 
             AppButton(
-              text: 'Xem lịch hẹn',
+              text: 'Xem hoạt động',
               onPressed: onViewBooking,
             ).animate().fadeIn(delay: 400.ms),
 

@@ -99,13 +99,13 @@ class PartnerDetailBottomBar extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                Ionicons.calendar_outline,
+                Ionicons.paper_plane_outline,
                 color: isAvailable ? Colors.white : context.appColors.textHint,
                 size: 20,
               ),
               const SizedBox(width: 8),
               Text(
-                isAvailable ? 'Đặt lịch hẹn' : 'Chưa sẵn sàng',
+                isAvailable ? 'Gửi lời mời' : 'Chưa sẵn sàng',
                 style: AppTypography.button.copyWith(
                   color:
                       isAvailable ? Colors.white : context.appColors.textHint,

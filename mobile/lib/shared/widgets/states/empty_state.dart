@@ -3,8 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:ionicons/ionicons.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/theme_context.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/theme_context.dart';
 import '../buttons/app_button.dart';
 
 /// Empty State Widget - Shown when there's no data
@@ -131,9 +131,9 @@ class NoBookingsWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return EmptyStateWidget(
       icon: Ionicons.calendar_outline,
-      title: 'Chưa có lịch hẹn nào',
-      message: 'Bạn chưa có cuộc hẹn nào. Hãy tìm bạn đồng hành và đặt lịch ngay!',
-      buttonText: 'Tìm Partner',
+      title: 'Chưa có hoạt động nào',
+      message: 'Bạn chưa tham gia hoạt động nào. Hãy khám phá và tham gia ngay!',
+      buttonText: 'Khám phá',
       onAction: onFindPartner,
     );
   }
@@ -165,7 +165,7 @@ class NoFavoritesWidget extends StatelessWidget {
     return EmptyStateWidget(
       icon: Ionicons.heart_outline,
       title: 'Chưa có yêu thích',
-      message: 'Bạn chưa thêm Partner nào vào danh sách yêu thích',
+      message: 'Bạn chưa thêm ai vào danh sách yêu thích',
       buttonText: 'Khám phá ngay',
       onAction: onExplore,
     );
@@ -196,7 +196,7 @@ class NoReviewsWidget extends StatelessWidget {
     return EmptyStateWidget(
       icon: Ionicons.star_outline,
       title: 'Chưa có đánh giá',
-      message: 'Partner này chưa có đánh giá nào',
+      message: 'Người dùng này chưa có đánh giá nào',
       showButton: false,
     );
   }
@@ -214,7 +214,7 @@ class NoTransactionsWidget extends StatelessWidget {
       icon: Ionicons.document_text_outline,
       title: 'Chưa có giao dịch',
       message: 'Lịch sử giao dịch của bạn sẽ hiển thị ở đây',
-      buttonText: 'Nạp tiền ngay',
+      buttonText: 'Khám phá ngay',
       onAction: onTopUp,
     );
   }

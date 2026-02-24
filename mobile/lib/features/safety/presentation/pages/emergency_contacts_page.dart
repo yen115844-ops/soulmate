@@ -6,6 +6,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
@@ -219,7 +220,7 @@ class _EmergencyContactsView extends StatelessWidget {
               // Info Banner
               Container(
                 margin: const EdgeInsets.all(20),
-                padding: const EdgeInsets.all(16),
+                padding: ResponsiveLayout.pagePadding(context),
                 decoration: BoxDecoration(
                   color: AppColors.warning.withAlpha(25),
                   borderRadius: BorderRadius.circular(12),
@@ -416,7 +417,7 @@ class _EmptyState extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          Padding(padding: const EdgeInsets.symmetric(horizontal: 20), child:  AppButton(
+          Padding(padding: EdgeInsets.symmetric(horizontal: ResponsiveLayout.horizontalPadding(context)), child:  AppButton(
             text: 'Thêm liên hệ đầu tiên',
             icon: Ionicons.add_outline,
             onPressed: onAdd,

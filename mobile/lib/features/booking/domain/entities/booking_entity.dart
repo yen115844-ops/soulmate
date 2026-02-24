@@ -9,7 +9,7 @@ int _parseIntFromDynamic(dynamic value) {
   return 0;
 }
 
-/// Booking Entity - Represents a booking in the app
+/// Booking Entity - Represents an activity in the app
 class BookingEntity extends Equatable {
   final String id;
   final String? bookingCode;
@@ -185,7 +185,7 @@ class BookingEntity extends Equatable {
       case 'CONFIRMED':
         return 'Đã xác nhận';
       case 'PAID':
-        return 'Đã thanh toán';
+        return 'Đã xác nhận';
       case 'IN_PROGRESS':
         return 'Đang diễn ra';
       case 'COMPLETED':

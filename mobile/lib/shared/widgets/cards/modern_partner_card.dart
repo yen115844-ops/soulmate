@@ -5,8 +5,8 @@ import 'package:ionicons/ionicons.dart';
 
 import '../../../../features/partner/domain/entities/partner_entity.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/theme_context.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/theme_context.dart';
 import '../../../core/utils/image_utils.dart';
 
 /// Modern Partner Card - Featured style with glassmorphism
@@ -316,14 +316,6 @@ class _ModernPartnerCardState extends State<ModernPartnerCard> {
                             ),
                           ),
                         const Spacer(),
-                        // Price
-                        Text(
-                          '${widget.partner.formattedHourlyRate}/h',
-                          style: AppTypography.labelMedium.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
                       ],
                     ),
                   ],
@@ -536,15 +528,7 @@ class CompactPartnerCard extends StatelessWidget {
                     const Spacer(),
                     Row(
                       children: [
-                        Text(
-                          '${partner.formattedHourlyRate}/h',
-                          style: AppTypography.labelMedium.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
                         if (partner.distance != null) ...[
-                          const Spacer(),
                           Icon(
                             Ionicons.location_outline,
                             size: 12,
@@ -747,7 +731,7 @@ class ListPartnerCard extends StatelessWidget {
                 ],
               ),
             ),
-            // Price & Favorite
+            // Favorite
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -757,14 +741,6 @@ class ListPartnerCard extends StatelessWidget {
                     isFavorite ? Icons.favorite : Ionicons.heart_outline,
                     size: 22,
                     color: isFavorite ? AppColors.error : context.appColors.textHint,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  '${partner.formattedHourlyRate}/h',
-                  style: AppTypography.titleSmall.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],

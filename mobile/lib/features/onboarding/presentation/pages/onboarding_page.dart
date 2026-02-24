@@ -8,6 +8,7 @@ import '../../../../core/services/local_storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 
 class OnboardingPage extends StatefulWidget {
@@ -25,23 +26,23 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final List<OnboardingItem> _items = [
     OnboardingItem(
       icon: Ionicons.people_outline,
-      title: 'Tìm Bạn Đồng Hành',
+      title: 'Tìm Bạn Cùng Sở Thích',
       description:
-          'Khám phá và kết nối với những người bạn mới cho mọi hoạt động từ đi dạo, xem phim đến dự tiệc.',
+          'Tham gia các hoạt động xã hội, gặp gỡ bạn mới qua những buổi cà phê, xem phim, thể thao và hơn thế nữa.',
       color: AppColors.primary,
     ),
     OnboardingItem(
       icon: Ionicons.shield_checkmark_outline,
       title: 'An Toàn & Tin Cậy',
       description:
-          'Tất cả Partner đều được xác minh danh tính. Hệ thống SOS 24/7 đảm bảo an toàn cho bạn.',
+          'Tất cả người dùng đều được xác minh danh tính. Hệ thống SOS 24/7 đảm bảo an toàn cho bạn.',
       color: AppColors.secondary,
     ),
     OnboardingItem(
       icon: Ionicons.diamond_outline,
       title: 'Đăng Ký Premium',
       description:
-          'Nâng cấp lên Premium để nhắn tin và đặt lịch hẹn với Partner. Thanh toán dễ dàng qua App Store.',
+          'Nâng cấp lên Premium để nhắn tin không giới hạn, bộ lọc nâng cao và nhiều tính năng hấp dẫn.',
       color: AppColors.accent,
     ),
   ];
@@ -82,8 +83,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          children: [
+        child: ResponsiveCenterWrapper(
+          maxContentWidth: 520,
+          child: Column(
+            children: [
             // Skip Button
             Padding(
               padding: const EdgeInsets.all(16),
@@ -172,6 +175,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               ),
             ),
           ],
+          ),
         ),
       ),
     );

@@ -174,7 +174,6 @@ class CreditTransaction extends Equatable {
   /// Check if transaction is income (positive)
   bool get isIncome =>
       type == 'CREDIT_PURCHASE' ||
-      type == 'PARTNER_EARNING' ||
       type == 'ESCROW_REFUND';
 
   /// Get display type in Vietnamese
@@ -183,17 +182,17 @@ class CreditTransaction extends Equatable {
       case 'CREDIT_PURCHASE':
         return 'Mua xu';
       case 'BOOKING_PAYMENT':
-        return 'Thanh toán booking';
+        return 'Sử dụng xu';
       case 'PARTNER_EARNING':
-        return 'Thu nhập booking';
+        return 'Nhận xu';
       case 'WITHDRAWAL':
         return 'Rút tiền';
       case 'ESCROW_HOLD':
-        return 'Giữ escrow';
+        return 'Giữ xu';
       case 'ESCROW_RELEASE':
-        return 'Giải phóng escrow';
+        return 'Giải phóng xu';
       case 'ESCROW_REFUND':
-        return 'Hoàn tiền';
+        return 'Hoàn xu';
       default:
         return type;
     }

@@ -8,6 +8,7 @@ import '../../../../core/network/api_exceptions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
@@ -80,10 +81,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         ),
         body: SafeArea(
           bottom: false,
-
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
+          child: ResponsiveCenterWrapper(
+            child: Padding(
+              padding: ResponsiveLayout.pagePadding(context).copyWith(
+                top: 24,
+                bottom: 24,
+              ),
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Spacer(),
@@ -127,6 +131,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               ],
             ),
           ),
+          ),
         ),
       );
     }
@@ -138,9 +143,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       ),
       body: SafeArea(
         bottom: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Form(
+        child: ResponsiveCenterWrapper(
+          child: SingleChildScrollView(
+            padding: ResponsiveLayout.pagePadding(context).copyWith(
+              top: 24,
+              bottom: 24,
+            ),
+            child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,8 +172,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     if (v == null || v.isEmpty) return 'Vui lòng nhập email';
                     if (!RegExp(
                       r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                    ).hasMatch(v))
+                    ).hasMatch(v)) {
                       return 'Email không hợp lệ';
+                    }
                     return null;
                   },
                 ),
@@ -191,6 +201,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               ],
             ),
           ),
+        ),
         ),
       ),
     );

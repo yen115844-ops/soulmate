@@ -136,7 +136,7 @@ class PartnerBookingsBloc
       final newState = currentState.copyWith(bookings: updatedBookings);
       emit(PartnerBookingsActionSuccess(
         previousState: newState,
-        message: 'Đã xác nhận lịch hẹn',
+        message: 'Đã xác nhận hoạt động',
       ));
     } catch (e) {
       debugPrint('Confirm booking error: $e');
@@ -176,7 +176,7 @@ class PartnerBookingsBloc
       final newState = currentState.copyWith(bookings: updatedBookings);
       emit(PartnerBookingsActionSuccess(
         previousState: newState,
-        message: 'Đã từ chối lịch hẹn',
+        message: 'Đã từ chối hoạt động',
       ));
     } catch (e) {
       debugPrint('Cancel booking error: $e');

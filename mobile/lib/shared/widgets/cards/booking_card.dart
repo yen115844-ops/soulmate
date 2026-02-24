@@ -60,7 +60,7 @@ class BookingCard extends StatelessWidget {
       case 'confirmed':
         return 'Đã xác nhận';
       case 'paid':
-        return 'Đã thanh toán';
+        return 'Đã xác nhận';
       case 'ongoing':
       case 'in_progress':
         return 'Đang diễn ra';
@@ -379,7 +379,7 @@ class MiniBookingCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Lịch hẹn sắp tới',
+                  'Hoạt động sắp tới',
                   style: AppTypography.labelMedium.copyWith(
                     color: Colors.white.withOpacity(0.9),
                   ),

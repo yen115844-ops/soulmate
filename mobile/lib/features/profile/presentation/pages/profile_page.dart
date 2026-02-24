@@ -12,6 +12,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../core/theme/theme_cubit.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../shared/widgets/auth_guard.dart';
@@ -250,7 +251,7 @@ class _ErrorView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: ResponsiveLayout.pagePadding(context).copyWith(top: 24, bottom: 24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -321,7 +322,7 @@ class _ProfileContent extends StatelessWidget {
 
           // Stats Cards
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: EdgeInsets.symmetric(horizontal: ResponsiveLayout.horizontalPadding(context)),
             child: _ModernStatsRow(
               totalBookings: stats.totalBookings,
               totalReviews: stats.totalReviews,
@@ -333,7 +334,7 @@ class _ProfileContent extends StatelessWidget {
 
           // Quick Actions
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: EdgeInsets.symmetric(horizontal: ResponsiveLayout.horizontalPadding(context)),
             child: _QuickActions(
               isPartner: stats.isPartner,
               partnerStatus: stats.partnerStatus,
@@ -344,7 +345,7 @@ class _ProfileContent extends StatelessWidget {
 
           // Menu Items
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: EdgeInsets.symmetric(horizontal: ResponsiveLayout.horizontalPadding(context)),
             child: Column(
               children: [
                 _ModernMenuSection(
@@ -565,7 +566,7 @@ class _ProfileHeroHeader extends StatelessWidget {
         bottom: false,
 
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+          padding: EdgeInsets.fromLTRB(ResponsiveLayout.horizontalPadding(context), 16, ResponsiveLayout.horizontalPadding(context), 32),
           child: Column(
             children: [
               // Title row
@@ -779,7 +780,7 @@ class _ModernStatsRow extends StatelessWidget {
             Expanded(
               child: _ModernStatItem(
                 value: totalBookings.toString(),
-                label: 'Lịch hẹn',
+                label: 'Hoạt động',
                 icon: Ionicons.calendar_outline,
                 color: const Color(0xFF3B82F6),
               ),
@@ -866,7 +867,7 @@ class _QuickActions extends StatelessWidget {
         Expanded(
           child: _QuickActionButton(
             icon: Ionicons.people_outline,
-            label: 'Trở thành Partner',
+            label: 'Tạo hồ sơ',
             color: AppColors.secondary,
             onTap: () => context.push(RouteNames.becomePartner),
           ),
@@ -993,7 +994,7 @@ class _PartnerStatusCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: _ModernStatItem(
-                    label: 'Đơn hàng',
+                    label: 'Hoạt động',
                     value:
                         '${status.completedBookings}/${status.totalBookings}',
                     icon: Ionicons.bag_check_outline,
@@ -1297,7 +1298,7 @@ class _GuestProfileView extends StatelessWidget {
 
               // Basic Settings
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: EdgeInsets.symmetric(horizontal: ResponsiveLayout.horizontalPadding(context)),
                 child: Column(
                   children: [
                     // Appearance section (local, no API needed)
@@ -1534,7 +1535,7 @@ class _GuestProfileHeader extends StatelessWidget {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+          padding: EdgeInsets.fromLTRB(ResponsiveLayout.horizontalPadding(context), 16, ResponsiveLayout.horizontalPadding(context), 32),
           child: Column(
             children: [
               // Title row

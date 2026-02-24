@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../core/services/app_deep_link_service.dart';
 import '../../../../core/services/deep_link_service.dart';
 import '../../../../core/theme/theme_context.dart';
@@ -236,24 +238,35 @@ class _HomePageViewState extends State<_HomePageView> {
     );
   }
 
-  SliverList _buildPartnerList(List<PartnerEntity> partners) {
-    return SliverList(
-      delegate: SliverChildBuilderDelegate((context, index) {
-        final partner = partners[index];
-        return Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              child: GestureDetector(
-                onTap: () => _onPartnerTap(partner),
-                child: PartnerCard(partner: partner),
-              ),
-            )
-            .animate()
-            .fadeIn(
-              delay: Duration(milliseconds: 60 * (index % 8)),
-              duration: 350.ms,
-            )
-            .slideY(begin: 0.05, end: 0);
-      }, childCount: partners.length),
+  Widget _buildPartnerList(List<PartnerEntity> partners) {
+    final crossAxisCount = ResponsiveLayout.gridCrossAxisCount(
+      context,
+      minCellWidth: 320,
+      horizontalPadding: ResponsiveLayout.horizontalPadding(context) * 2,
+      spacing: 16,
+    );
+    final padding = ResponsiveLayout.horizontalPadding(context);
+    return SliverPadding(
+      padding: EdgeInsets.fromLTRB(padding, 0, padding, 16),
+      sliver: SliverAlignedGrid.count(
+        crossAxisCount: crossAxisCount,
+        mainAxisSpacing: 16,
+        crossAxisSpacing: 16,
+        itemCount: partners.length,
+        itemBuilder: (context, index) {
+          final partner = partners[index];
+          return GestureDetector(
+            onTap: () => _onPartnerTap(partner),
+            child: PartnerCard(partner: partner),
+          )
+              .animate()
+              .fadeIn(
+                delay: Duration(milliseconds: 60 * (index % 8)),
+                duration: 350.ms,
+              )
+              .slideY(begin: 0.05, end: 0);
+        },
+      ),
     );
   }
 }

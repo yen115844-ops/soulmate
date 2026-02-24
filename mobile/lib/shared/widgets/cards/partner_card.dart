@@ -249,15 +249,6 @@ class PartnerCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-
-                  // Price
-                  Text(
-                    '$hourlyRate xu/giờ',
-                    style: AppTypography.labelLarge.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -444,7 +435,7 @@ class PartnerListItem extends StatelessWidget {
               ),
             ),
 
-            // Price & Favorite
+            // Favorite
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -454,20 +445,6 @@ class PartnerListItem extends StatelessWidget {
                     isFavorite ? Icons.favorite : Ionicons.heart_outline,
                     size: 22,
                     color: isFavorite ? AppColors.error : context.appColors.textHint,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  '$hourlyRate',
-                  style: AppTypography.titleSmall.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                Text(
-                  'xu/giờ',
-                  style: AppTypography.labelSmall.copyWith(
-                    color: context.appColors.textHint,
                   ),
                 ),
               ],

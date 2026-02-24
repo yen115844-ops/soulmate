@@ -9,6 +9,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../data/partner_repository.dart';
 import '../bloc/partner_reviews_bloc.dart';
@@ -180,7 +181,7 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(20),
+                              padding: ResponsiveLayout.pagePadding(context),
                               decoration: BoxDecoration(
                                 color: AppColors.starFilled.withOpacity(0.1),
                                 shape: BoxShape.circle,
@@ -205,7 +206,7 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
                     )
                   else
                     SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                      padding: EdgeInsets.fromLTRB(ResponsiveLayout.horizontalPadding(context), 0, ResponsiveLayout.horizontalPadding(context), 100),
                       sliver: SliverList(
                         delegate: SliverChildBuilderDelegate(
                           (context, index) {
@@ -230,7 +231,7 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
   Widget _buildRatingSummary(ReviewStats stats) {
     return Container(
       margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
+      padding: ResponsiveLayout.pagePadding(context),
       decoration: BoxDecoration(
         color: context.appColors.surface,
         borderRadius: BorderRadius.circular(24),

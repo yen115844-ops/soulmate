@@ -17,6 +17,7 @@ import '../../../../core/services/local_storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../auth/data/models/user_enums.dart';
@@ -700,7 +701,7 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
         Expanded(
           child: ListView.builder(
             controller: _scrollController,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            padding: EdgeInsets.symmetric(horizontal: ResponsiveLayout.horizontalPadding(context), vertical: 20),
             itemCount: messages.length,
             itemBuilder: (context, index) {
               final message = messages[index];

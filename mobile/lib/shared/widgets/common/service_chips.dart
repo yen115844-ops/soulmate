@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme_context.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/responsive.dart';
 
 /// Service Category Chip - Modern styled service chip
 class ServiceCategoryChip extends StatelessWidget {
@@ -224,7 +225,7 @@ class ServicesHorizontalList extends StatelessWidget {
 class ServicesGrid extends StatelessWidget {
   final List<Map<String, dynamic>> services;
   final Function(String)? onServiceSelected;
-  final int crossAxisCount;
+  final int? crossAxisCount;
   final bool isCompact;
   final EdgeInsets padding;
 
@@ -232,13 +233,21 @@ class ServicesGrid extends StatelessWidget {
     super.key,
     required this.services,
     this.onServiceSelected,
-    this.crossAxisCount = 4,
+    this.crossAxisCount,
     this.isCompact = true,
     this.padding = const EdgeInsets.symmetric(horizontal: 16),
   });
 
   @override
   Widget build(BuildContext context) {
+    final count = crossAxisCount ??
+        ResponsiveLayout.gridCrossAxisCount(
+          context,
+          minCellWidth: 100,
+          horizontalPadding: 32,
+          spacing: 12,
+          maxColumns: 6,
+        );
     if (isCompact) {
       return Padding(
         padding: padding,
@@ -247,8 +256,10 @@ class ServicesGrid extends StatelessWidget {
           runSpacing: 16,
           alignment: WrapAlignment.spaceBetween,
           children: services.map((service) {
+            final w = MediaQuery.sizeOf(context).width;
+            final paddingH = padding.left + padding.right;
             return SizedBox(
-              width: (MediaQuery.of(context).size.width - 32 - 48) / 4,
+              width: (w - paddingH - 48) / count,
               child: ServiceCategoryCard(
                 name: service['name'],
                 icon: service['icon'] as IconData,
@@ -268,7 +279,7 @@ class ServicesGrid extends StatelessWidget {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: crossAxisCount,
+          crossAxisCount: count,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
           childAspectRatio: 0.9,

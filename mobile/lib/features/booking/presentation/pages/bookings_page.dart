@@ -11,6 +11,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/cards/booking_card.dart';
 import '../../../../shared/widgets/common/pull_to_refresh.dart';
 import '../../../../shared/widgets/loading/shimmer_loading.dart';
@@ -215,7 +216,7 @@ class _BookingsPageContentState extends State<_BookingsPageContent>
       onRefresh: _onRefresh,
       child: ListView.builder(
         controller: _scrollControllerUpcoming,
-        padding: const EdgeInsets.all(16),
+        padding: ResponsiveLayout.pagePadding(context).copyWith(top: 16, bottom: 16),
         itemCount: state.upcomingBookings.length + (state.isLoadingMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (index >= state.upcomingBookings.length) {
@@ -284,7 +285,12 @@ class _BookingsPageContentState extends State<_BookingsPageContent>
         children: [
           // Toggle: Danh sách | Lịch
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            padding: EdgeInsets.fromLTRB(
+              ResponsiveLayout.horizontalPadding(context),
+              12,
+              ResponsiveLayout.horizontalPadding(context),
+              8,
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -339,7 +345,12 @@ class _BookingsPageContentState extends State<_BookingsPageContent>
 
     return ListView.builder(
       controller: _scrollControllerPast,
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: EdgeInsets.fromLTRB(
+        ResponsiveLayout.horizontalPadding(context),
+        0,
+        ResponsiveLayout.horizontalPadding(context),
+        16,
+      ),
       itemCount: pastBookings.length + (state.isLoadingMore ? 1 : 0),
       itemBuilder: (context, index) {
         if (index >= pastBookings.length) {

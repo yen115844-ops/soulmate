@@ -69,7 +69,7 @@ class WalletTransaction {
       case 'CREDIT_PURCHASE':
         return 'Nạp xu';
       case 'BOOKING_PAYMENT':
-        return 'Thanh toán booking';
+        return 'Hoạt động';
       case 'PARTNER_EARNING':
         return 'Thu nhập';
       case 'ESCROW_HOLD':
@@ -79,7 +79,7 @@ class WalletTransaction {
       case 'ESCROW_REFUND':
         return 'Hoàn tiền';
       case 'WITHDRAWAL':
-        return 'Rút tiền';
+        return 'Rút xu';
       default:
         return type;
     }

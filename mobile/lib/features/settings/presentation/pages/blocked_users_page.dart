@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../chat/data/chat_repository.dart';
 
 /// Page to display and manage blocked users
@@ -196,7 +197,7 @@ class _BlockedUsersPageState extends State<BlockedUsersPage> {
     return RefreshIndicator(
       onRefresh: _loadBlockedUsers,
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: ResponsiveLayout.pagePadding(context),
         itemCount: _blockedUsers.length,
         itemBuilder: (context, index) {
           final user = _blockedUsers[index];

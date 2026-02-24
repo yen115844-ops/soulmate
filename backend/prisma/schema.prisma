@@ -51,13 +51,13 @@ enum BookingStatus {
 
 enum TransactionType {
   CREDIT_PURCHASE   // Mua credits qua IAP
-  BOOKING_PAYMENT   // User thanh toán booking bằng credits
-  PARTNER_EARNING   // Partner nhận credits từ booking
-  WITHDRAWAL        // Rút credits ra VND
-  ESCROW_HOLD       // Giữ credits trong escrow
-  ESCROW_RELEASE    // Giải phóng credits cho partner
-  ESCROW_REFUND     // Hoàn credits cho user
-  SERVICE_FEE       // Phí platform
+  BOOKING_PAYMENT   // @deprecated - Payment removed in activity pivot
+  PARTNER_EARNING   // @deprecated - Earnings removed in activity pivot
+  WITHDRAWAL        // @deprecated - Withdrawal removed in activity pivot
+  ESCROW_HOLD       // @deprecated - Escrow removed in activity pivot
+  ESCROW_RELEASE    // @deprecated - Escrow removed in activity pivot
+  ESCROW_REFUND     // @deprecated - Escrow removed in activity pivot
+  SERVICE_FEE       // @deprecated - Service fee removed in activity pivot
   // Legacy - keep for migration
   DEPOSIT
 }
@@ -258,12 +258,12 @@ model PartnerProfile {
   userId           String   @unique @map("user_id")
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  // Pricing - Giá bằng Credits
-  hourlyRate       Int      @map("hourly_rate") // Credits/giờ
-  minimumHours     Int      @default(3) @map("minimum_hours")
+  // Pricing - @deprecated: Pricing removed in activity pivot. Fields kept for migration.
+  hourlyRate       Int      @map("hourly_rate") @default(0) // @deprecated
+  minimumHours     Int      @default(3) @map("minimum_hours") // @deprecated
   currency         String   @default("CREDITS")
   
-  // Service Types - các loại dịch vụ partner cung cấp
+  // Service Types - các loại hoạt động
   serviceTypes     Json     @default("[]") @map("service_types") // ["walking", "movie", "party", "event", "travel"]
   
   // Stats - Thống kê
@@ -478,7 +478,7 @@ model Subscription {
   @@map("subscriptions")
 }
 
-// Bookings - Đặt lịch
+// Bookings - Hoạt động
 model Booking {
   id            String        @id @default(uuid())
   bookingCode   String        @unique @map("booking_code") // Mã đặt lịch dạng BK-XXXXXX
@@ -489,7 +489,7 @@ model Booking {
   partnerId     String        @map("partner_id")
   partner       User          @relation("PartnerBookings", fields: [partnerId], references: [id])
   
-  // Thông tin dịch vụ
+  // Thông tin hoạt động
   serviceType   String        @map("service_type") // "walking", "movie", "party", etc.
   date          DateTime      @db.Date
   startTime     DateTime      @map("start_time") @db.Time()
@@ -501,12 +501,12 @@ model Booking {
   meetingLat      Decimal?    @map("meeting_lat") @db.Decimal(10, 8)
   meetingLng      Decimal?    @map("meeting_lng") @db.Decimal(11, 8)
   
-  // Pricing - Giá bằng Credits
-  hourlyRate      Int         @map("hourly_rate") // Credits/giờ
+  // Pricing - @deprecated: Pricing removed in activity pivot. Fields kept for migration.
+  hourlyRate      Int         @map("hourly_rate") @default(0) // @deprecated
   totalHours      Decimal     @map("total_hours") @db.Decimal(4, 2)
-  subtotal        Int         // hourlyRate * totalHours
-  serviceFee      Int         @map("service_fee") // Phí platform (15%)
-  totalAmount     Int         @map("total_amount") // subtotal + serviceFee
+  subtotal        Int         @default(0) // @deprecated
+  serviceFee      Int         @map("service_fee") @default(0) // @deprecated
+  totalAmount     Int         @map("total_amount") @default(0) // @deprecated
   
   status          BookingStatus @default(PENDING)
   

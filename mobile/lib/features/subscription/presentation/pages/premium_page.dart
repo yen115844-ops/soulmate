@@ -10,6 +10,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../data/services/iap_service.dart';
 import '../../domain/entities/subscription_entity.dart';
@@ -286,7 +287,7 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
     final dateFormat = DateFormat('dd/MM/yyyy');
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: ResponsiveLayout.pagePadding(context),
       child: Column(
         children: [
           const SizedBox(height: 20),
@@ -399,7 +400,7 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
 
   Widget _buildBenefitsCard(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: ResponsiveLayout.pagePadding(context),
       decoration: BoxDecoration(
         color: context.appColors.surface,
         borderRadius: BorderRadius.circular(20),
@@ -466,7 +467,7 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
 
   Widget _buildPremiumOffer(BuildContext context, SubscriptionState state) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: ResponsiveLayout.pagePadding(context),
       child: Column(
         children: [
           // Header
@@ -776,7 +777,7 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
 
   Widget _buildFeaturesSection(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: ResponsiveLayout.pagePadding(context),
       decoration: BoxDecoration(
         color: context.appColors.surface,
         borderRadius: BorderRadius.circular(20),

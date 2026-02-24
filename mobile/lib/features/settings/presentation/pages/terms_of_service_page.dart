@@ -5,6 +5,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../data/terms_repository.dart';
 import '../bloc/terms_bloc.dart';
@@ -33,7 +34,7 @@ class TermsOfServicePage extends StatelessWidget {
             if (state is TermsError) {
               return Center(
                 child: Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding: ResponsiveLayout.pagePadding(context),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -68,7 +69,7 @@ class TermsOfServicePage extends StatelessWidget {
             if (state is TermsLoaded) {
               return Markdown(
                 data: state.content,
-                padding: const EdgeInsets.all(20),
+                padding: ResponsiveLayout.pagePadding(context),
                 styleSheet: MarkdownStyleSheet(
                   h1: AppTypography.headlineSmall,
                   h2: AppTypography.titleLarge.copyWith(

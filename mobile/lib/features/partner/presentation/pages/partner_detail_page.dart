@@ -10,6 +10,7 @@ import '../../../../core/network/api_config.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/auth_guard.dart';
 import '../../../favorites/presentation/bloc/favorites_bloc.dart';
 import '../../../favorites/presentation/bloc/favorites_event.dart';
@@ -90,7 +91,7 @@ class _PartnerDetailView extends StatelessWidget {
           Expanded(
             child: Center(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: ResponsiveLayout.pagePadding(context),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -186,7 +187,6 @@ class _PartnerDetailView extends StatelessWidget {
                     // Pricing
                     PartnerPricingSection(
                       detail: detail,
-                      onBookNow: () => _navigateToBooking(context, detail),
                     ),
 
                     const SizedBox(height: 16),
@@ -260,8 +260,8 @@ class _PartnerDetailView extends StatelessWidget {
     PartnerDetailResponse detail,
   ) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(20),
+      margin: EdgeInsets.symmetric(horizontal: ResponsiveLayout.horizontalPadding(context)),
+      padding: ResponsiveLayout.pagePadding(context),
       decoration: BoxDecoration(
         color: context.appColors.surface,
         borderRadius: BorderRadius.circular(20),

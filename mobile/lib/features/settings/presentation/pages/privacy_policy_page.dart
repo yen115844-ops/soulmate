@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 
 class PrivacyPolicyPage extends StatelessWidget {
@@ -15,7 +16,7 @@ class PrivacyPolicyPage extends StatelessWidget {
         title: const Text('Chính sách bảo mật'),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: ResponsiveLayout.pagePadding(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -48,7 +49,7 @@ a) Thông tin bạn cung cấp:
 • Họ tên, ngày sinh, giới tính
 • Số điện thoại, email
 • Ảnh đại diện, ảnh xác minh danh tính
-• Thông tin thanh toán (số tài khoản ngân hàng)
+• Thông tin thanh toán (qua Apple/Google cho gói Premium)
 • Nội dung tin nhắn, đánh giá
 
 b) Thông tin tự động thu thập:
@@ -83,8 +84,8 @@ Chúng tôi sử dụng thông tin của bạn để:
               content: '''
 Chúng tôi có thể chia sẻ thông tin của bạn với:
 
-• Partner (người đồng hành): Tên, ảnh đại diện để thực hiện dịch vụ
-• Đối tác thanh toán: Thông tin cần thiết để xử lý giao dịch
+• Người tham gia hoạt động: Tên, ảnh đại diện để kết nối hoạt động
+• Đối tác thanh toán: Thông tin cần thiết để xử lý giao dịch Premium
 • Nhà cung cấp dịch vụ: Bên thứ ba hỗ trợ vận hành ứng dụng
 • Cơ quan pháp luật: Khi được yêu cầu theo quy định pháp luật
 

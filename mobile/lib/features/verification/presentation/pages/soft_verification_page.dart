@@ -9,6 +9,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../domain/entities/verification_entity.dart';
@@ -100,7 +101,7 @@ class _SoftVerificationPageContentState
       appBar: _buildAppBar(),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: ResponsiveLayout.pagePadding(context),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -247,7 +248,7 @@ class _SoftVerificationPageContentState
 
   Widget _buildProgressIndicator() {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: ResponsiveLayout.pagePadding(context),
       child: Row(
         children: List.generate(3, (index) {
           final isActive = index <= _currentStep;
@@ -270,7 +271,7 @@ class _SoftVerificationPageContentState
 
   Widget _buildIntroStep() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: ResponsiveLayout.pagePadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -461,7 +462,7 @@ class _SoftVerificationPageContentState
     final isSubmitting = state.status == VerificationStateStatus.submitting;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: ResponsiveLayout.pagePadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -544,7 +545,7 @@ class _SoftVerificationPageContentState
 
           // Tips
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: ResponsiveLayout.pagePadding(context),
             decoration: BoxDecoration(
               color: AppColors.info.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
@@ -642,7 +643,7 @@ class _SoftVerificationPageContentState
     final isSubmitting = state.status == VerificationStateStatus.submitting;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: ResponsiveLayout.pagePadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -684,7 +685,7 @@ class _SoftVerificationPageContentState
 
           // Checklist
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: ResponsiveLayout.pagePadding(context),
             decoration: BoxDecoration(
               color: context.appColors.surface,
               borderRadius: BorderRadius.circular(12),
@@ -702,7 +703,7 @@ class _SoftVerificationPageContentState
 
           // Privacy notice
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: ResponsiveLayout.pagePadding(context),
             decoration: BoxDecoration(
               color: AppColors.info.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),

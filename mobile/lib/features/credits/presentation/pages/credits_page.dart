@@ -7,6 +7,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/common/loading_overlay.dart';
@@ -150,8 +151,8 @@ class _CreditsPageState extends State<CreditsPage> {
         // Balance Card
         SliverToBoxAdapter(
           child: Container(
-            margin: const EdgeInsets.all(20),
-            padding: const EdgeInsets.all(24),
+            margin: ResponsiveLayout.pagePadding(context),
+            padding: ResponsiveLayout.pagePadding(context),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
@@ -231,7 +232,7 @@ class _CreditsPageState extends State<CreditsPage> {
         // Section Title
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+            padding: ResponsiveLayout.pagePadding(context).copyWith(top: 8, bottom: 16),
             child: Text(
               'Mua Xu',
               style: AppTypography.titleMedium.copyWith(
@@ -243,7 +244,7 @@ class _CreditsPageState extends State<CreditsPage> {
 
         // Credit Packages
         SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: EdgeInsets.symmetric(horizontal: ResponsiveLayout.horizontalPadding(context)),
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) => _buildPackageCard(context, packages[index]),
@@ -255,9 +256,9 @@ class _CreditsPageState extends State<CreditsPage> {
         // Exchange Rate Info
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: ResponsiveLayout.pagePadding(context),
             child: Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(ResponsiveLayout.horizontalPadding(context)),
               decoration: BoxDecoration(
                 color: context.appColors.card,
                 borderRadius: BorderRadius.circular(12),
@@ -450,7 +451,7 @@ class _PurchaseConfirmSheet extends StatelessWidget {
         color: context.appColors.card,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+      padding: EdgeInsets.fromLTRB(ResponsiveLayout.horizontalPadding(context), 12, ResponsiveLayout.horizontalPadding(context), 32),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,

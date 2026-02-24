@@ -1,71 +1,107 @@
-# App Store Review – FAQ and prepared answers
+# App Store Review - FAQ and Prepared Answers
 
-Use these when App Review asks follow-up questions about wallet, escrow, or payments. Keep answers short and consistent with [APP_STORE_REVIEW_NOTES.md](APP_STORE_REVIEW_NOTES.md).
-
----
-
-## (a) Mô tả ngắn: Mô hình thanh toán và escrow
-
-**English (for Notes / reply):**
-
-- **What the app does:** Our app is a **booking marketplace** for **real-world services** (e.g. in-person sessions with tutors, coaches, consultants). Users discover partners, book a time slot, and pay for the service.
-- **Payment:** Users can pay for a booking using their **in-app balance (wallet)**. The wallet can be topped up via card / bank transfer / third-party payment gateways. We do **not** use in-app purchase for these payments, because the service is consumed **outside the app** (Guideline 3.1.3(e)).
-- **Escrow:** When a user pays for a booking, the amount is **held temporarily** (escrow) until the service is completed. After the user confirms completion (or after a timeout), the funds are **released to the service provider (partner)**. This protects both sides and is the same model as Grab, Uber, Airbnb.
-- **Withdrawal:** Partners and users can withdraw their balance to their bank account. Withdrawal is processed by our backend (or by a licensed payment partner, if we integrate one).
-
-**Vietnamese (nếu cần):**
-
-- App là **sàn đặt lịch** cho **dịch vụ thực** (gặp mặt partner: gia sư, tư vấn, v.v.). User đặt lịch và thanh toán cho dịch vụ.
-- **Thanh toán:** User có thể trả bằng **số dư trong app (ví)**. Ví được nạp qua thẻ / chuyển khoản / cổng thanh toán bên thứ ba. Chúng tôi **không** dùng in-app purchase vì dịch vụ được tiêu thụ **bên ngoài app** (Guideline 3.1.3(e)).
-- **Escrow:** Khi user thanh toán đặt lịch, số tiền được **giữ tạm** (escrow) đến khi hoàn thành dịch vụ. Sau khi user xác nhận hoàn thành (hoặc hết thời gian chờ), tiền được **chuyển cho partner**. Rút tiền về tài khoản ngân hàng do backend (hoặc đối tác có giấy phép) xử lý.
+Use these when App Review asks follow-up questions. Keep answers short and consistent with APP_STORE_REVIEW_NOTES.md.
 
 ---
 
-## (b) Giấy phép (license)
+## (a) What does the app do?
 
-**If you have a license (e.g. Vietnam intermediary payment / e-wallet):**
+**English:**
 
-- “We hold an [intermediary payment / e-wallet] license issued by [State Bank of Vietnam / authority]. License number: [X]. We have attached the license document in App Review attachments / at [URL].”
+Our app is a **social activity platform** where users find and connect with others who share similar interests. Users can:
 
-**If you do not have a license yet:**
+1. Browse profiles of people with shared hobbies and interests
+2. View activity types they enjoy (coffee, movies, sports, travel, events, etc.)
+3. Send invitations to do activities together
+4. Chat to coordinate meetup details
+5. Rate and review their experience after activities
 
-- “We are a booking platform for real-world services. Wallet and escrow are used **only** to facilitate payment for these services, not as a standalone financial product. We are [in the process of obtaining / planning to use a licensed partner for] regulatory compliance in Vietnam. We have not positioned the app as a general-purpose e-wallet or investment product (Guideline 3.2.1(viii)).”
+**There is no payment between users.** All activities are free. Revenue comes only from optional Premium subscriptions via Apple In-App Purchase.
 
-(Replace with your actual status; avoid claiming to be a licensed financial institution if you are not.)
+**Vietnamese:**
 
----
+App la nen tang hoat dong xa hoi, noi nguoi dung tim va ket noi voi nhung nguoi co cung so thich. Nguoi dung co the:
 
-## (c) Tham chiếu app tương tự đã duyệt
+1. Xem ho so cua nhung nguoi co so thich tuong tu
+2. Xem cac loai hoat dong ho yeu thich
+3. Gui loi moi tham gia hoat dong cung nhau
+4. Nhan tin de sap xep chi tiet
+5. Danh gia trai nghiem sau hoat dong
 
-You can cite these so the reviewer can compare the model:
-
-| App | What it does | Why it’s similar |
-|-----|----------------|-------------------|
-| **GoESCROW** | Escrow for buyer/seller: hold funds until delivery/approval. | Same idea: hold money as intermediary until condition is met. |
-| **Grab** | Ride-hailing + food + services; in-app balance; pay for real-world services. | Balance for real-world services; payment outside IAP. |
-| **Uber** | Same as above. | Same. |
-| **Airbnb** | Book accommodation; payment held until check-in/completion. | Escrow-like hold for real-world service. |
-
-Short line for Notes: “Our payment and escrow model is similar to GoESCROW (escrow) and Grab/Uber/Airbnb (in-app balance for real-world services).”
-
----
-
-## Quick reference – Guideline mapping
-
-| Topic | Guideline | One-line answer |
-|-------|-----------|-----------------|
-| Why no IAP for booking payment? | 3.1.3(e) | Payments are for **real-world services consumed outside the app**; we use other payment methods (card, bank, gateway). |
-| Is this “money management”? | 3.2.1(viii) | No. Wallet and escrow are **only** for paying for **bookings** on our platform, not for investing or standalone money management. |
-| Who holds the money? | — | [We hold it in our system / A licensed partner holds it]. Funds are used only for booking payments and withdrawals to the user’s bank. |
+**Khong co thanh toan giua nguoi dung.** Tat ca hoat dong deu mien phi. Doanh thu chi den tu goi Premium qua Apple IAP.
 
 ---
 
-## If they ask for “demo account” or “how to test”
+## (b) How does the app make money?
 
-Provide in Notes (and keep up to date):
+**Revenue model: Premium subscriptions only (Apple IAP)**
 
-1. **Test account:** email + password (and state if it’s a “demo” or sandbox environment).
-2. **Steps to test:** (1) Log in → (2) Open Wallet → (3) Top up (use test card/flow if any) → (4) Create a booking and pay with wallet → (5) Complete booking (or simulate) so escrow releases.
-3. **Withdrawal:** If withdrawal is manual/sandbox, say “Withdrawal can be tested by requesting a small amount; processing may be manual in test environment.”
+- Users can optionally subscribe to Premium for enhanced features
+- Subscriptions are auto-renewable, purchased exclusively via Apple In-App Purchase
+- Premium features: priority visibility, more daily invitations, profile badges, advanced filters
+- Premium does NOT enable any form of payment between users
+- There are no credits, tokens, virtual currency, or user-to-user transactions
 
-Update this section each time you submit a new build so the reviewer can access a working flow.
+---
+
+## (c) Is this a dating or companionship app?
+
+**No.** This is a social activity platform, not a dating or companionship app.
+
+- The app connects people around **shared interests and activities** (coffee, sports, movies, events)
+- There are no romantic matching features (no swiping, no compatibility scores)
+- Users cannot pay each other for time or companionship
+- The concept is similar to **Meetup** (find people for activities) not Tinder (romantic matching)
+- All meetups are free and voluntary - no one is compensated for their time
+
+---
+
+## (d) Guideline 1.1.4 - Safety measures
+
+We take user safety seriously:
+
+| Feature | Description |
+|---------|-------------|
+| **Profile verification** | Selfie + liveness check to verify identity |
+| **Reporting** | Users can report inappropriate behavior |
+| **Blocking** | Users can block other users |
+| **SOS button** | Emergency button available during activities |
+| **Chat moderation** | Content filtering for messages and photos |
+| **Community guidelines** | Clear rules against harassment, solicitation, etc. |
+| **Admin review** | Reports are reviewed by our moderation team |
+
+---
+
+## (e) Similar apps already approved
+
+| App | What it does | Why similar |
+|-----|-------------|-------------|
+| **Meetup** | Find local groups and events by interest | Same concept: activity-based social connections |
+| **Bumble BFF** | Find friends with shared interests | Same: non-romantic social connections |
+| **Eventbrite** | Discover/attend events and activities | Same: activity discovery platform |
+| **Couchsurfing** | Connect travelers with local hosts | Same: free social connections around activities |
+
+---
+
+## (f) Demo / test instructions
+
+[Provide test account and steps:]
+
+1. Log in with test account
+2. Browse activity profiles on Home screen
+3. Tap a profile to view interests and activity types
+4. Send an invitation (tap "Gui loi moi")
+5. Check activity status in Activities tab
+6. Test Premium subscription flow in Settings > Premium
+
+---
+
+## Quick reference - Guideline mapping
+
+| Topic | Guideline | Answer |
+|-------|-----------|--------|
+| Compensated dating? | 1.1.4 | No. All activities are free. No user-to-user payments. |
+| How do you monetize? | 3.1 | Premium subscriptions via Apple IAP only. |
+| Payment between users? | 1.1.4 / 3.1 | None. No credits, tokens, wallet, or user-to-user transactions. |
+| Safety measures? | 1.1.4 | Verification, reporting, blocking, SOS, content moderation. |
+| Is this dating? | 1.1.4 | No. Activity-based social platform (like Meetup). |

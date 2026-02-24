@@ -7,6 +7,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../data/partner_repository.dart'; // for AvailabilitySlot model
 import '../bloc/schedule_settings_bloc.dart';
 import '../bloc/schedule_settings_event.dart';
@@ -641,7 +642,7 @@ class _SlotsListView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.all(16),
+          padding: ResponsiveLayout.pagePadding(context),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -743,7 +744,7 @@ class _SlotCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(16),
+      padding: ResponsiveLayout.pagePadding(context),
       decoration: BoxDecoration(
         color: slot.isBooked
             ? AppColors.warning.withAlpha(25)

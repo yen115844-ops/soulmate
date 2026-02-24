@@ -55,8 +55,9 @@ async function main() {
     // General
     { key: 'app_name', value: 'Mate Social', description: 'Application name' },
     { key: 'app_description', value: 'Nền tảng đặt chỗ bạn đồng hành', description: 'Application description' },
-    { key: 'support_email', value: 'support@matesocial.vn', description: 'Support email address' },
-    { key: 'support_phone', value: '+84 123 456 789', description: 'Support phone number' },
+    { key: 'support_email', value: 'ngocbinhan8888@gmail.com', description: 'Support email address' },
+    { key: 'support_phone', value: '+84 986 384 628', description: 'Support phone number' },
+    { key: 'support_url', value: 'https://gomate-cms.vercel.app/support', description: 'Support page URL (e.g. for App Store product page)' },
     { key: 'default_currency', value: 'VND', description: 'Default currency code' },
     { key: 'default_language', value: 'vi', description: 'Default language code' },
     { key: 'timezone', value: 'Asia/Ho_Chi_Minh', description: 'Default timezone' },

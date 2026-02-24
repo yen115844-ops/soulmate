@@ -10,6 +10,7 @@ import '../../../../config/routes/route_names.dart';
 import '../../../../core/constants/service_type_emoji.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../shared/bloc/master_data_bloc.dart';
@@ -37,31 +38,12 @@ class _BecomePartnerPageState extends State<BecomePartnerPage> {
 
   // Step 2: Services
   final List<String> _selectedServices = [];
-  final _hourlyRateController = TextEditingController(text: '300000');
 
   // Step 3: Photos
   final List<File> _photos = [];
 
-  // Step 4: Bank Account
-  final _bankNameController = TextEditingController();
-  final _accountNumberController = TextEditingController();
-  final _accountHolderController = TextEditingController();
-
   // Master data (loaded from API)
   List<ServiceTypeModel> _serviceTypes = [];
-
-  final List<String> _banks = [
-    'Vietcombank',
-    'BIDV',
-    'Techcombank',
-    'VPBank',
-    'MB Bank',
-    'ACB',
-    'Sacombank',
-    'TPBank',
-    'VIB',
-    'Agribank',
-  ];
 
   @override
   void initState() {
@@ -76,15 +58,11 @@ class _BecomePartnerPageState extends State<BecomePartnerPage> {
     _pageController.dispose();
     _bioController.dispose();
     _introController.dispose();
-    _hourlyRateController.dispose();
-    _bankNameController.dispose();
-    _accountNumberController.dispose();
-    _accountHolderController.dispose();
     super.dispose();
   }
 
   void _nextStep(BuildContext blocContext) {
-    if (_currentStep < 3) {
+    if (_currentStep < 2) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -111,14 +89,9 @@ class _BecomePartnerPageState extends State<BecomePartnerPage> {
         return _bioController.text.length >= 20 &&
             _introController.text.length >= 50;
       case 1:
-        return _selectedServices.isNotEmpty &&
-            _hourlyRateController.text.isNotEmpty;
+        return _selectedServices.isNotEmpty;
       case 2:
         return _photos.length >= 3;
-      case 3:
-        return _bankNameController.text.isNotEmpty &&
-            _accountNumberController.text.isNotEmpty &&
-            _accountHolderController.text.isNotEmpty;
       default:
         return false;
     }
@@ -157,12 +130,12 @@ class _BecomePartnerPageState extends State<BecomePartnerPage> {
     blocContext.read<PartnerRegistrationBloc>().add(
       PartnerRegistrationSubmitted(
         serviceTypes: selectedServiceCodes,
-        hourlyRate: int.tryParse(_hourlyRateController.text) ?? 300000,
+        hourlyRate: 0,
         introduction: _introController.text,
         bio: _bioController.text,
-        bankName: _bankNameController.text,
-        bankAccountNo: _accountNumberController.text,
-        bankAccountName: _accountHolderController.text,
+        bankName: '',
+        bankAccountNo: '',
+        bankAccountName: '',
         photos: _photos,
       ),
     );
@@ -317,7 +290,7 @@ class _BecomePartnerPageState extends State<BecomePartnerPage> {
             return Scaffold(
               appBar: AppBar(
                 leading: const AppBackButton(),
-                title: const Text('Trở thành Partner'),
+                title: const Text('Tạo hồ sơ'),
               ),
               body: _buildBody(context, state),
             );
@@ -365,7 +338,7 @@ class _BecomePartnerPageState extends State<BecomePartnerPage> {
         // Progress Indicator
         _StepIndicator(
           currentStep: _currentStep,
-          steps: const ['Thông tin', 'Dịch vụ', 'Hình ảnh', 'Thanh toán'],
+          steps: const ['Thông tin', 'Hoạt động', 'Hình ảnh'],
         ),
 
         // Page Content
@@ -382,7 +355,6 @@ class _BecomePartnerPageState extends State<BecomePartnerPage> {
               _ServicesStep(
                 serviceTypes: _serviceTypes,
                 selectedServices: _selectedServices,
-                hourlyRateController: _hourlyRateController,
                 getServiceEmoji: _getServiceEmoji,
                 onServiceToggle: (serviceId) {
                   setState(() {
@@ -399,13 +371,6 @@ class _BecomePartnerPageState extends State<BecomePartnerPage> {
                 photos: _photos,
                 onPickPhotos: _pickPhotos,
                 onRemovePhoto: _removePhoto,
-              ),
-              _BankAccountStep(
-                banks: _banks,
-                bankNameController: _bankNameController,
-                accountNumberController: _accountNumberController,
-                accountHolderController: _accountHolderController,
-                onChanged: () => setState(() {}),
               ),
             ],
           ),
@@ -446,7 +411,7 @@ class _BecomePartnerPageState extends State<BecomePartnerPage> {
                 Expanded(
                   flex: _currentStep > 0 ? 1 : 2,
                   child: AppButton(
-                    text: _currentStep == 3 ? 'Hoàn tất đăng ký' : 'Tiếp tục',
+                    text: _currentStep == 2 ? 'Hoàn tất đăng ký' : 'Tiếp tục',
                     onPressed: _canProceed() ? () => _nextStep(context) : null,
                     isLoading: _isLoading,
                   ),
@@ -565,7 +530,7 @@ class _BasicInfoStep extends StatelessWidget {
           Text('Giới thiệu về bạn', style: AppTypography.titleMedium),
           const SizedBox(height: 8),
           Text(
-            'Hãy cho mọi người biết về bạn để tăng cơ hội được chọn.',
+            'Hãy cho mọi người biết về bạn.',
             style: AppTypography.bodyMedium.copyWith(
               color: context.appColors.textSecondary,
             ),
@@ -689,7 +654,6 @@ class _TipItem extends StatelessWidget {
 class _ServicesStep extends StatelessWidget {
   final List<ServiceTypeModel> serviceTypes;
   final List<String> selectedServices;
-  final TextEditingController hourlyRateController;
   final String Function(ServiceTypeModel) getServiceEmoji;
   final Function(String) onServiceToggle;
   final VoidCallback onChanged;
@@ -697,7 +661,6 @@ class _ServicesStep extends StatelessWidget {
   const _ServicesStep({
     required this.serviceTypes,
     required this.selectedServices,
-    required this.hourlyRateController,
     required this.getServiceEmoji,
     required this.onServiceToggle,
     required this.onChanged,
@@ -710,10 +673,10 @@ class _ServicesStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Chọn dịch vụ của bạn', style: AppTypography.titleMedium),
+          Text('Chọn hoạt động yêu thích', style: AppTypography.titleMedium),
           const SizedBox(height: 8),
           Text(
-            'Chọn các dịch vụ bạn muốn cung cấp. Bạn có thể thay đổi sau.',
+            'Chọn các hoạt động bạn quan tâm. Bạn có thể thay đổi sau.',
             style: AppTypography.bodyMedium.copyWith(
               color: context.appColors.textSecondary,
             ),
@@ -726,7 +689,7 @@ class _ServicesStep extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Text(
-                  'Đang tải danh sách dịch vụ...',
+                  'Đang tải danh sách hoạt động...',
                   style: AppTypography.bodyMedium.copyWith(
                     color: context.appColors.textSecondary,
                   ),
@@ -737,8 +700,14 @@ class _ServicesStep extends StatelessWidget {
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: ResponsiveLayout.gridCrossAxisCount(
+                  context,
+                  minCellWidth: 140,
+                  horizontalPadding: 40,
+                  spacing: 12,
+                  maxColumns: 4,
+                ),
                 childAspectRatio: 2.5,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
@@ -798,65 +767,7 @@ class _ServicesStep extends StatelessWidget {
               },
             ),
 
-          const SizedBox(height: 32),
 
-          // Hourly Rate
-          Text('Mức giá theo giờ', style: AppTypography.titleMedium),
-          const SizedBox(height: 8),
-          Text(
-            'Đặt mức giá phù hợp với dịch vụ của bạn.',
-            style: AppTypography.bodyMedium.copyWith(
-              color: context.appColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          AppTextField(
-            controller: hourlyRateController,
-            label: 'Giá mỗi giờ (Xu)',
-            hint: 'Nhập số xu',
-            keyboardType: TextInputType.number,
-            prefixIcon: Ionicons.cash_outline,
-            onChanged: (_) => onChanged(),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Price Suggestions
-          Text(
-            'Gợi ý mức giá:',
-            style: AppTypography.labelMedium.copyWith(
-              color: context.appColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [50, 100, 150, 200].map((price) {
-              return GestureDetector(
-                onTap: () {
-                  hourlyRateController.text = price.toString();
-                  onChanged();
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.appColors.background,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: context.appColors.border),
-                  ),
-                  child: Text(
-                    '$price xu/giờ',
-                    style: AppTypography.labelMedium,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
         ],
       ),
     );
@@ -895,8 +806,14 @@ class _PhotosStep extends StatelessWidget {
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: ResponsiveLayout.gridCrossAxisCount(
+                context,
+                minCellWidth: 100,
+                horizontalPadding: 40,
+                spacing: 12,
+                maxColumns: 6,
+              ),
               childAspectRatio: 1,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
@@ -1067,276 +984,6 @@ class _PhotosStep extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _BankAccountStep extends StatelessWidget {
-  final List<String> banks;
-  final TextEditingController bankNameController;
-  final TextEditingController accountNumberController;
-  final TextEditingController accountHolderController;
-  final VoidCallback onChanged;
-
-  const _BankAccountStep({
-    required this.banks,
-    required this.bankNameController,
-    required this.accountNumberController,
-    required this.accountHolderController,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Thông tin thanh toán', style: AppTypography.titleMedium),
-          const SizedBox(height: 8),
-          Text(
-            'Thêm tài khoản ngân hàng để nhận thanh toán từ các đơn hàng.',
-            style: AppTypography.bodyMedium.copyWith(
-              color: context.appColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Bank Name
-          Text('Ngân hàng', style: AppTypography.labelLarge),
-          const SizedBox(height: 8),
-          GestureDetector(
-            onTap: () => _showBankPicker(context),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              decoration: BoxDecoration(
-                color: context.appColors.card,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: context.appColors.border),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Ionicons.business_outline,
-                    color: context.appColors.textHint,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      bankNameController.text.isEmpty
-                          ? 'Chọn ngân hàng'
-                          : bankNameController.text,
-                      style: AppTypography.bodyLarge.copyWith(
-                        color: bankNameController.text.isEmpty
-                            ? context.appColors.textHint
-                            : context.appColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    Ionicons.chevron_down_outline,
-                    color: context.appColors.textHint,
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          AppTextField(
-            controller: accountNumberController,
-            label: 'Số tài khoản',
-            hint: 'Nhập số tài khoản',
-            keyboardType: TextInputType.number,
-            prefixIcon: Ionicons.card_outline,
-            onChanged: (_) => onChanged(),
-          ),
-
-          const SizedBox(height: 20),
-
-          AppTextField(
-            controller: accountHolderController,
-            label: 'Tên chủ tài khoản',
-            hint: 'Nhập tên chủ tài khoản (in hoa)',
-            prefixIcon: Ionicons.person_outline,
-            onChanged: (_) => onChanged(),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Security Notice
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.success.withAlpha(25),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Ionicons.shield_checkmark_outline,
-                  color: AppColors.success,
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Bảo mật thông tin',
-                        style: AppTypography.labelMedium.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Thông tin tài khoản của bạn được mã hóa và bảo mật. Chúng tôi sẽ không chia sẻ với bất kỳ ai.',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: context.appColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Commission Info
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: context.appColors.card,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: context.appColors.border),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Thông tin hoa hồng', style: AppTypography.titleSmall),
-                const SizedBox(height: 12),
-                _CommissionItem(
-                  label: 'Thu nhập của bạn',
-                  value: '80%',
-                  color: AppColors.success,
-                ),
-                const SizedBox(height: 8),
-                _CommissionItem(
-                  label: 'Phí dịch vụ',
-                  value: '20%',
-                  color: context.appColors.textSecondary,
-                ),
-                const Divider(height: 24),
-                Text(
-                  'Tiền sẽ được chuyển vào tài khoản ngân hàng trong vòng 1-3 ngày làm việc sau khi hoàn thành dịch vụ.',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: context.appColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showBankPicker(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: context.appColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Text('Chọn ngân hàng', style: AppTypography.titleLarge),
-            ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: banks.length,
-                itemBuilder: (context, index) {
-                  final bank = banks[index];
-                  final isSelected = bankNameController.text == bank;
-
-                  return ListTile(
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: context.appColors.background,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Ionicons.business_outline,
-                        color: context.appColors.textSecondary,
-                        size: 20,
-                      ),
-                    ),
-                    title: Text(bank, style: AppTypography.bodyLarge),
-                    trailing: isSelected
-                        ? Icon(
-                            Ionicons.checkmark_circle_outline,
-                            color: AppColors.primary,
-                          )
-                        : null,
-                    onTap: () {
-                      bankNameController.text = bank;
-                      onChanged();
-                      Navigator.pop(context);
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CommissionItem extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color color;
-
-  const _CommissionItem({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: AppTypography.bodyMedium.copyWith(
-            color: context.appColors.textSecondary,
-          ),
-        ),
-        Text(
-          value,
-          style: AppTypography.titleMedium.copyWith(
-            color: color,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
     );
   }
 }

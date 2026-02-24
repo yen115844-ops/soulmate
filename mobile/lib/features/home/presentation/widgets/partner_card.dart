@@ -333,23 +333,7 @@ class PartnerCard extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                '${partner.completedBookings} chuyến',
-                style: AppTypography.bodySmall.copyWith(
-                  color: context.appColors.textSecondary,
-                ),
-              ),
-              const Spacer(),
-              // Price
-              Text(
-                '${partner.hourlyRate}',
-                style: AppTypography.titleMedium.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.primary,
-                  fontSize: 16,
-                ),
-              ),
-              Text(
-                ' xu/giờ',
+                '${partner.completedBookings} hoạt động',
                 style: AppTypography.bodySmall.copyWith(
                   color: context.appColors.textSecondary,
                 ),

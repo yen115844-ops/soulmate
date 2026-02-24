@@ -110,7 +110,7 @@ class _SwipeableHomePageState extends State<SwipeableHomePage>
 
   static const _authTabMessages = {
     1: 'Đăng nhập để xem danh sách yêu thích của bạn.',
-    2: 'Đăng nhập để xem và quản lý đặt lịch.',
+    2: 'Đăng nhập để xem và quản lý hoạt động.',
     3: 'Đăng nhập để nhắn tin với mọi người.',
   };
 

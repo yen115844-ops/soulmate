@@ -2,13 +2,13 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-    Bell,
-    Mail,
-    Save,
-    Server,
-    Settings2,
-    Shield,
-    Smartphone
+  Bell,
+  Mail,
+  Save,
+  Server,
+  Settings2,
+  Shield,
+  Smartphone
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -18,23 +18,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import {
-    formToValues,
-    settingsApi,
-    valuesToForm,
-} from "@/lib/api/settings";
 import { handleApiError } from "@/lib/api-client";
+import {
+  formToValues,
+  settingsApi,
+  valuesToForm,
+} from "@/lib/api/settings";
 
 // Types for settings
 interface GeneralSettings {
@@ -42,6 +42,7 @@ interface GeneralSettings {
   appDescription: string;
   supportEmail: string;
   supportPhone: string;
+  supportUrl: string;
   defaultCurrency: string;
   defaultLanguage: string;
   timezone: string;
@@ -81,8 +82,9 @@ interface SecuritySettings {
 const DEFAULT_GENERAL: GeneralSettings = {
   appName: "Mate Social",
   appDescription: "Nền tảng đặt chỗ bạn đồng hành",
-  supportEmail: "support@matesocial.vn",
-  supportPhone: "+84 123 456 789",
+  supportEmail: "ngocbinhan8888@gmail.com",
+  supportPhone: "+84 986 384 628",
+  supportUrl: "https://gomate-cms.vercel.app/support",
   defaultCurrency: "VND",
   defaultLanguage: "vi",
   timezone: "Asia/Ho_Chi_Minh",
@@ -294,6 +296,21 @@ export default function SettingsPage() {
                       setGeneralSettings({ ...generalSettings, supportPhone: e.target.value })
                     }
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="supportUrl">URL trang hỗ trợ (App Store)</Label>
+                  <Input
+                    id="supportUrl"
+                    type="url"
+                    placeholder="https://gomate-cms.vercel.app/support"
+                    value={generalSettings.supportUrl}
+                    onChange={(e) =>
+                      setGeneralSettings({ ...generalSettings, supportUrl: e.target.value })
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    URL này hiển thị trên trang sản phẩm app trên App Store. Nên trỏ tới trang support của CMS.
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="defaultCurrency">Tiền tệ mặc định</Label>

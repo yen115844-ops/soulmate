@@ -9,6 +9,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../data/partner_repository.dart'; // for PartnerBooking model
 import '../bloc/partner_bookings_bloc.dart';
 import '../bloc/partner_bookings_event.dart';
@@ -74,7 +75,7 @@ class _PartnerBookingsContentState extends State<_PartnerBookingsContent>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-         title:   Text('Quản lý lịch hẹn', style: TextStyle(
+         title:   Text('Quản lý hoạt động', style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: context.theme.colorScheme.onSurface,
@@ -177,7 +178,7 @@ class _PartnerBookingsContentState extends State<_PartnerBookingsContent>
                 // Upcoming
                 _BookingsList(
                   bookings: loadedState.upcomingBookings,
-                  emptyMessage: 'Không có lịch hẹn sắp tới',
+                  emptyMessage: 'Không có hoạt động sắp tới',
                   showActions: true,
                   processingBookingId: processingBookingId,
                   onRefresh: () async {
@@ -189,7 +190,7 @@ class _PartnerBookingsContentState extends State<_PartnerBookingsContent>
                 // Completed
                 _BookingsList(
                   bookings: loadedState.completedBookings,
-                  emptyMessage: 'Chưa có lịch hẹn hoàn thành',
+                  emptyMessage: 'Chưa có hoạt động hoàn thành',
                   onRefresh: () async {
                     context
                         .read<PartnerBookingsBloc>()
@@ -227,7 +228,7 @@ class _ErrorView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: ResponsiveLayout.pagePadding(context),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -300,7 +301,7 @@ class _BookingsList extends StatelessWidget {
     return RefreshIndicator(
       onRefresh: onRefresh,
       child: ListView.builder(
-        padding: const EdgeInsets.all(20),
+        padding: ResponsiveLayout.pagePadding(context).copyWith(bottom: 24),
         itemCount: bookings.length,
         itemBuilder: (context, index) {
           final booking = bookings[index];

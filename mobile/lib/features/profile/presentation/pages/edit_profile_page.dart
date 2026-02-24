@@ -9,6 +9,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../shared/bloc/master_data_bloc.dart';
 import '../../../../shared/data/models/master_data_models.dart';
@@ -300,7 +301,7 @@ class _EditProfileContentState extends State<_EditProfileContent> {
           return Form(
             key: _formKey,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: ResponsiveLayout.pagePadding(context).copyWith(top: 20, bottom: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

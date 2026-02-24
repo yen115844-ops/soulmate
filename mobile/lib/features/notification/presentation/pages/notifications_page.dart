@@ -8,6 +8,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/data/models/notification_models.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../bloc/notification_bloc.dart';
@@ -99,7 +100,7 @@ class _NotificationsPageContent extends StatelessWidget {
                   return false;
                 },
                 child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: EdgeInsets.symmetric(horizontal: ResponsiveLayout.horizontalPadding(context), vertical: 8),
                   itemCount: state.notifications.length +
                       (state.isLoadingMore ? 1 : 0),
                   separatorBuilder: (context, index) =>

@@ -6,6 +6,7 @@ import '../../../../config/routes/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 
 /// Hiển thị sau khi tạo booking thành công
@@ -23,7 +24,7 @@ class BookingConfirmationPage extends StatelessWidget {
         bottom: false,
 
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: ResponsiveLayout.pagePadding(context),
           child: Column(
             children: [
               const Spacer(),
@@ -42,14 +43,14 @@ class BookingConfirmationPage extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               Text(
-                'Đặt lịch thành công!',
+                'Tạo hoạt động thành công!',
                 style: AppTypography.headlineSmall,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
               if (bookingCode != null && bookingCode!.isNotEmpty)
                 Text(
-                  'Mã đặt lịch: $bookingCode',
+                  'Mã hoạt động: $bookingCode',
                   style: AppTypography.titleMedium.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w600,
@@ -57,7 +58,7 @@ class BookingConfirmationPage extends StatelessWidget {
                 ),
               const SizedBox(height: 8),
               Text(
-                'Partner sẽ xác nhận lịch hẹn của bạn. Bạn có thể xem chi tiết và trạng thái trong mục Đặt lịch.',
+                'Lời mời đã được gửi. Bạn có thể xem chi tiết và trạng thái trong mục Hoạt động.',
                 style: AppTypography.bodyMedium.copyWith(
                   color: context.appColors.textSecondary,
                 ),
@@ -66,7 +67,7 @@ class BookingConfirmationPage extends StatelessWidget {
               const Spacer(),
               if (bookingId != null && bookingId!.isNotEmpty)
                 AppButton(
-                  text: 'Xem chi tiết đặt lịch',
+                  text: 'Xem chi tiết hoạt động',
                   icon: Ionicons.document_text_outline,
                   onPressed: () => context.push('/booking/$bookingId'),
                 ),

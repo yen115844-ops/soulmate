@@ -9,6 +9,7 @@ import '../../../../config/routes/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
@@ -130,10 +131,13 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
           appBar: AppBar(leading: const AppBackButton()),
           body: SafeArea(
             bottom: false,
-
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
+            child: ResponsiveCenterWrapper(
+              child: Padding(
+                padding: ResponsiveLayout.pagePadding(context).copyWith(
+                  top: 24,
+                  bottom: 24,
+                ),
+                child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Icon
@@ -247,6 +251,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                   ),
                 ],
               ),
+            ),
             ),
           ),
         );

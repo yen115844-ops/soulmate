@@ -14,6 +14,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../core/theme/theme_cubit.dart';
 import '../../../../core/utils/image_utils.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
@@ -257,8 +258,8 @@ class _SettingsContent extends StatelessWidget {
                 child: InkWell(
                   onTap: isUpdating ? null : onAvatarTap,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: ResponsiveLayout.horizontalPadding(context),
                       vertical: 16,
                     ),
                     child: Row(
@@ -866,8 +867,9 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final padding = ResponsiveLayout.pagePadding(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+      padding: padding.copyWith(top: 24, bottom: 8),
       child: Text(
         title,
         style: AppTypography.titleSmall.copyWith(
@@ -906,7 +908,10 @@ class _SettingsTile extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          padding: EdgeInsets.symmetric(
+            horizontal: ResponsiveLayout.horizontalPadding(context),
+            vertical: 12,
+          ),
           child: Row(
             children: [
               Container(

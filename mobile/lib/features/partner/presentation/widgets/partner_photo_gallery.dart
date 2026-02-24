@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../data/models/partner_profile_model.dart';
 import 'fullscreen_image_viewer.dart';
 
@@ -90,8 +91,14 @@ class PartnerPhotoGallery extends StatelessWidget {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: ResponsiveLayout.gridCrossAxisCount(
+          context,
+          minCellWidth: 90,
+          horizontalPadding: 40,
+          spacing: 8,
+          maxColumns: 6,
+        ),
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
         childAspectRatio: 1,

@@ -151,7 +151,7 @@ class PartnerServicesSection extends StatelessWidget {
     if (services.isEmpty) return const SizedBox.shrink();
 
     return _SectionContainer(
-      title: 'Dịch vụ',
+      title: 'Hoạt động',
       icon: Ionicons.briefcase_outline,
       child: Wrap(
         spacing: 10,
