@@ -18,6 +18,11 @@ class TermsRepository {
     return _fetchTerms(TermsEndpoints.termsAndConditions);
   }
 
+  /// Fetch Privacy Policy content (Markdown string)
+  Future<String> getPrivacyPolicy() async {
+    return _fetchTerms(TermsEndpoints.privacyPolicy);
+  }
+
   Future<String> _fetchTerms(String endpoint) async {
     final response = await _apiClient.get(endpoint);
     final responseData = response.data as Map<String, dynamic>;

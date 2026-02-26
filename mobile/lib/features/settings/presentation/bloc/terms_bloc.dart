@@ -13,6 +13,7 @@ class TermsBloc extends Bloc<TermsEvent, TermsState> {
         super(const TermsInitial()) {
     on<LoadTermsOfService>(_onLoadTermsOfService);
     on<LoadTermsAndConditions>(_onLoadTermsAndConditions);
+    on<LoadPrivacyPolicy>(_onLoadPrivacyPolicy);
   }
 
   Future<void> _onLoadTermsOfService(
@@ -41,6 +42,21 @@ class TermsBloc extends Bloc<TermsEvent, TermsState> {
     } catch (e) {
       emit(TermsError(
         message: 'Không thể tải điều kiện sử dụng. Vui lòng thử lại.',
+      ));
+    }
+  }
+
+  Future<void> _onLoadPrivacyPolicy(
+    LoadPrivacyPolicy event,
+    Emitter<TermsState> emit,
+  ) async {
+    emit(const TermsLoading());
+    try {
+      final content = await _repository.getPrivacyPolicy();
+      emit(TermsLoaded(content: content));
+    } catch (e) {
+      emit(TermsError(
+        message: 'Không thể tải chính sách bảo mật. Vui lòng thử lại.',
       ));
     }
   }

@@ -12,9 +12,9 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
-import '../../../../core/utils/responsive.dart';
 import '../../../../core/theme/theme_cubit.dart';
 import '../../../../core/utils/image_utils.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/auth_guard.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
@@ -502,13 +502,17 @@ class _ProfileContent extends StatelessWidget {
   }
 
   void _showLogoutDialog(BuildContext context) {
+    // Capture bloc reference before opening dialog so we don't
+    // access the parent context after it may have been disposed.
+    final authBloc = context.read<AuthBloc>();
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Đăng xuất', style: TextStyle(fontWeight: FontWeight.w600,color: AppColors.error)),
-        content:   Text('Bạn có chắc chắn muốn đăng xuất?',
-            style: TextStyle(color: context.theme.colorScheme.onSurface)
+        title: const Text('Đăng xuất', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.error)),
+        content: Text(
+          'Bạn có chắc chắn muốn đăng xuất?',
+          style: TextStyle(color: Theme.of(dialogContext).colorScheme.onSurface),
         ),
         actions: [
           TextButton(
@@ -518,9 +522,9 @@ class _ProfileContent extends StatelessWidget {
           TextButton(
             onPressed: () {
               Navigator.pop(dialogContext);
-              context.read<AuthBloc>().add(const AuthLogoutRequested());
+              authBloc.add(const AuthLogoutRequested());
             },
-            child: Text('Đăng xuất', style: TextStyle(color: AppColors.error)),
+            child: const Text('Đăng xuất', style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),

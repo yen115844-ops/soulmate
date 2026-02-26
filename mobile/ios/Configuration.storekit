@@ -1,0 +1,108 @@
+{
+  "identifier" : "A1B2C3D4",
+  "nonRenewingSubscriptions" : [],
+  "products" : [],
+  "settings" : {},
+  "subscriptionGroups" : [
+    {
+      "id" : "premium",
+      "localizations" : [
+        {
+          "displayName" : "Mimate Premium",
+          "locale" : "vi_VN"
+        }
+      ],
+      "name" : "Mimate Premium",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "49000",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "SUB_1W",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Dùng thử tính năng premium trong 1 tuần",
+              "displayName" : "Premium 1 tuần",
+              "locale" : "vi_VN"
+            }
+          ],
+          "productID" : "premium_1w",
+          "recurringSubscriptionPeriod" : "P1W",
+          "referenceName" : "Premium 1 Week",
+          "subscriptionGroupID" : "premium",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "99000",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "SUB_1M",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Mở khóa mọi tính năng premium trong 1 tháng",
+              "displayName" : "Premium 1 tháng",
+              "locale" : "vi_VN"
+            }
+          ],
+          "productID" : "premium_1m",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Premium 1 Month",
+          "subscriptionGroupID" : "premium",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "249000",
+          "familyShareable" : false,
+          "groupNumber" : 3,
+          "internalID" : "SUB_3M",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Mở khóa mọi tính năng premium trong 3 tháng. Tiết kiệm 16%!",
+              "displayName" : "Premium 3 tháng",
+              "locale" : "vi_VN"
+            }
+          ],
+          "productID" : "premium_3m",
+          "recurringSubscriptionPeriod" : "P3M",
+          "referenceName" : "Premium 3 Months",
+          "subscriptionGroupID" : "premium",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "699000",
+          "familyShareable" : false,
+          "groupNumber" : 4,
+          "internalID" : "SUB_12M",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Mở khóa mọi tính năng premium trong 1 năm. Giá tốt nhất - Tiết kiệm 41%!",
+              "displayName" : "Premium 12 tháng",
+              "locale" : "vi_VN"
+            }
+          ],
+          "productID" : "premium_12m",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Premium 12 Months",
+          "subscriptionGroupID" : "premium",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 2,
+    "minor" : 0
+  }
+}

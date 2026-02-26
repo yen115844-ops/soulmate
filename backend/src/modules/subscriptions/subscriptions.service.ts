@@ -3,13 +3,15 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { NotificationType, SubscriptionStatus } from '../../generated/prisma/client';
 import { NotificationsService } from '../notifications';
+import { AppleIapService } from './apple-iap.service';
 import { VerifyPurchaseDto } from './dto';
- 
+
 @Injectable()
 export class SubscriptionsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
+    private readonly appleIap: AppleIapService,
   ) {}
 
   // ==================== Public APIs ====================
@@ -74,8 +76,12 @@ export class SubscriptionsService {
    * Verify IAP purchase and activate subscription
    */
   async verifyPurchase(userId: string, dto: VerifyPurchaseDto) {
-    // Verify receipt with Apple/Google
-    const verificationResult = await this.verifyReceipt(dto);
+    const verificationResult = await this.verifyReceipt({
+      platform: dto.platform,
+      receiptData: dto.receiptData,
+      productId: dto.productId,
+      transactionId: dto.transactionId,
+    });
 
     if (!verificationResult.isValid) {
       throw new BadRequestException('Invalid purchase receipt');
@@ -327,48 +333,70 @@ export class SubscriptionsService {
   }
 
   /**
-   * Verify receipt with Apple/Google (placeholder for actual implementation)
+   * Verify receipt with Apple/Google.
+   * iOS: App Store Server API (when transactionId + key in .env) or legacy verifyReceipt (receiptData + APPLE_SHARED_SECRET).
    */
   private async verifyReceipt(dto: {
     platform: 'ios' | 'android';
     receiptData: string;
     productId: string;
+    transactionId?: string;
   }): Promise<{
     isValid: boolean;
     transactionId?: string;
     originalTransactionId?: string;
     expiresAt?: Date;
   }> {
-    // In production, implement actual verification:
-    // iOS: https://developer.apple.com/documentation/storekit/in-app_purchase/original_api_for_in-app_purchase/validating_receipts_with_the_app_store
-    // Android: https://developer.android.com/google/play/billing/integrate
-
-    // For development, simulate successful verification
     if (process.env.NODE_ENV !== 'production') {
       return {
         isValid: true,
         transactionId: `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         originalTransactionId: `orig_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       };
     }
 
-    // Production: Call Apple/Google APIs
     if (dto.platform === 'ios') {
-      return this.verifyAppleReceipt(dto.receiptData);
-    } else {
-      return this.verifyGoogleReceipt(dto.receiptData, dto.productId);
+      return this.verifyAppleReceipt(dto.receiptData, dto.transactionId);
     }
+    return this.verifyGoogleReceipt(dto.receiptData, dto.productId);
   }
 
-  private async verifyAppleReceipt(receiptData: string): Promise<{
+  private async verifyAppleReceipt(
+    receiptData: string,
+    transactionId?: string,
+  ): Promise<{
     isValid: boolean;
     transactionId?: string;
     originalTransactionId?: string;
     expiresAt?: Date;
   }> {
-    // TODO: Implement Apple receipt verification
-    // https://developer.apple.com/documentation/appstoreserverapi
+    // 1) If transactionId provided and Apple IAP key in .env → App Store Server API
+    if (transactionId) {
+      const result = await this.appleIap.getTransactionInfo(transactionId);
+      if (result.ok) {
+        return {
+          isValid: true,
+          transactionId: result.info.transactionId,
+          originalTransactionId: result.info.originalTransactionId,
+          expiresAt: result.info.expiresDate
+            ? new Date(result.info.expiresDate)
+            : undefined,
+        };
+      }
+    }
+
+    // 2) Legacy verifyReceipt (receipt-data + APPLE_SHARED_SECRET)
+    const legacy = await this.appleIap.verifyReceiptLegacy(receiptData);
+    if (legacy.isValid) {
+      return {
+        isValid: true,
+        transactionId: legacy.transactionId,
+        originalTransactionId: legacy.originalTransactionId,
+        expiresAt: legacy.expiresAt,
+      };
+    }
+
     return { isValid: false };
   }
 

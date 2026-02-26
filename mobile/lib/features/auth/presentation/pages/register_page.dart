@@ -58,7 +58,7 @@ class _RegisterPageState extends State<RegisterPage> {
         AuthRegisterRequested(
           email: _emailController.text.trim(),
           password: _passwordController.text,
-          phone: _phoneController.text.trim(),
+          phone: _phoneController.text.trim().isEmpty ? '' : _phoneController.text.trim(),
           fullName: _nameController.text.trim(),
         ),
       );
@@ -211,15 +211,12 @@ class _RegisterPageState extends State<RegisterPage> {
 
                     const SizedBox(height: 16),
 
-                    // Phone
+                    // Phone (optional per Guideline 5.1.1 - only require info necessary for core functionality)
                     PhoneTextField(
                       controller: _phoneController,
                       enabled: !isLoading,
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Vui lòng nhập số điện thoại';
-                        }
-                        if (value.length < 10) {
+                        if (value != null && value.isNotEmpty && value.length < 10) {
                           return 'Số điện thoại không hợp lệ';
                         }
                         return null;

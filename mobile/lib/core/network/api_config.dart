@@ -12,7 +12,7 @@ class ApiConfig {
   /// In debug mode, falls back to localhost; in release mode, uses production URL.
   static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL');
   static const String _defaultDebugUrl =
-      'http://localhost:3222/api'; // For development, use localhost or
+      'https://gomate-backend.trancongtien.io.vn/api'; // For development, use localhost or
   static const String _defaultReleaseUrl =
       'https://gomate-backend.trancongtien.io.vn/api'; // TODO: Replace with real production URL
 
@@ -151,4 +151,5 @@ class TermsEndpoints {
       '${ApiConfig.publicTerms}/terms-of-service';
   static String termsAndConditions =
       '${ApiConfig.publicTerms}/terms-and-conditions';
+  static String privacyPolicy = '${ApiConfig.publicTerms}/privacy-policy';
 }

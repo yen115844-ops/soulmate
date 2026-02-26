@@ -18,4 +18,11 @@ export class UpdateTermsDto {
   @IsOptional()
   @IsString()
   termsAndConditions?: string;
+
+  @ApiPropertyOptional({
+    description: 'Privacy Policy content (HTML or Markdown)',
+  })
+  @IsOptional()
+  @IsString()
+  privacyPolicy?: string;
 }

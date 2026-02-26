@@ -17,3 +17,8 @@ class LoadTermsOfService extends TermsEvent {
 class LoadTermsAndConditions extends TermsEvent {
   const LoadTermsAndConditions();
 }
+
+/// Load privacy policy content
+class LoadPrivacyPolicy extends TermsEvent {
+  const LoadPrivacyPolicy();
+}

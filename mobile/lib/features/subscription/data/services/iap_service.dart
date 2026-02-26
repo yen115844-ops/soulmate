@@ -19,6 +19,8 @@ class IAPService {
   
   // Cached products
   List<ProductDetails> _products = [];
+  /// Product IDs that were requested but not found by the store (e.g. not yet approved).
+  Set<String> _lastNotFoundIDs = {};
   bool _isAvailable = false;
 
   /// Initialize IAP and start listening to purchase updates
@@ -57,9 +59,10 @@ class IAPService {
     }
 
     final response = await _inAppPurchase.queryProductDetails(productIds);
-    
-    if (response.notFoundIDs.isNotEmpty) {
-      debugPrint('IAP: Products not found: ${response.notFoundIDs}');
+
+    _lastNotFoundIDs = response.notFoundIDs.toSet();
+    if (_lastNotFoundIDs.isNotEmpty) {
+      debugPrint('IAP: Products not found: $_lastNotFoundIDs');
     }
 
     _products = response.productDetails;
@@ -79,6 +82,9 @@ class IAPService {
       return null;
     }
   }
+
+  /// IDs that were not found in the last fetch (e.g. not yet approved on App Store).
+  Set<String> get lastNotFoundIDs => Set.from(_lastNotFoundIDs);
 
   /// Purchase a product (subscription)
   Future<bool> purchaseProduct(ProductDetails product) async {

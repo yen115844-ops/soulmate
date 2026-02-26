@@ -33,32 +33,34 @@ export class SettingsController {
   }
 
   @Get('terms')
-  @ApiOperation({ summary: 'Get terms content (Admin)' })
-  @ApiResponse({ status: 200, description: 'Terms of service and terms and conditions' })
+  @ApiOperation({ summary: 'Get terms and privacy content (Admin)' })
+  @ApiResponse({ status: 200, description: 'Terms of service, terms and conditions, privacy policy' })
   async getTerms() {
-    const [termsOfService, termsAndConditions] = await Promise.all([
+    const [termsOfService, termsAndConditions, privacyPolicy] = await Promise.all([
       this.settingsService.getTermsContent('terms_of_service'),
       this.settingsService.getTermsContent('terms_and_conditions'),
+      this.settingsService.getPrivacyPolicyContent(),
     ]);
-    return { termsOfService, termsAndConditions };
+    return { termsOfService, termsAndConditions, privacyPolicy };
   }
 
   @Put('terms')
-  @ApiOperation({ summary: 'Update terms content (Admin)' })
-  @ApiResponse({ status: 200, description: 'Updated terms' })
+  @ApiOperation({ summary: 'Update terms/privacy content (Admin)' })
+  @ApiResponse({ status: 200, description: 'Updated terms and privacy' })
   async updateTerms(@Body() dto: UpdateTermsDto) {
     const values: Record<string, string> = {};
     if (dto.termsOfService !== undefined) values.terms_of_service = dto.termsOfService;
     if (dto.termsAndConditions !== undefined)
       values.terms_and_conditions = dto.termsAndConditions;
+    if (dto.privacyPolicy !== undefined) values.privacy_policy = dto.privacyPolicy;
     if (Object.keys(values).length > 0) {
       await this.settingsService.updateValues(values);
     }
-    return this.settingsService.getTermsContent('terms_of_service').then(
-      (termsOfService) =>
-        this.settingsService.getTermsContent('terms_and_conditions').then(
-          (termsAndConditions) => ({ termsOfService, termsAndConditions }),
-        ),
-    );
+    const [termsOfService, termsAndConditions, privacyPolicy] = await Promise.all([
+      this.settingsService.getTermsContent('terms_of_service'),
+      this.settingsService.getTermsContent('terms_and_conditions'),
+      this.settingsService.getPrivacyPolicyContent(),
+    ]);
+    return { termsOfService, termsAndConditions, privacyPolicy };
   }
 }

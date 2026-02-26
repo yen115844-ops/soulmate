@@ -1,11 +1,14 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:intl/intl.dart';
 import 'package:ionicons/ionicons.dart';
 
+import '../../../../config/routes/route_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -81,6 +84,7 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
           platform: _iapService.platform,
           productId: purchase.productID,
           receiptData: receiptData,
+          transactionId: purchase.purchaseID,
         ),
       );
     }
@@ -170,12 +174,26 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
 
     final product = _iapService.getProduct(productId);
     if (product == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Không tìm thấy sản phẩm'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      final notFoundIds = _iapService.lastNotFoundIDs;
+      final isNotApproved = notFoundIds.contains(productId);
+      String message = 'Không tìm thấy sản phẩm';
+      if (kDebugMode) {
+        message = 'Không tìm thấy sản phẩm ($productId). ';
+        if (isNotApproved) {
+          message += 'Sản phẩm có thể chưa duyệt trên App Store. Để test: mở project bằng Xcode → Edit Scheme → Run → Options → StoreKit Configuration chọn file .storekit có cùng product ID.';
+        } else {
+          message += 'Kiểm tra appleProductId trong backend khớp với App Store Connect.';
+        }
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 6),
+          ),
+        );
+      }
       return;
     }
 
@@ -474,6 +492,18 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
           _buildPremiumHeader(context),
           const SizedBox(height: 24),
 
+          // Dev hint when IAP products not available (e.g. not yet approved)
+          if (kDebugMode &&
+              state.plans.isNotEmpty &&
+              _iapProducts.isEmpty &&
+              _iapInitialized)
+            _buildDevIAPHint(context),
+          if (kDebugMode &&
+              state.plans.isNotEmpty &&
+              _iapProducts.isEmpty &&
+              _iapInitialized)
+            const SizedBox(height: 12),
+
           // Plans section FIRST (before features)
           _buildPlansSection(context, state),
           const SizedBox(height: 24),
@@ -539,6 +569,33 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
     );
   }
 
+  Widget _buildDevIAPHint(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.info.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.info.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        children: [
+          Icon(Ionicons.code_slash, color: AppColors.info, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Dev: Sản phẩm IAP chưa trả về từ store. Để test: dùng Xcode → Edit Scheme → Run → Options → StoreKit Configuration → chọn file .storekit (product ID khớp backend).',
+              style: AppTypography.bodySmall.copyWith(
+                color: context.appColors.textSecondary,
+                height: 1.3,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPlansSection(BuildContext context, SubscriptionState state) {
     final plans = state.plans;
 
@@ -584,10 +641,9 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
       decimalDigits: 0,
     );
 
-    final isPopular = plan.code == 'premium_3m';
     final isBestValue = _findBestValuePlan(allPlans)?.id == plan.id;
 
-    // Calculate duration label
+    // Display name: prefer API nameVi (e.g. "Premium 1 tuần"), fallback to duration-based label
     String durationLabel;
     if (plan.isWeekly) {
       durationLabel = '1 Tuần';
@@ -596,15 +652,18 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
     } else {
       durationLabel = '${plan.durationMonths} Tháng';
     }
+    final displayName = plan.nameVi.isNotEmpty ? plan.nameVi : durationLabel;
 
-    // Calculate savings
-    final monthlyPlan = allPlans.where((p) => p.code == 'premium_1m').firstOrNull;
-    int? savingsPercent;
-    if (monthlyPlan != null && plan.durationMonths > 1) {
-      final monthlyRate = monthlyPlan.priceVnd;
-      final thisMonthlyRate = plan.monthlyPrice;
-      savingsPercent = ((1 - (thisMonthlyRate / monthlyRate)) * 100).round();
-    }
+    final cardColor = isSelected
+        ? AppColors.primary.withValues(alpha: 0.1)
+        : (isBestValue
+            ? AppColors.primary.withValues(alpha: 0.05)
+            : context.appColors.surface);
+    final borderColor = isSelected
+        ? AppColors.primary
+        : (isBestValue
+            ? AppColors.primary.withValues(alpha: 0.4)
+            : context.appColors.border);
 
     return GestureDetector(
       onTap: () {
@@ -617,12 +676,10 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.1)
-              : context.appColors.surface,
+          color: cardColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? AppColors.primary : context.appColors.border,
+            color: borderColor,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -651,53 +708,14 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Text(
-                        durationLabel,
-                        style: AppTypography.titleMedium.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: context.appColors.textPrimary,
-                        ),
-                      ),
-                      if (isPopular) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFFF6B6B), Color(0xFFFF8E53)],
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '🔥 Phổ biến',
-                            style: AppTypography.labelSmall.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 10,
-                            ),
-                          ),
-                        ),
-                      ] else if (isBestValue && savingsPercent != null && savingsPercent > 0) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: AppColors.success,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '💎 -$savingsPercent%',
-                            style: AppTypography.labelSmall.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 10,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
+                  Text(
+                    displayName,
+                    style: AppTypography.titleMedium.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: context.appColors.textPrimary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                   if (plan.durationMonths > 1)
                     Text(
@@ -786,6 +804,7 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          SizedBox(height: 16),
           Row(
             children: [
               Icon(Ionicons.sparkles, color: AppColors.primary, size: 22),
@@ -890,26 +909,26 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
         ),
         const SizedBox(height: 12),
         
-        // Links
+        // Required: functional links to Terms of Use (EULA) and Privacy Policy (Guideline 3.1.2)
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextButton(
-              onPressed: () {},
+              onPressed: () => context.push(RouteNames.termsOfService),
               child: Text(
-                'Điều khoản',
+                'Điều khoản sử dụng (EULA)',
                 style: AppTypography.bodySmall.copyWith(
-                  color: context.appColors.textSecondary,
+                  color: AppColors.primary,
                 ),
               ),
             ),
             Text('•', style: TextStyle(color: context.appColors.textHint)),
             TextButton(
-              onPressed: () {},
+              onPressed: () => context.push(RouteNames.privacyPolicy),
               child: Text(
-                'Chính sách',
+                'Chính sách bảo mật',
                 style: AppTypography.bodySmall.copyWith(
-                  color: context.appColors.textSecondary,
+                  color: AppColors.primary,
                 ),
               ),
             ),

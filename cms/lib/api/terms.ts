@@ -4,7 +4,7 @@ import apiClient from "@/lib/api-client";
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
 
-export type TermsType = "terms-of-service" | "terms-and-conditions";
+export type TermsType = "terms-of-service" | "terms-and-conditions" | "privacy-policy";
 
 export interface TermsResponse {
   content: string;
@@ -13,6 +13,7 @@ export interface TermsResponse {
 export interface AdminTermsResponse {
   termsOfService: string;
   termsAndConditions: string;
+  privacyPolicy: string;
 }
 
 export const termsApi = {
@@ -36,10 +37,11 @@ export const termsApi = {
     return d as AdminTermsResponse;
   },
 
-  /** Admin - update terms contents */
+  /** Admin - update terms/privacy contents */
   updateAdmin: async (data: {
     termsOfService?: string;
     termsAndConditions?: string;
+    privacyPolicy?: string;
   }): Promise<AdminTermsResponse> => {
     const res = await apiClient.put("/admin/settings/terms", data);
     const d = res.data as unknown;

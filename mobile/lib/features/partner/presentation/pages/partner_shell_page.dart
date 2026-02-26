@@ -75,7 +75,7 @@ class _PartnerBottomNavigationBar extends StatelessWidget {
               ),
               _NavItem(
                 icon: Ionicons.wallet_outline,
-                label: 'Thu nhập',
+                label: 'Thông kê',
                 isSelected: currentIndex == 2,
                 onTap: () => onTap(2),
               ),

@@ -36,15 +36,17 @@ class SubscriptionPurchaseCompleted extends SubscriptionEvent {
   final String platform;
   final String productId;
   final String receiptData;
+  final String? transactionId;
 
   const SubscriptionPurchaseCompleted({
     required this.platform,
     required this.productId,
     required this.receiptData,
+    this.transactionId,
   });
 
   @override
-  List<Object?> get props => [platform, productId, receiptData];
+  List<Object?> get props => [platform, productId, receiptData, transactionId];
 }
 
 /// Restore purchases

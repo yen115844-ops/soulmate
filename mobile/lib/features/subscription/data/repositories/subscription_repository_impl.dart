@@ -50,17 +50,21 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     required String platform,
     required String productId,
     required String receiptData,
+    String? transactionId,
   }) async {
+    final body = <String, dynamic>{
+      'platform': platform,
+      'productId': productId,
+      'receiptData': receiptData,
+    };
+    if (transactionId != null && transactionId.isNotEmpty) {
+      body['transactionId'] = transactionId;
+    }
     await _apiClient.post(
       '${ApiConfig.baseUrl}/subscriptions/verify-purchase',
-      data: {
-        'platform': platform,
-        'productId': productId,
-        'receiptData': receiptData,
-      },
+      data: body,
     );
 
-    // After successful purchase, get updated status
     return getStatus();
   }
 

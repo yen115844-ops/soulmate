@@ -84,23 +84,24 @@ class RegisterRequest {
   });
 
   Map<String, dynamic> toJson() {
-    // Format phone number with country code if not present
-    String formattedPhone = phone;
-    if (!phone.startsWith('+')) {
-      // Remove leading 0 if present and add +84 (Vietnam)
-      if (phone.startsWith('0')) {
-        formattedPhone = '+84${phone.substring(1)}';
-      } else {
-        formattedPhone = '+84$phone';
-      }
-    }
-    
-    return {
+    final data = <String, dynamic>{
       'email': email,
       'password': password,
-      'phone': formattedPhone,
       'fullName': fullName,
     };
+    // Only send phone when provided (optional per Guideline 5.1.1)
+    if (phone.isNotEmpty) {
+      String formattedPhone = phone;
+      if (!phone.startsWith('+')) {
+        if (phone.startsWith('0')) {
+          formattedPhone = '+84${phone.substring(1)}';
+        } else {
+          formattedPhone = '+84$phone';
+        }
+      }
+      data['phone'] = formattedPhone;
+    }
+    return data;
   }
 }
 

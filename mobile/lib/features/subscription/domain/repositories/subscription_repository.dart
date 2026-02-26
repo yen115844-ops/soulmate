@@ -9,10 +9,12 @@ abstract class SubscriptionRepository {
   Future<PremiumStatusEntity> getStatus();
 
   /// Verify purchase and activate subscription
+  /// [transactionId] Optional; on iOS (purchaseID) enables App Store Server API when backend has key in .env.
   Future<PremiumStatusEntity> verifyPurchase({
     required String platform,
     required String productId,
     required String receiptData,
+    String? transactionId,
   });
 
   /// Restore previous purchases

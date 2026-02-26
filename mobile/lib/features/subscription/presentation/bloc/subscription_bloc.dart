@@ -82,6 +82,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
         platform: event.platform,
         productId: event.productId,
         receiptData: event.receiptData,
+        transactionId: event.transactionId,
       );
       emit(state.copyWith(
         status: SubscriptionStateStatus.success,

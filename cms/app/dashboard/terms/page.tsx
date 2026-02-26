@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileText, Save, Loader2 } from "lucide-react";
+import { FileText, Save, Loader2, ShieldCheck } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -18,6 +18,7 @@ export default function TermsEditorPage() {
   const [activeTab, setActiveTab] = useState("terms-of-service");
   const [termsOfService, setTermsOfService] = useState("");
   const [termsAndConditions, setTermsAndConditions] = useState("");
+  const [privacyPolicy, setPrivacyPolicy] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   const { data, isLoading } = useQuery({
@@ -29,6 +30,7 @@ export default function TermsEditorPage() {
     if (data) {
       setTermsOfService(data.termsOfService);
       setTermsAndConditions(data.termsAndConditions);
+      setPrivacyPolicy(data.privacyPolicy ?? "");
     }
   }, [data]);
 
@@ -60,6 +62,20 @@ export default function TermsEditorPage() {
     }
   };
 
+  const handleSavePrivacyPolicy = async () => {
+    setIsSaving(true);
+    try {
+      await termsApi.updateAdmin({ privacyPolicy });
+      await queryClient.invalidateQueries({ queryKey: ["admin", "terms"] });
+      await queryClient.invalidateQueries({ queryKey: ["public", "terms", "privacy-policy"] });
+      toast.success("Đã lưu Chính sách bảo mật");
+    } catch (err) {
+      toast.error(handleApiError(err) || "Lưu thất bại");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -76,14 +92,14 @@ export default function TermsEditorPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Điều khoản & Điều kiện</h1>
+        <h1 className="text-3xl font-bold">Điều khoản, Điều kiện & Chính sách bảo mật</h1>
         <p className="text-muted-foreground">
-          Chỉnh sửa nội dung Điều khoản sử dụng và Điều kiện sử dụng. Hỗ trợ Markdown (# tiêu đề, ## tiêu đề nhỏ, - danh sách).
+          Chỉnh sửa nội dung Điều khoản sử dụng, Điều kiện sử dụng và Chính sách bảo mật. Hỗ trợ Markdown (# tiêu đề, ## tiêu đề nhỏ, - danh sách).
         </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList className="grid w-full max-w-2xl grid-cols-3">
           <TabsTrigger value="terms-of-service" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Điều khoản sử dụng
@@ -91,6 +107,10 @@ export default function TermsEditorPage() {
           <TabsTrigger value="terms-and-conditions" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Điều kiện sử dụng
+          </TabsTrigger>
+          <TabsTrigger value="privacy-policy" className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4" />
+            Chính sách bảo mật
           </TabsTrigger>
         </TabsList>
 
@@ -146,6 +166,38 @@ export default function TermsEditorPage() {
               />
               <div className="flex justify-end">
                 <Button onClick={handleSaveTermsAndConditions} disabled={isSaving}>
+                  {isSaving ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="mr-2 h-4 w-4" />
+                  )}
+                  {isSaving ? "Đang lưu..." : "Lưu"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="privacy-policy" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Chính sách bảo mật</CardTitle>
+              <CardDescription>
+                Nội dung hiển thị tại trang /privacy-policy và trong ứng dụng. Dùng Markdown: # tiêu đề, ## mục, - danh sách.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <MarkdownEditor
+                value={privacyPolicy}
+                onChange={(v) => setPrivacyPolicy(v ?? "")}
+                placeholder="# Chính sách bảo mật Mate Social
+
+## 1. Giới thiệu
+..."
+                minHeight={500}
+              />
+              <div className="flex justify-end">
+                <Button onClick={handleSavePrivacyPolicy} disabled={isSaving}>
                   {isSaving ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (

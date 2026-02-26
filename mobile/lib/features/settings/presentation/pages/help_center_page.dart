@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:ionicons/ionicons.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -77,13 +79,15 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
         },
         {
           'question': 'Làm sao để đăng ký Premium?',
-          'answer':
-              'Vào Hồ sơ > Premium > Chọn gói phù hợp và thanh toán qua App Store hoặc Google Play.',
+          'answer': Platform.isIOS
+              ? 'Vào Hồ sơ > Premium > Chọn gói phù hợp và thanh toán qua App Store.'
+              : 'Vào Hồ sơ > Premium > Chọn gói phù hợp và thanh toán qua App Store hoặc Google Play.',
         },
         {
           'question': 'Làm sao để hủy Premium?',
-          'answer':
-              'Bạn có thể hủy đăng ký trong cài đặt App Store hoặc Google Play. Gói sẽ còn hiệu lực đến hết chu kỳ hiện tại.',
+          'answer': Platform.isIOS
+              ? 'Bạn có thể hủy đăng ký trong Cài đặt > [Apple ID] > Đăng ký. Gói sẽ còn hiệu lực đến hết chu kỳ hiện tại.'
+              : 'Bạn có thể hủy đăng ký trong cài đặt App Store hoặc Google Play. Gói sẽ còn hiệu lực đến hết chu kỳ hiện tại.',
         },
       ],
     },

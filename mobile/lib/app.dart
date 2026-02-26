@@ -34,11 +34,15 @@ class App extends StatefulWidget {
 
 class _AppState extends State<App> with WidgetsBindingObserver {
   late final StreamSubscription<AuthState> _authSubscription;
+  late final AuthBloc _authBloc;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    _authBloc = getIt<AuthBloc>()..add(const AuthCheckRequested());
+    AppRouter.init(_authBloc);
 
     _authSubscription = getIt<AuthService>().authStateStream.listen(
       _onAuthStateChanged,
@@ -96,15 +100,10 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final authBloc = getIt<AuthBloc>()..add(const AuthCheckRequested());
-
-    // Initialize GoRouter with AuthBloc so it can react to auth state changes
-    AppRouter.init(authBloc);
-
     return MultiBlocProvider(
       providers: [
         BlocProvider<ThemeCubit>.value(value: getIt<ThemeCubit>()),
-        BlocProvider<AuthBloc>.value(value: authBloc),
+        BlocProvider<AuthBloc>.value(value: _authBloc),
         BlocProvider<FavoritesBloc>.value(value: getIt<FavoritesBloc>()),
         BlocProvider<ProfileBloc>.value(value: getIt<ProfileBloc>()),
         BlocProvider<MasterDataBloc>.value(value: getIt<MasterDataBloc>()),
@@ -113,18 +112,23 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         listener: (context, state) {
           if (state is auth_state.AuthLogoutSuccess ||
               state is auth_state.AuthAccountDeleted) {
-            // User explicitly logged out or deleted account
-            // → reset blocs, disconnect, and navigate to login
-            getIt<ProfileBloc>().add(const ProfileResetRequested());
-            getIt<MasterDataBloc>().add(const MasterDataResetRequested());
-            getIt<ChatSocketService>().disconnect();
-            AppRouter.router.go(RouteNames.login);
+            // User explicitly logged out or deleted account.
+            // GoRouter redirect already navigates to login, so
+            // we only clean up state here. Defer to next frame to
+            // avoid marking widgets dirty during _flushDirtyElements.
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              getIt<ProfileBloc>().add(const ProfileResetRequested());
+              getIt<MasterDataBloc>().add(const MasterDataResetRequested());
+              getIt<ChatSocketService>().disconnect();
+            });
           } else if (state is auth_state.AuthUnauthenticated) {
             // Session expired or token invalid — clear data
             // but stay on browsable route (guest mode)
-            getIt<ProfileBloc>().add(const ProfileResetRequested());
-            getIt<MasterDataBloc>().add(const MasterDataResetRequested());
-            getIt<ChatSocketService>().disconnect();
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              getIt<ProfileBloc>().add(const ProfileResetRequested());
+              getIt<MasterDataBloc>().add(const MasterDataResetRequested());
+              getIt<ChatSocketService>().disconnect();
+            });
           } else if (state is auth_state.AuthAuthenticated ||
               state is auth_state.AuthNeedsProfileSetup) {
             getIt<ChatSocketService>().connect();
