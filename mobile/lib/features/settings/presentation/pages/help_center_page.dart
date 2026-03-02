@@ -81,13 +81,13 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
           'question': 'Làm sao để đăng ký Premium?',
           'answer': Platform.isIOS
               ? 'Vào Hồ sơ > Premium > Chọn gói phù hợp và thanh toán qua App Store.'
-              : 'Vào Hồ sơ > Premium > Chọn gói phù hợp và thanh toán qua App Store hoặc Google Play.',
+            : 'Vào Hồ sơ > Premium > Chọn gói phù hợp và thanh toán qua cửa hàng ứng dụng trên thiết bị của bạn.',
         },
         {
           'question': 'Làm sao để hủy Premium?',
           'answer': Platform.isIOS
               ? 'Bạn có thể hủy đăng ký trong Cài đặt > [Apple ID] > Đăng ký. Gói sẽ còn hiệu lực đến hết chu kỳ hiện tại.'
-              : 'Bạn có thể hủy đăng ký trong cài đặt App Store hoặc Google Play. Gói sẽ còn hiệu lực đến hết chu kỳ hiện tại.',
+            : 'Bạn có thể hủy đăng ký trong cài đặt tài khoản cửa hàng ứng dụng trên thiết bị. Gói sẽ còn hiệu lực đến hết chu kỳ hiện tại.',
         },
       ],
     },

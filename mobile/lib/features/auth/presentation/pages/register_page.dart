@@ -317,6 +317,10 @@ class _RegisterPageState extends State<RegisterPage> {
                                       context.push(RouteNames.termsOfService);
                                     },
                                 ),
+                                const TextSpan(
+                                  text:
+                                      ' (bao gồm chính sách không dung thứ nội dung phản cảm hoặc hành vi lạm dụng)',
+                                ),
                                 const TextSpan(text: ' và '),
                                 TextSpan(
                                   text: 'Chính sách bảo mật',

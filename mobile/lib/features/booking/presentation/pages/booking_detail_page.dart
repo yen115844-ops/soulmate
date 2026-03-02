@@ -270,10 +270,10 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                               ? CachedNetworkImage(
                                   imageUrl: ImageUtils.buildImageUrl(booking.partnerAvatar!),
                                   fit: BoxFit.cover,
-                                  placeholder: (_, __) => Container(
+                                  placeholder: (_, placeholderUrl) => Container(
                                     color: AppColors.primary.withAlpha(50),
                                   ),
-                                  errorWidget: (_, __, ___) => Container(
+                                  errorWidget: (_, errorUrl, error) => Container(
                                     color: AppColors.primary.withAlpha(50),
                                     child: Icon(
                                       Ionicons.person_outline,
@@ -655,7 +655,10 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
               ListTile(
                 leading: Icon(Ionicons.alert_circle_outline, color: AppColors.error),
                 title: Text('Báo cáo', style: TextStyle(color: AppColors.error)),
-                onTap: () => Navigator.pop(ctx),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showReportDialog();
+                },
               ),
             ],
           ),
@@ -708,6 +711,118 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
         );
       }
     }
+  }
+
+  void _showReportDialog() {
+    if (_booking == null) return;
+
+    final reasons = [
+      'Quấy rối hoặc lạm dụng',
+      'Nội dung phản cảm',
+      'Lừa đảo hoặc gian lận',
+      'Vi phạm điều khoản cộng đồng',
+    ];
+    String selectedReason = reasons.first;
+    final descriptionController = TextEditingController();
+    bool isSubmitting = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) => AlertDialog(
+            title: const Text('Báo cáo người dùng'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DropdownButtonFormField<String>(
+                  initialValue: selectedReason,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Lý do',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: reasons
+                      .map(
+                        (reason) => DropdownMenuItem<String>(
+                          value: reason,
+                          child: Text(reason),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: isSubmitting
+                      ? null
+                      : (value) {
+                          if (value != null) {
+                            setDialogState(() => selectedReason = value);
+                          }
+                        },
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: descriptionController,
+                  enabled: !isSubmitting,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    labelText: 'Mô tả thêm (tùy chọn)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: isSubmitting ? null : () => Navigator.pop(ctx),
+                child: const Text('Hủy'),
+              ),
+              FilledButton(
+                onPressed: isSubmitting
+                    ? null
+                    : () async {
+                        setDialogState(() => isSubmitting = true);
+                        try {
+                          await _bookingRepository.reportBooking(
+                            reportedUserId: _booking!.partnerId,
+                            bookingId: _booking!.id,
+                            reason: selectedReason,
+                            description: descriptionController.text.trim(),
+                          );
+
+                          if (!mounted || !ctx.mounted) return;
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Đã gửi báo cáo. Chúng tôi sẽ xem xét trong thời gian sớm nhất.',
+                              ),
+                              backgroundColor: AppColors.success,
+                            ),
+                          );
+                        } catch (e) {
+                          if (!mounted) return;
+                          setDialogState(() => isSubmitting = false);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Không thể gửi báo cáo: $e'),
+                              backgroundColor: AppColors.error,
+                            ),
+                          );
+                        }
+                      },
+                child: isSubmitting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Gửi báo cáo'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _showCompleteDialog() {

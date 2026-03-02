@@ -126,6 +126,32 @@ class BookingRepository with BaseRepositoryMixin {
     }
   }
 
+  /// Report a booking/user for objectionable behavior
+  Future<void> reportBooking({
+    required String reportedUserId,
+    required String bookingId,
+    required String reason,
+    String? description,
+  }) async {
+    try {
+      await _apiClient.post(
+        '/reports',
+        data: {
+          'reportedId': reportedUserId,
+          'type': 'booking',
+          'referenceId': bookingId,
+          'reason': reason,
+          if (description != null && description.isNotEmpty)
+            'description': description,
+        },
+      );
+    } catch (e, stackTrace) {
+      debugPrint('Report booking error: $e');
+      debugPrint('Stack trace: $stackTrace');
+      rethrow;
+    }
+  }
+
   /// Pay for a booking with credits
   Future<BookingEntity> payBooking(String bookingId) async {
     try {

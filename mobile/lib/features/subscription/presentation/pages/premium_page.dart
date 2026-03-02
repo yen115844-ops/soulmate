@@ -74,6 +74,12 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
     setState(() {
       _iapInitialized = true;
     });
+
+    if (!mounted) return;
+    final plans = context.read<SubscriptionBloc>().state.plans;
+    if (plans.isNotEmpty) {
+      await _fetchIAPProducts(plans);
+    }
   }
 
   void _handlePurchaseSuccess(PurchaseDetails purchase) {
@@ -148,6 +154,8 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
   }
 
   Future<void> _purchasePlan(SubscriptionPlanEntity plan) async {
+    final subscriptionBloc = context.read<SubscriptionBloc>();
+
     if (!_iapInitialized) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -172,7 +180,13 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
       return;
     }
 
-    final product = _iapService.getProduct(productId);
+    ProductDetails? product = _iapService.getProduct(productId);
+    if (product == null) {
+      await _fetchIAPProducts(subscriptionBloc.state.plans);
+      if (!mounted) return;
+      product = _iapService.getProduct(productId);
+    }
+
     if (product == null) {
       final notFoundIds = _iapService.lastNotFoundIDs;
       final isNotApproved = notFoundIds.contains(productId);
@@ -198,14 +212,23 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
     }
 
     // Start purchase
-    context.read<SubscriptionBloc>().add(
+    subscriptionBloc.add(
       SubscriptionPurchaseRequested(
         planId: plan.id,
         productId: productId,
       ),
     );
 
-    await _iapService.purchaseProduct(product);
+    final started = await _iapService.purchaseProduct(product);
+    if (!started && mounted) {
+      subscriptionBloc.add(const SubscriptionStatusRequested());
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Không thể bắt đầu giao dịch. Vui lòng thử lại.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 
   Future<void> _restorePurchases() async {
@@ -752,12 +775,20 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
       (p) => p.id == _selectedPlanId,
       orElse: () => state.plans.first,
     );
+    final selectedProductId = Platform.isIOS
+        ? selectedPlan.appleProductId
+        : selectedPlan.googleProductId;
+    final hasStoreProduct = selectedProductId != null &&
+        _iapService.getProduct(selectedProductId) != null;
+    final isReadyToPurchase = _iapInitialized && hasStoreProduct;
 
     return SizedBox(
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
-        onPressed: isProcessing ? null : () => _purchasePlan(selectedPlan),
+        onPressed: (isProcessing || !isReadyToPurchase)
+            ? null
+            : () => _purchasePlan(selectedPlan),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
@@ -775,6 +806,28 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
                   color: Colors.white,
                 ),
               )
+            : !isReadyToPurchase
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        'Đang tải gói...',
+                        style: AppTypography.titleMedium.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  )
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -898,7 +951,9 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'Thanh toán sẽ được tính vào tài khoản Apple/Google của bạn. Đăng ký sẽ tự động gia hạn trừ khi bạn hủy trước 24h.',
+            Platform.isIOS
+                ? 'Thanh toán sẽ được tính vào tài khoản Apple của bạn. Đăng ký sẽ tự động gia hạn trừ khi bạn hủy trước 24h.'
+                : 'Thanh toán sẽ được tính vào tài khoản cửa hàng ứng dụng của bạn. Đăng ký sẽ tự động gia hạn trừ khi bạn hủy trước 24h.',
             textAlign: TextAlign.center,
             style: AppTypography.bodySmall.copyWith(
               color: context.appColors.textHint,
