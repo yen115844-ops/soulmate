@@ -43,21 +43,48 @@ export class AuthService {
   ) {}
 
   /**
-   * Register a new user - creates account PENDING and sends OTP to email for verification
+   * Register a new user - creates account PENDING and sends OTP to email for verification.
+   * If email/phone already exists as PENDING (chưa xác thực OTP), xóa tài khoản cũ và cho đăng ký lại (gửi OTP mới).
    */
   async register(dto: RegisterDto) {
     const existingUser = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
     if (existingUser) {
-      throw new ConflictException('Email này đã được đăng ký');
+      if (existingUser.status !== UserStatus.PENDING) {
+        throw new ConflictException('Email này đã được đăng ký');
+      }
+      // PENDING: user quay lại từ màn OTP (đổi email) rồi đăng ký lại → xóa tài khoản cũ, gửi OTP mới
+      await this.prisma.$transaction(async (tx) => {
+        await tx.otpCode.deleteMany({
+          where: {
+            target: dto.email,
+            targetType: 'email',
+            purpose: this.OTP_PURPOSE_VERIFY_EMAIL,
+          },
+        });
+        await tx.user.delete({ where: { id: existingUser.id } });
+      });
     }
+
     if (dto.phone) {
       const existingPhone = await this.prisma.user.findUnique({
         where: { phone: dto.phone },
       });
       if (existingPhone) {
-        throw new ConflictException('Số điện thoại này đã được đăng ký');
+        if (existingPhone.status !== UserStatus.PENDING) {
+          throw new ConflictException('Số điện thoại này đã được đăng ký');
+        }
+        await this.prisma.$transaction(async (tx) => {
+          await tx.otpCode.deleteMany({
+            where: {
+              target: dto.phone,
+              targetType: 'phone',
+              purpose: this.OTP_PURPOSE_VERIFY_EMAIL,
+            },
+          });
+          await tx.user.delete({ where: { id: existingPhone.id } });
+        });
       }
     }
 
@@ -571,22 +598,12 @@ export class AuthService {
   }
 
   /**
-   * Validate password against app_settings: password_min_length, enforce_strong_password
+   * Validate password: only min length (from app_settings or default 8).
    */
   private async validatePasswordBySettings(password: string): Promise<void> {
     const minLength = await this.settingsService.getNumber('password_min_length', 8);
-    const enforceStrong = await this.settingsService.getBool('enforce_strong_password', true);
     if (password.length < minLength) {
       throw new BadRequestException(`Mật khẩu phải có ít nhất ${minLength} ký tự`);
-    }
-    if (enforceStrong) {
-      const hasLower = /[a-z]/.test(password);
-      const hasUpper = /[A-Z]/.test(password);
-      const hasNumber = /\d/.test(password);
-      const hasSymbol = /[@$!%*?&.#^_\-+=[\]{}();:'",<>/~`|\\]/.test(password);
-      if (!hasLower || !hasUpper || !hasNumber || !hasSymbol) {
-        throw new BadRequestException('Mật khẩu phải có chữ hoa, chữ thường, số và ký hiệu đặc biệt');
-      }
     }
   }
 

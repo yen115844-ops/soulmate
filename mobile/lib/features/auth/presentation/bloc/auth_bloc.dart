@@ -161,7 +161,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         _emitUserState(response.user, emit);
       }
     } on ApiException catch (e) {
-      emit(AuthError(message: e.message, errors: e.errors));
+      emit(AuthError(message: e.message, errors: e.errors, statusCode: e.statusCode));
     } catch (e) {
       emit(AuthError(message: getErrorMessage(e)));
     }

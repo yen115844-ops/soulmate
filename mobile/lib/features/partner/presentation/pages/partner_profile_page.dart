@@ -285,7 +285,14 @@ class _PartnerProfileContent extends StatelessWidget {
               ),
               onTap: () {
                 Navigator.pop(ctx);
-                // TODO: Preview public profile
+                final state = context.read<PartnerProfileBloc>().state;
+                if (state is PartnerProfileLoaded ||
+                    state is PartnerProfileUpdating) {
+                  final profile = state is PartnerProfileLoaded
+                      ? state.profile
+                      : (state as PartnerProfileUpdating).profile;
+                  context.push('/partner/${profile.id}');
+                }
               },
             ),
             ListTile(
@@ -342,27 +349,42 @@ class _PartnerProfileContent extends StatelessWidget {
   void _showPausePartnerDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Tạm ngừng hoạt động?'),
-        content: const Text(
-          'Khi tạm ngừng, bạn sẽ không nhận được các lượt đặt lịch mới. Bạn có thể bật lại bất cứ lúc nào.',
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('Tạm ngừng hoạt động?', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+              const SizedBox(height: 16),
+              const Text(
+                'Khi tạm ngừng, bạn sẽ không nhận được các lượt đặt lịch mới. Bạn có thể bật lại bất cứ lúc nào.',
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Hủy'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      context.read<PartnerProfileBloc>().add(
+                        const PartnerAvailabilityToggleRequested(isAvailable: false),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+                    child: const Text('Tạm ngừng'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Hủy'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              context.read<PartnerProfileBloc>().add(
-                const PartnerAvailabilityToggleRequested(isAvailable: false),
-              );
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Tạm ngừng'),
-          ),
-        ],
       ),
     );
   }

@@ -139,24 +139,39 @@ class _EmergencyContactsView extends StatelessWidget {
   void _deleteContact(BuildContext context, EmergencyContactModel contact) {
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Xóa liên hệ?'),
-        content: Text('Bạn có chắc muốn xóa ${contact.name}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Hủy'),
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('Xóa liên hệ?', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+              const SizedBox(height: 16),
+              Text('Bạn có chắc muốn xóa ${contact.name}?'),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: const Text('Hủy'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      context.read<EmergencyContactsBloc>().add(
+                        EmergencyContactDeleteRequested(contact.id),
+                      );
+                      Navigator.pop(dialogContext);
+                    },
+                    child: const Text('Xóa', style: TextStyle(color: AppColors.error)),
+                  ),
+                ],
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              context.read<EmergencyContactsBloc>().add(
-                EmergencyContactDeleteRequested(contact.id),
-              );
-              Navigator.pop(dialogContext);
-            },
-            child: const Text('Xóa', style: TextStyle(color: AppColors.error)),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -145,52 +145,54 @@ class _BecomePartnerPageState extends State<BecomePartnerPage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
+      builder: (context) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppColors.success.withAlpha(25),
-                shape: BoxShape.circle,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: AppColors.success.withAlpha(25),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Ionicons.checkmark_circle_outline,
+                  color: AppColors.success,
+                  size: 48,
+                ),
               ),
-              child: const Icon(
-                Ionicons.checkmark_circle_outline,
-                color: AppColors.success,
-                size: 48,
+              const SizedBox(height: 24),
+              Text(
+                'Đăng ký thành công!',
+                style: AppTypography.titleLarge,
+                textAlign: TextAlign.center,
               ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Đăng ký thành công!',
-              style: AppTypography.titleLarge,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Hồ sơ của bạn đang được xét duyệt. Chúng tôi sẽ thông báo kết quả trong vòng 24-48 giờ.',
-              style: AppTypography.bodyMedium.copyWith(
-                color: context.appColors.textSecondary,
+              const SizedBox(height: 12),
+              Text(
+                'Hồ sơ của bạn đang được xét duyệt. Chúng tôi sẽ thông báo kết quả trong vòng 24-48 giờ.',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: context.appColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-        actions: [
-          SizedBox(
-            width: double.infinity,
-            child: AppButton(
-              text: 'Hoàn tất',
-              onPressed: () {
-                Navigator.pop(context);
-                context.go(RouteNames.home);
-              },
-            ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: AppButton(
+                  text: 'Hoàn tất',
+                  onPressed: () {
+                    Navigator.pop(context);
+                    context.go(RouteNames.home);
+                  },
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -198,57 +200,59 @@ class _BecomePartnerPageState extends State<BecomePartnerPage> {
   void _showErrorDialog(String error, {bool isAlreadyPartner = false}) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: (isAlreadyPartner ? AppColors.warning : AppColors.error)
-                    .withAlpha(25),
-                shape: BoxShape.circle,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: (isAlreadyPartner ? AppColors.warning : AppColors.error)
+                      .withAlpha(25),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isAlreadyPartner
+                      ? Ionicons.information_circle_outline
+                      : Ionicons.close_circle_outline,
+                  color: isAlreadyPartner ? AppColors.warning : AppColors.error,
+                  size: 48,
+                ),
               ),
-              child: Icon(
-                isAlreadyPartner
-                    ? Ionicons.information_circle_outline
-                    : Ionicons.close_circle_outline,
-                color: isAlreadyPartner ? AppColors.warning : AppColors.error,
-                size: 48,
+              const SizedBox(height: 24),
+              Text(
+                isAlreadyPartner ? 'Đã đăng ký' : 'Đăng ký thất bại',
+                style: AppTypography.titleLarge,
+                textAlign: TextAlign.center,
               ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              isAlreadyPartner ? 'Đã đăng ký' : 'Đăng ký thất bại',
-              style: AppTypography.titleLarge,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              error,
-              style: AppTypography.bodyMedium.copyWith(
-                color: context.appColors.textSecondary,
+              const SizedBox(height: 12),
+              Text(
+                error,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: context.appColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-        actions: [
-          SizedBox(
-            width: double.infinity,
-            child: AppButton(
-              text: isAlreadyPartner ? 'Về trang chủ' : 'Đóng',
-              onPressed: () {
-                Navigator.pop(context);
-                if (isAlreadyPartner) {
-                  context.go(RouteNames.home);
-                }
-              },
-            ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: AppButton(
+                  text: isAlreadyPartner ? 'Về trang chủ' : 'Đóng',
+                  onPressed: () {
+                    Navigator.pop(context);
+                    if (isAlreadyPartner) {
+                      context.go(RouteNames.home);
+                    }
+                  },
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

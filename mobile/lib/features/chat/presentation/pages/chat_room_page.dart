@@ -372,34 +372,49 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Chặn người dùng'),
-        content: const Text(
-          'Bạn có chắc chắn muốn chặn người dùng này? '
-          'Họ sẽ không thể gửi tin nhắn cho bạn nữa.',
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('Chặn người dùng', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+              const SizedBox(height: 16),
+              const Text(
+                'Bạn có chắc chắn muốn chặn người dùng này? '
+                'Họ sẽ không thể gửi tin nhắn cho bạn nữa.',
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Hủy'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      context.read<ChatBloc>().add(ChatBlockUser(userId));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Đã chặn người dùng'),
+                          backgroundColor: AppColors.success,
+                        ),
+                      );
+                      // Go back to chat list
+                      context.pop();
+                    },
+                    style: TextButton.styleFrom(foregroundColor: AppColors.error),
+                    child: const Text('Chặn'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Hủy'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              context.read<ChatBloc>().add(ChatBlockUser(userId));
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Đã chặn người dùng'),
-                  backgroundColor: AppColors.success,
-                ),
-              );
-              // Go back to chat list
-              context.pop();
-            },
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Chặn'),
-          ),
-        ],
       ),
     );
   }
@@ -483,18 +498,33 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
             showDialog(
               context: context,
               barrierDismissible: false,
-              builder: (ctx) => AlertDialog(
-                title: const Text('Không thể gửi tin nhắn'),
-                content: Text(state.errorMessage!),
-                actions: [
-                  FilledButton(
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      context.pop(); // Go back to chat list
-                    },
-                    child: const Text('Đóng'),
+              builder: (ctx) => Dialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text('Không thể gửi tin nhắn', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+                      const SizedBox(height: 16),
+                      Text(state.errorMessage!),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          FilledButton(
+                            onPressed: () {
+                              Navigator.pop(ctx);
+                              context.pop(); // Go back to chat list
+                            },
+                            child: const Text('Đóng'),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             );
           } else {

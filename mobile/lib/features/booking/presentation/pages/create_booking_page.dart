@@ -80,7 +80,8 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
       final wantUpgrade = await PremiumGuard.showPremiumDialog(
         context,
         title: 'Cần đăng ký Premium',
-        message: 'Tính năng này yêu cầu gói Premium. Nâng cấp để tạo hoạt động!',
+        message:
+            'Tính năng này yêu cầu gói Premium. Nâng cấp để tạo hoạt động!',
       );
 
       if (wantUpgrade && mounted) {
@@ -99,6 +100,15 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
   }
 
   Future<void> _loadPartnerData() async {
+    if (widget.partnerId.isEmpty) {
+      if (mounted) {
+        setState(() {
+          _isLoadingPartner = false;
+          _errorMessage = 'Thiếu thông tin partner. Vui lòng chọn partner từ trang chi tiết.';
+        });
+      }
+      return;
+    }
     setState(() {
       _isLoadingPartner = true;
       _errorMessage = null;
@@ -258,8 +268,8 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
   List<Map<String, dynamic>> get _services {
     return _partnerServices.map((serviceType) {
       final display = ServiceTypeEmoji.get(serviceType);
-      final description = _serviceDescriptions[serviceType.toUpperCase()] ??
-          serviceType;
+      final description =
+          _serviceDescriptions[serviceType.toUpperCase()] ?? serviceType;
       return {
         'type': serviceType,
         'name': display.nameVi,
@@ -333,7 +343,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
       );
       return;
     }
-    
+
     final serviceName = ServiceTypeEmoji.get(_selectedService!).nameVi;
     showModalBottomSheet(
       context: context,
@@ -384,7 +394,10 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
 
       if (mounted) {
         setState(() => _isSubmitting = false);
-        _showSuccessDialog(bookingId: booking.id, bookingCode: booking.bookingCode);
+        _showSuccessDialog(
+          bookingId: booking.id,
+          bookingCode: booking.bookingCode,
+        );
       }
     } catch (e) {
       debugPrint('Error creating booking: $e');
@@ -408,10 +421,10 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
         onViewBooking: () {
           Navigator.pop(dialogContext);
           if (bookingId != null && bookingId.isNotEmpty) {
-            context.go(RouteNames.bookingConfirmation, extra: {
-              'bookingId': bookingId,
-              'bookingCode': bookingCode ?? '',
-            });
+            context.go(
+              RouteNames.bookingConfirmation,
+              extra: {'bookingId': bookingId, 'bookingCode': bookingCode ?? ''},
+            );
           } else {
             context.go('/home', extra: {'initialPage': 0});
           }
@@ -428,62 +441,70 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
     final needed = _totalAmount - currentBalance;
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Icon(Ionicons.wallet_outline, color: AppColors.warning, size: 28),
-            const SizedBox(width: 12),
-            const Text('Không đủ Xu'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Bạn cần $_totalAmount xu cho booking này.',
-              style: AppTypography.bodyMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Số dư hiện tại: $currentBalance xu',
-              style: AppTypography.bodyMedium.copyWith(
-                color: context.appColors.textSecondary,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Icon(Ionicons.wallet_outline, color: AppColors.warning, size: 28),
+                  const SizedBox(width: 12),
+                  const Text('Không đủ Xu'),
+                ],
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Cần thêm: $needed xu',
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.error,
-                fontWeight: FontWeight.w600,
+              const SizedBox(height: 16),
+              Text(
+                'Bạn cần $_totalAmount xu cho booking này.',
+                style: AppTypography.bodyMedium,
               ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              'Đóng',
-              style: TextStyle(color: context.appColors.textSecondary),
-            ),
+              const SizedBox(height: 8),
+              Text(
+                'Số dư hiện tại: $currentBalance xu',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: context.appColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Cần thêm: $needed xu',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.error,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: Text(
+                      'Đóng',
+                      style: TextStyle(color: context.appColors.textSecondary),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(dialogContext);
+                      context.push(RouteNames.credits);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Mua Xu', style: TextStyle(color: Colors.white)),
+                  ),
+                ],
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              context.push(RouteNames.credits);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text('Mua Xu', style: TextStyle(color: Colors.white)),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -514,13 +535,20 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Ionicons.alert_circle_outline, size: 64, color: AppColors.error),
+              Icon(
+                Ionicons.alert_circle_outline,
+                size: 64,
+                color: AppColors.error,
+              ),
               const SizedBox(height: 16),
               Text(_errorMessage!),
               const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _loadPartnerData,
-                child: const Text('Thử lại'),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: ElevatedButton(
+                  onPressed: _loadPartnerData,
+                  child: const Text('Thử lại'),
+                ),
               ),
             ],
           ),
@@ -884,7 +912,9 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                 ? 'Chọn giờ bắt đầu trong khung giờ ${_partner?.displayName ?? 'Partner'} có thể nhận'
                 : 'Không có khung giờ khả dụng trong ngày này',
             style: AppTypography.bodySmall.copyWith(
-              color: hasSlots ? context.appColors.textSecondary : AppColors.error,
+              color: hasSlots
+                  ? context.appColors.textSecondary
+                  : AppColors.error,
             ),
           ),
           const SizedBox(height: 12),
@@ -910,7 +940,9 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: hasSlots ? context.appColors.surface : context.appColors.background,
+                color: hasSlots
+                    ? context.appColors.surface
+                    : context.appColors.background,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: hasSlots
@@ -930,7 +962,9 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                     ),
                     child: Icon(
                       Ionicons.time_outline,
-                      color: hasSlots ? AppColors.secondary : context.appColors.textHint,
+                      color: hasSlots
+                          ? AppColors.secondary
+                          : context.appColors.textHint,
                       size: 22,
                     ),
                   ),
@@ -1039,8 +1073,6 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
               ],
             ),
           ),
-
-
         ],
       ),
     );
@@ -1104,11 +1136,11 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                 fillColor: context.appColors.surface,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide:   BorderSide(color: context.appColors.border),
+                  borderSide: BorderSide(color: context.appColors.border),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide:   BorderSide(color: context.appColors.border),
+                  borderSide: BorderSide(color: context.appColors.border),
                 ),
               ),
               maxLines: 2,
@@ -1203,11 +1235,11 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
               fillColor: context.appColors.surface,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide:   BorderSide(color: context.appColors.border),
+                borderSide: BorderSide(color: context.appColors.border),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide:   BorderSide(color: context.appColors.border),
+                borderSide: BorderSide(color: context.appColors.border),
               ),
             ),
             maxLines: 3,
@@ -1221,7 +1253,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-                Icon(
+              Icon(
                 Ionicons.information_circle_outline,
                 size: 16,
                 color: context.appColors.textHint,
@@ -1390,7 +1422,11 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Ionicons.time_outline, size: 14, color: AppColors.success),
+              const Icon(
+                Ionicons.time_outline,
+                size: 14,
+                color: AppColors.success,
+              ),
               const SizedBox(width: 6),
               Text(
                 slot.displayString,
@@ -1417,7 +1453,11 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
       ),
       child: Row(
         children: [
-          const Icon(Ionicons.calendar_outline, color: AppColors.error, size: 24),
+          const Icon(
+            Ionicons.calendar_outline,
+            color: AppColors.error,
+            size: 24,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -1492,7 +1532,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
         constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height * 0.7,
         ),
-        decoration:   BoxDecoration(
+        decoration: BoxDecoration(
           color: context.appColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
@@ -1503,7 +1543,10 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
               padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
-                  const Icon(Ionicons.calendar_outline, color: AppColors.primary),
+                  const Icon(
+                    Ionicons.calendar_outline,
+                    color: AppColors.primary,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -1655,7 +1698,7 @@ class _TimeSelectionBottomSheet extends StatelessWidget {
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.5,
       ),
-      decoration:   BoxDecoration(
+      decoration: BoxDecoration(
         color: context.appColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -1810,7 +1853,9 @@ class _LocationOption extends StatelessWidget {
               ),
               child: Icon(
                 icon,
-                color: isSelected ? AppColors.primary : context.appColors.textSecondary,
+                color: isSelected
+                    ? AppColors.primary
+                    : context.appColors.textSecondary,
                 size: 22,
               ),
             ),
@@ -1919,7 +1964,7 @@ class _ConfirmationBottomSheet extends StatelessWidget {
         20,
         MediaQuery.of(context).padding.bottom + 20,
       ),
-      decoration:   BoxDecoration(
+      decoration: BoxDecoration(
         color: context.appColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -2023,7 +2068,7 @@ class _ConfirmationBottomSheet extends StatelessWidget {
                   onPressed: () => Navigator.pop(context),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    side:   BorderSide(color: context.appColors.border),
+                    side: BorderSide(color: context.appColors.border),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

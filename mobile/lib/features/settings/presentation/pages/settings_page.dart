@@ -581,35 +581,41 @@ class _SettingsContent extends StatelessWidget {
   ) {
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(
-          'Chọn ngôn ngữ',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: context.theme.colorScheme.onSurface,
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Chọn ngôn ngữ',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: context.theme.colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _LanguageOption(
+                title: 'Tiếng Việt',
+                isSelected: currentLanguage == 'vi',
+                onTap: () {
+                  bloc.add(const SettingsLanguageChanged(language: 'vi'));
+                  Navigator.pop(dialogContext);
+                },
+              ),
+              _LanguageOption(
+                title: 'English',
+                isSelected: currentLanguage == 'en',
+                onTap: () {
+                  bloc.add(const SettingsLanguageChanged(language: 'en'));
+                  Navigator.pop(dialogContext);
+                },
+              ),
+            ],
           ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _LanguageOption(
-              title: 'Tiếng Việt',
-              isSelected: currentLanguage == 'vi',
-              onTap: () {
-                bloc.add(const SettingsLanguageChanged(language: 'vi'));
-                Navigator.pop(dialogContext);
-              },
-            ),
-            _LanguageOption(
-              title: 'English',
-              isSelected: currentLanguage == 'en',
-              onTap: () {
-                bloc.add(const SettingsLanguageChanged(language: 'en'));
-                Navigator.pop(dialogContext);
-              },
-            ),
-          ],
         ),
       ),
     );
@@ -622,47 +628,53 @@ class _SettingsContent extends StatelessWidget {
   ) {
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(
-          'Ai có thể nhắn tin cho tôi',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: context.theme.colorScheme.onSurface,
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Ai có thể nhắn tin cho tôi',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: context.theme.colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _LanguageOption(
+                title: 'Mọi người',
+                isSelected: currentValue == 'everyone',
+                onTap: () {
+                  bloc.add(
+                    const SettingsAllowMessagesFromChanged(value: 'everyone'),
+                  );
+                  Navigator.pop(dialogContext);
+                },
+              ),
+              _LanguageOption(
+                title: 'Người đã xác minh',
+                isSelected: currentValue == 'verified',
+                onTap: () {
+                  bloc.add(
+                    const SettingsAllowMessagesFromChanged(value: 'verified'),
+                  );
+                  Navigator.pop(dialogContext);
+                },
+              ),
+              _LanguageOption(
+                title: 'Không ai',
+                isSelected: currentValue == 'none',
+                onTap: () {
+                  bloc.add(const SettingsAllowMessagesFromChanged(value: 'none'));
+                  Navigator.pop(dialogContext);
+                },
+              ),
+            ],
           ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _LanguageOption(
-              title: 'Mọi người',
-              isSelected: currentValue == 'everyone',
-              onTap: () {
-                bloc.add(
-                  const SettingsAllowMessagesFromChanged(value: 'everyone'),
-                );
-                Navigator.pop(dialogContext);
-              },
-            ),
-            _LanguageOption(
-              title: 'Người đã xác minh',
-              isSelected: currentValue == 'verified',
-              onTap: () {
-                bloc.add(
-                  const SettingsAllowMessagesFromChanged(value: 'verified'),
-                );
-                Navigator.pop(dialogContext);
-              },
-            ),
-            _LanguageOption(
-              title: 'Không ai',
-              isSelected: currentValue == 'none',
-              onTap: () {
-                bloc.add(const SettingsAllowMessagesFromChanged(value: 'none'));
-                Navigator.pop(dialogContext);
-              },
-            ),
-          ],
         ),
       ),
     );
@@ -696,24 +708,39 @@ class _SettingsContent extends StatelessWidget {
   void _showClearCacheDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Xóa bộ nhớ cache?'),
-        content: const Text(
-          'Hành động này sẽ xóa ảnh và dữ liệu tạm thời được lưu trên thiết bị để giải phóng dung lượng.',
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('Xóa bộ nhớ cache?', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+              const SizedBox(height: 16),
+              const Text(
+                'Hành động này sẽ xóa ảnh và dữ liệu tạm thời được lưu trên thiết bị để giải phóng dung lượng.',
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: const Text('Hủy'),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      Navigator.pop(dialogContext);
+                      await _clearCache(context);
+                    },
+                    child: const Text('Xóa', style: TextStyle(color: AppColors.error)),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Hủy'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-              await _clearCache(context);
-            },
-            child: const Text('Xóa', style: TextStyle(color: AppColors.error)),
-          ),
-        ],
       ),
     );
   }
@@ -778,67 +805,76 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
           });
         }
       },
-      child: AlertDialog(
-        title: const Text('Xóa tài khoản?'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Hành động này không thể hoàn tác. Tất cả dữ liệu của bạn sẽ bị xóa vĩnh viễn.',
-              style: TextStyle(color: context.appColors.textSecondary),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _passwordController,
-              obscureText: _obscurePassword,
-              decoration: InputDecoration(
-                labelText: 'Nhập mật khẩu để xác nhận',
-                errorText: _errorMessage,
-                border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscurePassword
-                        ? Ionicons.eye_off_outline
-                        : Ionicons.eye_outline,
-                    color: context.appColors.textSecondary,
-                  ),
-                  onPressed: () =>
-                      setState(() => _obscurePassword = !_obscurePassword),
-                ),
+      child: Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('Xóa tài khoản?', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+              const SizedBox(height: 16),
+              Text(
+                'Hành động này không thể hoàn tác. Tất cả dữ liệu của bạn sẽ bị xóa vĩnh viễn.',
+                style: TextStyle(color: context.appColors.textSecondary),
               ),
-              enabled: !_isLoading,
-            ),
-          ],
+              const SizedBox(height: 16),
+              TextField(
+                controller: _passwordController,
+                obscureText: _obscurePassword,
+                decoration: InputDecoration(
+                  labelText: 'Nhập mật khẩu để xác nhận',
+                  errorText: _errorMessage,
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Ionicons.eye_off_outline
+                          : Ionicons.eye_outline,
+                      color: context.appColors.textSecondary,
+                    ),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
+                  ),
+                ),
+                enabled: !_isLoading,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                    child: const Text('Hủy'),
+                  ),
+                  TextButton(
+                    onPressed: _isLoading
+                        ? null
+                        : () {
+                            if (_passwordController.text.isEmpty) {
+                              setState(() => _errorMessage = 'Vui lòng nhập mật khẩu');
+                              return;
+                            }
+                            authBloc.add(
+                              AuthDeleteAccountRequested(
+                                password: _passwordController.text,
+                              ),
+                            );
+                          },
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Xóa', style: TextStyle(color: AppColors.error)),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-            child: const Text('Hủy'),
-          ),
-          TextButton(
-            onPressed: _isLoading
-                ? null
-                : () {
-                    if (_passwordController.text.isEmpty) {
-                      setState(() => _errorMessage = 'Vui lòng nhập mật khẩu');
-                      return;
-                    }
-                    authBloc.add(
-                      AuthDeleteAccountRequested(
-                        password: _passwordController.text,
-                      ),
-                    );
-                  },
-            child: _isLoading
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Xóa', style: TextStyle(color: AppColors.error)),
-          ),
-        ],
       ),
     );
   }

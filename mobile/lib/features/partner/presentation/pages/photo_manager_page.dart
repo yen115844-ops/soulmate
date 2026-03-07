@@ -183,21 +183,36 @@ class _PhotoManagerPageState extends State<PhotoManagerPage> {
 
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Huỷ thay đổi?'),
-        content: const Text(
-          'Bạn có thay đổi chưa lưu. Bạn có chắc muốn thoát?',
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('Huỷ thay đổi?', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+              const SizedBox(height: 16),
+              const Text(
+                'Bạn có thay đổi chưa lưu. Bạn có chắc muốn thoát?',
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text('Ở lại'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text('Thoát'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Ở lại'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Thoát'),
-          ),
-        ],
       ),
     );
 

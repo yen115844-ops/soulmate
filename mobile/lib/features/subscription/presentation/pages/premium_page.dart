@@ -14,8 +14,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/responsive.dart';
+import '../../../../core/services/iap_service.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
-import '../../data/services/iap_service.dart';
 import '../../domain/entities/subscription_entity.dart';
 import '../bloc/subscription_bloc.dart';
 import '../bloc/subscription_event.dart';
@@ -48,7 +48,8 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
   String? _selectedPlanId;
   final IAPService _iapService = getIt<IAPService>();
   List<ProductDetails> _iapProducts = [];
-  bool _iapInitialized = false;
+  bool _isFetchingProducts = false;
+  String? _iapLoadError;
   bool _isRestoring = false;
 
   @override
@@ -57,25 +58,22 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
     _initializeIAP();
   }
 
+  bool get _iapInitialized => _iapService.isAvailable;
+
   Future<void> _initializeIAP() async {
-    // Initialize IAP service
-    final available = await _iapService.initialize();
-    if (!available) {
+    // IAP already initialized in main; ensure callbacks are set for this page
+    if (!_iapService.isAvailable) {
       debugPrint('IAP: Store not available');
       return;
     }
 
-    // Set up callbacks
     _iapService.onPurchaseSuccess = _handlePurchaseSuccess;
-    _iapService.onPurchaseError = _handlePurchaseError;
+    _iapService.onPurchaseErrorWithDetails = _handlePurchaseError;
     _iapService.onPurchasePending = _handlePurchasePending;
     _iapService.onPurchaseRestored = _handlePurchaseRestored;
 
-    setState(() {
-      _iapInitialized = true;
-    });
-
     if (!mounted) return;
+    setState(() {});
     final plans = context.read<SubscriptionBloc>().state.plans;
     if (plans.isNotEmpty) {
       await _fetchIAPProducts(plans);
@@ -133,6 +131,13 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
   Future<void> _fetchIAPProducts(List<SubscriptionPlanEntity> plans) async {
     if (!_iapInitialized || plans.isEmpty) return;
 
+    if (mounted) {
+      setState(() {
+        _isFetchingProducts = true;
+        _iapLoadError = null;
+      });
+    }
+
     // Get product IDs from plans
     final productIds = <String>{};
     for (final plan in plans) {
@@ -146,11 +151,25 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
 
     if (productIds.isEmpty) {
       debugPrint('IAP: No product IDs configured');
+      if (mounted) {
+        setState(() {
+          _isFetchingProducts = false;
+          _iapLoadError = 'Chưa cấu hình mã sản phẩm IAP.';
+        });
+      }
       return;
     }
 
-    _iapProducts = await _iapService.fetchProducts(productIds);
-    if (mounted) setState(() {});
+    final products = await _iapService.fetchProducts(productIds);
+    if (!mounted) return;
+
+    setState(() {
+      _iapProducts = products;
+      _isFetchingProducts = false;
+      _iapLoadError = products.isEmpty
+          ? 'Không thể tải gói từ App Store. Vui lòng kiểm tra Sandbox account và thử lại.'
+          : null;
+    });
   }
 
   Future<void> _purchasePlan(SubscriptionPlanEntity plan) async {
@@ -219,7 +238,7 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
       ),
     );
 
-    final started = await _iapService.purchaseProduct(product);
+    final started = await _iapService.purchaseProductDetails(product);
     if (!started && mounted) {
       subscriptionBloc.add(const SubscriptionStatusRequested());
       ScaffoldMessenger.of(context).showSnackBar(
@@ -276,7 +295,10 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
         }
 
         // Fetch IAP products when plans are loaded
-        if (state.plans.isNotEmpty && _iapProducts.isEmpty && _iapInitialized) {
+        if (state.plans.isNotEmpty &&
+            _iapProducts.isEmpty &&
+            _iapInitialized &&
+            !_isFetchingProducts) {
           _fetchIAPProducts(state.plans);
         }
 
@@ -300,7 +322,10 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
             ),
             centerTitle: true,
           ),
-          body: _buildBody(context, state),
+          body: ResponsiveCenterWrapper(
+            maxContentWidth: 560,
+            child: _buildBody(context, state),
+          ),
         );
       },
     );
@@ -533,6 +558,10 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
 
           // Purchase button
           _buildPurchaseButton(context, state),
+          if (_iapLoadError != null) ...[
+            const SizedBox(height: 12),
+            _buildIAPStatusHint(context),
+          ],
           const SizedBox(height: 24),
 
           // Features section (below plans)
@@ -781,14 +810,19 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
     final hasStoreProduct = selectedProductId != null &&
         _iapService.getProduct(selectedProductId) != null;
     final isReadyToPurchase = _iapInitialized && hasStoreProduct;
+    final isPreparingProducts = !_iapInitialized || _isFetchingProducts;
 
     return SizedBox(
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
-        onPressed: (isProcessing || !isReadyToPurchase)
-            ? null
-            : () => _purchasePlan(selectedPlan),
+      onPressed: isProcessing
+        ? null
+        : isReadyToPurchase
+          ? () => _purchasePlan(selectedPlan)
+          : (!isPreparingProducts && state.plans.isNotEmpty)
+            ? () => _fetchIAPProducts(state.plans)
+            : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
@@ -806,7 +840,7 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
                   color: Colors.white,
                 ),
               )
-            : !isReadyToPurchase
+            : isPreparingProducts
                 ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -828,6 +862,21 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
                       ),
                     ],
                   )
+            : !isReadyToPurchase
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Ionicons.refresh_outline, size: 20),
+                      const SizedBox(width: 10),
+                      Text(
+                        'Tải lại gói',
+                        style: AppTypography.titleMedium.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  )
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -842,6 +891,29 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
                   ),
                 ],
               ),
+      ),
+    );
+  }
+
+  Widget _buildIAPStatusHint(BuildContext context) {
+    if (_iapLoadError == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.5)),
+      ),
+      child: Text(
+        _iapLoadError!,
+        style: AppTypography.bodySmall.copyWith(
+          color: context.appColors.textSecondary,
+          height: 1.3,
+        ),
       ),
     );
   }
@@ -965,8 +1037,11 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
         const SizedBox(height: 12),
         
         // Required: functional links to Terms of Use (EULA) and Privacy Policy (Guideline 3.1.2)
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        Wrap(
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 4,
+          runSpacing: 0,
           children: [
             TextButton(
               onPressed: () => context.push(RouteNames.termsOfService),
@@ -1015,83 +1090,85 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => Dialog(
         backgroundColor: context.appColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Success icon
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                gradient: AppColors.accentGradient,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.4),
-                    blurRadius: 30,
-                    spreadRadius: 5,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Success icon
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  gradient: AppColors.accentGradient,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.4),
+                      blurRadius: 30,
+                      spreadRadius: 5,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.diamond_rounded,
+                  color: Colors.white,
+                  size: 56,
+                ),
+              ),
+              const SizedBox(height: 24),
+              ShaderMask(
+                shaderCallback: (bounds) => AppColors.accentGradient.createShader(bounds),
+                child: Text(
+                  'Chào mừng VIP!',
+                  style: AppTypography.headlineSmall.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: 1,
                   ),
-                ],
-              ),
-              child: const Icon(
-                Icons.diamond_rounded,
-                color: Colors.white,
-                size: 56,
-              ),
-            ),
-            const SizedBox(height: 24),
-            ShaderMask(
-              shaderCallback: (bounds) => AppColors.accentGradient.createShader(bounds),
-              child: Text(
-                'Chào mừng VIP!',
-                style: AppTypography.headlineSmall.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                  letterSpacing: 1,
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Bạn đã nâng cấp thành công!\nHãy tận hưởng các đặc quyền Premium.',
-              textAlign: TextAlign.center,
-              style: AppTypography.bodyMedium.copyWith(
-                color: context.appColors.textSecondary,
-                height: 1.5,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                Navigator.of(context).pop();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                elevation: 0,
-              ),
-              child: Text(
-                'Bắt đầu trải nghiệm',
-                style: AppTypography.titleMedium.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+              const SizedBox(height: 12),
+              Text(
+                'Bạn đã nâng cấp thành công!\nHãy tận hưởng các đặc quyền Premium.',
+                textAlign: TextAlign.center,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: context.appColors.textSecondary,
+                  height: 1.5,
                 ),
               ),
-            ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                    Navigator.of(context).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'Bắt đầu trải nghiệm',
+                    style: AppTypography.titleMedium.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

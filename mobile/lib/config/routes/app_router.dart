@@ -150,7 +150,7 @@ class AppRouter {
         },
       ),
 
-      // Main Home - Swipeable (Bookings - Home - Settings)
+      // Main Home - Swipeable (Home - Hoạt động - Nhắn tin - Thông tin cá nhân)
       GoRoute(
         path: RouteNames.home,
         name: 'home',
@@ -275,12 +275,16 @@ class AppRouter {
         },
       ),
 
-      // Create Booking
+      // Create Booking (partnerId từ query /booking/create?partnerId=xxx hoặc extra khi push từ partner detail)
       GoRoute(
         path: RouteNames.createBooking,
         name: 'create-booking',
         builder: (context, state) {
-          final partnerId = state.uri.queryParameters['partnerId'] ?? '';
+          final fromQuery = state.uri.queryParameters['partnerId'] ?? '';
+          final fromExtra = state.extra is Map
+              ? (state.extra as Map)['partnerId']?.toString() ?? ''
+              : '';
+          final partnerId = fromQuery.isNotEmpty ? fromQuery : fromExtra;
           return CreateBookingPage(partnerId: partnerId);
         },
       ),
@@ -527,21 +531,6 @@ class AppRouter {
           currentState is auth_state.AuthNeedsProfileSetup ||
           currentState is auth_state.AuthPendingVerification;
 
-      // User explicitly logged out or deleted account → force login
-      final isLoggedOut = currentState is auth_state.AuthLogoutSuccess ||
-          currentState is auth_state.AuthAccountDeleted;
-      if (isLoggedOut && location != RouteNames.login) {
-        return RouteNames.login;
-      }
-
-      // Routes that guests can browse without authentication
-      final isBrowsableRoute =
-          location == RouteNames.home ||
-          location.startsWith('/partner/') ||
-          location == RouteNames.helpCenter ||
-          location == RouteNames.termsOfService ||
-          location == RouteNames.privacyPolicy;
-
       // Auth pages (login, register, etc.)
       final isAuthRoute =
           location == RouteNames.onboarding ||
@@ -550,6 +539,21 @@ class AppRouter {
           location.startsWith(RouteNames.otpVerification) ||
           location == RouteNames.forgotPassword ||
           location == RouteNames.resetPassword;
+
+      // Routes that guests can browse without authentication (same as chưa đăng nhập)
+      final isBrowsableRoute =
+          location == RouteNames.home ||
+          location.startsWith('/partner/') ||
+          location == RouteNames.helpCenter ||
+          location == RouteNames.termsOfService ||
+          location == RouteNames.privacyPolicy;
+
+      // Sau đăng xuất: xử lý giống khách — chỉ redirect login khi vào trang cần đăng nhập.
+      final isLoggedOut = currentState is auth_state.AuthLogoutSuccess ||
+          currentState is auth_state.AuthAccountDeleted;
+      if (isLoggedOut && !isAuthRoute && !isBrowsableRoute) {
+        return RouteNames.login;
+      }
 
       // If auth is still resolving, let browsable routes through
       // immediately — no loading screen needed.

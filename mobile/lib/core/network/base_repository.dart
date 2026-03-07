@@ -1,4 +1,5 @@
 import 'api_exceptions.dart';
+import '../utils/error_utils.dart' as error_utils;
 
 /// Base repository mixin providing common data extraction utilities.
 ///
@@ -58,18 +59,6 @@ mixin BaseRepositoryMixin {
 
   /// Get user-friendly error message from exception.
   ///
-  /// Centralizes error message handling that was duplicated across BLoCs.
-  String getErrorMessage(dynamic error) {
-    if (error is ApiException) {
-      return error.message;
-    }
-    final errorStr = error.toString();
-    if (errorStr.contains('SocketException') || errorStr.contains('Connection')) {
-      return 'Không có kết nối mạng. Vui lòng kiểm tra và thử lại.';
-    }
-    if (errorStr.contains('TimeoutException')) {
-      return 'Kết nối quá chậm. Vui lòng thử lại.';
-    }
-    return 'Đã có lỗi xảy ra. Vui lòng thử lại.';
-  }
+  /// Delegates to error_utils for a single source of truth.
+  String getErrorMessage(dynamic error) => error_utils.getErrorMessage(error);
 }

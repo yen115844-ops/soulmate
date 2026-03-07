@@ -13,11 +13,11 @@ import '../../../../features/favorites/presentation/bloc/favorites_state.dart';
 import '../../../../shared/widgets/auth_guard.dart';
 import '../../../partner/domain/entities/partner_entity.dart';
 
-/// Modern Partner Card — Mioto-style listing
-class PartnerCard extends StatelessWidget {
+/// Partner card for home grid — accepts [PartnerEntity], shows favorites and premium badge.
+class HomePartnerCard extends StatelessWidget {
   final PartnerEntity partner;
 
-  const PartnerCard({super.key, required this.partner});
+  const HomePartnerCard({super.key, required this.partner});
 
   @override
   Widget build(BuildContext context) {

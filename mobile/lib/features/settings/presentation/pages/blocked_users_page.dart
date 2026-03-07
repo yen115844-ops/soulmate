@@ -59,22 +59,37 @@ class _BlockedUsersPageState extends State<BlockedUsersPage> {
   Future<void> _unblockUser(BlockedUserEntity user) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Bỏ chặn người dùng'),
-        content: Text(
-          'Bạn có chắc chắn muốn bỏ chặn ${user.name}? '
-          'Người này sẽ có thể nhắn tin và xem hồ sơ của bạn.',
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('Bỏ chặn người dùng', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+              const SizedBox(height: 16),
+              Text(
+                'Bạn có chắc chắn muốn bỏ chặn ${user.name}? '
+                'Người này sẽ có thể nhắn tin và xem hồ sơ của bạn.',
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text('Hủy'),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text('Bỏ chặn'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Bỏ chặn'),
-          ),
-        ],
       ),
     );
 

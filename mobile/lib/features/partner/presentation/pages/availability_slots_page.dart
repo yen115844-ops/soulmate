@@ -317,25 +317,40 @@ class _AvailabilitySlotsContentState extends State<_AvailabilitySlotsContent> {
   void _deleteSlot(String slotId) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Xóa lịch rảnh'),
-        content: const Text('Bạn có chắc muốn xóa khung giờ này?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Hủy'),
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('Xóa lịch rảnh', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+              const SizedBox(height: 16),
+              const Text('Bạn có chắc muốn xóa khung giờ này?'),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Hủy'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      context.read<ScheduleSettingsBloc>().add(
+                        ScheduleSettingsDeleteSlotRequested(slotId: slotId),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+                    child: const Text('Xóa'),
+                  ),
+                ],
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              context.read<ScheduleSettingsBloc>().add(
-                ScheduleSettingsDeleteSlotRequested(slotId: slotId),
-              );
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Xóa'),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -343,70 +358,79 @@ class _AvailabilitySlotsContentState extends State<_AvailabilitySlotsContent> {
   void _showHelpDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Ionicons.information_circle_outline, color: AppColors.primary),
-            SizedBox(width: 12),
-            Text('Hướng dẫn'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '• Chọn ngày trên lịch để xem và quản lý lịch rảnh',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: context.theme.colorScheme.onSurface,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Row(
+                children: [
+                  Icon(Ionicons.information_circle_outline, color: AppColors.primary),
+                  SizedBox(width: 12),
+                  Text('Hướng dẫn', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+                ],
               ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              '• Nhấn nút "Thêm lịch" để thêm khung giờ mới',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: context.theme.colorScheme.onSurface,
+              const SizedBox(height: 16),
+              Text(
+                '• Chọn ngày trên lịch để xem và quản lý lịch rảnh',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: context.theme.colorScheme.onSurface,
+                ),
               ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              '• Kéo sang trái để xóa một khung giờ',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: context.theme.colorScheme.onSurface,
+              const SizedBox(height: 8),
+              Text(
+                '• Nhấn nút "Thêm lịch" để thêm khung giờ mới',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: context.theme.colorScheme.onSurface,
+                ),
               ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              '• Ngày có lịch rảnh sẽ được đánh dấu màu xanh',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: context.theme.colorScheme.onSurface,
+              const SizedBox(height: 8),
+              Text(
+                '• Kéo sang trái để xóa một khung giờ',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: context.theme.colorScheme.onSurface,
+                ),
               ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              '• Khách hàng chỉ có thể đặt lịch trong các khung giờ bạn đã tạo',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: context.theme.colorScheme.onSurface,
+              const SizedBox(height: 8),
+              Text(
+                '• Ngày có lịch rảnh sẽ được đánh dấu màu xanh',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: context.theme.colorScheme.onSurface,
+                ),
               ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu'),
+              const SizedBox(height: 8),
+              Text(
+                '• Khách hàng chỉ có thể đặt lịch trong các khung giờ bạn đã tạo',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: context.theme.colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Đã hiểu'),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -704,24 +728,39 @@ class _SlotsListView extends StatelessWidget {
                       confirmDismiss: (_) async {
                         return await showDialog<bool>(
                           context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Xóa lịch rảnh'),
-                            content: const Text(
-                              'Bạn có chắc muốn xóa khung giờ này?',
+                          builder: (context) => Dialog(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  const Text('Xóa lịch rảnh', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+                                  const SizedBox(height: 16),
+                                  const Text(
+                                    'Bạn có chắc muốn xóa khung giờ này?',
+                                  ),
+                                  const SizedBox(height: 24),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context, false),
+                                        child: const Text('Hủy'),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () => Navigator.pop(context, true),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppColors.error,
+                                        ),
+                                        child: const Text('Xóa'),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Hủy'),
-                              ),
-                              ElevatedButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.error,
-                                ),
-                                child: const Text('Xóa'),
-                              ),
-                            ],
                           ),
                         );
                       },

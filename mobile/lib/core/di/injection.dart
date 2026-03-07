@@ -32,8 +32,8 @@ import '../../features/settings/data/settings_repository.dart';
 import '../../features/settings/data/terms_repository.dart';
 import '../../features/settings/presentation/bloc/settings_bloc.dart';
 import '../../features/subscription/data/repositories/subscription_repository_impl.dart';
-import '../../features/subscription/data/services/iap_service.dart';
 import '../../features/subscription/presentation/bloc/subscription_bloc.dart';
+import '../services/iap_service.dart';
 import '../../features/verification/data/repositories/verification_repository_impl.dart';
 import '../../features/verification/presentation/bloc/verification_bloc.dart';
 import '../../shared/bloc/master_data_bloc.dart';
@@ -175,8 +175,8 @@ Future<void> setupDependencies() async {
     () => CreditsRepository(apiClient: getIt<ApiClient>()),
   );
 
-  // IAP Service (In-App Purchase)
-  getIt.registerLazySingleton<IAPService>(() => IAPService());
+  // IAP Service – unified for credits (consumable) and subscription (non-consumable). Init in main.
+  getIt.registerLazySingleton<IAPService>(() => IAPService.instance);
 
   // ==================== BLoCs ====================
 

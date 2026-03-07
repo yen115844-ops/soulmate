@@ -1,18 +1,24 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    HttpCode,
-    HttpStatus,
-    Param,
-    Patch,
-    Post,
-    Put,
-    Query,
-    UseGuards,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -20,13 +26,13 @@ import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt-auth.guar
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { UserRole } from '../../generated/prisma/client';
 import {
-    AdminPartnerQueryDto,
-    CreateAvailabilitySlotDto,
-    CreatePartnerProfileDto,
-    SearchPartnersDto,
-    UpdateAvailabilitySlotDto,
-    UpdatePartnerProfileDto,
-    UpdatePartnerStatusDto,
+  AdminPartnerQueryDto,
+  CreateAvailabilitySlotDto,
+  CreatePartnerProfileDto,
+  SearchPartnersDto,
+  UpdateAvailabilitySlotDto,
+  UpdatePartnerProfileDto,
+  UpdatePartnerStatusDto,
 } from './dto';
 import { PartnersService } from './partners.service';
 
@@ -156,7 +162,11 @@ export class PartnersController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
-    return this.partnersService.getAvailabilitySlots(userId, startDate, endDate);
+    return this.partnersService.getAvailabilitySlots(
+      userId,
+      startDate,
+      endDate,
+    );
   }
 
   @Post('me/slots')

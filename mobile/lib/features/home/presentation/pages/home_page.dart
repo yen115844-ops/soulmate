@@ -257,7 +257,7 @@ class _HomePageViewState extends State<_HomePageView> {
           final partner = partners[index];
           return GestureDetector(
             onTap: () => _onPartnerTap(partner),
-            child: PartnerCard(partner: partner),
+            child: HomePartnerCard(partner: partner),
           )
               .animate()
               .fadeIn(

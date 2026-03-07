@@ -293,24 +293,39 @@ class _ChatListPageState extends State<ChatListPage> {
                   confirmDismiss: (direction) async {
                     final confirm = await showDialog<bool>(
                       context: context,
-                      builder: (ctx) => AlertDialog(
-                        title: const Text('Xoá cuộc trò chuyện'),
-                        content: Text(
-                          'Bạn có chắc muốn xoá cuộc trò chuyện với ${conversation.otherUser?.name ?? 'người này'}? Cuộc trò chuyện sẽ bị ẩn khỏi danh sách.',
+                      builder: (ctx) => Dialog(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const Text('Xoá cuộc trò chuyện', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Bạn có chắc muốn xoá cuộc trò chuyện với ${conversation.otherUser?.name ?? 'người này'}? Cuộc trò chuyện sẽ bị ẩn khỏi danh sách.',
+                              ),
+                              const SizedBox(height: 24),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, false),
+                                    child: const Text('Huỷ'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: AppColors.error,
+                                    ),
+                                    child: const Text('Xoá'),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(ctx, false),
-                            child: const Text('Huỷ'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(ctx, true),
-                            style: TextButton.styleFrom(
-                              foregroundColor: AppColors.error,
-                            ),
-                            child: const Text('Xoá'),
-                          ),
-                        ],
                       ),
                     );
                     return confirm ?? false;

@@ -392,30 +392,19 @@ export class PartnersService {
 
   /**
    * Get partner by ID (public profile)
-   * @param partnerId Partner user ID
+   * @param partnerId Partner user ID or partner profile ID (UUID)
    * @param currentUserId Optional current user ID to check block status
    */
   async getPartnerById(partnerId: string, currentUserId?: string) {
-    // Check if either user has blocked the other
-    if (currentUserId && currentUserId !== partnerId) {
-      const blockExists = await this.prisma.userBlacklist.findFirst({
-        where: {
-          OR: [
-            { blockerId: currentUserId, blockedId: partnerId },
-            { blockerId: partnerId, blockedId: currentUserId },
-          ],
-        },
-      });
-      
-      if (blockExists) {
-        throw new ForbiddenException('Không thể xem hồ sơ người dùng này');
-      }
-    }
+    const baseWhere = {
+      user: { role: UserRole.PARTNER, status: 'ACTIVE' as const },
+    };
 
-    const partner = await this.prisma.partnerProfile.findFirst({
+    // Find by userId first, then by profile id so both identifiers work
+    let partner = await this.prisma.partnerProfile.findFirst({
       where: {
+        ...baseWhere,
         userId: partnerId,
-        user: { role: UserRole.PARTNER, status: 'ACTIVE' },
       },
       include: {
         user: {
@@ -454,7 +443,66 @@ export class PartnersService {
     });
 
     if (!partner) {
+      partner = await this.prisma.partnerProfile.findFirst({
+        where: {
+          ...baseWhere,
+          id: partnerId,
+        },
+        include: {
+          user: {
+            include: {
+              profile: true,
+              reviewsReceived: {
+                take: 5,
+                orderBy: { createdAt: 'desc' },
+                include: {
+                  reviewer: {
+                    include: {
+                      profile: {
+                        select: {
+                          fullName: true,
+                          avatarUrl: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            omit: {
+              passwordHash: true,
+            },
+          },
+          availabilitySlots: {
+            where: {
+              date: { gte: new Date() },
+              status: SlotStatus.AVAILABLE,
+            },
+            take: 20,
+            orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
+          },
+        },
+      });
+    }
+
+    if (!partner) {
       throw new NotFoundException('Partner not found');
+    }
+
+    // Block check using resolved userId
+    const resolvedUserId = partner.userId;
+    if (currentUserId && currentUserId !== resolvedUserId) {
+      const blockExists = await this.prisma.userBlacklist.findFirst({
+        where: {
+          OR: [
+            { blockerId: currentUserId, blockedId: resolvedUserId },
+            { blockerId: resolvedUserId, blockedId: currentUserId },
+          ],
+        },
+      });
+      if (blockExists) {
+        throw new ForbiddenException('Không thể xem hồ sơ người dùng này');
+      }
     }
 
     return this.transformPartnerDetailResponse(partner);

@@ -9,7 +9,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/theme_context.dart';
 import '../../../core/utils/image_utils.dart';
 
-/// Partner Card - Horizontal style for featured/recommendations
+/// Canonical partner card for lists (favorites, recommendations). Horizontal style.
 class PartnerCard extends StatelessWidget {
   final String id;
   final String name;

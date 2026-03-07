@@ -8,8 +8,8 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/theme_context.dart';
 import '../../../core/utils/image_utils.dart';
 
-/// Partner Card - Main card for displaying partner info
-class PartnerCard extends StatelessWidget {
+/// Partner card with services list (alternative style). Prefer [shared/widgets/cards/partner_card.dart] for lists.
+class PartnerCardWithServices extends StatelessWidget {
   final String name;
   final String? avatarUrl;
   final double rating;
@@ -23,7 +23,7 @@ class PartnerCard extends StatelessWidget {
   final VoidCallback? onFavorite;
   final bool isFavorite;
 
-  const PartnerCard({
+  const PartnerCardWithServices({
     super.key,
     required this.name,
     this.avatarUrl,

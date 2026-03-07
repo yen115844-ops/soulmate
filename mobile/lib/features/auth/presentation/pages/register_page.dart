@@ -90,14 +90,61 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
+  void _showConflictDialog(BuildContext context, String message) {
+    final isEmailConflict = message.toLowerCase().contains('email');
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('Thông báo', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+              const SizedBox(height: 16),
+              Text(message, style: AppTypography.bodyMedium.copyWith(color: context.appColors.textSecondary)),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: Text('Đóng', style: AppTypography.labelLarge.copyWith(color: context.appColors.textSecondary)),
+                  ),
+                  if (isEmailConflict)
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(ctx).pop();
+                        context.push(RouteNames.forgotPassword);
+                      },
+                      child: Text('Quên mật khẩu', style: AppTypography.labelLarge.copyWith(color: AppColors.primary)),
+                    ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(ctx).pop();
+                      context.pushReplacement(RouteNames.login);
+                    },
+                    child: Text('Đăng nhập', style: AppTypography.labelLarge.copyWith(color: AppColors.primary)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthRegisterSuccess) {
           _showSuccess('Mã OTP đã được gửi đến email của bạn.');
-          // Navigate to OTP verification page (email verify)
-          context.go(
+          // Push OTP page so user can Back / Đổi email to return to register form
+          context.push(
             RouteNames.otpVerification,
             extra: {
               'phone': _phoneController.text.trim(),
@@ -112,7 +159,11 @@ class _RegisterPageState extends State<RegisterPage> {
           _showSuccess('Tài khoản đang chờ xác minh.');
           context.go(RouteNames.home);
         } else if (state is AuthError) {
-          _showError(state.message);
+          if (state.statusCode == 409) {
+            _showConflictDialog(context, state.message);
+          } else {
+            _showError(state.message);
+          }
         }
       },
       builder: (context, state) {
@@ -241,11 +292,6 @@ class _RegisterPageState extends State<RegisterPage> {
                         if (value.length < 8) {
                           return 'Mật khẩu phải có ít nhất 8 ký tự';
                         }
-                        if (!RegExp(
-                          r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)',
-                        ).hasMatch(value)) {
-                          return 'Mật khẩu cần có chữ hoa, chữ thường và số';
-                        }
                         return null;
                       },
                     ),
@@ -302,7 +348,8 @@ class _RegisterPageState extends State<RegisterPage> {
                           child: RichText(
                             text: TextSpan(
                               style: AppTypography.bodySmall.copyWith(
-                                color: context.appColors.textSecondary,
+                                color: context.appColors.textPrimary,
+                                fontWeight: FontWeight.w500,
                               ),
                               children: [
                                 const TextSpan(text: 'Tôi đồng ý với '),
@@ -321,7 +368,13 @@ class _RegisterPageState extends State<RegisterPage> {
                                   text:
                                       ' (bao gồm chính sách không dung thứ nội dung phản cảm hoặc hành vi lạm dụng)',
                                 ),
-                                const TextSpan(text: ' và '),
+                                TextSpan(
+                                  text: ' và ',
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: context.appColors.textPrimary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
                                 TextSpan(
                                   text: 'Chính sách bảo mật',
                                   style: AppTypography.bodySmall.copyWith(

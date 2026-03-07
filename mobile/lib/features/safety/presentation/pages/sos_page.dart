@@ -83,45 +83,48 @@ class _SosPageState extends State<SosPage> with SingleTickerProviderStateMixin {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => AlertDialog(
+        builder: (context) => Dialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: AppColors.error.withAlpha(25),
-                  shape: BoxShape.circle,
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withAlpha(25),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Ionicons.call_outline,
+                    color: AppColors.error,
+                    size: 40,
+                  ),
                 ),
-                child: const Icon(
-                  Ionicons.call_outline,
-                  color: AppColors.error,
-                  size: 40,
+                const SizedBox(height: 24),
+                Text(
+                  'Đang gửi tín hiệu SOS',
+                  style: AppTypography.titleLarge,
+                  textAlign: TextAlign.center,
                 ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Đang gửi tín hiệu SOS',
-                style: AppTypography.titleLarge,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Vị trí của bạn đang được gửi đến các liên hệ khẩn cấp và đội ngũ hỗ trợ.',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: context.appColors.textSecondary,
+                const SizedBox(height: 12),
+                Text(
+                  'Vị trí của bạn đang được gửi đến các liên hệ khẩn cấp và đội ngũ hỗ trợ.',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: context.appColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation(AppColors.error),
-              ),
-            ],
+                const SizedBox(height: 24),
+                const CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation(AppColors.error),
+                ),
+              ],
+            ),
           ),
         ),
       );

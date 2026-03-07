@@ -614,26 +614,41 @@ class _PartnerBookingCard extends StatelessWidget {
   void _startBooking(BuildContext context, String bookingId) {
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Bắt đầu cuộc hẹn'),
-        content: const Text(
-          'Xác nhận bắt đầu cuộc hẹn với khách hàng?',
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('Bắt đầu cuộc hẹn', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+              const SizedBox(height: 16),
+              const Text(
+                'Xác nhận bắt đầu cuộc hẹn với khách hàng?',
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: const Text('Hủy'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(dialogContext);
+                      context.read<PartnerBookingsBloc>().add(
+                        PartnerBookingStartRequested(bookingId: bookingId),
+                      );
+                    },
+                    child: const Text('Bắt đầu'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Hủy'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              context.read<PartnerBookingsBloc>().add(
-                PartnerBookingStartRequested(bookingId: bookingId),
-              );
-            },
-            child: const Text('Bắt đầu'),
-          ),
-        ],
       ),
     );
   }
@@ -643,45 +658,55 @@ class _PartnerBookingCard extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Hoàn thành cuộc hẹn'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Ghi chú (tùy chọn):'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: noteController,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                hintText: 'Nhập ghi chú về cuộc hẹn...',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Hủy'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              final note = noteController.text.trim();
-              context.read<PartnerBookingsBloc>().add(
-                PartnerBookingCompleteRequested(
-                  bookingId: bookingId,
-                  note: note.isNotEmpty ? note : null,
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('Hoàn thành cuộc hẹn', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+              const SizedBox(height: 16),
+              const Text('Ghi chú (tùy chọn):'),
+              const SizedBox(height: 16),
+              TextField(
+                controller: noteController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  hintText: 'Nhập ghi chú về cuộc hẹn...',
+                  border: OutlineInputBorder(),
                 ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.success,
-            ),
-            child: const Text('Hoàn thành'),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: const Text('Hủy'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(dialogContext);
+                      final note = noteController.text.trim();
+                      context.read<PartnerBookingsBloc>().add(
+                        PartnerBookingCompleteRequested(
+                          bookingId: bookingId,
+                          note: note.isNotEmpty ? note : null,
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.success,
+                    ),
+                    child: const Text('Hoàn thành'),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -691,48 +716,58 @@ class _PartnerBookingCard extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Từ chối lịch hẹn'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Vui lòng cho biết lý do từ chối:'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: reasonController,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                hintText: 'Nhập lý do...',
-                border: OutlineInputBorder(),
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('Từ chối lịch hẹn', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+              const SizedBox(height: 16),
+              const Text('Vui lòng cho biết lý do từ chối:'),
+              const SizedBox(height: 16),
+              TextField(
+                controller: reasonController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  hintText: 'Nhập lý do...',
+                  border: OutlineInputBorder(),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: const Text('Hủy'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      final reason = reasonController.text.trim();
+                      if (reason.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Vui lòng nhập lý do')),
+                        );
+                        return;
+                      }
+                      Navigator.pop(dialogContext);
+                      context.read<PartnerBookingsBloc>().add(
+                            PartnerBookingCancelRequested(
+                              bookingId: booking.id,
+                              reason: reason,
+                            ),
+                          );
+                    },
+                    child: const Text('Từ chối', style: TextStyle(color: AppColors.error)),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Hủy'),
-          ),
-          TextButton(
-            onPressed: () {
-              final reason = reasonController.text.trim();
-              if (reason.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Vui lòng nhập lý do')),
-                );
-                return;
-              }
-              Navigator.pop(dialogContext);
-              context.read<PartnerBookingsBloc>().add(
-                    PartnerBookingCancelRequested(
-                      bookingId: booking.id,
-                      reason: reason,
-                    ),
-                  );
-            },
-            child: const Text('Từ chối', style: TextStyle(color: AppColors.error)),
-          ),
-        ],
       ),
     );
   }

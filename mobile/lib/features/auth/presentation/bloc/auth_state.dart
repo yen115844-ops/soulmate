@@ -111,14 +111,16 @@ class AuthUnauthenticated extends AuthState {
 class AuthError extends AuthState {
   final String message;
   final dynamic errors;
+  final int? statusCode;
 
   const AuthError({
     required this.message,
     this.errors,
+    this.statusCode,
   });
 
   @override
-  List<Object?> get props => [message, errors];
+  List<Object?> get props => [message, errors, statusCode];
 }
 
 /// State when login is successful

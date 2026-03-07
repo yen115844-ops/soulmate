@@ -78,81 +78,83 @@ class PremiumUpgradeDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      contentPadding: const EdgeInsets.all(24),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Premium icon
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Premium icon
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                ),
+                shape: BoxShape.circle,
               ),
-              shape: BoxShape.circle,
+              child: const Icon(
+                Icons.workspace_premium_rounded,
+                size: 40,
+                color: Colors.white,
+              ),
             ),
-            child: const Icon(
-              Icons.workspace_premium_rounded,
-              size: 40,
-              color: Colors.white,
+            const SizedBox(height: 20),
+            Text(
+              title,
+              style: AppTypography.titleLarge.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
             ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            title,
-            style: AppTypography.titleLarge.copyWith(
-              fontWeight: FontWeight.bold,
+            const SizedBox(height: 12),
+            Text(
+              message,
+              style: AppTypography.bodyMedium.copyWith(
+                color: Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            message,
-            style: AppTypography.bodyMedium.copyWith(
-              color: Colors.grey[600],
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          // Premium benefits preview
-          _buildBenefitItem('Nhắn tin không giới hạn'),
-          _buildBenefitItem('Ưu tiên hiển thị'),
-          _buildBenefitItem('Xem ai đã quan tâm'),
-          const SizedBox(height: 24),
-          // Upgrade button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop(true);
-                onUpgrade?.call();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            const SizedBox(height: 8),
+            // Premium benefits preview
+            _buildBenefitItem('Nhắn tin không giới hạn'),
+            _buildBenefitItem('Ưu tiên hiển thị'),
+            _buildBenefitItem('Xem ai đã quan tâm'),
+            const SizedBox(height: 24),
+            // Upgrade button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                  onUpgrade?.call();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Nâng cấp Premium',
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
-              child: const Text(
-                'Nâng cấp Premium',
-                style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(
+                'Để sau',
+                style: TextStyle(color: Colors.grey[600]),
               ),
             ),
-          ),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(
-              'Để sau',
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

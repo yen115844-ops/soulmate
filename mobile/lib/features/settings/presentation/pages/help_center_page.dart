@@ -1,9 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ionicons/ionicons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../config/routes/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
@@ -155,6 +157,13 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
   }
 
   Future<void> _contactSupport(String method) async {
+    if (method == 'chat') {
+      if (context.mounted) {
+        context.push(RouteNames.chat);
+      }
+      return;
+    }
+
     Uri uri;
     switch (method) {
       case 'email':
@@ -163,9 +172,6 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
       case 'phone':
         uri = Uri(scheme: 'tel', path: '19001234');
         break;
-      case 'chat':
-        // TODO: Open in-app chat
-        return;
       default:
         return;
     }

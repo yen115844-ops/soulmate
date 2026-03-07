@@ -5,10 +5,12 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ionicons/ionicons.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/network/api_config.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
@@ -507,26 +509,40 @@ class _ProfileContent extends StatelessWidget {
     final authBloc = context.read<AuthBloc>();
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Đăng xuất', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.error)),
-        content: Text(
-          'Bạn có chắc chắn muốn đăng xuất?',
-          style: TextStyle(color: Theme.of(dialogContext).colorScheme.onSurface),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('Đăng xuất', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.error, fontSize: 18)),
+              const SizedBox(height: 16),
+              Text(
+                'Bạn có chắc chắn muốn đăng xuất?',
+                style: TextStyle(color: Theme.of(dialogContext).colorScheme.onSurface),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: const Text('Hủy'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(dialogContext);
+                      authBloc.add(const AuthLogoutRequested());
+                    },
+                    child: const Text('Đăng xuất', style: TextStyle(color: AppColors.error)),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Hủy'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              authBloc.add(const AuthLogoutRequested());
-            },
-            child: const Text('Đăng xuất', style: TextStyle(color: AppColors.error)),
-          ),
-        ],
       ),
     );
   }
@@ -852,6 +868,14 @@ class _ModernStatItem extends StatelessWidget {
   }
 }
 
+void _inviteFriends(BuildContext context) {
+  final link = ApiConfig.webUrl;
+  Share.share(
+    'Bạn có muốn tham gia ứng dụng cùng tôi không? Tải app tại: $link',
+    subject: 'Mời bạn tham gia ứng dụng',
+  );
+}
+
 class _QuickActions extends StatelessWidget {
   final bool isPartner;
   final PartnerStatus? partnerStatus;
@@ -882,9 +906,7 @@ class _QuickActions extends StatelessWidget {
             icon: Ionicons.gift_outline,
             label: 'Mời bạn bè',
             color: AppColors.accent,
-            onTap: () {
-              // TODO: Invite friends
-            },
+            onTap: () => _inviteFriends(context),
           ),
         ),
       ],
@@ -1467,25 +1489,39 @@ class _GuestProfileView extends StatelessWidget {
   void _showClearCacheDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Xóa bộ nhớ cache?'),
-        content: const Text(
-          'Hành động này sẽ xóa ảnh và dữ liệu tạm thời được lưu trên thiết bị để giải phóng dung lượng.',
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('Xóa bộ nhớ cache?', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+              const SizedBox(height: 16),
+              const Text(
+                'Hành động này sẽ xóa ảnh và dữ liệu tạm thời được lưu trên thiết bị để giải phóng dung lượng.',
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: const Text('Hủy'),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      Navigator.pop(dialogContext);
+                      await _clearCache(context);
+                    },
+                    child: const Text('Xóa', style: TextStyle(color: AppColors.error)),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Hủy'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-              await _clearCache(context);
-            },
-            child: const Text('Xóa', style: TextStyle(color: AppColors.error)),
-          ),
-        ],
       ),
     );
   }

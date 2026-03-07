@@ -828,58 +828,60 @@ class _SoftVerificationPageContentState
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: (isAutoApproved ? AppColors.success : AppColors.warning)
-                    .withOpacity(0.1),
-                shape: BoxShape.circle,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: (isAutoApproved ? AppColors.success : AppColors.warning)
+                      .withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isAutoApproved
+                      ? Ionicons.checkmark_circle
+                      : Ionicons.time_outline,
+                  color: isAutoApproved ? AppColors.success : AppColors.warning,
+                  size: 48,
+                ),
               ),
-              child: Icon(
+              const SizedBox(height: 24),
+              Text(
+                isAutoApproved ? 'Xác thực thành công!' : 'Đã gửi yêu cầu!',
+                style: AppTypography.titleLarge.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
                 isAutoApproved
-                    ? Ionicons.checkmark_circle
-                    : Ionicons.time_outline,
-                color: isAutoApproved ? AppColors.success : AppColors.warning,
-                size: 48,
+                    ? 'Tài khoản của bạn đã được xác thực. Huy hiệu tick xanh sẽ hiển thị trên hồ sơ.'
+                    : 'Yêu cầu xác thực đang được xem xét. Bạn sẽ nhận được thông báo trong 24-48 giờ.',
+                textAlign: TextAlign.center,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: context.appColors.textSecondary,
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              isAutoApproved ? 'Xác thực thành công!' : 'Đã gửi yêu cầu!',
-              style: AppTypography.titleLarge.copyWith(
-                fontWeight: FontWeight.bold,
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: AppButton(
+                  text: 'Đã hiểu',
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                    Navigator.of(context).pop();
+                  },
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              isAutoApproved
-                  ? 'Tài khoản của bạn đã được xác thực. Huy hiệu tick xanh sẽ hiển thị trên hồ sơ.'
-                  : 'Yêu cầu xác thực đang được xem xét. Bạn sẽ nhận được thông báo trong 24-48 giờ.',
-              textAlign: TextAlign.center,
-              style: AppTypography.bodyMedium.copyWith(
-                color: context.appColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          SizedBox(
-            width: double.infinity,
-            child: AppButton(
-              text: 'Đã hiểu',
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                Navigator.of(context).pop();
-              },
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

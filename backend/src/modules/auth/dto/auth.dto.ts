@@ -15,10 +15,7 @@ export class RegisterDto {
 
   @ApiProperty({ example: 'SecureP@ss123', minLength: 8 })
   @IsString()
-  @MinLength(8)
-  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
-    message: 'Password must contain uppercase, lowercase, number/special character',
-  })
+  @MinLength(8, { message: 'Mật khẩu phải có ít nhất 8 ký tự' })
   password: string;
 
   @ApiProperty({ example: 'Nguyen Van A' })
@@ -66,10 +63,7 @@ export class ResetPasswordDto {
 
   @ApiProperty({ example: 'NewSecureP@ss123', minLength: 8 })
   @IsString()
-  @MinLength(8)
-  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
-    message: 'Password must contain uppercase, lowercase, number/special character',
-  })
+  @MinLength(8, { message: 'Mật khẩu phải có ít nhất 8 ký tự' })
   newPassword: string;
 }
 
@@ -81,10 +75,7 @@ export class ChangePasswordDto {
 
   @ApiProperty({ example: 'NewSecureP@ss123', minLength: 8 })
   @IsString()
-  @MinLength(8)
-  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
-    message: 'Password must contain uppercase, lowercase, number/special character',
-  })
+  @MinLength(8, { message: 'Mật khẩu phải có ít nhất 8 ký tự' })
   newPassword: string;
 }
 

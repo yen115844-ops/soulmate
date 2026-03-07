@@ -670,22 +670,37 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
   void _showCancelDialog() {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Hủy hoạt động'),
-        content: const Text('Bạn có chắc chắn muốn hủy hoạt động này không?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Không'),
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('Hủy hoạt động', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+              const SizedBox(height: 16),
+              const Text('Bạn có chắc chắn muốn hủy hoạt động này không?'),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Không'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _cancelBooking();
+                    },
+                    child: Text('Hủy', style: TextStyle(color: AppColors.error)),
+                  ),
+                ],
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _cancelBooking();
-            },
-            child: Text('Hủy', style: TextStyle(color: AppColors.error)),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -730,95 +745,104 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
       context: context,
       builder: (ctx) {
         return StatefulBuilder(
-          builder: (ctx, setDialogState) => AlertDialog(
-            title: const Text('Báo cáo người dùng'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                DropdownButtonFormField<String>(
-                  initialValue: selectedReason,
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Lý do',
-                    border: OutlineInputBorder(),
+          builder: (ctx, setDialogState) => Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text('Báo cáo người dùng', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: selectedReason,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Lý do',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: reasons
+                        .map(
+                          (reason) => DropdownMenuItem<String>(
+                            value: reason,
+                            child: Text(reason),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: isSubmitting
+                        ? null
+                        : (value) {
+                            if (value != null) {
+                              setDialogState(() => selectedReason = value);
+                            }
+                          },
                   ),
-                  items: reasons
-                      .map(
-                        (reason) => DropdownMenuItem<String>(
-                          value: reason,
-                          child: Text(reason),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: isSubmitting
-                      ? null
-                      : (value) {
-                          if (value != null) {
-                            setDialogState(() => selectedReason = value);
-                          }
-                        },
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: descriptionController,
-                  enabled: !isSubmitting,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Mô tả thêm (tùy chọn)',
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: descriptionController,
+                    enabled: !isSubmitting,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      labelText: 'Mô tả thêm (tùy chọn)',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: isSubmitting ? null : () => Navigator.pop(ctx),
-                child: const Text('Hủy'),
-              ),
-              FilledButton(
-                onPressed: isSubmitting
-                    ? null
-                    : () async {
-                        setDialogState(() => isSubmitting = true);
-                        try {
-                          await _bookingRepository.reportBooking(
-                            reportedUserId: _booking!.partnerId,
-                            bookingId: _booking!.id,
-                            reason: selectedReason,
-                            description: descriptionController.text.trim(),
-                          );
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: isSubmitting ? null : () => Navigator.pop(ctx),
+                        child: const Text('Hủy'),
+                      ),
+                      FilledButton(
+                        onPressed: isSubmitting
+                            ? null
+                            : () async {
+                                setDialogState(() => isSubmitting = true);
+                                try {
+                                  await _bookingRepository.reportBooking(
+                                    reportedUserId: _booking!.partnerId,
+                                    bookingId: _booking!.id,
+                                    reason: selectedReason,
+                                    description: descriptionController.text.trim(),
+                                  );
 
-                          if (!mounted || !ctx.mounted) return;
-                          Navigator.pop(ctx);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Đã gửi báo cáo. Chúng tôi sẽ xem xét trong thời gian sớm nhất.',
-                              ),
-                              backgroundColor: AppColors.success,
-                            ),
-                          );
-                        } catch (e) {
-                          if (!mounted) return;
-                          setDialogState(() => isSubmitting = false);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Không thể gửi báo cáo: $e'),
-                              backgroundColor: AppColors.error,
-                            ),
-                          );
-                        }
-                      },
-                child: isSubmitting
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Gửi báo cáo'),
+                                  if (!mounted || !ctx.mounted) return;
+                                  Navigator.pop(ctx);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Đã gửi báo cáo. Chúng tôi sẽ xem xét trong thời gian sớm nhất.',
+                                      ),
+                                      backgroundColor: AppColors.success,
+                                    ),
+                                  );
+                                } catch (e) {
+                                  if (!mounted) return;
+                                  setDialogState(() => isSubmitting = false);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Không thể gửi báo cáo: $e'),
+                                      backgroundColor: AppColors.error,
+                                    ),
+                                  );
+                                }
+                              },
+                        child: isSubmitting
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Text('Gửi báo cáo'),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         );
       },
@@ -829,39 +853,48 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
     final noteController = TextEditingController();
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Hoàn thành hoạt động'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Xác nhận bạn đã hoàn thành hoạt động. Bạn có thể thêm ghi chú (tùy chọn):',
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: noteController,
-              decoration: const InputDecoration(
-                hintText: 'Ghi chú (tùy chọn)',
-                border: OutlineInputBorder(),
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('Hoàn thành hoạt động', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+              const SizedBox(height: 16),
+              const Text(
+                'Xác nhận bạn đã hoàn thành hoạt động. Bạn có thể thêm ghi chú (tùy chọn):',
               ),
-              maxLines: 2,
-            ),
-          ],
+              const SizedBox(height: 12),
+              TextField(
+                controller: noteController,
+                decoration: const InputDecoration(
+                  hintText: 'Ghi chú (tùy chọn)',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Hủy'),
+                  ),
+                  FilledButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _completeBooking(note: noteController.text.trim());
+                    },
+                    child: const Text('Xác nhận hoàn thành'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Hủy'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _completeBooking(note: noteController.text.trim());
-            },
-            child: const Text('Xác nhận hoàn thành'),
-          ),
-        ],
       ),
     );
   }

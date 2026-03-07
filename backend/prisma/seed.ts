@@ -89,7 +89,7 @@ async function main() {
     { key: 'max_login_attempts', value: '5', description: 'Max failed login attempts before lock' },
     { key: 'session_timeout', value: '30', description: 'Token expiry in days' },
     { key: 'password_min_length', value: '8', description: 'Minimum password length' },
-    { key: 'enforce_strong_password', value: 'true', description: 'Enforce strong password policy' },
+    { key: 'enforce_strong_password', value: 'false', description: 'Enforce strong password policy (only min length 8)' },
   ];
 
   for (const setting of appSettings) {

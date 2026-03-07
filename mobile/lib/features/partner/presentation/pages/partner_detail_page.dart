@@ -417,14 +417,15 @@ class _PartnerDetailView extends StatelessWidget {
   }
 
   void _navigateToBooking(BuildContext context, PartnerDetailResponse detail) {
+    // Backend GET /partners/:id expects userId, not profile.id
     context.push(
       RouteNames.createBooking,
-      extra: {'partnerId': detail.profile.id},
+      extra: {'partnerId': detail.profile.userId},
     );
   }
 
   void _sharePartner(BuildContext context, PartnerDetailResponse detail) {
-       final shareUrl = ApiConfig.partnerShareUrl(detail.profile.id);
+       final shareUrl = ApiConfig.partnerShareUrl(detail.profile.userId);
     final partnerName = detail.userProfile?.fullName ?? 'Partner';
     final shareText = 'Xem hồ sơ của $partnerName trên Mate Social:\n$shareUrl';
 

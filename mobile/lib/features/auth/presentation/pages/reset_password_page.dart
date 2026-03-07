@@ -77,44 +77,46 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Ionicons.checkmark_circle_outline,
-              size: 64,
-              color: AppColors.success,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Đặt lại mật khẩu thành công!',
-              style: AppTypography.titleMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Bạn có thể đăng nhập bằng mật khẩu mới.',
-              style: AppTypography.bodySmall.copyWith(
-                color: context.appColors.textSecondary,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Ionicons.checkmark_circle_outline,
+                size: 64,
+                color: AppColors.success,
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-        actions: [
-          SizedBox(
-            width: double.infinity,
-            child: AppButton(
-              text: 'Đăng nhập',
-              onPressed: () {
-                Navigator.pop(ctx);
-                context.go(RouteNames.login);
-              },
-            ),
+              const SizedBox(height: 16),
+              Text(
+                'Đặt lại mật khẩu thành công!',
+                style: AppTypography.titleMedium,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Bạn có thể đăng nhập bằng mật khẩu mới.',
+                style: AppTypography.bodySmall.copyWith(
+                  color: context.appColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: AppButton(
+                  text: 'Đăng nhập',
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    context.go(RouteNames.login);
+                  },
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -184,15 +186,6 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                       return 'Vui lòng nhập mật khẩu mới';
                     }
                     if (v.length < 8) return 'Mật khẩu phải có ít nhất 8 ký tự';
-                    if (!v.contains(RegExp(r'[A-Z]'))) {
-                      return 'Cần ít nhất 1 chữ hoa';
-                    }
-                    if (!v.contains(RegExp(r'[a-z]'))) {
-                      return 'Cần ít nhất 1 chữ thường';
-                    }
-                    if (!v.contains(RegExp(r'[0-9]'))) {
-                      return 'Cần ít nhất 1 số';
-                    }
                     return null;
                   },
                 ),
