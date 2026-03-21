@@ -46,9 +46,9 @@ export class UpdateSettingsDto {
   @IsOptional()
   showOnlineStatus?: boolean;
 
-  @ApiPropertyOptional({ 
-    description: 'Who can send messages', 
-    enum: ['everyone', 'verified', 'none'] 
+  @ApiPropertyOptional({
+    description: 'Who can send messages',
+    enum: ['everyone', 'verified', 'none'],
   })
   @IsString()
   @IsIn(['everyone', 'verified', 'none'])

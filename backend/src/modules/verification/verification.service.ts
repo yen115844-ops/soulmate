@@ -1,9 +1,13 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { KycStatus, NotificationType } from '../../generated/prisma/client';
 import { NotificationsService } from '../notifications';
 import { ReviewVerificationDto, SubmitSelfieDto } from './dto';
- 
+
 // Thresholds for auto-verification
 // NOTE: For now, we disable auto-verification and require manual CMS review.
 // Set AUTO_APPROVE_THRESHOLD to a very high value (1.1) to always require manual review.
@@ -134,7 +138,9 @@ export class VerificationService {
     return {
       id: verification.id,
       status: verification.status,
-      livenessScore: verification.livenessScore ? Number(verification.livenessScore) : null,
+      livenessScore: verification.livenessScore
+        ? Number(verification.livenessScore)
+        : null,
       isAutoVerified: verification.isAutoVerified,
       verifiedAt: verification.verifiedAt,
       submittedAt: verification.submittedAt,
@@ -145,16 +151,16 @@ export class VerificationService {
 
   /**
    * Perform liveness check (placeholder for now)
-   * 
+   *
    * CURRENT STATUS: Returns a random score for development.
    * All submissions go to PENDING for manual CMS review.
-   * 
+   *
    * TODO: Future Enhancement - Integrate with actual liveness API:
    * - AWS Rekognition Face Liveness (recommended)
    * - FPT.AI eKYC (Vietnam)
    * - VNPT eKYC (Vietnam)
    * - Jumio, Onfido (international)
-   * 
+   *
    * When implementing:
    * 1. Call the liveness API with selfie URL
    * 2. Get actual liveness score and face quality metrics
@@ -182,9 +188,15 @@ export class VerificationService {
   async adminGetStats() {
     const [total, pending, verified, rejected, none] = await Promise.all([
       this.prisma.kycVerification.count(),
-      this.prisma.kycVerification.count({ where: { status: KycStatus.PENDING } }),
-      this.prisma.kycVerification.count({ where: { status: KycStatus.VERIFIED } }),
-      this.prisma.kycVerification.count({ where: { status: KycStatus.REJECTED } }),
+      this.prisma.kycVerification.count({
+        where: { status: KycStatus.PENDING },
+      }),
+      this.prisma.kycVerification.count({
+        where: { status: KycStatus.VERIFIED },
+      }),
+      this.prisma.kycVerification.count({
+        where: { status: KycStatus.REJECTED },
+      }),
       this.prisma.user.count({ where: { kycStatus: KycStatus.NONE } }),
     ]);
 
@@ -202,11 +214,18 @@ export class VerificationService {
     sortBy?: string;
     sortOrder?: 'asc' | 'desc';
   }) {
-    const { page = 1, limit = 10, status, search, sortBy = 'submittedAt', sortOrder = 'desc' } = params;
+    const {
+      page = 1,
+      limit = 10,
+      status,
+      search,
+      sortBy = 'submittedAt',
+      sortOrder = 'desc',
+    } = params;
     const skip = (page - 1) * limit;
 
     const where: any = {};
-    
+
     if (status) {
       where.status = status;
     }
@@ -309,7 +328,8 @@ export class VerificationService {
         status: dto.status,
         verifiedAt: dto.status === KycStatus.VERIFIED ? new Date() : null,
         verifiedBy: dto.status === KycStatus.VERIFIED ? adminId : null,
-        rejectionReason: dto.status === KycStatus.REJECTED ? dto.rejectionReason : null,
+        rejectionReason:
+          dto.status === KycStatus.REJECTED ? dto.rejectionReason : null,
         reviewNote: dto.reviewNote,
         isAutoVerified: false,
       },
@@ -335,7 +355,9 @@ export class VerificationService {
         userId: verification.userId,
         type: NotificationType.SYSTEM,
         title: 'Xác thực bị từ chối',
-        body: dto.rejectionReason || 'Yêu cầu xác thực của bạn không được chấp nhận. Vui lòng thử lại.',
+        body:
+          dto.rejectionReason ||
+          'Yêu cầu xác thực của bạn không được chấp nhận. Vui lòng thử lại.',
         actionType: 'verification',
       });
     }

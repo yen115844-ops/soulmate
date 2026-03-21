@@ -1,14 +1,24 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma/prisma.service';
-import { NotificationType, TransactionStatus, TransactionType } from '../../generated/prisma/client';
+import {
+  NotificationType,
+  TransactionStatus,
+  TransactionType,
+} from '../../generated/prisma/client';
 import { NotificationsService } from '../notifications';
 import {
-    CREDIT_TO_VND_RATE,
-    MINIMUM_WITHDRAWAL_CREDITS,
-    calculatePlatformFee,
-    creditsToVnd,
+  CREDIT_TO_VND_RATE,
+  MINIMUM_WITHDRAWAL_CREDITS,
+  calculatePlatformFee,
+  creditsToVnd,
 } from './credits.constants';
-import { CreateCreditPackageDto, UpdateBankInfoDto, UpdateCreditPackageDto, VerifyCreditPurchaseDto, WithdrawCreditsDto } from './dto';
+import {
+  CreateCreditPackageDto,
+  UpdateBankInfoDto,
+  UpdateCreditPackageDto,
+  VerifyCreditPurchaseDto,
+  WithdrawCreditsDto,
+} from './dto';
 
 @Injectable()
 export class CreditsService {
@@ -36,18 +46,20 @@ export class CreditsService {
    */
   async getWallet(userId: string) {
     const wallet = await this.getOrCreateWallet(userId);
-    
+
     return {
       id: wallet.id,
       balance: wallet.balance,
       pendingBalance: wallet.pendingBalance,
       totalEarnings: wallet.totalEarnings,
       totalSpent: wallet.totalSpent,
-      bankInfo: wallet.bankName ? {
-        bankName: wallet.bankName,
-        bankAccountNo: wallet.bankAccountNo,
-        bankAccountName: wallet.bankAccountName,
-      } : null,
+      bankInfo: wallet.bankName
+        ? {
+            bankName: wallet.bankName,
+            bankAccountNo: wallet.bankAccountNo,
+            bankAccountName: wallet.bankAccountName,
+          }
+        : null,
       exchangeRate: CREDIT_TO_VND_RATE,
       balanceInVnd: creditsToVnd(wallet.balance),
     };
@@ -72,7 +84,7 @@ export class CreditsService {
     ]);
 
     return {
-      data: transactions.map(tx => ({
+      data: transactions.map((tx) => ({
         id: tx.id,
         code: tx.transactionCode,
         type: tx.type,
@@ -98,9 +110,10 @@ export class CreditsService {
   async verifyCreditPurchase(userId: string, dto: VerifyCreditPurchaseDto) {
     // Find the package
     const creditPackage = await this.prisma.creditPackage.findFirst({
-      where: dto.platform === 'ios'
-        ? { appleProductId: dto.productId }
-        : { googleProductId: dto.productId },
+      where:
+        dto.platform === 'ios'
+          ? { appleProductId: dto.productId }
+          : { googleProductId: dto.productId },
     });
 
     if (!creditPackage) {
@@ -125,7 +138,8 @@ export class CreditsService {
     }
 
     // Calculate total credits
-    const totalCredits = creditPackage.creditAmount + creditPackage.bonusCredits;
+    const totalCredits =
+      creditPackage.creditAmount + creditPackage.bonusCredits;
 
     // Process purchase in transaction
     const result = await this.prisma.$transaction(async (tx) => {
@@ -156,13 +170,19 @@ export class CreditsService {
     });
 
     // Send notification
-    await this.notificationsService.sendNotification({
-      userId,
-      type: NotificationType.PAYMENT,
-      title: 'Mua Credits thành công',
-      body: `Bạn đã nhận ${totalCredits} credits vào tài khoản`,
-      data: { purchaseId: result.purchase.id },
-    }).catch((err) => this.logger.warn(`Failed to send purchase notification: ${err?.message}`));
+    await this.notificationsService
+      .sendNotification({
+        userId,
+        type: NotificationType.PAYMENT,
+        title: 'Mua Credits thành công',
+        body: `Bạn đã nhận ${totalCredits} credits vào tài khoản`,
+        data: { purchaseId: result.purchase.id },
+      })
+      .catch((err) =>
+        this.logger.warn(
+          `Failed to send purchase notification: ${err?.message}`,
+        ),
+      );
 
     return {
       success: true,
@@ -179,7 +199,9 @@ export class CreditsService {
 
     // Validate
     if (dto.amount < MINIMUM_WITHDRAWAL_CREDITS) {
-      throw new BadRequestException(`Minimum withdrawal is ${MINIMUM_WITHDRAWAL_CREDITS} credits`);
+      throw new BadRequestException(
+        `Minimum withdrawal is ${MINIMUM_WITHDRAWAL_CREDITS} credits`,
+      );
     }
 
     if (wallet.balance < dto.amount) {
@@ -187,7 +209,9 @@ export class CreditsService {
     }
 
     if (!wallet.bankName || !wallet.bankAccountNo) {
-      throw new BadRequestException('Please add bank account information first');
+      throw new BadRequestException(
+        'Please add bank account information first',
+      );
     }
 
     // Calculate VND amount
@@ -229,7 +253,9 @@ export class CreditsService {
     });
 
     // Notify admins about withdrawal request
-    this.logger.log(`Withdrawal request: User ${userId}, ${dto.amount} credits = ${vndAmount}đ`);
+    this.logger.log(
+      `Withdrawal request: User ${userId}, ${dto.amount} credits = ${vndAmount}đ`,
+    );
 
     return {
       success: true,
@@ -237,7 +263,8 @@ export class CreditsService {
       amount: dto.amount,
       vndAmount,
       status: 'PENDING',
-      message: 'Yêu cầu rút tiền đã được gửi. Vui lòng chờ xử lý trong 1-3 ngày làm việc.',
+      message:
+        'Yêu cầu rút tiền đã được gửi. Vui lòng chờ xử lý trong 1-3 ngày làm việc.',
     };
   }
 
@@ -272,7 +299,12 @@ export class CreditsService {
   /**
    * Pay for a booking (move credits to escrow)
    */
-  async payBooking(bookingId: string, userId: string, partnerId: string, amount: number) {
+  async payBooking(
+    bookingId: string,
+    userId: string,
+    partnerId: string,
+    amount: number,
+  ) {
     const wallet = await this.getOrCreateWallet(userId);
 
     if (wallet.balance < amount) {
@@ -378,13 +410,19 @@ export class CreditsService {
       });
 
       // Notify partner
-      await this.notificationsService.sendNotification({
-        userId: escrow.payeeId,
-        type: NotificationType.PAYMENT,
-        title: 'Nhận thanh toán',
-        body: `Bạn đã nhận ${escrow.amount} credits từ booking hoàn thành`,
-        data: { bookingId },
-      }).catch((err) => this.logger.warn(`Failed to send release notification: ${err?.message}`));
+      await this.notificationsService
+        .sendNotification({
+          userId: escrow.payeeId,
+          type: NotificationType.PAYMENT,
+          title: 'Nhận thanh toán',
+          body: `Bạn đã nhận ${escrow.amount} credits từ booking hoàn thành`,
+          data: { bookingId },
+        })
+        .catch((err) =>
+          this.logger.warn(
+            `Failed to send release notification: ${err?.message}`,
+          ),
+        );
 
       return { success: true };
     });
@@ -441,13 +479,19 @@ export class CreditsService {
       });
 
       // Notify user
-      await this.notificationsService.sendNotification({
-        userId: escrow.payerId,
-        type: NotificationType.PAYMENT,
-        title: 'Hoàn tiền',
-        body: `Bạn đã được hoàn ${escrow.totalAmount} credits do booking bị hủy`,
-        data: { bookingId },
-      }).catch((err) => this.logger.warn(`Failed to send refund notification: ${err?.message}`));
+      await this.notificationsService
+        .sendNotification({
+          userId: escrow.payerId,
+          type: NotificationType.PAYMENT,
+          title: 'Hoàn tiền',
+          body: `Bạn đã được hoàn ${escrow.totalAmount} credits do booking bị hủy`,
+          data: { bookingId },
+        })
+        .catch((err) =>
+          this.logger.warn(
+            `Failed to send refund notification: ${err?.message}`,
+          ),
+        );
 
       return { success: true };
     });
@@ -516,7 +560,7 @@ export class CreditsService {
     const prisma = tx || this.prisma;
     const date = new Date();
     const prefix = `TXN-${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-    
+
     const count = await prisma.transaction.count({
       where: {
         transactionCode: { startsWith: prefix },
@@ -529,10 +573,14 @@ export class CreditsService {
   /**
    * Verify IAP receipt with Apple/Google
    */
-  private async verifyReceipt(dto: VerifyCreditPurchaseDto): Promise<{ isValid: boolean }> {
+  private async verifyReceipt(
+    dto: VerifyCreditPurchaseDto,
+  ): Promise<{ isValid: boolean }> {
     // TODO: Implement actual receipt verification with Apple/Google servers
     // For now, return valid for development
-    this.logger.log(`Verifying receipt for ${dto.platform}: ${dto.transactionId}`);
+    this.logger.log(
+      `Verifying receipt for ${dto.platform}: ${dto.transactionId}`,
+    );
     return { isValid: true };
   }
 
@@ -581,13 +629,25 @@ export class CreditsService {
         ...(dto.name !== undefined && { name: dto.name }),
         ...(dto.nameVi !== undefined && { nameVi: dto.nameVi }),
         ...(dto.description !== undefined && { description: dto.description }),
-        ...(dto.creditAmount !== undefined && { creditAmount: dto.creditAmount }),
-        ...(dto.bonusCredits !== undefined && { bonusCredits: dto.bonusCredits }),
+        ...(dto.creditAmount !== undefined && {
+          creditAmount: dto.creditAmount,
+        }),
+        ...(dto.bonusCredits !== undefined && {
+          bonusCredits: dto.bonusCredits,
+        }),
         ...(dto.priceVnd !== undefined && { priceVnd: dto.priceVnd }),
-        ...(dto.appleProductId !== undefined && { appleProductId: dto.appleProductId }),
-        ...(dto.googleProductId !== undefined && { googleProductId: dto.googleProductId }),
-        ...(dto.originalPrice !== undefined && { originalPrice: dto.originalPrice }),
-        ...(dto.discountPercent !== undefined && { discountPercent: dto.discountPercent }),
+        ...(dto.appleProductId !== undefined && {
+          appleProductId: dto.appleProductId,
+        }),
+        ...(dto.googleProductId !== undefined && {
+          googleProductId: dto.googleProductId,
+        }),
+        ...(dto.originalPrice !== undefined && {
+          originalPrice: dto.originalPrice,
+        }),
+        ...(dto.discountPercent !== undefined && {
+          discountPercent: dto.discountPercent,
+        }),
         ...(dto.isActive !== undefined && { isActive: dto.isActive }),
         ...(dto.isBestValue !== undefined && { isBestValue: dto.isBestValue }),
         ...(dto.sortOrder !== undefined && { sortOrder: dto.sortOrder }),

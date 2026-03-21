@@ -63,6 +63,11 @@ class SubscriptionRestoreRequested extends SubscriptionEvent {
   List<Object?> get props => [platform, receiptData];
 }
 
+/// Purchase cancelled by user
+class SubscriptionPurchaseCancelled extends SubscriptionEvent {
+  const SubscriptionPurchaseCancelled();
+}
+
 /// Load admirers list (who favorited me)
 class SubscriptionAdmirersRequested extends SubscriptionEvent {
   const SubscriptionAdmirersRequested();

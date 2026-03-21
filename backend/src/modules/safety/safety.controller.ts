@@ -1,28 +1,33 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    HttpCode,
-    HttpStatus,
-    Param,
-    Patch,
-    Post,
-    Put,
-    UseGuards,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Put,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { UserRole } from '../../generated/prisma/client';
 import {
-    CreateEmergencyContactDto,
-    LogLocationDto,
-    ResolveSosDto,
-    TriggerSosDto,
-    UpdateEmergencyContactDto,
+  CreateEmergencyContactDto,
+  LogLocationDto,
+  ResolveSosDto,
+  TriggerSosDto,
+  UpdateEmergencyContactDto,
 } from './dto';
 import { SafetyService } from './safety.service';
 
@@ -49,10 +54,7 @@ export class SafetyController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Cancel own SOS event' })
   @ApiResponse({ status: 200, description: 'SOS cancelled' })
-  async cancelSos(
-    @Param('id') id: string,
-    @CurrentUser('id') userId: string,
-  ) {
+  async cancelSos(@Param('id') id: string, @CurrentUser('id') userId: string) {
     return this.safetyService.cancelSos(id, userId);
   }
 

@@ -27,6 +27,9 @@ class ProfileUpdateRequested extends ProfileEvent {
   final DateTime? dateOfBirth;
   final int? heightCm;
   final int? weightKg;
+  final String? education;
+  final String? smokingHabit;
+  final String? drinkingHabit;
   final String? provinceId;
   final String? districtId;
   final String? city;
@@ -44,6 +47,9 @@ class ProfileUpdateRequested extends ProfileEvent {
     this.dateOfBirth,
     this.heightCm,
     this.weightKg,
+    this.education,
+    this.smokingHabit,
+    this.drinkingHabit,
     this.provinceId,
     this.districtId,
     this.city,
@@ -63,6 +69,9 @@ class ProfileUpdateRequested extends ProfileEvent {
         dateOfBirth,
         heightCm,
         weightKg,
+        education,
+        smokingHabit,
+        drinkingHabit,
         provinceId,
         districtId,
         city,

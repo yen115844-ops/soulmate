@@ -5,11 +5,14 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import {
-    AllExceptionsFilter,
-    HttpExceptionFilter,
-    PrismaExceptionFilter,
+  AllExceptionsFilter,
+  HttpExceptionFilter,
+  PrismaExceptionFilter,
 } from './common/filters';
-import { LoggingInterceptor, TransformInterceptor } from './common/interceptors';
+import {
+  LoggingInterceptor,
+  TransformInterceptor,
+} from './common/interceptors';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -37,9 +40,12 @@ async function bootstrap() {
   // CORS — use specific origins in production, wildcard only in development
   const corsOrigins = configService.get<string>('CORS_ORIGINS', '*');
   app.enableCors({
-    origin: corsOrigins === '*' 
-      ? (process.env.NODE_ENV === 'production' ? false : true)
-      : corsOrigins.split(',').map(o => o.trim()),
+    origin:
+      corsOrigins === '*'
+        ? process.env.NODE_ENV === 'production'
+          ? false
+          : true
+        : corsOrigins.split(',').map((o) => o.trim()),
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: corsOrigins !== '*',
   });
@@ -109,7 +115,9 @@ async function bootstrap() {
   }
 
   await app.listen(port);
-  logger.log(`Application is running on: http://localhost:${port}/${apiPrefix}`);
+  logger.log(
+    `Application is running on: http://localhost:${port}/${apiPrefix}`,
+  );
 }
 
 bootstrap();

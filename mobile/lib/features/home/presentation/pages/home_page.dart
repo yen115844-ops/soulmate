@@ -6,10 +6,11 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection.dart';
-import '../../../../core/utils/responsive.dart';
 import '../../../../core/services/app_deep_link_service.dart';
 import '../../../../core/services/deep_link_service.dart';
+import '../../../../core/services/image_warmup_service.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../partner/domain/entities/partner_entity.dart';
 import '../../../subscription/presentation/widgets/premium_banner.dart';
 import '../bloc/home_bloc.dart';
@@ -19,9 +20,8 @@ import '../widgets/filter_bottom_sheet.dart';
 import '../widgets/home_app_bar.dart';
 import '../widgets/home_empty_state.dart';
 import '../widgets/home_loading_shimmer.dart';
-import '../widgets/partner_card.dart';
+import '../widgets/home_partner_card.dart';
 import '../widgets/quick_filter_bar.dart';
-import '../widgets/section_header.dart';
 import '../widgets/service_categories_section.dart';
 import '../widgets/sort_bottom_sheet.dart';
 
@@ -51,6 +51,7 @@ class _HomePageView extends StatefulWidget {
 class _HomePageViewState extends State<_HomePageView> {
   late ScrollController _scrollController;
   String? _selectedService;
+  String _lastWarmupKey = '';
 
   @override
   void initState() {
@@ -103,16 +104,12 @@ class _HomePageViewState extends State<_HomePageView> {
       if (_selectedService == code) {
         _selectedService = null;
         bloc.add(
-          HomeApplyFilter(
-            bloc.state.filter.clear(clearServiceType: true),
-          ),
+          HomeApplyFilter(bloc.state.filter.clear(clearServiceType: true)),
         );
       } else {
         _selectedService = code;
         bloc.add(
-          HomeApplyFilter(
-            bloc.state.filter.copyWith(serviceType: code),
-          ),
+          HomeApplyFilter(bloc.state.filter.copyWith(serviceType: code)),
         );
       }
     });
@@ -169,6 +166,26 @@ class _HomePageViewState extends State<_HomePageView> {
               ),
             );
           }
+
+          if (!state.isSuccess || state.partners.isEmpty) return;
+
+          final warmupKey = state.partners.take(6).map((p) => p.id).join('|');
+          if (warmupKey.isEmpty || warmupKey == _lastWarmupKey) return;
+
+          _lastWarmupKey = warmupKey;
+
+          final imageUrls = state.partners
+              .take(16)
+              .map((p) => p.gallery.isNotEmpty ? p.gallery.first : p.avatarUrl)
+              .where((url) => url.trim().isNotEmpty)
+              .toList(growable: false);
+
+          ImageWarmupService.instance.warmupImages(
+            context: context,
+            imageUrls: imageUrls,
+            maxImages: 16,
+            targetWidth: 800,
+          );
         },
         builder: (context, state) {
           return CustomScrollView(
@@ -187,9 +204,7 @@ class _HomePageViewState extends State<_HomePageView> {
               ),
 
               // Premium banner - promotes Premium subscription
-              const SliverToBoxAdapter(
-                child: PremiumBanner(),
-              ),
+              const SliverToBoxAdapter(child: PremiumBanner()),
 
               // Quick filter chips
               SliverToBoxAdapter(
@@ -200,14 +215,8 @@ class _HomePageViewState extends State<_HomePageView> {
                 ),
               ),
 
-              // Section header
-              SliverToBoxAdapter(
-                child: HomeSectionHeader(
-                  state: state,
-                  selectedService: _selectedService,
-                  onClearFilter: _resetFilters,
-                ),
-              ),
+           // sizedbox heigth
+              const SliverToBoxAdapter(child: SizedBox(height: 15)),
 
               // Partner list
               if (state.isLoading)
@@ -256,9 +265,9 @@ class _HomePageViewState extends State<_HomePageView> {
         itemBuilder: (context, index) {
           final partner = partners[index];
           return GestureDetector(
-            onTap: () => _onPartnerTap(partner),
-            child: HomePartnerCard(partner: partner),
-          )
+                onTap: () => _onPartnerTap(partner),
+                child: HomePartnerCard(partner: partner),
+              )
               .animate()
               .fadeIn(
                 delay: Duration(milliseconds: 60 * (index % 8)),

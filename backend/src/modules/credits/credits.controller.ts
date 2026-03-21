@@ -1,13 +1,13 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    Post,
-    Put,
-    Query,
-    UseGuards,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -16,7 +16,13 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { UserRole } from '../../generated/prisma/client';
 import { CREDIT_TO_VND_RATE } from './credits.constants';
 import { CreditsService } from './credits.service';
-import { CreateCreditPackageDto, UpdateBankInfoDto, UpdateCreditPackageDto, VerifyCreditPurchaseDto, WithdrawCreditsDto } from './dto';
+import {
+  CreateCreditPackageDto,
+  UpdateBankInfoDto,
+  UpdateCreditPackageDto,
+  VerifyCreditPurchaseDto,
+  WithdrawCreditsDto,
+} from './dto';
 
 @Controller('credits')
 export class CreditsController {

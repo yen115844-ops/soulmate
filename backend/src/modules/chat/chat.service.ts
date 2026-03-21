@@ -1,13 +1,24 @@
-import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma/prisma.service';
-import { ConversationStatus, MessageStatus, MessageType, NotificationType } from '../../generated/prisma/client';
+import {
+  ConversationStatus,
+  MessageStatus,
+  MessageType,
+  NotificationType,
+} from '../../generated/prisma/client';
 import { NotificationsService } from '../notifications';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import {
-    CreateConversationDto,
-    QueryConversationsDto,
-    QueryMessagesDto,
-    SendMessageWithMediaDto
+  CreateConversationDto,
+  QueryConversationsDto,
+  QueryMessagesDto,
+  SendMessageWithMediaDto,
 } from './dto';
 
 // Online users tracking (in-memory, consider Redis for production with multiple instances)
@@ -48,7 +59,9 @@ export class ChatService {
     } else {
       onlineUsersMap.delete(userId);
     }
-    this.logger.debug(`User ${userId} is now ${isOnline ? 'online' : 'offline'}`);
+    this.logger.debug(
+      `User ${userId} is now ${isOnline ? 'online' : 'offline'}`,
+    );
   }
 
   /**
@@ -74,7 +87,10 @@ export class ChatService {
   /**
    * Check if there's a block relationship between two users
    */
-  async isBlockedRelationship(userId1: string, userId2: string): Promise<boolean> {
+  async isBlockedRelationship(
+    userId1: string,
+    userId2: string,
+  ): Promise<boolean> {
     const block = await this.prisma.userBlacklist.findFirst({
       where: {
         OR: [
@@ -107,10 +123,7 @@ export class ChatService {
   async getBlockedUserIds(userId: string): Promise<string[]> {
     const blocks = await this.prisma.userBlacklist.findMany({
       where: {
-        OR: [
-          { blockerId: userId },
-          { blockedId: userId },
-        ],
+        OR: [{ blockerId: userId }, { blockedId: userId }],
       },
       select: {
         blockerId: true,
@@ -192,10 +205,14 @@ export class ChatService {
     // Transform to include unread count and other user info
     // Also filter out blocked users
     const blockedUserIds = await this.getBlockedUserIds(userId);
-    
+
     const filteredConversations = conversations.filter((conv) => {
-      const otherParticipant = conv.participants.find((p) => p.userId !== userId);
-      return otherParticipant && !blockedUserIds.includes(otherParticipant.userId);
+      const otherParticipant = conv.participants.find(
+        (p) => p.userId !== userId,
+      );
+      return (
+        otherParticipant && !blockedUserIds.includes(otherParticipant.userId)
+      );
     });
 
     // Batch fetch unread counts in a single query to avoid N+1
@@ -210,7 +227,9 @@ export class ChatService {
     });
 
     // Build a map: conversationId -> total messages not from user
-    const totalMsgMap = new Map(unreadCountsRaw.map((r) => [r.conversationId, r._count.id]));
+    const totalMsgMap = new Map(
+      unreadCountsRaw.map((r) => [r.conversationId, r._count.id]),
+    );
 
     // For conversations with lastReadAt, we need to count only messages after lastReadAt
     // Build the participant map for lastReadAt
@@ -225,7 +244,7 @@ export class ChatService {
     const convsWithLastRead = filteredConversations.filter(
       (c) => participantMap.get(c.id) != null,
     );
-    
+
     let unreadAfterReadMap = new Map<string, number>();
     if (convsWithLastRead.length > 0) {
       // Use Promise.all but with a single query per conversation that has lastReadAt
@@ -248,8 +267,12 @@ export class ChatService {
     }
 
     const transformedConversations = filteredConversations.map((conv) => {
-      const currentParticipant = conv.participants.find((p) => p.userId === userId);
-      const otherParticipant = conv.participants.find((p) => p.userId !== userId);
+      const currentParticipant = conv.participants.find(
+        (p) => p.userId === userId,
+      );
+      const otherParticipant = conv.participants.find(
+        (p) => p.userId !== userId,
+      );
 
       // Use batch unread count: if lastReadAt exists, use the filtered count; otherwise use total
       const unreadCount = participantMap.get(conv.id)
@@ -308,7 +331,9 @@ export class ChatService {
     // Check if blocked
     const isBlocked = await this.isBlockedRelationship(userId, participantId);
     if (isBlocked) {
-      throw new BadRequestException('Không thể trò chuyện với người dùng này. Đã bị chặn.');
+      throw new BadRequestException(
+        'Không thể trò chuyện với người dùng này. Đã bị chặn.',
+      );
     }
 
     // Check if the other user exists
@@ -555,7 +580,9 @@ export class ChatService {
     // Check if blocked
     const isBlocked = await this.isBlockedRelationship(userId, participantId);
     if (isBlocked) {
-      throw new BadRequestException('Không thể trò chuyện với người dùng này. Đã bị chặn.');
+      throw new BadRequestException(
+        'Không thể trò chuyện với người dùng này. Đã bị chặn.',
+      );
     }
 
     // Check if the other user exists
@@ -580,13 +607,20 @@ export class ChatService {
 
     if (existingConversation) {
       // Send message to existing conversation
-      const sentMessage = await this.sendMessage(userId, existingConversation.id, {
-        content: message,
-        type: 'text',
-      });
-      
+      const sentMessage = await this.sendMessage(
+        userId,
+        existingConversation.id,
+        {
+          content: message,
+          type: 'text',
+        },
+      );
+
       return {
-        conversation: await this.getConversationById(existingConversation.id, userId),
+        conversation: await this.getConversationById(
+          existingConversation.id,
+          userId,
+        ),
         message: sentMessage,
         isNew: false,
       };
@@ -610,7 +644,9 @@ export class ChatService {
       type: 'text',
     });
 
-    this.logger.log(`Created new conversation with message: ${newConversation.id}`);
+    this.logger.log(
+      `Created new conversation with message: ${newConversation.id}`,
+    );
 
     return {
       conversation: await this.getConversationById(newConversation.id, userId),
@@ -657,7 +693,11 @@ export class ChatService {
   /**
    * Get messages for a conversation
    */
-  async getMessages(userId: string, conversationId: string, dto: QueryMessagesDto) {
+  async getMessages(
+    userId: string,
+    conversationId: string,
+    dto: QueryMessagesDto,
+  ) {
     const { page = 1, limit = 50, before } = dto;
 
     // Check user is participant
@@ -707,7 +747,9 @@ export class ChatService {
         orderBy: { createdAt: 'desc' },
         take: limit,
       }),
-      this.prisma.message.count({ where: { conversationId, isDeleted: false } }),
+      this.prisma.message.count({
+        where: { conversationId, isDeleted: false },
+      }),
     ]);
 
     // Mark messages as read
@@ -727,7 +769,11 @@ export class ChatService {
   /**
    * Send a message
    */
-  async sendMessage(userId: string, conversationId: string, dto: SendMessageWithMediaDto) {
+  async sendMessage(
+    userId: string,
+    conversationId: string,
+    dto: SendMessageWithMediaDto,
+  ) {
     // Check premium subscription
     await this.requirePremium(userId);
 
@@ -753,11 +799,16 @@ export class ChatService {
     const otherParticipant = participant.conversation.participants.find(
       (p) => p.userId !== userId,
     );
-    
+
     if (otherParticipant) {
-      const isBlocked = await this.isBlockedRelationship(userId, otherParticipant.userId);
+      const isBlocked = await this.isBlockedRelationship(
+        userId,
+        otherParticipant.userId,
+      );
       if (isBlocked) {
-        throw new BadRequestException('Không thể gửi tin nhắn. Người dùng đã bị chặn hoặc đã chặn bạn.');
+        throw new BadRequestException(
+          'Không thể gửi tin nhắn. Người dùng đã bị chặn hoặc đã chặn bạn.',
+        );
       }
     }
 
@@ -801,15 +852,17 @@ export class ChatService {
     });
 
     // Send push notification to other participants
-    const otherParticipants = await this.prisma.conversationParticipant.findMany({
-      where: {
-        conversationId,
-        userId: { not: userId },
-      },
-      select: { userId: true },
-    });
+    const otherParticipants =
+      await this.prisma.conversationParticipant.findMany({
+        where: {
+          conversationId,
+          userId: { not: userId },
+        },
+        select: { userId: true },
+      });
 
-    const senderName = message.sender.profile?.displayName || message.sender.email;
+    const senderName =
+      message.sender.profile?.displayName || message.sender.email;
     const senderAvatar = message.sender.profile?.avatarUrl || undefined;
 
     for (const participant of otherParticipants) {
@@ -1111,7 +1164,7 @@ export class ChatService {
     status: 'SENT' | 'DELIVERED' | 'READ',
   ) {
     const data: any = { status };
-    
+
     if (status === 'DELIVERED') {
       data.deliveredAt = new Date();
     } else if (status === 'READ') {
@@ -1195,15 +1248,17 @@ export class ChatService {
     });
 
     // Send push notification to offline participants
-    const otherParticipants = await this.prisma.conversationParticipant.findMany({
-      where: {
-        conversationId,
-        userId: { not: userId },
-      },
-      select: { userId: true },
-    });
+    const otherParticipants =
+      await this.prisma.conversationParticipant.findMany({
+        where: {
+          conversationId,
+          userId: { not: userId },
+        },
+        select: { userId: true },
+      });
 
-    const senderName = message.sender.profile?.displayName || message.sender.email;
+    const senderName =
+      message.sender.profile?.displayName || message.sender.email;
     const senderAvatar = message.sender.profile?.avatarUrl || undefined;
 
     for (const p of otherParticipants) {

@@ -11,14 +11,26 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { UserRole } from '../../generated/prisma/client';
 import { BookingsService } from './bookings.service';
-import { AdminBookingQueryDto, BookingQueryDto, CancelBookingDto, CompleteBookingDto, CreateBookingDto, UpdateBookingStatusDto } from './dto';
+import {
+  AdminBookingQueryDto,
+  BookingQueryDto,
+  CancelBookingDto,
+  CompleteBookingDto,
+  CreateBookingDto,
+  UpdateBookingStatusDto,
+} from './dto';
 
 @ApiTags('Bookings')
 @Controller('bookings')
@@ -110,10 +122,7 @@ export class BookingsController {
   @ApiOperation({ summary: 'Get booking details' })
   @ApiResponse({ status: 200, description: 'Booking retrieved' })
   @ApiResponse({ status: 404, description: 'Booking not found' })
-  async getBooking(
-    @Param('id') id: string,
-    @CurrentUser('id') userId: string,
-  ) {
+  async getBooking(@Param('id') id: string, @CurrentUser('id') userId: string) {
     return this.bookingsService.getBookingById(id, userId);
   }
 
@@ -145,10 +154,7 @@ export class BookingsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Pay for booking with credits' })
   @ApiResponse({ status: 200, description: 'Booking paid' })
-  async payBooking(
-    @Param('id') id: string,
-    @CurrentUser('id') userId: string,
-  ) {
+  async payBooking(@Param('id') id: string, @CurrentUser('id') userId: string) {
     return this.bookingsService.payBooking(id, userId);
   }
 

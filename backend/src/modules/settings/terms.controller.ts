@@ -17,7 +17,9 @@ export class TermsController {
   @ApiOperation({ summary: 'Get terms/privacy content by type (Public)' })
   @ApiResponse({ status: 200, description: 'Terms or privacy policy content' })
   async getTerms(@Param('type') type: string) {
-    if (!VALID_TERMS_TYPES.includes(type as (typeof VALID_TERMS_TYPES)[number])) {
+    if (
+      !VALID_TERMS_TYPES.includes(type as (typeof VALID_TERMS_TYPES)[number])
+    ) {
       throw new BadRequestException(
         'type must be terms-of-service, terms-and-conditions or privacy-policy',
       );
@@ -26,7 +28,9 @@ export class TermsController {
       type === 'privacy-policy'
         ? await this.settingsService.getPrivacyPolicyContent()
         : await this.settingsService.getTermsContent(
-            type === 'terms-of-service' ? 'terms_of_service' : 'terms_and_conditions',
+            type === 'terms-of-service'
+              ? 'terms_of_service'
+              : 'terms_and_conditions',
           );
     return { content };
   }

@@ -90,9 +90,7 @@ class PremiumUpgradeDialog extends StatelessWidget {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-                ),
+                color: const Color(0xFFFFD700),
                 shape: BoxShape.circle,
               ),
               child: const Icon(

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_config.dart';
+import '../../../core/utils/image_upload_optimizer.dart';
 import '../../auth/data/models/user_model.dart';
 import '../presentation/bloc/profile_state.dart';
 
@@ -34,6 +35,9 @@ class ProfileRepository {
     DateTime? dateOfBirth,
     int? heightCm,
     int? weightKg,
+    String? education,
+    String? smokingHabit,
+    String? drinkingHabit,
     String? provinceId,
     String? districtId,
     String? city,
@@ -52,6 +56,9 @@ class ProfileRepository {
     if (dateOfBirth != null) data['dateOfBirth'] = dateOfBirth.toIso8601String();
     if (heightCm != null) data['heightCm'] = heightCm;
     if (weightKg != null) data['weightKg'] = weightKg;
+    if (education != null) data['education'] = education;
+    if (smokingHabit != null) data['smokingHabit'] = smokingHabit;
+    if (drinkingHabit != null) data['drinkingHabit'] = drinkingHabit;
     if (provinceId != null) data['provinceId'] = provinceId;
     if (districtId != null) data['districtId'] = districtId;
     if (city != null) data['city'] = city;
@@ -111,40 +118,66 @@ class ProfileRepository {
 
   /// Upload avatar
   Future<String> uploadAvatar(String imagePath) async {
-    final formData = FormData.fromMap({
-      'file': await MultipartFile.fromFile(imagePath, filename: 'avatar.jpg'),
-    });
-    
-    final response = await _apiClient.post(
-      '${UserEndpoints.profile}/avatar',
-      data: formData,
+    final optimized = await ImageUploadOptimizer.optimize(
+      imagePath,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      quality: 82,
+      targetMaxBytes: 1500 * 1024,
     );
-    
-    final responseData = response.data as Map<String, dynamic>;
-    final data = responseData['data'] as Map<String, dynamic>? ?? responseData;
-    return data['avatarUrl'] as String? ?? '';
+
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(
+        optimized.path,
+        filename: 'avatar.jpg',
+      ),
+    });
+
+    try {
+      final response = await _apiClient.post(
+        '${UserEndpoints.profile}/avatar',
+        data: formData,
+      );
+
+      final responseData = response.data as Map<String, dynamic>;
+      final data = responseData['data'] as Map<String, dynamic>? ?? responseData;
+      return data['avatarUrl'] as String? ?? '';
+    } finally {
+      await optimized.dispose();
+    }
   }
 
   /// Upload photos
   Future<List<String>> uploadPhotos(List<String> imagePaths) async {
     final List<String> uploadedUrls = [];
-    
+
     for (final path in imagePaths) {
-      final formData = FormData.fromMap({
-        'file': await MultipartFile.fromFile(path),
-      });
-      
-      final response = await _apiClient.post(
-        '${UserEndpoints.profile}/photos',
-        data: formData,
+      final optimized = await ImageUploadOptimizer.optimize(
+        path,
+        maxWidth: 1280,
+        maxHeight: 1280,
+        quality: 82,
       );
-      
-      final responseData = response.data as Map<String, dynamic>;
-      final data = responseData['data'] as Map<String, dynamic>? ?? responseData;
-      final url = data['photoUrl'] as String?;
-      if (url != null) uploadedUrls.add(url);
+
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(optimized.path),
+      });
+
+      try {
+        final response = await _apiClient.post(
+          '${UserEndpoints.profile}/photos',
+          data: formData,
+        );
+
+        final responseData = response.data as Map<String, dynamic>;
+        final data = responseData['data'] as Map<String, dynamic>? ?? responseData;
+        final url = data['photoUrl'] as String?;
+        if (url != null) uploadedUrls.add(url);
+      } finally {
+        await optimized.dispose();
+      }
     }
-    
+
     return uploadedUrls;
   }
 

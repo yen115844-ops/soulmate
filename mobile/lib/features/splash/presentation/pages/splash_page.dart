@@ -55,6 +55,20 @@ class _SplashPageState extends State<SplashPage> {
 
         switch (status) {
           case UserStatus.active:
+            if (!user.hasCompletedBasicProfile) {
+              context.go(RouteNames.editProfile);
+              break;
+            }
+            // Navigate to home first
+            debugPrint('=== GOING TO HOME ===');
+            context.go(RouteNames.home);
+            // Mark app as ready and process pending deep link
+            debugPrint('=== MARKING APP READY ===');
+            _deepLinkService.markAppReady();
+            debugPrint('=== PROCESSING PENDING DEEPLINK ===');
+            final processed = _deepLinkService.processPendingDeepLink();
+            debugPrint('Pending deeplink processed: $processed');
+            break;
           case UserStatus.pending:
             // Navigate to home first
             debugPrint('=== GOING TO HOME ===');
@@ -93,7 +107,7 @@ class _SplashPageState extends State<SplashPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+        decoration: const BoxDecoration(color: AppColors.primaryGradient),
         child: SafeArea(
           bottom: false,
 

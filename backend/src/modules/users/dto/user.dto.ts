@@ -1,7 +1,25 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsArray, IsDateString, IsEnum, IsNumber, IsOptional, IsString, IsUrl, IsUUID, Max, Min } from 'class-validator';
-import { Gender, UserRole, UserStatus } from '../../../generated/prisma/client';
+import {
+  IsArray,
+  IsDateString,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUrl,
+  IsUUID,
+  Max,
+  Min,
+} from 'class-validator';
+import {
+  DrinkingHabit,
+  Education,
+  Gender,
+  SmokingHabit,
+  UserRole,
+  UserStatus,
+} from '../../../generated/prisma/client';
 
 export class UpdateProfileDto {
   @ApiPropertyOptional({ example: 'Nguyen Van A' })
@@ -55,6 +73,30 @@ export class UpdateProfileDto {
   @Max(200)
   weightKg?: number;
 
+  @ApiPropertyOptional({
+    enum: Object.values(Education),
+    description: 'Học vấn',
+  })
+  @IsOptional()
+  @IsEnum(Education)
+  education?: Education;
+
+  @ApiPropertyOptional({
+    enum: Object.values(SmokingHabit),
+    description: 'Thói quen hút thuốc',
+  })
+  @IsOptional()
+  @IsEnum(SmokingHabit)
+  smokingHabit?: SmokingHabit;
+
+  @ApiPropertyOptional({
+    enum: Object.values(DrinkingHabit),
+    description: 'Thói quen uống rượu',
+  })
+  @IsOptional()
+  @IsEnum(DrinkingHabit)
+  drinkingHabit?: DrinkingHabit;
+
   @ApiPropertyOptional({ description: 'Province/City ID from master data' })
   @IsOptional()
   @IsUUID()
@@ -65,12 +107,20 @@ export class UpdateProfileDto {
   @IsUUID()
   districtId?: string;
 
-  @ApiPropertyOptional({ example: 'Ho Chi Minh City', description: 'Display name (denormalized), auto-populated from provinceId if not provided' })
+  @ApiPropertyOptional({
+    example: 'Ho Chi Minh City',
+    description:
+      'Display name (denormalized), auto-populated from provinceId if not provided',
+  })
   @IsOptional()
   @IsString()
   city?: string;
 
-  @ApiPropertyOptional({ example: 'District 1', description: 'Display name (denormalized), auto-populated from districtId if not provided' })
+  @ApiPropertyOptional({
+    example: 'District 1',
+    description:
+      'Display name (denormalized), auto-populated from districtId if not provided',
+  })
   @IsOptional()
   @IsString()
   district?: string;
@@ -137,6 +187,15 @@ export class UpdateLocationDto {
   @IsOptional()
   @IsString()
   district?: string;
+}
+
+export class DeletePhotoDto {
+  @ApiProperty({
+    description: 'Photo URL to delete',
+    example: '/api/upload/files/abc.jpg',
+  })
+  @IsString()
+  photoUrl: string;
 }
 
 export class UpdateUserStatusDto {

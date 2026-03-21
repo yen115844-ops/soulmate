@@ -6,4 +6,3 @@ export * from './notifications.service';
 export * from './processors/notification.processor';
 export * from './services/device-token.service';
 export * from './services/fcm.service';
-

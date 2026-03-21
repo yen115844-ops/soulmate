@@ -39,6 +39,11 @@ void main() {
       WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
       FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
+      // Increase in-memory image cache so first feed screens feel instant.
+      final imageCache = PaintingBinding.instance.imageCache;
+      imageCache.maximumSize = 1000;
+      imageCache.maximumSizeBytes = 180 << 20; // 180 MB
+
       // Initialize Firebase
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,

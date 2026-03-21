@@ -20,7 +20,9 @@ export class EmailService {
     const user = this.configService.get<string>('email.user');
     const password = this.configService.get<string>('email.password');
     if (!user || !password) {
-      this.logger.warn('Email credentials not configured (EMAIL_USER, EMAIL_PASSWORD). OTP emails will be logged only.');
+      this.logger.warn(
+        'Email credentials not configured (EMAIL_USER, EMAIL_PASSWORD). OTP emails will be logged only.',
+      );
       return null;
     }
     this.transporter = nodemailer.createTransport({
@@ -35,11 +37,19 @@ export class EmailService {
   /**
    * Send OTP code to email for verification (e.g. register, reset password)
    */
-  async sendOtpEmail(to: string, otp: string, purpose: 'verify_email' | 'reset_password' = 'verify_email'): Promise<void> {
-    const from = this.configService.get<string>('email.from', 'noreply@matesocial.com');
-    const subject = purpose === 'verify_email'
-      ? 'Xác thực email - Mate Social'
-      : 'Đặt lại mật khẩu - Mate Social';
+  async sendOtpEmail(
+    to: string,
+    otp: string,
+    purpose: 'verify_email' | 'reset_password' = 'verify_email',
+  ): Promise<void> {
+    const from = this.configService.get<string>(
+      'email.from',
+      'noreply@matesocial.com',
+    );
+    const subject =
+      purpose === 'verify_email'
+        ? 'Xác thực email - Mate Social'
+        : 'Đặt lại mật khẩu - Mate Social';
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
         <h2 style="color: #333;">${purpose === 'verify_email' ? 'Xác thực email của bạn' : 'Đặt lại mật khẩu'}</h2>

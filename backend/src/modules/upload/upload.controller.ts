@@ -1,17 +1,24 @@
 import {
-    BadRequestException,
-    Controller,
-    Get,
-    Param,
-    Post,
-    Res,
-    UploadedFile,
-    UploadedFiles,
-    UseGuards,
-    UseInterceptors,
+  BadRequestException,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Res,
+  UploadedFile,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import type { Response } from 'express';
 import { Public } from '../../common/decorators';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -47,6 +54,7 @@ export class UploadController {
 
     // Validate magic bytes
     this.uploadService.validateMagicBytes(file);
+    await this.uploadService.optimizeImage(file);
 
     const url = this.uploadService.getFileUrl(file.filename);
     return {
@@ -84,6 +92,9 @@ export class UploadController {
     }
 
     const urls = this.uploadService.processUploadedFiles(files);
+    await Promise.all(
+      files.map((file) => this.uploadService.optimizeImage(file)),
+    );
     return {
       success: true,
       count: files.length,
@@ -100,7 +111,10 @@ export class UploadController {
 
   @Get('files/:filename')
   @Public()
-  @ApiOperation({ summary: 'Serve uploaded file (public - files are protected by UUID filenames)' })
+  @ApiOperation({
+    summary:
+      'Serve uploaded file (public - files are protected by UUID filenames)',
+  })
   @ApiResponse({ status: 200, description: 'File served' })
   @ApiResponse({ status: 404, description: 'File not found' })
   async serveFile(@Param('filename') filename: string, @Res() res: Response) {

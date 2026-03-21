@@ -19,9 +19,11 @@ export const databaseConfig = registerAs('database', () => ({
 }));
 
 export const jwtConfig = registerAs('jwt', () => ({
-  accessSecret: process.env.JWT_ACCESS_SECRET || 'access-secret-key-change-in-production',
+  accessSecret:
+    process.env.JWT_ACCESS_SECRET || 'access-secret-key-change-in-production',
   accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
-  refreshSecret: process.env.JWT_REFRESH_SECRET || 'refresh-secret-key-change-in-production',
+  refreshSecret:
+    process.env.JWT_REFRESH_SECRET || 'refresh-secret-key-change-in-production',
   refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
 }));
 
@@ -36,7 +38,9 @@ export const uploadConfig = registerAs('upload', () => ({
   maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '5242880', 10), // 5MB
   maxFiles: parseInt(process.env.MAX_FILES || '10', 10),
   uploadDir: process.env.UPLOAD_DIR || './uploads',
-  allowedMimeTypes: (process.env.ALLOWED_MIME_TYPES || 'image/jpeg,image/png,image/webp').split(','),
+  allowedMimeTypes: (
+    process.env.ALLOWED_MIME_TYPES || 'image/jpeg,image/png,image/webp'
+  ).split(','),
 }));
 
 export const twilioConfig = registerAs('twilio', () => ({

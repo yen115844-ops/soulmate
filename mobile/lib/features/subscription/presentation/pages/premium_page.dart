@@ -7,14 +7,15 @@ import 'package:go_router/go_router.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:intl/intl.dart';
 import 'package:ionicons/ionicons.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/services/iap_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/responsive.dart';
-import '../../../../core/services/iap_service.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../domain/entities/subscription_entity.dart';
 import '../bloc/subscription_bloc.dart';
@@ -68,9 +69,11 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
     }
 
     _iapService.onPurchaseSuccess = _handlePurchaseSuccess;
+    _iapService.onPurchaseError = _handleSimplePurchaseError;
     _iapService.onPurchaseErrorWithDetails = _handlePurchaseError;
     _iapService.onPurchasePending = _handlePurchasePending;
     _iapService.onPurchaseRestored = _handlePurchaseRestored;
+    _iapService.onPurchaseCancelled = _handlePurchaseCancelled;
 
     if (!mounted) return;
     setState(() {});
@@ -94,13 +97,29 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
     }
   }
 
+  void _handleSimplePurchaseError(String error) {
+    if (mounted) {
+      context.read<SubscriptionBloc>().add(
+        const SubscriptionPurchaseCancelled(),
+      );
+    }
+  }
+
   void _handlePurchaseError(PurchaseDetails purchase, String error) {
     if (mounted) {
+      context.read<SubscriptionBloc>().add(
+        const SubscriptionPurchaseCancelled(),
+      );
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error),
-          backgroundColor: AppColors.error,
-        ),
+        SnackBar(content: Text(error), backgroundColor: AppColors.error),
+      );
+    }
+  }
+
+  void _handlePurchaseCancelled() {
+    if (mounted) {
+      context.read<SubscriptionBloc>().add(
+        const SubscriptionPurchaseCancelled(),
       );
     }
   }
@@ -213,9 +232,11 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
       if (kDebugMode) {
         message = 'Không tìm thấy sản phẩm ($productId). ';
         if (isNotApproved) {
-          message += 'Sản phẩm có thể chưa duyệt trên App Store. Để test: mở project bằng Xcode → Edit Scheme → Run → Options → StoreKit Configuration chọn file .storekit có cùng product ID.';
+          message +=
+              'Sản phẩm có thể chưa duyệt trên App Store. Để test: mở project bằng Xcode → Edit Scheme → Run → Options → StoreKit Configuration chọn file .storekit có cùng product ID.';
         } else {
-          message += 'Kiểm tra appleProductId trong backend khớp với App Store Connect.';
+          message +=
+              'Kiểm tra appleProductId trong backend khớp với App Store Connect.';
         }
       }
       if (mounted) {
@@ -232,15 +253,12 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
 
     // Start purchase
     subscriptionBloc.add(
-      SubscriptionPurchaseRequested(
-        planId: plan.id,
-        productId: productId,
-      ),
+      SubscriptionPurchaseRequested(planId: plan.id, productId: productId),
     );
 
     final started = await _iapService.purchaseProductDetails(product);
     if (!started && mounted) {
-      subscriptionBloc.add(const SubscriptionStatusRequested());
+      subscriptionBloc.add(const SubscriptionPurchaseCancelled());
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Không thể bắt đầu giao dịch. Vui lòng thử lại.'),
@@ -302,7 +320,8 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
           _fetchIAPProducts(state.plans);
         }
 
-        if (state.status == SubscriptionStateStatus.success && state.premiumStatus?.isPremium == true) {
+        if (state.status == SubscriptionStateStatus.success &&
+            state.premiumStatus?.isPremium == true) {
           _showSuccessDialog(context);
         }
       },
@@ -333,11 +352,7 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
 
   Widget _buildBody(BuildContext context, SubscriptionState state) {
     if (state.status == SubscriptionStateStatus.loading) {
-      return Center(
-        child: CircularProgressIndicator(
-          color: AppColors.primary,
-        ),
-      );
+      return Center(child: CircularProgressIndicator(color: AppColors.primary));
     }
 
     // Check if user is already Premium
@@ -350,21 +365,24 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
 
   Widget _buildAlreadyPremium(BuildContext context, SubscriptionState state) {
     final premiumUntil = state.premiumStatus?.premiumUntil;
+    final activeSubscription = state.premiumStatus?.activeSubscription;
+    final activePlan = activeSubscription?.plan;
     final dateFormat = DateFormat('dd/MM/yyyy');
+    final daysRemaining = activeSubscription?.daysRemaining ?? 0;
 
     return SingleChildScrollView(
       padding: ResponsiveLayout.pagePadding(context),
       child: Column(
         children: [
           const SizedBox(height: 20),
-          
+
           // Premium Crown
           Container(
             width: 120,
             height: 120,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: AppColors.accentGradient,
+              color: AppColors.accentGradient,
               boxShadow: [
                 BoxShadow(
                   color: AppColors.primary.withValues(alpha: 0.4),
@@ -399,40 +417,22 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
           ),
           const SizedBox(height: 24),
 
-          // Expiry date card
-          if (premiumUntil != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: AppColors.primary.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Ionicons.calendar_outline,
-                    color: AppColors.primary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    'Hết hạn: ${dateFormat.format(premiumUntil)}',
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: context.appColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          const SizedBox(height: 32),
+          // Current plan info card
+          _buildCurrentPlanCard(
+            context,
+            activePlan: activePlan,
+            premiumUntil: premiumUntil,
+            daysRemaining: daysRemaining,
+            dateFormat: dateFormat,
+          ),
+          const SizedBox(height: 24),
 
           // Benefits section
           _buildBenefitsCard(context),
+          const SizedBox(height: 24),
+
+          // Change plan section
+          _buildChangePlanSection(context, state),
           const SizedBox(height: 24),
 
           // Restore purchases
@@ -459,9 +459,322 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
               ),
             ),
           ),
+
+          // Manage subscription via App Store / Google Play
+          TextButton.icon(
+            onPressed: _openSubscriptionManagement,
+            icon: Icon(
+              Platform.isIOS ? Ionicons.logo_apple : Ionicons.logo_google_playstore,
+              size: 18,
+              color: context.appColors.textSecondary,
+            ),
+            label: Text(
+              Platform.isIOS
+                  ? 'Quản lý trong App Store'
+                  : 'Quản lý trong Google Play',
+              style: AppTypography.bodyMedium.copyWith(
+                color: context.appColors.textSecondary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
         ],
       ),
     );
+  }
+
+  Widget _buildCurrentPlanCard(
+    BuildContext context, {
+    required SubscriptionPlanEntity? activePlan,
+    required DateTime? premiumUntil,
+    required int daysRemaining,
+    required DateFormat dateFormat,
+  }) {
+    final priceFormat = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: '₫',
+      decimalDigits: 0,
+    );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primary.withValues(alpha: 0.08),
+            AppColors.primary.withValues(alpha: 0.04),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Ionicons.pricetag, color: AppColors.primary, size: 20),
+              const SizedBox(width: 10),
+              Text(
+                'Gói hiện tại',
+                style: AppTypography.titleMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: context.appColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Plan name
+          if (activePlan != null) ...[
+            _buildInfoRow(
+              context,
+              icon: Ionicons.diamond_outline,
+              label: 'Gói',
+              value: activePlan.nameVi.isNotEmpty
+                  ? activePlan.nameVi
+                  : activePlan.name,
+            ),
+            const SizedBox(height: 10),
+            _buildInfoRow(
+              context,
+              icon: Ionicons.cash_outline,
+              label: 'Giá',
+              value: priceFormat.format(activePlan.priceVnd),
+            ),
+            const SizedBox(height: 10),
+          ],
+
+          // Expiry
+          if (premiumUntil != null) ...[
+            _buildInfoRow(
+              context,
+              icon: Ionicons.calendar_outline,
+              label: 'Hết hạn',
+              value: dateFormat.format(premiumUntil),
+            ),
+            const SizedBox(height: 10),
+          ],
+
+          // Days remaining
+          if (daysRemaining > 0)
+            _buildInfoRow(
+              context,
+              icon: Ionicons.time_outline,
+              label: 'Còn lại',
+              value: '$daysRemaining ngày',
+              valueColor: daysRemaining <= 7
+                  ? AppColors.warning
+                  : AppColors.success,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String value,
+    Color? valueColor,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: context.appColors.textSecondary),
+        const SizedBox(width: 10),
+        Text(
+          '$label:',
+          style: AppTypography.bodyMedium.copyWith(
+            color: context.appColors.textSecondary,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            value,
+            style: AppTypography.bodyMedium.copyWith(
+              fontWeight: FontWeight.w600,
+              color: valueColor ?? context.appColors.textPrimary,
+            ),
+            textAlign: TextAlign.end,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChangePlanSection(BuildContext context, SubscriptionState state) {
+    final plans = state.plans;
+    if (plans.isEmpty) return const SizedBox.shrink();
+
+    final activePlanCode = state.premiumStatus?.activeSubscription?.plan.code;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: context.appColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: context.appColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Ionicons.swap_horizontal, color: AppColors.primary, size: 20),
+              const SizedBox(width: 10),
+              Text(
+                'Thay đổi gói',
+                style: AppTypography.titleMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: context.appColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Nâng cấp hoặc thay đổi gói Premium phù hợp với bạn',
+            style: AppTypography.bodySmall.copyWith(
+              color: context.appColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ...plans.map((plan) {
+            final isCurrentPlan = plan.code == activePlanCode;
+            return _buildChangePlanItem(context, plan, isCurrentPlan);
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChangePlanItem(
+    BuildContext context,
+    SubscriptionPlanEntity plan,
+    bool isCurrentPlan,
+  ) {
+    final priceFormat = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: '₫',
+      decimalDigits: 0,
+    );
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isCurrentPlan
+            ? AppColors.primary.withValues(alpha: 0.08)
+            : context.appColors.background,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isCurrentPlan
+              ? AppColors.primary.withValues(alpha: 0.4)
+              : context.appColors.border,
+          width: isCurrentPlan ? 1.5 : 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      plan.nameVi.isNotEmpty ? plan.nameVi : plan.name,
+                      style: AppTypography.bodyMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: context.appColors.textPrimary,
+                      ),
+                    ),
+                    if (isCurrentPlan) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          'Hiện tại',
+                          style: AppTypography.labelSmall.copyWith(
+                            color: AppColors.success,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                if (plan.discountPercent != null && plan.discountPercent! > 0)
+                  Text(
+                    'Tiết kiệm ${plan.discountPercent}%',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.success,
+                      fontSize: 11,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            priceFormat.format(plan.priceVnd),
+            style: AppTypography.bodyMedium.copyWith(
+              fontWeight: FontWeight.bold,
+              color: isCurrentPlan
+                  ? AppColors.primary
+                  : context.appColors.textPrimary,
+            ),
+          ),
+          if (!isCurrentPlan) ...[
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: () => _purchasePlan(plan),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  'Đổi',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _openSubscriptionManagement() {
+    final uri = Platform.isIOS
+        ? Uri.parse('https://apps.apple.com/account/subscriptions')
+        : Uri.parse('https://play.google.com/store/account/subscriptions');
+    launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   Widget _buildBenefitsCard(BuildContext context) {
@@ -477,11 +790,7 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
         children: [
           Row(
             children: [
-              Icon(
-                Ionicons.sparkles,
-                color: AppColors.primary,
-                size: 22,
-              ),
+              Icon(Ionicons.sparkles, color: AppColors.primary, size: 22),
               const SizedBox(width: 10),
               Text(
                 'Đặc quyền của bạn',
@@ -493,10 +802,18 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
             ],
           ),
           const SizedBox(height: 16),
-          _buildBenefitRow(context, Ionicons.infinite, 'Nhắn tin không giới hạn'),
+          _buildBenefitRow(
+            context,
+            Ionicons.infinite,
+            'Nhắn tin không giới hạn',
+          ),
           _buildBenefitRow(context, Ionicons.rocket, 'Ưu tiên ghép cặp'),
           _buildBenefitRow(context, Ionicons.eye, 'Tăng hiển thị profile'),
-          _buildBenefitRow(context, Ionicons.heart_circle, 'Xem ai đã quan tâm bạn'),
+          _buildBenefitRow(
+            context,
+            Ionicons.heart_circle,
+            'Xem ai đã quan tâm bạn',
+          ),
         ],
       ),
     );
@@ -540,24 +857,16 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
           _buildPremiumHeader(context),
           const SizedBox(height: 24),
 
-          // Dev hint when IAP products not available (e.g. not yet approved)
-          if (kDebugMode &&
-              state.plans.isNotEmpty &&
-              _iapProducts.isEmpty &&
-              _iapInitialized)
-            _buildDevIAPHint(context),
-          if (kDebugMode &&
-              state.plans.isNotEmpty &&
-              _iapProducts.isEmpty &&
-              _iapInitialized)
-            const SizedBox(height: 12),
-
           // Plans section FIRST (before features)
           _buildPlansSection(context, state),
           const SizedBox(height: 24),
 
           // Purchase button
           _buildPurchaseButton(context, state),
+          const SizedBox(height: 12),
+
+          // Apple-required: Subscription terms disclosure
+          _buildSubscriptionDisclosure(context, state),
           if (_iapLoadError != null) ...[
             const SizedBox(height: 12),
             _buildIAPStatusHint(context),
@@ -585,7 +894,7 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
           height: 80,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: AppColors.accentGradient,
+            color: AppColors.accentGradient,
             boxShadow: [
               BoxShadow(
                 color: AppColors.primary.withValues(alpha: 0.3),
@@ -601,7 +910,7 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
           ),
         ),
         const SizedBox(height: 16),
-        
+
         // Title
         Text(
           'Nâng cấp Premium',
@@ -621,6 +930,7 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
     );
   }
 
+  // ignore: unused_element
   Widget _buildDevIAPHint(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -709,13 +1019,13 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
     final cardColor = isSelected
         ? AppColors.primary.withValues(alpha: 0.1)
         : (isBestValue
-            ? AppColors.primary.withValues(alpha: 0.05)
-            : context.appColors.surface);
+              ? AppColors.primary.withValues(alpha: 0.05)
+              : context.appColors.surface);
     final borderColor = isSelected
         ? AppColors.primary
         : (isBestValue
-            ? AppColors.primary.withValues(alpha: 0.4)
-            : context.appColors.border);
+              ? AppColors.primary.withValues(alpha: 0.4)
+              : context.appColors.border);
 
     return GestureDetector(
       onTap: () {
@@ -730,10 +1040,7 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
         decoration: BoxDecoration(
           color: cardColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: borderColor,
-            width: isSelected ? 2 : 1,
-          ),
+          border: Border.all(color: borderColor, width: isSelected ? 2 : 1),
         ),
         child: Row(
           children: [
@@ -745,7 +1052,9 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
                 shape: BoxShape.circle,
                 color: isSelected ? AppColors.primary : Colors.transparent,
                 border: Border.all(
-                  color: isSelected ? AppColors.primary : context.appColors.border,
+                  color: isSelected
+                      ? AppColors.primary
+                      : context.appColors.border,
                   width: 2,
                 ),
               ),
@@ -769,6 +1078,18 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
                   ),
+                  // Show subscription duration (Apple requirement)
+                  Text(
+                    plan.isWeekly
+                        ? 'Tự động gia hạn mỗi tuần'
+                        : plan.durationMonths == 1
+                        ? 'Tự động gia hạn mỗi tháng'
+                        : 'Tự động gia hạn mỗi ${plan.durationMonths} tháng',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: context.appColors.textSecondary,
+                      fontSize: 11,
+                    ),
+                  ),
                   if (plan.durationMonths > 1)
                     Text(
                       '${priceFormat.format(plan.monthlyPrice.round())}/tháng',
@@ -780,12 +1101,14 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
               ),
             ),
 
-            // Price
+            // Price - hiển thị VND từ backend
             Text(
               priceFormat.format(plan.priceVnd),
               style: AppTypography.titleMedium.copyWith(
                 fontWeight: FontWeight.bold,
-                color: isSelected ? AppColors.primary : context.appColors.textPrimary,
+                color: isSelected
+                    ? AppColors.primary
+                    : context.appColors.textPrimary,
               ),
             ),
           ],
@@ -807,7 +1130,8 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
     final selectedProductId = Platform.isIOS
         ? selectedPlan.appleProductId
         : selectedPlan.googleProductId;
-    final hasStoreProduct = selectedProductId != null &&
+    final hasStoreProduct =
+        selectedProductId != null &&
         _iapService.getProduct(selectedProductId) != null;
     final isReadyToPurchase = _iapInitialized && hasStoreProduct;
     final isPreparingProducts = !_iapInitialized || _isFetchingProducts;
@@ -816,11 +1140,11 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
-      onPressed: isProcessing
-        ? null
-        : isReadyToPurchase
-          ? () => _purchasePlan(selectedPlan)
-          : (!isPreparingProducts && state.plans.isNotEmpty)
+        onPressed: isProcessing
+            ? null
+            : isReadyToPurchase
+            ? () => _purchasePlan(selectedPlan)
+            : (!isPreparingProducts && state.plans.isNotEmpty)
             ? () => _fetchIAPProducts(state.plans)
             : null,
         style: ElevatedButton.styleFrom(
@@ -841,42 +1165,42 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
                 ),
               )
             : isPreparingProducts
-                ? Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        'Đang tải gói...',
-                        style: AppTypography.titleMedium.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  )
+            ? Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Đang tải gói...',
+                    style: AppTypography.titleMedium.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              )
             : !isReadyToPurchase
-                ? Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Ionicons.refresh_outline, size: 20),
-                      const SizedBox(width: 10),
-                      Text(
-                        'Tải lại gói',
-                        style: AppTypography.titleMedium.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  )
+            ? Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Ionicons.refresh_outline, size: 20),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Tải lại gói',
+                    style: AppTypography.titleMedium.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              )
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -944,16 +1268,41 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
             ],
           ),
           const SizedBox(height: 16),
-          _buildFeatureItem(context, Ionicons.infinite, 'Nhắn tin không giới hạn', 'Chat thoải mái mọi lúc'),
-          _buildFeatureItem(context, Ionicons.rocket, 'Ưu tiên ghép cặp', 'Được đề xuất nhiều hơn'),
-          _buildFeatureItem(context, Ionicons.eye, 'Boost hồ sơ', 'Tăng khả năng hiển thị'),
-          _buildFeatureItem(context, Ionicons.heart_circle, 'Ai đã quan tâm bạn', 'Xem danh sách người thích'),
+          _buildFeatureItem(
+            context,
+            Ionicons.infinite,
+            'Nhắn tin không giới hạn',
+            'Chat thoải mái mọi lúc',
+          ),
+          _buildFeatureItem(
+            context,
+            Ionicons.rocket,
+            'Ưu tiên ghép cặp',
+            'Được đề xuất nhiều hơn',
+          ),
+          _buildFeatureItem(
+            context,
+            Ionicons.eye,
+            'Boost hồ sơ',
+            'Tăng khả năng hiển thị',
+          ),
+          _buildFeatureItem(
+            context,
+            Ionicons.heart_circle,
+            'Ai đã quan tâm bạn',
+            'Xem danh sách người thích',
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildFeatureItem(BuildContext context, IconData icon, String title, String subtitle) {
+  Widget _buildFeatureItem(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String subtitle,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(
@@ -994,6 +1343,95 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
     );
   }
 
+  /// Build subscription disclosure text required by Apple (Guideline 3.1.2)
+  Widget _buildSubscriptionDisclosure(
+    BuildContext context,
+    SubscriptionState state,
+  ) {
+    final selectedPlan = state.plans.isNotEmpty
+        ? state.plans.firstWhere(
+            (p) => p.id == _selectedPlanId,
+            orElse: () => state.plans.first,
+          )
+        : null;
+
+    if (selectedPlan == null) return const SizedBox.shrink();
+
+    final priceFormat = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: '₫',
+      decimalDigits: 0,
+    );
+    final displayPrice = priceFormat.format(selectedPlan.priceVnd);
+
+    // Subscription duration text
+    String durationText;
+    if (selectedPlan.isWeekly) {
+      durationText = '1 tuần';
+    } else if (selectedPlan.durationMonths == 1) {
+      durationText = '1 tháng';
+    } else {
+      durationText = '${selectedPlan.durationMonths} tháng';
+    }
+
+    // Subscription title
+    final subscriptionTitle = selectedPlan.nameVi.isNotEmpty
+        ? selectedPlan.nameVi
+        : 'Premium $durationText';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: context.appColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.appColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Apple-required: Subscription name, duration, and price
+          Text(
+            'Thông tin đăng ký:',
+            style: AppTypography.bodySmall.copyWith(
+              fontWeight: FontWeight.w600,
+              color: context.appColors.textPrimary,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '• Gói: $subscriptionTitle\n'
+            '• Thời hạn: $durationText\n'
+            '• Giá: $displayPrice/$durationText',
+            style: AppTypography.bodySmall.copyWith(
+              color: context.appColors.textSecondary,
+              fontSize: 11,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            Platform.isIOS
+                ? 'Thanh toán sẽ được tính vào tài khoản iTunes của bạn khi xác nhận mua. '
+                      'Đăng ký sẽ tự động gia hạn trừ khi bạn tắt tự động gia hạn ít nhất 24 giờ trước khi hết hạn hiện tại. '
+                      'Tài khoản sẽ bị tính phí gia hạn trong vòng 24 giờ trước thời điểm hết hạn. '
+                      'Bạn có thể quản lý và hủy đăng ký trong phần Cài đặt tài khoản trên App Store sau khi mua.'
+                : 'Thanh toán sẽ được tính vào tài khoản Google Play của bạn khi xác nhận mua. '
+                      'Đăng ký sẽ tự động gia hạn trừ khi bạn hủy trước 24 giờ khi hết hạn hiện tại. '
+                      'Bạn có thể quản lý và hủy đăng ký trong Google Play Store.',
+            textAlign: TextAlign.left,
+            style: AppTypography.bodySmall.copyWith(
+              color: context.appColors.textHint,
+              fontSize: 10,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFooter(BuildContext context) {
     return Column(
       children: [
@@ -1009,66 +1447,134 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
                     color: AppColors.primary,
                   ),
                 )
-              : Icon(Ionicons.refresh_outline, size: 18, color: AppColors.primary),
+              : Icon(
+                  Ionicons.refresh_outline,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
           label: Text(
             'Khôi phục mua hàng',
-            style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.primary,
-            ),
+            style: AppTypography.bodyMedium.copyWith(color: AppColors.primary),
           ),
         ),
         const SizedBox(height: 12),
-        
-        // Terms text
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            Platform.isIOS
-                ? 'Thanh toán sẽ được tính vào tài khoản Apple của bạn. Đăng ký sẽ tự động gia hạn trừ khi bạn hủy trước 24h.'
-                : 'Thanh toán sẽ được tính vào tài khoản cửa hàng ứng dụng của bạn. Đăng ký sẽ tự động gia hạn trừ khi bạn hủy trước 24h.',
-            textAlign: TextAlign.center,
-            style: AppTypography.bodySmall.copyWith(
-              color: context.appColors.textHint,
-              fontSize: 11,
-              height: 1.4,
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        
+
         // Required: functional links to Terms of Use (EULA) and Privacy Policy (Guideline 3.1.2)
-        Wrap(
-          alignment: WrapAlignment.center,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 4,
-          runSpacing: 0,
-          children: [
-            TextButton(
-              onPressed: () => context.push(RouteNames.termsOfService),
-              child: Text(
-                'Điều khoản sử dụng (EULA)',
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: context.appColors.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: context.appColors.border),
+          ),
+          child: Column(
+            children: [
+              Text(
+                'Bằng việc đăng ký, bạn đồng ý với:',
                 style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.primary,
+                  color: context.appColors.textSecondary,
+                  fontSize: 11,
                 ),
               ),
-            ),
-            Text('•', style: TextStyle(color: context.appColors.textHint)),
-            TextButton(
-              onPressed: () => context.push(RouteNames.privacyPolicy),
-              child: Text(
-                'Chính sách bảo mật',
-                style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.primary,
+              const SizedBox(height: 4),
+              // Terms of Use (EULA) link
+              InkWell(
+                onTap: () => context.push(RouteNames.termsOfService),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Ionicons.document_text_outline,
+                        size: 14,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Điều khoản sử dụng (EULA)',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                          decoration: TextDecoration.underline,
+                          decorationColor: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+              // Privacy Policy link
+              InkWell(
+                onTap: () => context.push(RouteNames.privacyPolicy),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Ionicons.shield_checkmark_outline,
+                        size: 14,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Chính sách bảo mật',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                          decoration: TextDecoration.underline,
+                          decorationColor: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              // Apple Standard EULA link (external)
+              if (Platform.isIOS)
+                InkWell(
+                  onTap: () => launchUrl(
+                    Uri.parse(
+                      'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
+                    ),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Ionicons.logo_apple,
+                          size: 14,
+                          color: context.appColors.textHint,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Apple Standard EULA',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: context.appColors.textHint,
+                            fontSize: 10,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ],
     );
   }
 
-  SubscriptionPlanEntity? _findBestValuePlan(List<SubscriptionPlanEntity> plans) {
+  SubscriptionPlanEntity? _findBestValuePlan(
+    List<SubscriptionPlanEntity> plans,
+  ) {
     if (plans.isEmpty) return null;
 
     SubscriptionPlanEntity? bestPlan;
@@ -1103,7 +1609,7 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
                 width: 100,
                 height: 100,
                 decoration: BoxDecoration(
-                  gradient: AppColors.accentGradient,
+                  color: AppColors.accentGradient,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
@@ -1120,15 +1626,12 @@ class _PremiumPageContentState extends State<_PremiumPageContent> {
                 ),
               ),
               const SizedBox(height: 24),
-              ShaderMask(
-                shaderCallback: (bounds) => AppColors.accentGradient.createShader(bounds),
-                child: Text(
-                  'Chào mừng VIP!',
-                  style: AppTypography.headlineSmall.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    letterSpacing: 1,
-                  ),
+              Text(
+                'Chào mừng VIP!',
+                style: AppTypography.headlineSmall.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.accentGradient,
+                  letterSpacing: 1,
                 ),
               ),
               const SizedBox(height: 12),

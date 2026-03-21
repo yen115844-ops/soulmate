@@ -100,6 +100,17 @@ class UserModel extends Equatable {
   String get displayRole => role ?? 'USER';
   String get displayStatus => status ?? 'PENDING';
 
+  /// Basic profile fields required before user can use the app normally.
+  bool get hasCompletedBasicProfile {
+    final p = profile;
+    return p != null &&
+        p.fullName != null &&
+        p.fullName!.trim().isNotEmpty &&
+        p.dateOfBirth != null &&
+        p.gender != null &&
+        p.gender!.trim().isNotEmpty;
+  }
+
   @override
   List<Object?> get props => [
         id,
@@ -129,6 +140,9 @@ class ProfileModel extends Equatable {
   final DateTime? dateOfBirth;
   final int? heightCm;
   final int? weightKg;
+  final String? education;
+  final String? smokingHabit;
+  final String? drinkingHabit;
   final double? currentLat;
   final double? currentLng;
   final String? provinceId;
@@ -155,6 +169,9 @@ class ProfileModel extends Equatable {
     this.dateOfBirth,
     this.heightCm,
     this.weightKg,
+    this.education,
+    this.smokingHabit,
+    this.drinkingHabit,
     this.currentLat,
     this.currentLng,
     this.provinceId,
@@ -185,6 +202,9 @@ class ProfileModel extends Equatable {
           : null,
       heightCm: json['heightCm'] != null ? int.tryParse(json['heightCm'].toString()) : null,
       weightKg: json['weightKg'] != null ? int.tryParse(json['weightKg'].toString()) : null,
+      education: json['education']?.toString(),
+      smokingHabit: json['smokingHabit']?.toString(),
+      drinkingHabit: json['drinkingHabit']?.toString(),
       currentLat: json['currentLat'] != null ? double.tryParse(json['currentLat'].toString()) : null,
       currentLng: json['currentLng'] != null ? double.tryParse(json['currentLng'].toString()) : null,
       provinceId: json['provinceId']?.toString(),
@@ -226,6 +246,9 @@ class ProfileModel extends Equatable {
       'dateOfBirth': dateOfBirth?.toIso8601String(),
       'heightCm': heightCm,
       'weightKg': weightKg,
+      'education': education,
+      'smokingHabit': smokingHabit,
+      'drinkingHabit': drinkingHabit,
       'currentLat': currentLat,
       'currentLng': currentLng,
       'provinceId': provinceId,
@@ -260,6 +283,9 @@ class ProfileModel extends Equatable {
     DateTime? dateOfBirth,
     int? heightCm,
     int? weightKg,
+    String? education,
+    String? smokingHabit,
+    String? drinkingHabit,
     double? currentLat,
     double? currentLng,
     String? provinceId,
@@ -286,6 +312,9 @@ class ProfileModel extends Equatable {
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       heightCm: heightCm ?? this.heightCm,
       weightKg: weightKg ?? this.weightKg,
+      education: education ?? this.education,
+      smokingHabit: smokingHabit ?? this.smokingHabit,
+      drinkingHabit: drinkingHabit ?? this.drinkingHabit,
       currentLat: currentLat ?? this.currentLat,
       currentLng: currentLng ?? this.currentLng,
       provinceId: provinceId ?? this.provinceId,
@@ -315,6 +344,9 @@ class ProfileModel extends Equatable {
         dateOfBirth,
         heightCm,
         weightKg,
+        education,
+        smokingHabit,
+        drinkingHabit,
         currentLat,
         currentLng,
         provinceId,

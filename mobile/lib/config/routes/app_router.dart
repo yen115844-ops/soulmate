@@ -531,6 +531,8 @@ class AppRouter {
           currentState is auth_state.AuthNeedsProfileSetup ||
           currentState is auth_state.AuthPendingVerification;
 
+        final requiresProfileSetup = currentState is auth_state.AuthNeedsProfileSetup;
+
       // Auth pages (login, register, etc.)
       final isAuthRoute =
           location == RouteNames.onboarding ||
@@ -548,11 +550,36 @@ class AppRouter {
           location == RouteNames.termsOfService ||
           location == RouteNames.privacyPolicy;
 
-      // Sau đăng xuất: xử lý giống khách — chỉ redirect login khi vào trang cần đăng nhập.
+      // If profile is incomplete, user must complete basic profile first.
+      // editProfile is only accessible to logged-in users who need profile setup
+      final canAccessWithoutCompletedProfile =
+          isAuthRoute ||
+          location == RouteNames.helpCenter ||
+          location == RouteNames.termsOfService ||
+          location == RouteNames.privacyPolicy;
+
+      // Route editProfile is only allowed when user needs profile setup
+      if (requiresProfileSetup && location == RouteNames.editProfile) {
+        // Allow access for profile setup
+        return null;
+      }
+
+      // Redirect to editProfile if profile is incomplete (but disallow guests)
+      if (requiresProfileSetup && !canAccessWithoutCompletedProfile) {
+        return RouteNames.editProfile;
+      }
+
+      // Guests cannot access editProfile - redirect to home
+      if (!isLoggedIn && location == RouteNames.editProfile) {
+        return RouteNames.home;
+      }
+
+      // Sau đăng xuất: xử lý giống khách — không ép sang login,
+      // đưa về home để tiếp tục guest mode.
       final isLoggedOut = currentState is auth_state.AuthLogoutSuccess ||
           currentState is auth_state.AuthAccountDeleted;
       if (isLoggedOut && !isAuthRoute && !isBrowsableRoute) {
-        return RouteNames.login;
+        return RouteNames.home;
       }
 
       // If auth is still resolving, let browsable routes through
@@ -578,9 +605,11 @@ class AppRouter {
         return RouteNames.home;
       }
 
-      // Guest on auth-required route → redirect to login
+      // Guest on auth-required route → return to home.
+      // Login prompt must be triggered by UI-level AuthGuard bottom sheet
+      // when user taps gated functionality.
       if (!isLoggedIn && !isAuthRoute && !isBrowsableRoute) {
-        return RouteNames.login;
+        return RouteNames.home;
       }
 
       // /main → /home, /search → /home

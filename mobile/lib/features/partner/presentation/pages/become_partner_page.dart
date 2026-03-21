@@ -7,12 +7,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:ionicons/ionicons.dart';
 
 import '../../../../config/routes/route_names.dart';
-import '../../../../core/constants/service_type_emoji.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/responsive.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/bloc/master_data_bloc.dart';
 import '../../../../shared/data/models/master_data_models.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
@@ -257,11 +256,11 @@ class _BecomePartnerPageState extends State<BecomePartnerPage> {
     );
   }
 
-  /// Lấy emoji từ API hoặc fallback
+    /// Lấy emoji từ API
   String _getServiceEmoji(ServiceTypeModel service) =>
       (service.icon != null && service.icon!.isNotEmpty)
       ? service.icon!
-      : ServiceTypeEmoji.get(service.code).emoji;
+      : '•';
 
   @override
   Widget build(BuildContext context) {

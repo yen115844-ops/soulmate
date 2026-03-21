@@ -14,6 +14,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     on<SubscriptionStatusRequested>(_onStatusRequested);
     on<SubscriptionPurchaseRequested>(_onPurchaseRequested);
     on<SubscriptionPurchaseCompleted>(_onPurchaseCompleted);
+    on<SubscriptionPurchaseCancelled>(_onPurchaseCancelled);
     on<SubscriptionRestoreRequested>(_onRestoreRequested);
     on<SubscriptionAdmirersRequested>(_onAdmirersRequested);
   }
@@ -71,6 +72,16 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     // This event just marks the beginning of the purchase process
     // The SubscriptionPurchaseCompleted event will be triggered
     // after the IAP callback with the receipt data
+  }
+
+  void _onPurchaseCancelled(
+    SubscriptionPurchaseCancelled event,
+    Emitter<SubscriptionState> emit,
+  ) {
+    emit(state.copyWith(
+      status: SubscriptionStateStatus.success,
+      purchasingPlanId: null,
+    ));
   }
 
   Future<void> _onPurchaseCompleted(

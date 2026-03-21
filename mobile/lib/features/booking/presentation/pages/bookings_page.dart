@@ -208,7 +208,7 @@ class _BookingsPageContentState extends State<_BookingsPageContent>
 
     if (state.upcomingBookings.isEmpty) {
       return NoBookingsWidget(
-        onFindPartner: () => context.go(RouteNames.home, extra: {'initialPage': 1}),
+        onFindPartner: () => context.go(RouteNames.home, extra: {'initialPage': 0}),
       );
     }
 
@@ -677,36 +677,59 @@ class _BookingsPageContentState extends State<_BookingsPageContent>
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (bottomSheetContext) => StatefulBuilder(
-        builder: (builderContext, setModalState) => Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(builderContext).size.height * 0.75,
-          ),
-          decoration: BoxDecoration(
-            color: context.appColors.surface,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Bộ lọc chi tiết',
-                      style: AppTypography.titleMedium.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.pop(builderContext),
-                    ),
-                  ],
+        builder: (builderContext, setModalState) {
+          final mediaQuery = MediaQuery.of(builderContext);
+          final keyboardInset = mediaQuery.viewInsets.bottom;
+          final bottomSafeInset = mediaQuery.padding.bottom;
+
+          return AnimatedPadding(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+            padding: EdgeInsets.only(bottom: keyboardInset),
+            child: DraggableScrollableSheet(
+              expand: false,
+              initialChildSize: 0.75,
+              minChildSize: 0.45,
+              maxChildSize: 0.9,
+              builder: (context, scrollController) => Container(
+                decoration: BoxDecoration(
+                  color: context.appColors.surface,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                 ),
-                const SizedBox(height: 20),
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  padding: EdgeInsets.fromLTRB(20, 12, 20, bottomSafeInset + 8),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          margin: const EdgeInsets.only(bottom: 14),
+                          decoration: BoxDecoration(
+                            color: context.appColors.border,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Bộ lọc chi tiết',
+                            style: AppTypography.titleMedium.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.pop(builderContext),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
                 // Trạng thái
                 Text(
                   'Trạng thái',
@@ -877,11 +900,14 @@ class _BookingsPageContentState extends State<_BookingsPageContent>
                     ),
                   ],
                 ),
-                SizedBox(height: MediaQuery.of(builderContext).padding.bottom + 8),
-              ],
+                      const SizedBox(height: 8),
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -899,7 +925,7 @@ class _BookingsPageContentState extends State<_BookingsPageContent>
     (label: 'Đang diễn ra', status: 'IN_PROGRESS'),
     (label: 'Hoàn thành', status: 'COMPLETED'),
     (label: 'Đã hủy', status: 'CANCELLED'),
-    (label: 'Bị từ chối', status: 'REJECTED'),
+    (label: 'Bị từ chối', status: 'DISPUTED'),
   ];
 
   Widget _buildFilterChip({

@@ -52,10 +52,10 @@ class ProfilePage extends StatelessWidget {
         }
 
         // Use existing ProfileBloc singleton and trigger load
+        // Always load fresh profile when entering authenticated profile page
+        // to ensure we don't show stale data from previous session
         final profileBloc = getIt<ProfileBloc>();
-        if (profileBloc.state is ProfileInitial) {
-          profileBloc.add(const ProfileLoadRequested());
-        }
+        profileBloc.add(const ProfileLoadRequested());
 
         return BlocProvider.value(
           value: profileBloc,
@@ -392,14 +392,20 @@ class _ProfileContent extends StatelessWidget {
                   items: [
                     _ModernMenuItem(
                       icon: Ionicons.shield_checkmark_outline,
-                      iconBgColor: const Color(0xFFE3F2FD),
-                      iconColor: const Color(0xFF1976D2),
+                      iconBgColor: isKycVerified
+                          ? const Color(0xFFE8F5E9)
+                          : const Color(0xFFE3F2FD),
+                      iconColor: isKycVerified
+                          ? AppColors.success
+                          : const Color(0xFF1976D2),
                       title: 'Xác minh danh tính (eKYC)',
                       subtitle: kycStatusText,
                       subtitleColor: isKycVerified
                           ? AppColors.success
                           : AppColors.warning,
-                      onTap: () => context.push(RouteNames.verification),
+                      onTap: isKycVerified
+                          ? null
+                          : () => context.push(RouteNames.verification),
                     ),
                     _ModernMenuItem(
                       icon: Ionicons.call_outline,
@@ -571,15 +577,7 @@ class _ProfileHeroHeader extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary,
-            AppColors.primary.withOpacity(0.8),
-            AppColors.primaryLight,
-          ],
-        ),
+        color: AppColors.primary,
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
       ),
       child: SafeArea(
@@ -870,9 +868,12 @@ class _ModernStatItem extends StatelessWidget {
 
 void _inviteFriends(BuildContext context) {
   final link = ApiConfig.webUrl;
+  final box = context.findRenderObject() as RenderBox?;
   Share.share(
     'Bạn có muốn tham gia ứng dụng cùng tôi không? Tải app tại: $link',
     subject: 'Mời bạn tham gia ứng dụng',
+    sharePositionOrigin:
+        box != null ? box.localToGlobal(Offset.zero) & box.size : null,
   );
 }
 
@@ -928,19 +929,9 @@ class _PartnerStatusCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isVerified
-              ? [
-                  AppColors.success.withAlpha(25),
-                  AppColors.success.withAlpha(10),
-                ]
-              : [
-                  AppColors.warning.withAlpha(25),
-                  AppColors.warning.withAlpha(10),
-                ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: isVerified
+            ? AppColors.success.withAlpha(25)
+            : AppColors.warning.withAlpha(25),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: statusColor.withAlpha(50)),
       ),
@@ -1123,11 +1114,7 @@ class _QuickActionButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [color, color.withOpacity(0.8)],
-          ),
+          color: color,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -1561,15 +1548,7 @@ class _GuestProfileHeader extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary,
-            AppColors.primary.withOpacity(0.8),
-            AppColors.primaryLight,
-          ],
-        ),
+        color: AppColors.primary,
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
       ),
       child: SafeArea(

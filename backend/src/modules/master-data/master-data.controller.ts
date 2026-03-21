@@ -1,36 +1,42 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    HttpCode,
-    HttpStatus,
-    Param,
-    Post,
-    Put,
-    Query,
-    UseGuards,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { UserRole } from '../../generated/prisma/client';
 import {
-    CreateDistrictDto,
-    CreateInterestCategoryDto,
-    CreateInterestDto,
-    CreateLanguageDto,
-    CreateProvinceDto,
-    CreateServiceTypeDto,
-    CreateTalentCategoryDto,
-    CreateTalentDto,
-    UpdateDistrictDto,
-    UpdateInterestDto,
-    UpdateLanguageDto,
-    UpdateProvinceDto,
-    UpdateServiceTypeDto,
-    UpdateTalentDto,
+  CreateDistrictDto,
+  CreateInterestCategoryDto,
+  CreateInterestDto,
+  CreateLanguageDto,
+  CreateProvinceDto,
+  CreateServiceTypeDto,
+  CreateTalentCategoryDto,
+  CreateTalentDto,
+  UpdateDistrictDto,
+  UpdateInterestDto,
+  UpdateLanguageDto,
+  UpdateProvinceDto,
+  UpdateServiceTypeDto,
+  UpdateTalentDto,
 } from './dto';
 import { MasterDataService } from './master-data.service';
 
@@ -49,7 +55,9 @@ export class MasterDataController {
   }
 
   @Get('partner')
-  @ApiOperation({ summary: 'Get all master data for partner registration (public)' })
+  @ApiOperation({
+    summary: 'Get all master data for partner registration (public)',
+  })
   @ApiResponse({ status: 200, description: 'Partner master data retrieved' })
   async getPartnerMasterData() {
     return this.masterDataService.getPartnerMasterData();
@@ -114,7 +122,10 @@ export class MasterDataController {
     @Query('provinceId') provinceId?: string,
     @Query('includeInactive') includeInactive?: string,
   ) {
-    return this.masterDataService.getDistricts(provinceId, includeInactive === 'true');
+    return this.masterDataService.getDistricts(
+      provinceId,
+      includeInactive === 'true',
+    );
   }
 
   @Get('provinces/:provinceId/districts')
@@ -131,14 +142,21 @@ export class MasterDataController {
     @Query('categoryId') categoryId?: string,
     @Query('includeInactive') includeInactive?: string,
   ) {
-    return this.masterDataService.getInterests(categoryId, includeInactive === 'true');
+    return this.masterDataService.getInterests(
+      categoryId,
+      includeInactive === 'true',
+    );
   }
 
   @Get('interest-categories')
   @ApiOperation({ summary: 'Get all interest categories with interests' })
   @ApiQuery({ name: 'includeInactive', required: false, type: Boolean })
-  async getInterestCategories(@Query('includeInactive') includeInactive?: string) {
-    return this.masterDataService.getInterestCategories(includeInactive === 'true');
+  async getInterestCategories(
+    @Query('includeInactive') includeInactive?: string,
+  ) {
+    return this.masterDataService.getInterestCategories(
+      includeInactive === 'true',
+    );
   }
 
   @Get('talents')
@@ -149,14 +167,21 @@ export class MasterDataController {
     @Query('categoryId') categoryId?: string,
     @Query('includeInactive') includeInactive?: string,
   ) {
-    return this.masterDataService.getTalents(categoryId, includeInactive === 'true');
+    return this.masterDataService.getTalents(
+      categoryId,
+      includeInactive === 'true',
+    );
   }
 
   @Get('talent-categories')
   @ApiOperation({ summary: 'Get all talent categories with talents' })
   @ApiQuery({ name: 'includeInactive', required: false, type: Boolean })
-  async getTalentCategories(@Query('includeInactive') includeInactive?: string) {
-    return this.masterDataService.getTalentCategories(includeInactive === 'true');
+  async getTalentCategories(
+    @Query('includeInactive') includeInactive?: string,
+  ) {
+    return this.masterDataService.getTalentCategories(
+      includeInactive === 'true',
+    );
   }
 
   @Get('languages')
@@ -182,7 +207,10 @@ export class MasterDataController {
   @Roles(UserRole.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update province (Admin)' })
-  async updateProvince(@Param('id') id: string, @Body() dto: UpdateProvinceDto) {
+  async updateProvince(
+    @Param('id') id: string,
+    @Body() dto: UpdateProvinceDto,
+  ) {
     return this.masterDataService.updateProvince(id, dto);
   }
 
@@ -210,7 +238,10 @@ export class MasterDataController {
   @Roles(UserRole.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update district (Admin)' })
-  async updateDistrict(@Param('id') id: string, @Body() dto: UpdateDistrictDto) {
+  async updateDistrict(
+    @Param('id') id: string,
+    @Body() dto: UpdateDistrictDto,
+  ) {
     return this.masterDataService.updateDistrict(id, dto);
   }
 
@@ -247,7 +278,10 @@ export class MasterDataController {
   @Roles(UserRole.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update interest (Admin)' })
-  async updateInterest(@Param('id') id: string, @Body() dto: UpdateInterestDto) {
+  async updateInterest(
+    @Param('id') id: string,
+    @Body() dto: UpdateInterestDto,
+  ) {
     return this.masterDataService.updateInterest(id, dto);
   }
 
@@ -312,7 +346,10 @@ export class MasterDataController {
   @Roles(UserRole.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update language (Admin)' })
-  async updateLanguage(@Param('id') id: string, @Body() dto: UpdateLanguageDto) {
+  async updateLanguage(
+    @Param('id') id: string,
+    @Body() dto: UpdateLanguageDto,
+  ) {
     return this.masterDataService.updateLanguage(id, dto);
   }
 

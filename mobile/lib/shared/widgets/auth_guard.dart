@@ -116,7 +116,7 @@ class _LoginPromptSheet extends StatelessWidget {
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
+                  color: AppColors.primaryGradient,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(

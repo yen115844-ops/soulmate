@@ -1,17 +1,20 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../database/prisma/prisma.service';
-import { NotificationType, SubscriptionStatus } from '../../generated/prisma/client';
+import {
+  NotificationType,
+  SubscriptionStatus,
+} from '../../generated/prisma/client';
 import { NotificationsService } from '../notifications';
 import {
-    AppleNotificationPayload,
-    AppleNotificationType,
-    AppleNotificationV2Dto,
-    AppleRenewalInfo,
-    AppleTransactionInfo,
-    GoogleDeveloperNotification,
-    GoogleRTDNDto,
-    GoogleSubscriptionNotificationType,
+  AppleNotificationPayload,
+  AppleNotificationType,
+  AppleNotificationV2Dto,
+  AppleRenewalInfo,
+  AppleTransactionInfo,
+  GoogleDeveloperNotification,
+  GoogleRTDNDto,
+  GoogleSubscriptionNotificationType,
 } from './dto/webhook.dto';
 
 @Injectable()
@@ -48,7 +51,9 @@ export class SubscriptionWebhookService {
     );
 
     if (!payload) {
-      this.logger.error(`[Apple ${environment}] Failed to decode notification payload`);
+      this.logger.error(
+        `[Apple ${environment}] Failed to decode notification payload`,
+      );
       return;
     }
 
@@ -87,25 +92,41 @@ export class SubscriptionWebhookService {
 
     this.logger.log(
       `[Apple ${environment}] Transaction: productId=${transactionInfo.productId}, ` +
-      `originalTxId=${transactionInfo.originalTransactionId}, txId=${transactionInfo.transactionId}`,
+        `originalTxId=${transactionInfo.originalTransactionId}, txId=${transactionInfo.transactionId}`,
     );
 
     // Route to appropriate handler
     switch (payload.notificationType) {
       case AppleNotificationType.SUBSCRIBED:
-        await this.handleAppleSubscribed(transactionInfo, renewalInfo, environment);
+        await this.handleAppleSubscribed(
+          transactionInfo,
+          renewalInfo,
+          environment,
+        );
         break;
 
       case AppleNotificationType.DID_RENEW:
-        await this.handleAppleRenewal(transactionInfo, renewalInfo, environment);
+        await this.handleAppleRenewal(
+          transactionInfo,
+          renewalInfo,
+          environment,
+        );
         break;
 
       case AppleNotificationType.DID_CHANGE_RENEWAL_STATUS:
-        await this.handleAppleRenewalStatusChange(transactionInfo, renewalInfo, environment);
+        await this.handleAppleRenewalStatusChange(
+          transactionInfo,
+          renewalInfo,
+          environment,
+        );
         break;
 
       case AppleNotificationType.DID_FAIL_TO_RENEW:
-        await this.handleAppleFailedRenewal(transactionInfo, renewalInfo, environment);
+        await this.handleAppleFailedRenewal(
+          transactionInfo,
+          renewalInfo,
+          environment,
+        );
         break;
 
       case AppleNotificationType.EXPIRED:
@@ -125,7 +146,11 @@ export class SubscriptionWebhookService {
         break;
 
       case AppleNotificationType.DID_CHANGE_RENEWAL_PREF:
-        await this.handleAppleRenewalPrefChange(transactionInfo, renewalInfo, environment);
+        await this.handleAppleRenewalPrefChange(
+          transactionInfo,
+          renewalInfo,
+          environment,
+        );
         break;
 
       default:
@@ -168,7 +193,7 @@ export class SubscriptionWebhookService {
       // from verifyPurchase(). If not, log a warning.
       this.logger.warn(
         `[Apple ${env}] SUBSCRIBED notification for unknown originalTxId=${tx.originalTransactionId}. ` +
-        `The subscription may not have been created via verifyPurchase yet.`,
+          `The subscription may not have been created via verifyPurchase yet.`,
       );
     }
   }
@@ -183,7 +208,9 @@ export class SubscriptionWebhookService {
   ): Promise<void> {
     this.logger.log(`[Apple ${env}] DID_RENEW: ${tx.originalTransactionId}`);
 
-    const subscription = await this.findSubscriptionByOriginalTx(tx.originalTransactionId);
+    const subscription = await this.findSubscriptionByOriginalTx(
+      tx.originalTransactionId,
+    );
     if (!subscription) return;
 
     // Extend subscription
@@ -226,7 +253,9 @@ export class SubscriptionWebhookService {
       `[Apple ${env}] DID_CHANGE_RENEWAL_STATUS: ${tx.originalTransactionId}, autoRenew=${autoRenew}`,
     );
 
-    const subscription = await this.findSubscriptionByOriginalTx(tx.originalTransactionId);
+    const subscription = await this.findSubscriptionByOriginalTx(
+      tx.originalTransactionId,
+    );
     if (!subscription) return;
 
     await this.prisma.subscription.update({
@@ -254,9 +283,13 @@ export class SubscriptionWebhookService {
     renewal: AppleRenewalInfo | null,
     env: string,
   ): Promise<void> {
-    this.logger.log(`[Apple ${env}] DID_FAIL_TO_RENEW: ${tx.originalTransactionId}`);
+    this.logger.log(
+      `[Apple ${env}] DID_FAIL_TO_RENEW: ${tx.originalTransactionId}`,
+    );
 
-    const subscription = await this.findSubscriptionByOriginalTx(tx.originalTransactionId);
+    const subscription = await this.findSubscriptionByOriginalTx(
+      tx.originalTransactionId,
+    );
     if (!subscription) return;
 
     const isInGracePeriod = renewal?.gracePeriodExpiresDate
@@ -290,7 +323,9 @@ export class SubscriptionWebhookService {
   ): Promise<void> {
     this.logger.log(`[Apple ${env}] EXPIRED: ${tx.originalTransactionId}`);
 
-    const subscription = await this.findSubscriptionByOriginalTx(tx.originalTransactionId);
+    const subscription = await this.findSubscriptionByOriginalTx(
+      tx.originalTransactionId,
+    );
     if (!subscription) return;
 
     await this.prisma.subscription.update({
@@ -314,9 +349,13 @@ export class SubscriptionWebhookService {
     tx: AppleTransactionInfo,
     env: string,
   ): Promise<void> {
-    this.logger.log(`[Apple ${env}] GRACE_PERIOD_EXPIRED: ${tx.originalTransactionId}`);
+    this.logger.log(
+      `[Apple ${env}] GRACE_PERIOD_EXPIRED: ${tx.originalTransactionId}`,
+    );
 
-    const subscription = await this.findSubscriptionByOriginalTx(tx.originalTransactionId);
+    const subscription = await this.findSubscriptionByOriginalTx(
+      tx.originalTransactionId,
+    );
     if (!subscription) return;
 
     await this.prisma.subscription.update({
@@ -340,9 +379,13 @@ export class SubscriptionWebhookService {
     tx: AppleTransactionInfo,
     env: string,
   ): Promise<void> {
-    this.logger.log(`[Apple ${env}] REFUND: ${tx.originalTransactionId}, txId=${tx.transactionId}`);
+    this.logger.log(
+      `[Apple ${env}] REFUND: ${tx.originalTransactionId}, txId=${tx.transactionId}`,
+    );
 
-    const subscription = await this.findSubscriptionByOriginalTx(tx.originalTransactionId);
+    const subscription = await this.findSubscriptionByOriginalTx(
+      tx.originalTransactionId,
+    );
     if (!subscription) return;
 
     // Revoke premium access on refund
@@ -357,7 +400,9 @@ export class SubscriptionWebhookService {
 
     await this.updateUserPremiumStatus(subscription.userId);
 
-    this.logger.log(`[Apple ${env}] Refund processed: user=${subscription.userId}`);
+    this.logger.log(
+      `[Apple ${env}] Refund processed: user=${subscription.userId}`,
+    );
   }
 
   /**
@@ -369,7 +414,9 @@ export class SubscriptionWebhookService {
   ): Promise<void> {
     this.logger.log(`[Apple ${env}] REVOKE: ${tx.originalTransactionId}`);
 
-    const subscription = await this.findSubscriptionByOriginalTx(tx.originalTransactionId);
+    const subscription = await this.findSubscriptionByOriginalTx(
+      tx.originalTransactionId,
+    );
     if (!subscription) return;
 
     await this.prisma.subscription.update({
@@ -394,7 +441,7 @@ export class SubscriptionWebhookService {
   ): Promise<void> {
     this.logger.log(
       `[Apple ${env}] DID_CHANGE_RENEWAL_PREF: ${tx.originalTransactionId}, ` +
-      `newProduct=${renewal?.autoRenewProductId}`,
+        `newProduct=${renewal?.autoRenewProductId}`,
     );
 
     // This notification indicates the user changed their renewal product.
@@ -415,7 +462,9 @@ export class SubscriptionWebhookService {
     }
 
     // Decode base64 Pub/Sub message data
-    const decodedData = Buffer.from(dto.message.data, 'base64').toString('utf-8');
+    const decodedData = Buffer.from(dto.message.data, 'base64').toString(
+      'utf-8',
+    );
     let notification: GoogleDeveloperNotification;
 
     try {
@@ -427,7 +476,7 @@ export class SubscriptionWebhookService {
 
     this.logger.log(
       `[Google RTDN] Package: ${notification.packageName}, ` +
-      `eventTime=${notification.eventTimeMillis}`,
+        `eventTime=${notification.eventTimeMillis}`,
     );
 
     // Handle test notification
@@ -438,7 +487,9 @@ export class SubscriptionWebhookService {
 
     // Handle subscription notifications
     if (notification.subscriptionNotification) {
-      await this.handleGoogleSubscriptionNotification(notification.subscriptionNotification);
+      await this.handleGoogleSubscriptionNotification(
+        notification.subscriptionNotification,
+      );
       return;
     }
 
@@ -457,14 +508,16 @@ export class SubscriptionWebhookService {
   /**
    * Handle Google Play subscription notification
    */
-  private async handleGoogleSubscriptionNotification(
-    notification: { notificationType: number; purchaseToken: string; subscriptionId: string },
-  ): Promise<void> {
+  private async handleGoogleSubscriptionNotification(notification: {
+    notificationType: number;
+    purchaseToken: string;
+    subscriptionId: string;
+  }): Promise<void> {
     const { notificationType, purchaseToken, subscriptionId } = notification;
 
     this.logger.log(
       `[Google RTDN] Subscription notification: type=${notificationType}, ` +
-      `subscriptionId=${subscriptionId}, token=${purchaseToken.substring(0, 20)}...`,
+        `subscriptionId=${subscriptionId}, token=${purchaseToken.substring(0, 20)}...`,
     );
 
     // Find subscription by purchaseToken (stored as receiptData for Android)
@@ -478,7 +531,7 @@ export class SubscriptionWebhookService {
     if (!subscription) {
       this.logger.warn(
         `[Google RTDN] No subscription found for purchaseToken. ` +
-        `It may not have been created via verifyPurchase yet.`,
+          `It may not have been created via verifyPurchase yet.`,
       );
       return;
     }
@@ -728,7 +781,9 @@ export class SubscriptionWebhookService {
       }
 
       const payloadBase64 = parts[1];
-      const payloadJson = Buffer.from(payloadBase64, 'base64url').toString('utf-8');
+      const payloadJson = Buffer.from(payloadBase64, 'base64url').toString(
+        'utf-8',
+      );
       return JSON.parse(payloadJson) as T;
     } catch (error) {
       this.logger.error(
@@ -763,7 +818,9 @@ export class SubscriptionWebhookService {
     const activeSubscription = await this.prisma.subscription.findFirst({
       where: {
         userId,
-        status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.GRACE_PERIOD] },
+        status: {
+          in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.GRACE_PERIOD],
+        },
         endDate: { gte: new Date() },
       },
       orderBy: { endDate: 'desc' },

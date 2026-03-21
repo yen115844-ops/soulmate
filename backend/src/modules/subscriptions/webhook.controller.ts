@@ -1,15 +1,15 @@
 import {
-    Body,
-    Controller,
-    HttpCode,
-    HttpStatus,
-    Logger,
-    Post,
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Logger,
+  Post,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AppleNotificationV2Dto, GoogleRTDNDto } from './dto/webhook.dto';
 import { SubscriptionWebhookService } from './subscription-webhook.service';
- 
+
 /**
  * Webhook Controller for App Store & Google Play Server Notifications
  *
@@ -28,9 +28,7 @@ import { SubscriptionWebhookService } from './subscription-webhook.service';
 export class WebhookController {
   private readonly logger = new Logger(WebhookController.name);
 
-  constructor(
-    private readonly webhookService: SubscriptionWebhookService,
-  ) {}
+  constructor(private readonly webhookService: SubscriptionWebhookService) {}
 
   // ==================== Apple App Store Server Notifications V2 ====================
 
@@ -45,11 +43,10 @@ export class WebhookController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Apple App Store Server Notifications V2 (Production)',
-    description: 'Receives server-to-server notifications from Apple for subscription lifecycle events in production.',
+    description:
+      'Receives server-to-server notifications from Apple for subscription lifecycle events in production.',
   })
-  async handleAppleNotification(
-    @Body() body: AppleNotificationV2Dto,
-  ) {
+  async handleAppleNotification(@Body() body: AppleNotificationV2Dto) {
     this.logger.log('[Apple Production] Received notification');
 
     try {
@@ -62,7 +59,10 @@ export class WebhookController {
       );
       // Still return 200 to Apple to prevent retries for processing errors
       // Apple will retry on non-2xx responses
-      return { status: 'error', message: 'Notification received but processing failed' };
+      return {
+        status: 'error',
+        message: 'Notification received but processing failed',
+      };
     }
   }
 
@@ -77,11 +77,10 @@ export class WebhookController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Apple App Store Server Notifications V2 (Sandbox)',
-    description: 'Receives server-to-server notifications from Apple for subscription lifecycle events in sandbox/testing.',
+    description:
+      'Receives server-to-server notifications from Apple for subscription lifecycle events in sandbox/testing.',
   })
-  async handleAppleSandboxNotification(
-    @Body() body: AppleNotificationV2Dto,
-  ) {
+  async handleAppleSandboxNotification(@Body() body: AppleNotificationV2Dto) {
     this.logger.log('[Apple Sandbox] Received notification');
 
     try {
@@ -92,7 +91,10 @@ export class WebhookController {
         `[Apple Sandbox] Failed to process notification: ${error.message}`,
         error.stack,
       );
-      return { status: 'error', message: 'Notification received but processing failed' };
+      return {
+        status: 'error',
+        message: 'Notification received but processing failed',
+      };
     }
   }
 
@@ -110,7 +112,8 @@ export class WebhookController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Google Play Real-time Developer Notifications',
-    description: 'Receives Pub/Sub push notifications from Google Play for subscription lifecycle events.',
+    description:
+      'Receives Pub/Sub push notifications from Google Play for subscription lifecycle events.',
   })
   async handleGoogleNotification(@Body() body: GoogleRTDNDto) {
     this.logger.log('[Google RTDN] Received notification');
@@ -124,7 +127,10 @@ export class WebhookController {
         error.stack,
       );
       // Return 200 to prevent Pub/Sub retries for processing errors
-      return { status: 'error', message: 'Notification received but processing failed' };
+      return {
+        status: 'error',
+        message: 'Notification received but processing failed',
+      };
     }
   }
 }

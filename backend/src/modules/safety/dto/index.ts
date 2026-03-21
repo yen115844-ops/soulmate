@@ -1,5 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 
 export class TriggerSosDto {
   @ApiProperty({ description: 'Latitude of user location' })
@@ -62,4 +68,7 @@ export class LogLocationDto {
 }
 
 // Re-export from users module
-export { CreateEmergencyContactDto, UpdateEmergencyContactDto } from '../../users/dto';
+export {
+  CreateEmergencyContactDto,
+  UpdateEmergencyContactDto,
+} from '../../users/dto';

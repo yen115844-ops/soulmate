@@ -1,6 +1,16 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { IsArray, IsDateString, IsEnum, IsNumber, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
+import {
+  IsArray,
+  IsDateString,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  Min,
+} from 'class-validator';
 import { BookingStatus } from '../../../generated/prisma/client';
 
 export class CreateBookingDto {
@@ -87,11 +97,15 @@ export class BookingQueryDto {
   @Max(50)
   limit?: number;
 
-  @ApiPropertyOptional({ enum: Object.values(BookingStatus), isArray: true, description: 'Filter by status (can be comma-separated)' })
+  @ApiPropertyOptional({
+    enum: Object.values(BookingStatus),
+    isArray: true,
+    description: 'Filter by status (can be comma-separated)',
+  })
   @IsOptional()
   @Transform(({ value }) => {
     if (typeof value === 'string') {
-      return value.split(',').map(s => s.trim());
+      return value.split(',').map((s) => s.trim());
     }
     return Array.isArray(value) ? value : [value];
   })
@@ -111,7 +125,9 @@ export class BookingQueryDto {
 }
 
 export class AdminBookingQueryDto extends BookingQueryDto {
-  @ApiPropertyOptional({ description: 'Search by booking code, user name, or partner name' })
+  @ApiPropertyOptional({
+    description: 'Search by booking code, user name, or partner name',
+  })
   @IsOptional()
   @IsString()
   search?: string;

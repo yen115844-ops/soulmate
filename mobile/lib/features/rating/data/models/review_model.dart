@@ -20,10 +20,10 @@ class ReviewModel {
   final DateTime updatedAt;
 
   // Related user info
-  final String? userName;
-  final String? userAvatar;
-  final String? partnerName;
-  final String? partnerAvatar;
+  final String? reviewerName;
+  final String? reviewerAvatar;
+  final String? revieweeName;
+  final String? revieweeAvatar;
   final String? serviceType;
   final ReviewResponseModel? response;
 
@@ -46,10 +46,10 @@ class ReviewModel {
     this.isAnonymous = false,
     required this.createdAt,
     required this.updatedAt,
-    this.userName,
-    this.userAvatar,
-    this.partnerName,
-    this.partnerAvatar,
+    this.reviewerName,
+    this.reviewerAvatar,
+    this.revieweeName,
+    this.revieweeAvatar,
     this.serviceType,
     this.response,
   });
@@ -80,11 +80,12 @@ class ReviewModel {
       isAnonymous: json['isAnonymous'] ?? false,
       createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
       updatedAt: DateTime.tryParse(json['updatedAt'] ?? '') ?? DateTime.now(),
-      userName: reviewerProfile?['fullName'] ?? reviewerProfile?['displayName'],
-      userAvatar: reviewerProfile?['avatarUrl'],
-      partnerName:
+      reviewerName:
+          reviewerProfile?['fullName'] ?? reviewerProfile?['displayName'],
+      reviewerAvatar: reviewerProfile?['avatarUrl'],
+      revieweeName:
           revieweeProfile?['fullName'] ?? revieweeProfile?['displayName'],
-      partnerAvatar: revieweeProfile?['avatarUrl'],
+      revieweeAvatar: revieweeProfile?['avatarUrl'],
       serviceType: booking?['serviceType'],
       response: json['response'] != null
           ? ReviewResponseModel.fromJson(json['response'])

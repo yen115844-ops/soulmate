@@ -46,7 +46,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   void initState() {
     super.initState();
     final filter = widget.currentFilter;
-    _distance = filter.radius?.toDouble() ?? 10;
+    _distance = filter.radius?.toDouble() ?? 50;
     _ageRange = RangeValues(
       filter.minAge?.toDouble() ?? 18,
       filter.maxAge?.toDouble() ?? 35,
@@ -77,316 +77,327 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.85,
-      decoration: BoxDecoration(
-        color: context.appColors.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        children: [
-          // Handle bar
-          Container(
-            margin: const EdgeInsets.only(top: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: context.appColors.border,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
+    final mediaQuery = MediaQuery.of(context);
+    final bottomSafeInset = mediaQuery.padding.bottom;
 
-          // Header
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 16, 8),
-            child: Row(
-              children: [
-                Icon(
-                  Ionicons.funnel_outline,
-                  size: 22,
-                  color: AppColors.primary,
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.85,
+      minChildSize: 0.45,
+      maxChildSize: 0.9,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: BoxDecoration(
+            color: context.appColors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: context.appColors.border,
+                  borderRadius: BorderRadius.circular(2),
                 ),
-                const SizedBox(width: 10),
-                Text(
-                  'Bộ lọc tìm kiếm',
-                  style: AppTypography.titleLarge.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const Spacer(),
-                TextButton.icon(
-                  onPressed: _resetFilters,
-                  icon: Icon(
-                    Ionicons.refresh_outline,
-                    size: 16,
-                    color: AppColors.primary,
-                  ),
-                  label: Text(
-                    'Đặt lại',
-                    style: TextStyle(
+              ),
+
+              // Header
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 16, 8),
+                child: Row(
+                  children: [
+                    Icon(
+                      Ionicons.funnel_outline,
+                      size: 22,
                       color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
                     ),
-                  ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Bộ lọc tìm kiếm',
+                      style: AppTypography.titleLarge.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const Spacer(),
+                    TextButton.icon(
+                      onPressed: _resetFilters,
+                      icon: Icon(
+                        Ionicons.refresh_outline,
+                        size: 16,
+                        color: AppColors.primary,
+                      ),
+                      label: Text(
+                        'Đặt lại',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
 
-          Divider(height: 1, color: context.appColors.border),
+              Divider(height: 1, color: context.appColors.border),
 
-          // Filters
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── Gender ──
-                  _buildSection(
-                    title: 'Giới tính',
-                    icon: Ionicons.people_outline,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _GenderChip(
-                            label: 'Tất cả',
-                            icon: Ionicons.people_outline,
-                            selected: _selectedGender == null,
-                            onTap: () => setState(() => _selectedGender = null),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        ..._genders.map(
-                          (g) => Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 10),
+              // Filters
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  padding: EdgeInsets.fromLTRB(24, 20, 24, bottomSafeInset + 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ── Gender ──
+                      _buildSection(
+                        title: 'Giới tính',
+                        icon: Ionicons.people_outline,
+                        child: Row(
+                          children: [
+                            Expanded(
                               child: _GenderChip(
-                                label: g.label,
-                                icon: g.icon,
-                                selected: _selectedGender == g.code,
-                                onTap: () =>
-                                    setState(() => _selectedGender = g.code),
+                                label: 'Tất cả',
+                                icon: Ionicons.people_outline,
+                                selected: _selectedGender == null,
+                                onTap: () => setState(() => _selectedGender = null),
                               ),
                             ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // ── Area (Khu vực) ──
-                  _buildSection(
-                    title: 'Khu vực',
-                    icon: Ionicons.map_outline,
-                    child: _buildAreaFilter(),
-                  ),
-
-                  // ── Distance ──
-                  _buildSection(
-                    title: 'Khoảng cách',
-                    icon: Ionicons.navigate_outline,
-                    value: '${_distance.round()} km',
-                    child: Column(
-                      children: [
-                        SliderTheme(
-                          data: _sliderTheme,
-                          child: Slider(
-                            value: _distance,
-                            min: 1,
-                            max: 50,
-                            divisions: 49,
-                            label: '${_distance.round()} km',
-                            onChanged: (v) => setState(() => _distance = v),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '1 km',
-                                style: AppTypography.labelSmall.copyWith(
-                                  color: context.appColors.textSecondary,
-                                  fontSize: 11,
-                                ),
-                              ),
-                              Text(
-                                '50 km',
-                                style: AppTypography.labelSmall.copyWith(
-                                  color: context.appColors.textSecondary,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // ── Age Range ──
-                  _buildSection(
-                    title: 'Độ tuổi',
-                    icon: Ionicons.calendar_outline,
-                    value:
-                        '${_ageRange.start.round()} - ${_ageRange.end.round()} tuổi',
-                    child: Column(
-                      children: [
-                        SliderTheme(
-                          data: _sliderTheme,
-                          child: RangeSlider(
-                            values: _ageRange,
-                            min: 18,
-                            max: 50,
-                            divisions: 32,
-                            labels: RangeLabels(
-                              '${_ageRange.start.round()}',
-                              '${_ageRange.end.round()}',
-                            ),
-                            onChanged: (v) => setState(() => _ageRange = v),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '18 tuổi',
-                                style: AppTypography.labelSmall.copyWith(
-                                  color: context.appColors.textSecondary,
-                                  fontSize: 11,
-                                ),
-                              ),
-                              Text(
-                                '50 tuổi',
-                                style: AppTypography.labelSmall.copyWith(
-                                  color: context.appColors.textSecondary,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // ── Services ──
-                  _buildSection(
-                    title: 'Hoạt động',
-                    icon: Ionicons.grid_outline,
-                    child: Builder(
-                      builder: (context) {
-                        // Get service types from HomeBloc state
-                        final homeState = context.read<HomeBloc>().state;
-                        final categories = homeState.serviceTypes.isNotEmpty
-                            ? homeState.serviceTypes.map((s) => ServiceCategoryData.fromServiceType(s)).toList()
-                            : serviceCategories;
-                        return Wrap(
-                          spacing: 10,
-                          runSpacing: 10,
-                          children: categories.map((s) {
-                            final selected = _selectedServices.contains(s.code);
-                            return _FilterServiceChip(
-                              label: s.label,
-                              icon: s.icon,
-                              color: s.color,
-                              selected: selected,
-                              onTap: () => _toggleService(s.code),
-                            );
-                          }).toList(),
-                        );
-                      },
-                    ),
-                  ),
-
-                  // ── Sort ──
-                  _buildSection(
-                    title: 'Sắp xếp theo',
-                    icon: Ionicons.swap_vertical_outline,
-                    child: Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: _sortOptions.map((s) {
-                        final selected = _sortBy == s.code;
-                        return GestureDetector(
-                          onTap: () => setState(() => _sortBy = s.code),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: selected
-                                  ? AppColors.primary
-                                  : context.appColors.background,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: selected
-                                    ? AppColors.primary
-                                    : context.appColors.border,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  s.icon,
-                                  size: 16,
-                                  color: selected
-                                      ? Colors.white
-                                      : context.appColors.textSecondary,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  s.label,
-                                  style: AppTypography.labelMedium.copyWith(
-                                    color: selected
-                                        ? Colors.white
-                                        : context.appColors.textPrimary,
-                                    fontWeight: selected
-                                        ? FontWeight.w700
-                                        : FontWeight.w500,
+                            const SizedBox(width: 10),
+                            ..._genders.map(
+                              (g) => Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 10),
+                                  child: _GenderChip(
+                                    label: g.label,
+                                    icon: g.icon,
+                                    selected: _selectedGender == g.code,
+                                    onTap: () => setState(() => _selectedGender = g.code),
                                   ),
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
+                          ],
+                        ),
+                      ),
 
-                  // ── Toggles ──
-                  _buildToggle(
-                    'Chỉ hiện đã xác minh',
-                    Ionicons.shield_checkmark_outline,
-                    _verifiedOnly,
-                    (v) => setState(() => _verifiedOnly = v),
-                  ),
+                      // ── Area (Khu vực) ──
+                      _buildSection(
+                        title: 'Khu vực',
+                        icon: Ionicons.map_outline,
+                        child: _buildAreaFilter(),
+                      ),
 
-                  _buildToggle(
-                    'Chỉ hiện đang online',
-                    Ionicons.wifi_outline,
-                    _onlineOnly,
-                    (v) => setState(() => _onlineOnly = v),
-                  ),
+                      // ── Distance ──
+                      _buildSection(
+                        title: 'Khoảng cách',
+                        icon: Ionicons.navigate_outline,
+                        value: '${_distance.round()} km',
+                        child: Column(
+                          children: [
+                            SliderTheme(
+                              data: _sliderTheme,
+                              child: Slider(
+                                value: _distance,
+                                min: 50,
+                                max: 500,
+                                divisions: 45,
+                                label: '${_distance.round()} km',
+                                onChanged: (v) => setState(() => _distance = v),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '50 km',
+                                    style: AppTypography.labelSmall.copyWith(
+                                      color: context.appColors.textSecondary,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                  Text(
+                                    '500 km',
+                                    style: AppTypography.labelSmall.copyWith(
+                                      color: context.appColors.textSecondary,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
 
-                  const SizedBox(height: 16),
-                ],
+                      // ── Age Range ──
+                      _buildSection(
+                        title: 'Độ tuổi',
+                        icon: Ionicons.calendar_outline,
+                        value:
+                            '${_ageRange.start.round()} - ${_ageRange.end.round()} tuổi',
+                        child: Column(
+                          children: [
+                            SliderTheme(
+                              data: _sliderTheme,
+                              child: RangeSlider(
+                                values: _ageRange,
+                                min: 18,
+                                max: 50,
+                                divisions: 32,
+                                labels: RangeLabels(
+                                  '${_ageRange.start.round()}',
+                                  '${_ageRange.end.round()}',
+                                ),
+                                onChanged: (v) => setState(() => _ageRange = v),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '18 tuổi',
+                                    style: AppTypography.labelSmall.copyWith(
+                                      color: context.appColors.textSecondary,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                  Text(
+                                    '50 tuổi',
+                                    style: AppTypography.labelSmall.copyWith(
+                                      color: context.appColors.textSecondary,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // ── Services ──
+                      _buildSection(
+                        title: 'Hoạt động',
+                        icon: Ionicons.grid_outline,
+                        child: Builder(
+                          builder: (context) {
+                            final homeState = context.read<HomeBloc>().state;
+                            final categories = homeState.serviceTypes.isNotEmpty
+                                ? homeState.serviceTypes
+                                    .map((s) => ServiceCategoryData.fromServiceType(s))
+                                    .toList()
+                                : serviceCategories;
+                            return Wrap(
+                              spacing: 10,
+                              runSpacing: 10,
+                              children: categories.map((s) {
+                                final selected = _selectedServices.contains(s.code);
+                                return _FilterServiceChip(
+                                  label: s.label,
+                                  icon: s.icon,
+                                  color: s.color,
+                                  selected: selected,
+                                  onTap: () => _toggleService(s.code),
+                                );
+                              }).toList(),
+                            );
+                          },
+                        ),
+                      ),
+
+                      // ── Sort ──
+                      _buildSection(
+                        title: 'Sắp xếp theo',
+                        icon: Ionicons.swap_vertical_outline,
+                        child: Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: _sortOptions.map((s) {
+                            final selected = _sortBy == s.code;
+                            return GestureDetector(
+                              onTap: () => setState(() => _sortBy = s.code),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: selected
+                                      ? AppColors.primary
+                                      : context.appColors.background,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: selected
+                                        ? AppColors.primary
+                                        : context.appColors.border,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      s.icon,
+                                      size: 16,
+                                      color: selected
+                                          ? Colors.white
+                                          : context.appColors.textSecondary,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      s.label,
+                                      style: AppTypography.labelMedium.copyWith(
+                                        color: selected
+                                            ? Colors.white
+                                            : context.appColors.textPrimary,
+                                        fontWeight: selected
+                                            ? FontWeight.w700
+                                            : FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+
+                      // ── Toggles ──
+                      _buildToggle(
+                        'Chỉ hiện đã xác minh',
+                        Ionicons.shield_checkmark_outline,
+                        _verifiedOnly,
+                        (v) => setState(() => _verifiedOnly = v),
+                      ),
+
+                      _buildToggle(
+                        'Chỉ hiện đang online',
+                        Ionicons.wifi_outline,
+                        _onlineOnly,
+                        (v) => setState(() => _onlineOnly = v),
+                      ),
+
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ),
 
-          // Apply + Count
-          _buildApplyButton(),
-        ],
-      ),
+              // Apply + Count
+              _buildApplyButton(),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -452,7 +463,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
 
   void _resetFilters() {
     setState(() {
-      _distance = 10;
+      _distance = 50;
       _ageRange = const RangeValues(18, 35);
       _selectedServices = {};
       _selectedGender = null;
@@ -764,7 +775,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   int get _activeFilterCount {
     int count = 0;
     if (_selectedGender != null) count++;
-    if (_distance != 10) count++;
+    if (_distance != 50) count++;
     if (_ageRange.start != 18 || _ageRange.end != 35) count++;
     if (_selectedServices.isNotEmpty) count++;
     if (_selectedProvinceId != null || _selectedDistrictId != null) count++;
@@ -844,7 +855,9 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
 
   void _applyFilter() {
     final filter = HomeFilter(
-      radius: _distance.round() != 10 ? _distance.round() : null,
+      lat: widget.currentFilter.lat,
+      lng: widget.currentFilter.lng,
+      radius: _distance.round() != 50 ? _distance.round() : null,
       minAge: _ageRange.start.round() != 18 ? _ageRange.start.round() : null,
       maxAge: _ageRange.end.round() != 35 ? _ageRange.end.round() : null,
       minRate: null,

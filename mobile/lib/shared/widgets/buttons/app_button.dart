@@ -56,10 +56,9 @@ class AppButton extends StatelessWidget {
         width: width ?? double.infinity,
         height: height,
         decoration: BoxDecoration(
-          gradient: onPressed != null && !isLoading
+          color: onPressed != null && !isLoading
               ? AppColors.primaryGradient
-              : null,
-          color: onPressed == null || isLoading ? context.appColors.border : null,
+              : context.appColors.border,
           borderRadius: BorderRadius.circular(borderRadius),
           boxShadow: onPressed != null && !isLoading
               ? [

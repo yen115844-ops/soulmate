@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { ThrottlerModuleOptions } from '@nestjs/throttler';
 import {
-    InjectThrottlerOptions,
-    InjectThrottlerStorage,
-    ThrottlerGuard,
-    ThrottlerStorage,
+  InjectThrottlerOptions,
+  InjectThrottlerStorage,
+  ThrottlerGuard,
+  ThrottlerStorage,
 } from '@nestjs/throttler';
 
 /**

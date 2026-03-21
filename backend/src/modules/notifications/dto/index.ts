@@ -2,4 +2,3 @@ export * from './mark-read.dto';
 export * from './query-notifications.dto';
 export * from './register-device.dto';
 export * from './send-notification.dto';
-

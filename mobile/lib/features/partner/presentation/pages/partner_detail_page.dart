@@ -15,6 +15,8 @@ import '../../../../shared/widgets/auth_guard.dart';
 import '../../../favorites/presentation/bloc/favorites_bloc.dart';
 import '../../../favorites/presentation/bloc/favorites_event.dart';
 import '../../../favorites/presentation/bloc/favorites_state.dart';
+import '../../../settings/data/app_config_repository.dart';
+import '../../../subscription/presentation/widgets/premium_guard.dart';
 import '../../data/partner_repository.dart';
 import '../bloc/partner_detail_bloc.dart';
 import '../bloc/partner_detail_event.dart';
@@ -23,8 +25,6 @@ import '../widgets/fullscreen_image_viewer.dart';
 import '../widgets/partner_detail_bottom_bar.dart';
 import '../widgets/partner_detail_header.dart';
 import '../widgets/partner_info_sections.dart';
-import '../widgets/partner_photo_gallery.dart';
-import '../widgets/partner_pricing_section.dart';
 import '../widgets/partner_stats_section.dart';
 
 class PartnerDetailPage extends StatelessWidget {
@@ -139,7 +139,7 @@ class _PartnerDetailView extends StatelessWidget {
     return BlocBuilder<FavoritesBloc, FavoritesState>(
       builder: (context, favState) {
         final isFavorite =
-            favState.favorites.any((f) => f.partnerId == detail.profile.id);
+            favState.favorites.any((f) => f.partnerId == detail.profile.userId);
 
         return Stack(
           children: [
@@ -155,12 +155,10 @@ class _PartnerDetailView extends StatelessWidget {
                   parent: AlwaysScrollableScrollPhysics(),
                 ),
                 slivers: [
-                  // Hero header with avatar
                   PartnerDetailHeader(
                     detail: detail,
                     isFavorite: isFavorite,
                     onBack: () {
-                      // xử lý nếu ko thể pop (ví dụ: là root page), có thể điều hướng về home
                       if (Navigator.of(context).canPop()) {
                         Navigator.of(context).pop();
                       } else {
@@ -170,7 +168,7 @@ class _PartnerDetailView extends StatelessWidget {
                     onShare: () => _sharePartner(context, detail),
                     onFavorite: () =>
                         _toggleFavorite(context, detail, isFavorite),
-                    onImageTap: () => _openImageViewer(context, detail, 0),
+                    onImageTap: (index) => _openImageViewer(context, detail, index),
                   ),
 
               // Content sections
@@ -184,13 +182,9 @@ class _PartnerDetailView extends StatelessWidget {
 
                     const SizedBox(height: 16),
 
-                    // Pricing
-                    PartnerPricingSection(
-                      detail: detail,
-                    ),
+                
 
-                    const SizedBox(height: 16),
-
+ 
                     // About / Introduction
                     PartnerAboutSection(detail: detail),
 
@@ -213,11 +207,6 @@ class _PartnerDetailView extends StatelessWidget {
 
                     // Languages
                     PartnerLanguagesSection(detail: detail),
-
-                    const SizedBox(height: 16),
-
-                    // Photo gallery
-                    PartnerPhotoGallery(detail: detail),
 
                     const SizedBox(height: 16),
 
@@ -259,6 +248,10 @@ class _PartnerDetailView extends StatelessWidget {
     BuildContext context,
     PartnerDetailResponse detail,
   ) {
+    final reviewStats = detail.reviewStats;
+    final averageRating = reviewStats?.averageRating ?? detail.profile.averageRating;
+    final totalReviews = reviewStats?.totalReviews ?? detail.profile.totalReviews;
+
     return Container(
       margin: EdgeInsets.symmetric(horizontal: ResponsiveLayout.horizontalPadding(context)),
       padding: ResponsiveLayout.pagePadding(context),
@@ -299,7 +292,8 @@ class _PartnerDetailView extends StatelessWidget {
               GestureDetector(
                 onTap: () {
                   // Navigate to reviews page
-                  context.push('/partner/${detail.profile.id}/reviews');
+                  final reviewUserId = detail.userId ?? detail.profile.userId;
+                  context.push('/partner/$reviewUserId/reviews');
                 },
                 child: Row(
                   children: [
@@ -325,7 +319,7 @@ class _PartnerDetailView extends StatelessWidget {
               Column(
                 children: [
                   Text(
-                    detail.profile.averageRating.toStringAsFixed(1),
+                    averageRating.toStringAsFixed(1),
                     style: AppTypography.displaySmall.copyWith(
                       color: context.appColors.textPrimary,
                       fontWeight: FontWeight.w800,
@@ -335,7 +329,7 @@ class _PartnerDetailView extends StatelessWidget {
                   Row(
                     children: List.generate(5, (index) {
                       final starValue = index + 1;
-                      final rating = detail.profile.averageRating;
+                      final rating = averageRating;
                       return Icon(
                         starValue <= rating
                             ? Ionicons.star
@@ -353,7 +347,7 @@ class _PartnerDetailView extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${detail.profile.totalReviews} đánh giá',
+                    '$totalReviews đánh giá',
                     style: AppTypography.bodySmall.copyWith(
                       color: context.appColors.textSecondary,
                     ),
@@ -364,11 +358,11 @@ class _PartnerDetailView extends StatelessWidget {
               Expanded(
                 child: Column(
                   children: [
-                    _buildRatingBar(context, '5', 0.8),
-                    _buildRatingBar(context, '4', 0.15),
-                    _buildRatingBar(context, '3', 0.05),
-                    _buildRatingBar(context, '2', 0.0),
-                    _buildRatingBar(context, '1', 0.0),
+                    _buildRatingBar(context, '5', reviewStats?.getPercentage(5) ?? 0),
+                    _buildRatingBar(context, '4', reviewStats?.getPercentage(4) ?? 0),
+                    _buildRatingBar(context, '3', reviewStats?.getPercentage(3) ?? 0),
+                    _buildRatingBar(context, '2', reviewStats?.getPercentage(2) ?? 0),
+                    _buildRatingBar(context, '1', reviewStats?.getPercentage(1) ?? 0),
                   ],
                 ),
               ),
@@ -417,21 +411,50 @@ class _PartnerDetailView extends StatelessWidget {
   }
 
   void _navigateToBooking(BuildContext context, PartnerDetailResponse detail) {
-    // Backend GET /partners/:id expects userId, not profile.id
-    context.push(
-      RouteNames.createBooking,
-      extra: {'partnerId': detail.profile.userId},
+    AuthGuard.requireAuth(
+      context,
+      message: 'Đăng nhập để gửi lời mời.',
+      onAuthenticated: () async {
+        // Kiểm tra setting có yêu cầu premium cho booking không
+        final requirePremium =
+            await getIt<AppConfigRepository>().requirePremiumForBooking();
+
+        if (!context.mounted) return;
+
+        if (requirePremium && !PremiumGuard.isPremium(context)) {
+          final wantUpgrade = await PremiumGuard.showPremiumDialog(
+            context,
+            title: 'Cần đăng ký Premium',
+            message:
+                'Tính năng này yêu cầu gói Premium. Nâng cấp để gửi lời mời!',
+          );
+          if (wantUpgrade && context.mounted) {
+            await context.push('/premium');
+          }
+          return;
+        }
+
+        if (!context.mounted) return;
+        context.push(
+          RouteNames.createBooking,
+          extra: {'partnerId': detail.profile.userId},
+        );
+      },
     );
   }
 
   void _sharePartner(BuildContext context, PartnerDetailResponse detail) {
-       final shareUrl = ApiConfig.partnerShareUrl(detail.profile.userId);
+    final shareUrl = ApiConfig.partnerShareUrl(detail.profile.userId);
     final partnerName = detail.userProfile?.fullName ?? 'Partner';
     final shareText = 'Xem hồ sơ của $partnerName trên Mate Social:\n$shareUrl';
 
-
+    final box = context.findRenderObject() as RenderBox?;
     SharePlus.instance.share(
-      ShareParams(text: shareText),
+      ShareParams(
+        text: shareText,
+        sharePositionOrigin:
+            box != null ? box.localToGlobal(Offset.zero) & box.size : null,
+      ),
     );
   }
 
@@ -448,12 +471,11 @@ class _PartnerDetailView extends StatelessWidget {
       );
       return;
     }
-
     final bloc = context.read<FavoritesBloc>();
     if (isFavorite) {
-      bloc.add(FavoriteRemoveRequested(detail.profile.id));
+      bloc.add(FavoriteRemoveRequested(detail.profile.userId));
     } else {
-      bloc.add(FavoriteAddRequested(detail.profile.id));
+      bloc.add(FavoriteAddRequested(detail.profile.userId));
     }
   }
 
@@ -463,10 +485,10 @@ class _PartnerDetailView extends StatelessWidget {
     int initialIndex,
   ) {
     final allPhotos = <String>[];
+    allPhotos.addAll(detail.photos);
     if (detail.avatarUrl != null && detail.avatarUrl!.isNotEmpty) {
       allPhotos.add(detail.avatarUrl!);
     }
-    allPhotos.addAll(detail.photos);
     final uniquePhotos = allPhotos.toSet().toList();
 
     if (uniquePhotos.isEmpty) return;
@@ -477,4 +499,5 @@ class _PartnerDetailView extends StatelessWidget {
       initialIndex: initialIndex.clamp(0, uniquePhotos.length - 1),
     );
   }
+
 }

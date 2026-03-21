@@ -35,7 +35,9 @@ export class FcmService implements OnModuleInit {
   private initializeFirebase() {
     try {
       const projectId = this.configService.get<string>('firebase.projectId');
-      const clientEmail = this.configService.get<string>('firebase.clientEmail');
+      const clientEmail = this.configService.get<string>(
+        'firebase.clientEmail',
+      );
       const privateKey = this.configService.get<string>('firebase.privateKey');
 
       if (!projectId || !clientEmail || !privateKey) {
@@ -132,12 +134,12 @@ export class FcmService implements OnModuleInit {
       return true;
     } catch (error: any) {
       this.logger.error(`Failed to send FCM message: ${error.message}`);
-      
+
       // Handle invalid token
       if (this.isInvalidTokenError(error)) {
         await this.invalidateToken(token);
       }
-      
+
       return false;
     }
   }
@@ -145,7 +147,10 @@ export class FcmService implements OnModuleInit {
   /**
    * Send push notification to multiple devices
    */
-  async sendToDevices(tokens: string[], message: FcmMessage): Promise<SendResult> {
+  async sendToDevices(
+    tokens: string[],
+    message: FcmMessage,
+  ): Promise<SendResult> {
     if (!this.isAvailable()) {
       this.logger.warn(
         '[FcmService] FCM not available (Firebase not configured or init failed), skipping push',
@@ -281,7 +286,10 @@ export class FcmService implements OnModuleInit {
   /**
    * Send push notification to multiple users
    */
-  async sendToUsers(userIds: string[], message: FcmMessage): Promise<SendResult> {
+  async sendToUsers(
+    userIds: string[],
+    message: FcmMessage,
+  ): Promise<SendResult> {
     const deviceTokens = await this.prisma.deviceToken.findMany({
       where: {
         userId: { in: userIds },

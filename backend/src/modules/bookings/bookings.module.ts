@@ -7,7 +7,12 @@ import { BookingsController } from './bookings.controller';
 import { BookingsService } from './bookings.service';
 
 @Module({
-  imports: [PrismaModule, NotificationsModule, SubscriptionsModule, CreditsModule],
+  imports: [
+    PrismaModule,
+    NotificationsModule,
+    SubscriptionsModule,
+    CreditsModule,
+  ],
   controllers: [BookingsController],
   providers: [BookingsService],
   exports: [BookingsService],

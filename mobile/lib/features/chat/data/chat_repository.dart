@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../core/network/api_client.dart';
 import '../../../core/network/base_repository.dart';
+import '../../../core/utils/image_upload_optimizer.dart';
 
 /// Message types supported
 class MessageType {
@@ -229,21 +230,32 @@ class ChatRepository with BaseRepositoryMixin {
 
   /// Upload image to server
   Future<String> _uploadImage(File imageFile) async {
+    final optimized = await ImageUploadOptimizer.optimize(
+      imageFile.path,
+      maxWidth: 1600,
+      maxHeight: 1600,
+      quality: 84,
+    );
+
     final formData = FormData.fromMap({
       'files': await MultipartFile.fromFile(
-        imageFile.path,
+        optimized.path,
         filename: imageFile.path.split('/').last,
       ),
     });
 
-    final response = await _apiClient.post('/upload/images', data: formData);
-    final data = extractRawData(response.data);
-    
-    if (data['urls'] != null && (data['urls'] as List).isNotEmpty) {
-      return (data['urls'] as List).first;
+    try {
+      final response = await _apiClient.post('/upload/images', data: formData);
+      final data = extractRawData(response.data);
+
+      if (data['urls'] != null && (data['urls'] as List).isNotEmpty) {
+        return (data['urls'] as List).first;
+      }
+
+      throw Exception('Failed to upload image');
+    } finally {
+      await optimized.dispose();
     }
-    
-    throw Exception('Failed to upload image');
   }
 
   /// Mute/Unmute conversation

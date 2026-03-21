@@ -1,10 +1,25 @@
-import { BadRequestException, ForbiddenException, Inject, Injectable, Logger, NotFoundException, forwardRef } from '@nestjs/common';
+import {
+    BadRequestException,
+    ForbiddenException,
+    Inject,
+    Injectable,
+    Logger,
+    NotFoundException,
+    forwardRef,
+} from '@nestjs/common';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { UserStatus } from '../../generated/prisma/client';
 import { ChatGateway } from '../chat/chat.gateway';
 import { NotificationsService } from '../notifications/notifications.service';
-import { AdminUserQueryDto, UpdateLocationDto, UpdateProfileDto, UpdateSettingsDto, UpdateUserStatusDto } from './dto';
+import { UploadService } from '../upload/upload.service';
+import {
+    AdminUserQueryDto,
+    UpdateLocationDto,
+    UpdateProfileDto,
+    UpdateSettingsDto,
+    UpdateUserStatusDto,
+} from './dto';
 
 @Injectable()
 export class UsersService {
@@ -13,6 +28,7 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
+    private readonly uploadService: UploadService,
     @Inject(forwardRef(() => ChatGateway))
     private readonly chatGateway: ChatGateway,
   ) {}
@@ -33,7 +49,7 @@ export class UsersService {
           ],
         },
       });
-      
+
       if (blockExists) {
         throw new ForbiddenException('Không thể xem hồ sơ người dùng này');
       }
@@ -163,8 +179,16 @@ export class UsersService {
       throw new NotFoundException('Profile not found');
     }
 
+    this.uploadService.validateMagicBytes(file);
+    await this.uploadService.optimizeImage(file, {
+      maxWidth: 1024,
+      maxHeight: 1024,
+      quality: 82,
+    });
+
     // Generate avatar URL (use the public file serving endpoint)
-    const avatarUrl = `/api/upload/files/${file.filename}`;
+    const avatarUrl = this.uploadService.getFileUrl(file.filename);
+    const oldAvatarUrl = existingProfile.avatarUrl;
 
     // Update profile with new avatar URL
     const profile = await this.prisma.profile.update({
@@ -173,12 +197,89 @@ export class UsersService {
     });
 
     this.logger.log(`Avatar updated for user: ${userId}`);
+
+    if (oldAvatarUrl && oldAvatarUrl !== avatarUrl) {
+      this.uploadService.deleteFileByUrl(oldAvatarUrl);
+    }
+
     return {
       avatarUrl,
       filename: file.filename,
       originalName: file.originalname,
       size: file.size,
       mimetype: file.mimetype,
+    };
+  }
+
+  async uploadProfilePhoto(userId: string, file: Express.Multer.File) {
+    const existingProfile = await this.prisma.profile.findUnique({
+      where: { userId },
+    });
+
+    if (!existingProfile) {
+      throw new NotFoundException('Profile not found');
+    }
+
+    this.uploadService.validateMagicBytes(file);
+    await this.uploadService.optimizeImage(file, {
+      maxWidth: 1440,
+      maxHeight: 1440,
+      quality: 82,
+    });
+
+    const photoUrl = this.uploadService.getFileUrl(file.filename);
+    const currentPhotos = Array.isArray(existingProfile.photos)
+      ? (existingProfile.photos as string[])
+      : [];
+
+    if (!currentPhotos.includes(photoUrl)) {
+      currentPhotos.push(photoUrl);
+    }
+
+    await this.prisma.profile.update({
+      where: { userId },
+      data: { photos: currentPhotos },
+    });
+
+    return {
+      photoUrl,
+      filename: file.filename,
+      originalName: file.originalname,
+      size: file.size,
+      mimetype: file.mimetype,
+      totalPhotos: currentPhotos.length,
+    };
+  }
+
+  async deleteProfilePhoto(userId: string, photoUrl: string) {
+    const existingProfile = await this.prisma.profile.findUnique({
+      where: { userId },
+    });
+
+    if (!existingProfile) {
+      throw new NotFoundException('Profile not found');
+    }
+
+    const currentPhotos = Array.isArray(existingProfile.photos)
+      ? (existingProfile.photos as string[])
+      : [];
+    const nextPhotos = currentPhotos.filter((url) => url !== photoUrl);
+
+    if (nextPhotos.length === currentPhotos.length) {
+      throw new BadRequestException('Photo not found in profile');
+    }
+
+    await this.prisma.profile.update({
+      where: { userId },
+      data: { photos: nextPhotos },
+    });
+
+    this.uploadService.deleteFileByUrl(photoUrl);
+
+    return {
+      deleted: true,
+      photoUrl,
+      totalPhotos: nextPhotos.length,
     };
   }
 
@@ -245,7 +346,11 @@ export class UsersService {
       where.OR = [
         { email: { contains: filters.search, mode: 'insensitive' } },
         { phone: { contains: filters.search } },
-        { profile: { fullName: { contains: filters.search, mode: 'insensitive' } } },
+        {
+          profile: {
+            fullName: { contains: filters.search, mode: 'insensitive' },
+          },
+        },
       ];
     }
 
@@ -328,6 +433,7 @@ export class UsersService {
     return {
       data: favorites.map((f) => ({
         id: f.id,
+        partnerId: f.partnerId,
         partner: {
           id: f.partner.id,
           email: f.partner.email,
@@ -393,35 +499,36 @@ export class UsersService {
    * Get profile statistics
    */
   async getProfileStats(userId: string) {
-    const [bookingsCount, reviewsCount, reviewsData, partnerProfile] = await Promise.all([
-      // Total bookings as user
-      this.prisma.booking.count({
-        where: { userId },
-      }),
-      // Total reviews written
-      this.prisma.review.count({
-        where: { reviewerId: userId },
-      }),
-      // Average rating received (reviews about this user)
-      this.prisma.review.aggregate({
-        where: { revieweeId: userId },
-        _avg: { overallRating: true },
-      }),
-      // Partner profile info
-      this.prisma.partnerProfile.findUnique({
-        where: { userId },
-        select: {
-          id: true,
-          isVerified: true,
-          isAvailable: true,
-          verificationBadge: true,
-          totalBookings: true,
-          completedBookings: true,
-          averageRating: true,
-          totalReviews: true,
-        },
-      }),
-    ]);
+    const [bookingsCount, reviewsCount, reviewsData, partnerProfile] =
+      await Promise.all([
+        // Total bookings as user
+        this.prisma.booking.count({
+          where: { userId },
+        }),
+        // Total reviews written
+        this.prisma.review.count({
+          where: { reviewerId: userId },
+        }),
+        // Average rating received (reviews about this user)
+        this.prisma.review.aggregate({
+          where: { revieweeId: userId },
+          _avg: { overallRating: true },
+        }),
+        // Partner profile info
+        this.prisma.partnerProfile.findUnique({
+          where: { userId },
+          select: {
+            id: true,
+            isVerified: true,
+            isAvailable: true,
+            verificationBadge: true,
+            totalBookings: true,
+            completedBookings: true,
+            averageRating: true,
+            totalReviews: true,
+          },
+        }),
+      ]);
 
     return {
       totalBookings: bookingsCount,
@@ -429,15 +536,17 @@ export class UsersService {
       averageRating: reviewsData._avg?.overallRating ?? 0,
       // Partner info
       isPartner: !!partnerProfile,
-      partnerStatus: partnerProfile ? {
-        isVerified: partnerProfile.isVerified,
-        isAvailable: partnerProfile.isAvailable,
-        verificationBadge: partnerProfile.verificationBadge,
-        totalBookings: partnerProfile.totalBookings,
-        completedBookings: partnerProfile.completedBookings,
-        averageRating: partnerProfile.averageRating,
-        totalReviews: partnerProfile.totalReviews,
-      } : null,
+      partnerStatus: partnerProfile
+        ? {
+            isVerified: partnerProfile.isVerified,
+            isAvailable: partnerProfile.isAvailable,
+            verificationBadge: partnerProfile.verificationBadge,
+            totalBookings: partnerProfile.totalBookings,
+            completedBookings: partnerProfile.completedBookings,
+            averageRating: partnerProfile.averageRating,
+            totalReviews: partnerProfile.totalReviews,
+          }
+        : null,
     };
   }
 
@@ -447,15 +556,16 @@ export class UsersService {
    * Admin: Get user statistics
    */
   async adminGetUserStats() {
-    const [total, active, pending, suspended, banned, partners, admins] = await Promise.all([
-      this.prisma.user.count(),
-      this.prisma.user.count({ where: { status: UserStatus.ACTIVE } }),
-      this.prisma.user.count({ where: { status: UserStatus.PENDING } }),
-      this.prisma.user.count({ where: { status: UserStatus.SUSPENDED } }),
-      this.prisma.user.count({ where: { status: UserStatus.BANNED } }),
-      this.prisma.user.count({ where: { role: 'PARTNER' } }),
-      this.prisma.user.count({ where: { role: 'ADMIN' } }),
-    ]);
+    const [total, active, pending, suspended, banned, partners, admins] =
+      await Promise.all([
+        this.prisma.user.count(),
+        this.prisma.user.count({ where: { status: UserStatus.ACTIVE } }),
+        this.prisma.user.count({ where: { status: UserStatus.PENDING } }),
+        this.prisma.user.count({ where: { status: UserStatus.SUSPENDED } }),
+        this.prisma.user.count({ where: { status: UserStatus.BANNED } }),
+        this.prisma.user.count({ where: { role: 'PARTNER' } }),
+        this.prisma.user.count({ where: { role: 'ADMIN' } }),
+      ]);
 
     return {
       total,
@@ -824,7 +934,10 @@ export class UsersService {
     return {
       data: blockedUsers.map((b) => ({
         id: b.blockedId,
-        name: b.blocked.profile?.displayName || b.blocked.profile?.fullName || 'User',
+        name:
+          b.blocked.profile?.displayName ||
+          b.blocked.profile?.fullName ||
+          'User',
         avatarUrl: b.blocked.profile?.avatarUrl,
         blockedAt: b.createdAt,
       })),

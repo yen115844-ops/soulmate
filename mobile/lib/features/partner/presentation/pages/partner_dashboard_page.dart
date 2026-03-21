@@ -466,7 +466,7 @@ class _QuickStats extends StatelessWidget {
     return Container(
       padding: EdgeInsets.fromLTRB(h, 20, h, 20),
       decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
+        color: AppColors.primaryGradient,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(

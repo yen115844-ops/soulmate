@@ -18,7 +18,10 @@ export class VerifyPurchaseDto {
   @IsNotEmpty()
   receiptData: string;
 
-  @ApiPropertyOptional({ description: 'iOS transaction ID (purchaseID). When set and Apple IAP key in .env, uses App Store Server API.' })
+  @ApiPropertyOptional({
+    description:
+      'iOS transaction ID (purchaseID). When set and Apple IAP key in .env, uses App Store Server API.',
+  })
   @IsOptional()
   @IsString()
   transactionId?: string;

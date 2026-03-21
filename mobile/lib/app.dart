@@ -21,7 +21,6 @@ import 'features/favorites/presentation/bloc/favorites_bloc.dart';
 import 'features/partner/data/partner_repository.dart';
 import 'features/profile/presentation/bloc/profile_bloc.dart';
 import 'features/profile/presentation/bloc/profile_event.dart';
-import 'features/profile/presentation/bloc/profile_state.dart';
 import 'shared/bloc/master_data_bloc.dart';
 
 /// The main application widget
@@ -113,7 +112,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           if (state is auth_state.AuthLogoutSuccess ||
               state is auth_state.AuthAccountDeleted) {
             // User explicitly logged out or deleted account.
-            // GoRouter redirect already navigates to login, so
+            // Router keeps user in guest mode (home), so
             // we only clean up state here. Defer to next frame to
             // avoid marking widgets dirty during _flushDirtyElements.
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -133,10 +132,9 @@ class _AppState extends State<App> with WidgetsBindingObserver {
               state is auth_state.AuthNeedsProfileSetup) {
             getIt<ChatSocketService>().connect();
             // Auto-load profile when authenticated
+            // Always load fresh to avoid showing stale data from previous session
             final profileBloc = getIt<ProfileBloc>();
-            if (profileBloc.state is ProfileInitial) {
-              profileBloc.add(const ProfileLoadRequested());
-            }
+            profileBloc.add(const ProfileLoadRequested());
             _updatePresence();
           }
         },

@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ionicons/ionicons.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../config/routes/route_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -60,9 +64,7 @@ class _CreditsPageState extends State<CreditsPage> {
           if (state is CreditsPurchaseSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(
-                  'Đã nhận ${state.creditsReceived} xu!',
-                ),
+                content: Text('Đã nhận ${state.creditsReceived} xu!'),
                 backgroundColor: AppColors.success,
               ),
             );
@@ -154,11 +156,7 @@ class _CreditsPageState extends State<CreditsPage> {
             margin: ResponsiveLayout.pagePadding(context),
             padding: ResponsiveLayout.pagePadding(context),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: AppColors.primary,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
@@ -170,6 +168,7 @@ class _CreditsPageState extends State<CreditsPage> {
             ),
             child: Column(
               children: [
+                const SizedBox(height: 12),
                 Text(
                   'Số dư hiện tại',
                   style: AppTypography.bodyMedium.copyWith(
@@ -180,11 +179,7 @@ class _CreditsPageState extends State<CreditsPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
-                      Ionicons.diamond,
-                      color: Colors.amber,
-                      size: 32,
-                    ),
+                    const Icon(Ionicons.diamond, color: Colors.amber, size: 32),
                     const SizedBox(width: 12),
                     Text(
                       '${wallet.balance}',
@@ -208,10 +203,15 @@ class _CreditsPageState extends State<CreditsPage> {
                     color: Colors.white54,
                   ),
                 ),
+                const SizedBox(height: 12),
+
                 if (wallet.pendingBalance > 0) ...[
                   const SizedBox(height: 12),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
@@ -232,7 +232,9 @@ class _CreditsPageState extends State<CreditsPage> {
         // Section Title
         SliverToBoxAdapter(
           child: Padding(
-            padding: ResponsiveLayout.pagePadding(context).copyWith(top: 8, bottom: 16),
+            padding: ResponsiveLayout.pagePadding(
+              context,
+            ).copyWith(top: 8, bottom: 16),
             child: Text(
               'Mua Xu',
               style: AppTypography.titleMedium.copyWith(
@@ -244,7 +246,9 @@ class _CreditsPageState extends State<CreditsPage> {
 
         // Credit Packages
         SliverPadding(
-          padding: EdgeInsets.symmetric(horizontal: ResponsiveLayout.horizontalPadding(context)),
+          padding: EdgeInsets.symmetric(
+            horizontal: ResponsiveLayout.horizontalPadding(context),
+          ),
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) => _buildPackageCard(context, packages[index]),
@@ -258,7 +262,9 @@ class _CreditsPageState extends State<CreditsPage> {
           child: Padding(
             padding: ResponsiveLayout.pagePadding(context),
             child: Container(
-              padding: EdgeInsets.all(ResponsiveLayout.horizontalPadding(context)),
+              padding: EdgeInsets.all(
+                ResponsiveLayout.horizontalPadding(context),
+              ),
               decoration: BoxDecoration(
                 color: context.appColors.card,
                 borderRadius: BorderRadius.circular(12),
@@ -301,7 +307,9 @@ class _CreditsPageState extends State<CreditsPage> {
           color: context.appColors.card,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: package.isBestValue ? AppColors.primary : context.appColors.border,
+            color: package.isBestValue
+                ? AppColors.primary
+                : context.appColors.border,
             width: package.isBestValue ? 2 : 1,
           ),
         ),
@@ -340,7 +348,10 @@ class _CreditsPageState extends State<CreditsPage> {
                       ),
                       if (package.bonusCredits > 0)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.success.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
@@ -355,7 +366,10 @@ class _CreditsPageState extends State<CreditsPage> {
                         ),
                       if (package.isBestValue)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.primary,
                             borderRadius: BorderRadius.circular(8),
@@ -394,7 +408,8 @@ class _CreditsPageState extends State<CreditsPage> {
                     color: AppColors.primary,
                   ),
                 ),
-                if (package.discountPercent != null && package.discountPercent! > 0)
+                if (package.discountPercent != null &&
+                    package.discountPercent! > 0)
                   Text(
                     '-${package.discountPercent}%',
                     style: AppTypography.bodySmall.copyWith(
@@ -439,10 +454,7 @@ class _PurchaseConfirmSheet extends StatelessWidget {
   final CreditPackage package;
   final VoidCallback onConfirm;
 
-  const _PurchaseConfirmSheet({
-    required this.package,
-    required this.onConfirm,
-  });
+  const _PurchaseConfirmSheet({required this.package, required this.onConfirm});
 
   @override
   Widget build(BuildContext context) {
@@ -451,7 +463,12 @@ class _PurchaseConfirmSheet extends StatelessWidget {
         color: context.appColors.card,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      padding: EdgeInsets.fromLTRB(ResponsiveLayout.horizontalPadding(context), 12, ResponsiveLayout.horizontalPadding(context), 32),
+      padding: EdgeInsets.fromLTRB(
+        ResponsiveLayout.horizontalPadding(context),
+        12,
+        ResponsiveLayout.horizontalPadding(context),
+        32,
+      ),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -466,7 +483,7 @@ class _PurchaseConfirmSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-    
+
             // Title
             Text(
               'Xác nhận mua Xu',
@@ -475,7 +492,7 @@ class _PurchaseConfirmSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-    
+
             // Package icon
             Container(
               width: 72,
@@ -491,7 +508,7 @@ class _PurchaseConfirmSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-    
+
             // Package name
             Text(
               '${package.totalCredits} Xu',
@@ -510,7 +527,7 @@ class _PurchaseConfirmSheet extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 20),
-    
+
             // Details
             Container(
               width: double.infinity,
@@ -521,11 +538,7 @@ class _PurchaseConfirmSheet extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _buildDetailRow(
-                    context,
-                    'Gói',
-                    package.nameVi,
-                  ),
+                  _buildDetailRow(context, 'Gói', package.nameVi),
                   const SizedBox(height: 8),
                   _buildDetailRow(
                     context,
@@ -552,17 +565,18 @@ class _PurchaseConfirmSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-    
+
             // Confirm button
             SizedBox(
               width: double.infinity,
               child: AppButton(
-                text: 'Xác nhận mua - ${_formatPrice(package.priceVnd.toInt())}',
+                text:
+                    'Xác nhận mua - ${_formatPrice(package.priceVnd.toInt())}',
                 onPressed: onConfirm,
               ),
             ),
             const SizedBox(height: 12),
-    
+
             // Cancel
             SizedBox(
               width: double.infinity,
@@ -572,6 +586,80 @@ class _PurchaseConfirmSheet extends StatelessWidget {
                 isOutlined: true,
               ),
             ),
+            const SizedBox(height: 16),
+
+            // Required: functional links to Terms of Use (EULA) and Privacy Policy (Guideline 3.1.2)
+            Text(
+              'Bằng việc mua, bạn đồng ý với:',
+              style: AppTypography.bodySmall.copyWith(
+                color: context.appColors.textSecondary,
+                fontSize: 11,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    context.push(RouteNames.termsOfService);
+                  },
+                  child: Text(
+                    'Điều khoản sử dụng',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                      decoration: TextDecoration.underline,
+                      decorationColor: AppColors.primary,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+                Text(
+                  ' và ',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: context.appColors.textSecondary,
+                    fontSize: 11,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    context.push(RouteNames.privacyPolicy);
+                  },
+                  child: Text(
+                    'Chính sách bảo mật',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                      decoration: TextDecoration.underline,
+                      decorationColor: AppColors.primary,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (Platform.isIOS) ...[
+              const SizedBox(height: 4),
+              GestureDetector(
+                onTap: () => launchUrl(
+                  Uri.parse(
+                    'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
+                  ),
+                  mode: LaunchMode.externalApplication,
+                ),
+                child: Text(
+                  'Apple Standard EULA',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: context.appColors.textHint,
+                    fontSize: 10,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

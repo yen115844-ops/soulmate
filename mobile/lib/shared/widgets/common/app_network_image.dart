@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:ionicons/ionicons.dart';
 
+import '../../../core/services/app_image_cache_manager.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme_context.dart';
 import '../../../core/utils/image_utils.dart';
@@ -48,6 +49,18 @@ class AppNetworkImage extends StatelessWidget {
   /// Background color for placeholder/error
   final Color? backgroundColor;
 
+  /// Optional memory decode width to reduce jank and memory spikes.
+  final int? memCacheWidth;
+
+  /// Optional memory decode height to reduce jank and memory spikes.
+  final int? memCacheHeight;
+
+  /// Optional disk cache width for resized file caching.
+  final int? maxWidthDiskCache;
+
+  /// Optional disk cache height for resized file caching.
+  final int? maxHeightDiskCache;
+
   const AppNetworkImage({
     super.key,
     this.imageUrl,
@@ -62,6 +75,10 @@ class AppNetworkImage extends StatelessWidget {
     this.errorIcon = Ionicons.person_outline,
     this.iconSize = 32,
     this.backgroundColor,
+    this.memCacheWidth,
+    this.memCacheHeight,
+    this.maxWidthDiskCache,
+    this.maxHeightDiskCache,
   });
 
   @override
@@ -74,25 +91,35 @@ class AppNetworkImage extends StatelessWidget {
       return _buildFallback(bgColor, errorIcon);
     }
 
+    final useSharedCacheManager = ImageUtils.isBackendHostedUrl(fullUrl);
+
     Widget image = CachedNetworkImage(
       imageUrl: fullUrl,
+      cacheManager: useSharedCacheManager
+          ? AppImageCacheManager.instance
+          : null,
       fit: fit,
       width: width,
       height: height,
-      placeholder: (context, url) =>
-          placeholder ?? _buildPlaceholder(bgColor),
-      errorWidget: (context, url, error) =>
-          errorWidget ?? _buildFallback(bgColor, errorIcon),
+      memCacheWidth: memCacheWidth,
+      memCacheHeight: memCacheHeight,
+      maxWidthDiskCache: maxWidthDiskCache,
+      maxHeightDiskCache: maxHeightDiskCache,
+      fadeInDuration: Duration.zero,
+      placeholderFadeInDuration: Duration.zero,
+      useOldImageOnUrlChange: true,
+      placeholder: (context, url) => placeholder ?? _buildPlaceholder(bgColor),
+      errorWidget: (context, url, error) {
+        debugPrint('AppNetworkImage load failed: $url -> $error');
+        return errorWidget ?? _buildFallback(bgColor, errorIcon);
+      },
     );
 
     // Apply border radius or circular clip
     if (isCircular) {
       image = ClipOval(child: image);
     } else if (borderRadius != null) {
-      image = ClipRRect(
-        borderRadius: borderRadius!,
-        child: image,
-      );
+      image = ClipRRect(borderRadius: borderRadius!, child: image);
     }
 
     return image;
@@ -104,13 +131,7 @@ class AppNetworkImage extends StatelessWidget {
       height: height,
       color: bgColor,
       child: Center(
-        child: SizedBox(
-          width: iconSize,
-          height: iconSize,
-          child: const CircularProgressIndicator(
-            strokeWidth: 2,
-          ),
-        ),
+        child: Icon(placeholderIcon, size: iconSize, color: AppColors.textHint),
       ),
     );
   }
@@ -121,11 +142,7 @@ class AppNetworkImage extends StatelessWidget {
       height: height,
       color: bgColor,
       child: Center(
-        child: Icon(
-          icon,
-          size: iconSize,
-          color: AppColors.textHint,
-        ),
+        child: Icon(icon, size: iconSize, color: AppColors.textHint),
       ),
     );
   }
@@ -165,6 +182,8 @@ class AppAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final fullUrl = ImageUtils.buildImageUrlNullable(imageUrl);
     final bgColor = backgroundColor ?? AppColors.primary.withAlpha(25);
+    final useSharedCacheManager =
+        fullUrl != null && ImageUtils.isBackendHostedUrl(fullUrl);
 
     return Container(
       width: size,
@@ -179,11 +198,24 @@ class AppAvatar extends StatelessWidget {
         child: fullUrl != null && fullUrl.isNotEmpty
             ? CachedNetworkImage(
                 imageUrl: fullUrl,
+                cacheManager: useSharedCacheManager
+                    ? AppImageCacheManager.instance
+                    : null,
                 fit: BoxFit.cover,
                 width: size,
                 height: size,
+                memCacheWidth: size.toInt(),
+                memCacheHeight: size.toInt(),
+                maxWidthDiskCache: size.toInt() * 2,
+                maxHeightDiskCache: size.toInt() * 2,
+                fadeInDuration: Duration.zero,
+                placeholderFadeInDuration: Duration.zero,
+                useOldImageOnUrlChange: true,
                 placeholder: (context, url) => _buildPlaceholder(bgColor),
-                errorWidget: (context, url, error) => _buildFallback(bgColor),
+                errorWidget: (context, url, error) {
+                  debugPrint('AppAvatar load failed: $url -> $error');
+                  return _buildFallback(bgColor);
+                },
               )
             : _buildFallback(bgColor),
       ),
@@ -193,8 +225,12 @@ class AppAvatar extends StatelessWidget {
   Widget _buildPlaceholder(Color bgColor) {
     return Container(
       color: bgColor,
-      child: const Center(
-        child: CircularProgressIndicator(strokeWidth: 2),
+      child: Center(
+        child: Icon(
+          Ionicons.person_outline,
+          size: size * 0.4,
+          color: AppColors.textHint,
+        ),
       ),
     );
   }

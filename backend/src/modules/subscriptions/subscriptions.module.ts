@@ -11,7 +11,11 @@ import { WebhookController } from './webhook.controller';
 @Module({
   imports: [PrismaModule, NotificationsModule, ConfigModule],
   controllers: [SubscriptionsController, WebhookController],
-  providers: [SubscriptionsService, AppleIapService, SubscriptionWebhookService],
+  providers: [
+    SubscriptionsService,
+    AppleIapService,
+    SubscriptionWebhookService,
+  ],
   exports: [SubscriptionsService],
 })
 export class SubscriptionsModule {}

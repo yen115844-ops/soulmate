@@ -3,8 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:ionicons/ionicons.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/theme_context.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/theme_context.dart';
 
 /// Step Indicator for multi-step flows (Booking, KYC, etc.)
 class StepIndicator extends StatelessWidget {
@@ -162,7 +162,7 @@ class LinearStepIndicator extends StatelessWidget {
             duration: const Duration(milliseconds: 300),
             width: constraints.maxWidth * (currentStep + 1) / totalSteps,
             decoration: BoxDecoration(
-              gradient: AppColors.primaryGradient,
+              color: AppColors.primaryGradient,
               borderRadius: BorderRadius.circular(height / 2),
             ),
           );

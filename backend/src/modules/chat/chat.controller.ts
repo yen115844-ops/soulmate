@@ -1,27 +1,32 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    Post,
-    Put,
-    Query,
-    UseGuards,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { ChatGateway } from './chat.gateway';
 import { ChatService } from './chat.service';
 import {
-    CreateConversationDto,
-    QueryConversationsDto,
-    QueryMessagesDto,
-    SearchMessagesDto,
-    SendFirstMessageDto,
-    SendMessageDto,
-    ToggleMuteDto,
+  CreateConversationDto,
+  QueryConversationsDto,
+  QueryMessagesDto,
+  SearchMessagesDto,
+  SendFirstMessageDto,
+  SendMessageDto,
+  ToggleMuteDto,
 } from './dto';
 
 @ApiTags('Chat')
@@ -45,8 +50,14 @@ export class ChatController {
   }
 
   @Post('conversations')
-  @ApiOperation({ summary: 'Get or create a conversation with another user (creates only if initialMessage provided)' })
-  @ApiResponse({ status: 200, description: 'Conversation retrieved or created' })
+  @ApiOperation({
+    summary:
+      'Get or create a conversation with another user (creates only if initialMessage provided)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Conversation retrieved or created',
+  })
   @ApiResponse({ status: 404, description: 'User not found' })
   async getOrCreateConversation(
     @CurrentUser('id') userId: string,
@@ -56,8 +67,13 @@ export class ChatController {
   }
 
   @Get('conversations/find/:participantId')
-  @ApiOperation({ summary: 'Find existing conversation with a user (does not create new one)' })
-  @ApiResponse({ status: 200, description: 'Conversation found or virtual conversation info' })
+  @ApiOperation({
+    summary: 'Find existing conversation with a user (does not create new one)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Conversation found or virtual conversation info',
+  })
   @ApiResponse({ status: 404, description: 'User not found' })
   async findConversation(
     @CurrentUser('id') userId: string,
@@ -67,8 +83,13 @@ export class ChatController {
   }
 
   @Post('conversations/send-first')
-  @ApiOperation({ summary: 'Create conversation and send first message (atomic operation)' })
-  @ApiResponse({ status: 201, description: 'Conversation created and message sent' })
+  @ApiOperation({
+    summary: 'Create conversation and send first message (atomic operation)',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Conversation created and message sent',
+  })
   @ApiResponse({ status: 404, description: 'User not found' })
   async sendFirstMessage(
     @CurrentUser('id') userId: string,
@@ -79,23 +100,30 @@ export class ChatController {
       dto.participantId,
       dto.message,
     );
-    
+
     // Emit socket event to notify the other participant (not sender)
-    await this.chatGateway.emitNewMessage(result.conversation.id, {
-      id: result.message.id,
-      conversationId: result.conversation.id,
-      senderId: result.message.senderId,
-      sender: result.message.sender,
-      content: result.message.content,
-      type: result.message.type,
-      status: result.message.status,
-      createdAt: result.message.createdAt,
-    }, userId);
-    
+    await this.chatGateway.emitNewMessage(
+      result.conversation.id,
+      {
+        id: result.message.id,
+        conversationId: result.conversation.id,
+        senderId: result.message.senderId,
+        sender: result.message.sender,
+        content: result.message.content,
+        type: result.message.type,
+        status: result.message.status,
+        createdAt: result.message.createdAt,
+      },
+      userId,
+    );
+
     // Also notify both users about new conversation
     this.chatGateway.emitConversationUpdate(userId, result.conversation);
-    this.chatGateway.emitConversationUpdate(dto.participantId, result.conversation);
-    
+    this.chatGateway.emitConversationUpdate(
+      dto.participantId,
+      result.conversation,
+    );
+
     return result;
   }
 
@@ -143,22 +171,30 @@ export class ChatController {
     @Param('conversationId') conversationId: string,
     @Body() dto: SendMessageDto,
   ) {
-    const message = await this.chatService.sendMessage(userId, conversationId, dto);
-    
+    const message = await this.chatService.sendMessage(
+      userId,
+      conversationId,
+      dto,
+    );
+
     // Emit socket event to notify other participants in real-time
     // Pass userId as senderId so sender doesn't receive duplicate
-    await this.chatGateway.emitNewMessage(conversationId, {
-      id: message.id,
+    await this.chatGateway.emitNewMessage(
       conversationId,
-      senderId: message.senderId,
-      sender: message.sender,
-      content: message.content,
-      type: message.type,
-      status: message.status,
-      mediaUrl: message.mediaUrl,
-      createdAt: message.createdAt,
-    }, userId);
-    
+      {
+        id: message.id,
+        conversationId,
+        senderId: message.senderId,
+        sender: message.sender,
+        content: message.content,
+        type: message.type,
+        status: message.status,
+        mediaUrl: message.mediaUrl,
+        createdAt: message.createdAt,
+      },
+      userId,
+    );
+
     return message;
   }
 
@@ -182,7 +218,11 @@ export class ChatController {
     @Param('conversationId') conversationId: string,
     @Body() dto: ToggleMuteDto,
   ) {
-    return this.chatService.toggleMuteConversation(userId, conversationId, dto.muted);
+    return this.chatService.toggleMuteConversation(
+      userId,
+      conversationId,
+      dto.muted,
+    );
   }
 
   @Delete('conversations/:conversationId')
@@ -207,9 +247,7 @@ export class ChatController {
   @Get('online-status')
   @ApiOperation({ summary: 'Get online status for users' })
   @ApiResponse({ status: 200, description: 'Online status retrieved' })
-  async getOnlineStatus(
-    @Query('userIds') userIdsStr: string,
-  ) {
+  async getOnlineStatus(@Query('userIds') userIdsStr: string) {
     const userIds = userIdsStr ? userIdsStr.split(',') : [];
     return this.chatService.getOnlineStatus(userIds);
   }

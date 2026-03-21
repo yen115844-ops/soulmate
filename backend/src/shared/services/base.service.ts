@@ -1,5 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PaginatedResponseDto, PaginationDto } from '../../common/dto/pagination.dto';
+import {
+  PaginatedResponseDto,
+  PaginationDto,
+} from '../../common/dto/pagination.dto';
 import { PrismaService } from '../../database/prisma/prisma.service';
 
 /**
@@ -7,11 +10,7 @@ import { PrismaService } from '../../database/prisma/prisma.service';
  * Extend this class for specific model services
  */
 @Injectable()
-export abstract class BaseService<
-  T,
-  CreateDto,
-  UpdateDto,
-> {
+export abstract class BaseService<T, CreateDto, UpdateDto> {
   protected readonly logger = new Logger(this.constructor.name);
 
   constructor(protected readonly prisma: PrismaService) {}

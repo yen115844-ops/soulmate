@@ -235,7 +235,10 @@ class _EmergencyContactsView extends StatelessWidget {
               // Info Banner
               Container(
                 margin: const EdgeInsets.all(20),
-                padding: ResponsiveLayout.pagePadding(context),
+                padding: EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.warning.withAlpha(25),
                   borderRadius: BorderRadius.circular(12),

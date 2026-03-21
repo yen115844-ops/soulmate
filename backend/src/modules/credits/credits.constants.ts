@@ -1,6 +1,6 @@
 /**
  * Credits System Constants
- * 
+ *
  * Credits are the virtual currency used for booking payments.
  * Users purchase credits via IAP consumables.
  * Partners earn credits from completed bookings.

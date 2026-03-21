@@ -1,18 +1,18 @@
 import {
-    BadRequestException,
-    ConflictException,
-    ForbiddenException,
-    Injectable,
-    Logger,
-    NotFoundException,
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { BookingStatus } from '../../generated/prisma/client';
 import {
-    CreateReviewDto,
-    CreateReviewResponseDto,
-    QueryReviewsDto,
-    UpdateReviewDto,
+  CreateReviewDto,
+  CreateReviewResponseDto,
+  QueryReviewsDto,
+  UpdateReviewDto,
 } from './dto';
 
 @Injectable()
@@ -116,7 +116,8 @@ export class ReviewsService {
     };
 
     if (minRating) {
-      where.overallRating = { gte: minRating };
+      // UI star chips represent exact star selection (1..5), not minimum threshold.
+      where.overallRating = minRating;
     }
 
     // Build order by
@@ -280,29 +281,56 @@ export class ReviewsService {
     });
 
     // Sub-ratings
-    const punctualityRatings = reviews.filter((r) => r.punctualityRating != null);
-    const communicationRatings = reviews.filter((r) => r.communicationRating != null);
+    const punctualityRatings = reviews.filter(
+      (r) => r.punctualityRating != null,
+    );
+    const communicationRatings = reviews.filter(
+      (r) => r.communicationRating != null,
+    );
     const attitudeRatings = reviews.filter((r) => r.attitudeRating != null);
 
     return {
       averageRating: Number(averageRating.toFixed(1)),
       totalReviews: total,
+      rating5Count: ratingDistribution[5] || 0,
+      rating4Count: ratingDistribution[4] || 0,
+      rating3Count: ratingDistribution[3] || 0,
+      rating2Count: ratingDistribution[2] || 0,
+      rating1Count: ratingDistribution[1] || 0,
       ratingDistribution,
       subRatings: {
         punctuality:
           punctualityRatings.length > 0
-            ? punctualityRatings.reduce((sum, r) => sum + (r.punctualityRating || 0), 0) /
-              punctualityRatings.length
+            ? Number(
+                (
+                  punctualityRatings.reduce(
+                    (sum, r) => sum + (r.punctualityRating || 0),
+                    0,
+                  ) / punctualityRatings.length
+                ).toFixed(1),
+              )
             : 0,
         communication:
           communicationRatings.length > 0
-            ? communicationRatings.reduce((sum, r) => sum + (r.communicationRating || 0), 0) /
-              communicationRatings.length
+            ? Number(
+                (
+                  communicationRatings.reduce(
+                    (sum, r) => sum + (r.communicationRating || 0),
+                    0,
+                  ) / communicationRatings.length
+                ).toFixed(1),
+              )
             : 0,
         attitude:
           attitudeRatings.length > 0
-            ? attitudeRatings.reduce((sum, r) => sum + (r.attitudeRating || 0), 0) /
-              attitudeRatings.length
+            ? Number(
+                (
+                  attitudeRatings.reduce(
+                    (sum, r) => sum + (r.attitudeRating || 0),
+                    0,
+                  ) / attitudeRatings.length
+                ).toFixed(1),
+              )
             : 0,
       },
     };
@@ -327,7 +355,9 @@ export class ReviewsService {
     const hoursSinceCreation =
       (Date.now() - review.createdAt.getTime()) / (1000 * 60 * 60);
     if (hoursSinceCreation > 24) {
-      throw new BadRequestException('Reviews can only be updated within 24 hours');
+      throw new BadRequestException(
+        'Reviews can only be updated within 24 hours',
+      );
     }
 
     const updated = await this.prisma.review.update({
@@ -386,7 +416,9 @@ export class ReviewsService {
     });
 
     if (!review) {
-      throw new NotFoundException('Review not found or you cannot respond to it');
+      throw new NotFoundException(
+        'Review not found or you cannot respond to it',
+      );
     }
 
     // Check if response already exists

@@ -1,21 +1,37 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../database/prisma/prisma.service';
-import { SlotStatus, UserRole, UserStatus } from '../../generated/prisma/client';
 import {
-    AdminPartnerQueryDto,
-    CreateAvailabilitySlotDto,
-    CreatePartnerProfileDto,
-    SearchPartnersDto,
-    UpdateAvailabilitySlotDto,
-    UpdatePartnerProfileDto,
-    UpdatePartnerStatusDto,
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import { calculateDistance } from '../../common/utils/helpers.util';
+import { PrismaService } from '../../database/prisma/prisma.service';
+import {
+  SlotStatus,
+  UserRole,
+  UserStatus,
+} from '../../generated/prisma/client';
+import { SettingsService } from '../settings/settings.service';
+import {
+  AdminPartnerQueryDto,
+  CreateAvailabilitySlotDto,
+  CreatePartnerProfileDto,
+  SearchPartnersDto,
+  UpdateAvailabilitySlotDto,
+  UpdatePartnerProfileDto,
+  UpdatePartnerStatusDto,
 } from './dto';
 
 @Injectable()
 export class PartnersService {
   private readonly logger = new Logger(PartnersService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly settingsService: SettingsService,
+  ) {}
 
   /**
    * Update lastActiveAt (presence) for current user's partner profile.
@@ -47,13 +63,24 @@ export class PartnersService {
       throw new ConflictException('User already has a partner profile');
     }
 
+    // Kiểm tra setting có yêu cầu admin duyệt partner hay không
+    const requireApproval = await this.settingsService.getBool('require_approval_for_partner', false);
+
     // Create partner profile and update user role in transaction
     const result = await this.prisma.$transaction(async (tx) => {
-      // Update user role to PARTNER
-      await tx.user.update({
-        where: { id: userId },
-        data: { role: UserRole.PARTNER },
-      });
+      // Nếu không cần duyệt → set role PARTNER luôn
+      // Nếu cần duyệt → set status PENDING, giữ role USER cho đến khi admin approve
+      if (requireApproval) {
+        await tx.user.update({
+          where: { id: userId },
+          data: { status: UserStatus.PENDING },
+        });
+      } else {
+        await tx.user.update({
+          where: { id: userId },
+          data: { role: UserRole.PARTNER },
+        });
+      }
 
       // Update user profile bio if provided
       if (dto.bio && user.profile) {
@@ -78,9 +105,9 @@ export class PartnersService {
 
       // Add photos to user's photos if provided
       if (dto.photoUrls && dto.photoUrls.length > 0) {
-        const existingPhotos = user.profile?.photos as string[] || [];
+        const existingPhotos = (user.profile?.photos as string[]) || [];
         const newPhotos = [...existingPhotos];
-        
+
         for (const url of dto.photoUrls) {
           if (!newPhotos.includes(url)) {
             newPhotos.push(url);
@@ -101,14 +128,20 @@ export class PartnersService {
               photos: newPhotos,
             },
           });
-          this.logger.log(`Created new profile for user ${userId} during partner registration`);
+          this.logger.log(
+            `Created new profile for user ${userId} during partner registration`,
+          );
         }
       }
 
       return partnerProfile;
     });
 
-    this.logger.log(`User ${userId} registered as partner`);
+    if (requireApproval) {
+      this.logger.log(`User ${userId} registered as partner (pending approval)`);
+    } else {
+      this.logger.log(`User ${userId} registered as partner (auto-approved)`);
+    }
     return result;
   }
 
@@ -163,7 +196,14 @@ export class PartnersService {
     }
 
     // Extract bank info, photo updates from dto (these go to different tables)
-    const { bankName, bankAccountNo, bankAccountName, photoUrls, removePhotoUrls, ...partnerData } = dto;
+    const {
+      bankName,
+      bankAccountNo,
+      bankAccountName,
+      photoUrls,
+      removePhotoUrls,
+      ...partnerData
+    } = dto;
 
     return this.prisma.$transaction(async (tx) => {
       // Update partner profile
@@ -182,7 +222,9 @@ export class PartnersService {
 
         // Remove photos if specified
         if (removePhotoUrls && removePhotoUrls.length > 0) {
-          currentPhotos = currentPhotos.filter((url) => !removePhotoUrls.includes(url));
+          currentPhotos = currentPhotos.filter(
+            (url) => !removePhotoUrls.includes(url),
+          );
         }
 
         // Add new photos if specified
@@ -240,8 +282,8 @@ export class PartnersService {
         }),
       ]);
       blockedUserIds = [
-        ...blockedByMe.map(b => b.blockedId),
-        ...blockedMe.map(b => b.blockerId),
+        ...blockedByMe.map((b) => b.blockedId),
+        ...blockedMe.map((b) => b.blockerId),
       ];
     }
 
@@ -285,50 +327,113 @@ export class PartnersService {
       where.isVerified = true;
     }
 
+    const profileFilters: any[] = [];
+
     // Gender filter
     if (dto.gender) {
-      where.user.is.profile = {
-        is: {
-          gender: dto.gender,
-        },
-      };
+      profileFilters.push({ gender: dto.gender });
     }
 
     // City filter (by province ID)
     const filterProvinceId = dto.provinceId || dto.cityId;
     if (filterProvinceId) {
-      if (!where.user.is.profile) {
-        where.user.is.profile = { is: {} };
+      const province = await this.prisma.province.findUnique({
+        where: { id: filterProvinceId },
+        select: { id: true, name: true, nameEn: true },
+      });
+
+      if (province) {
+        const provinceNameCandidates = [province.name, province.nameEn].filter(
+          (value): value is string => !!value && value.trim().length > 0,
+        );
+
+        profileFilters.push({
+          OR: [
+            { provinceId: filterProvinceId },
+            ...provinceNameCandidates.map((name) => ({
+              city: { equals: name, mode: 'insensitive' },
+            })),
+          ],
+        });
+      } else {
+        profileFilters.push({ provinceId: filterProvinceId });
       }
-      where.user.is.profile.is.provinceId = filterProvinceId;
     }
 
     // District filter (by district ID)
     if (dto.districtId) {
-      if (!where.user.is.profile) {
-        where.user.is.profile = { is: {} };
+      const district = await this.prisma.district.findUnique({
+        where: { id: dto.districtId },
+        include: {
+          province: {
+            select: { id: true, name: true, nameEn: true },
+          },
+        },
+      });
+
+      if (district) {
+        const provinceNameCandidates = [
+          district.province?.name,
+          district.province?.nameEn,
+        ].filter(
+          (value): value is string => !!value && value.trim().length > 0,
+        );
+
+        profileFilters.push({
+          OR: [
+            { districtId: dto.districtId },
+            {
+              AND: [
+                { district: { equals: district.name, mode: 'insensitive' } },
+                {
+                  OR: [
+                    { provinceId: district.provinceId },
+                    ...provinceNameCandidates.map((name) => ({
+                      city: { equals: name, mode: 'insensitive' },
+                    })),
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+      } else {
+        profileFilters.push({ districtId: dto.districtId });
       }
-      where.user.is.profile.is.districtId = dto.districtId;
     }
 
     // Age filter (based on dateOfBirth)
     if (dto.minAge !== undefined || dto.maxAge !== undefined) {
-      if (!where.user.is.profile) {
-        where.user.is.profile = { is: {} };
-      }
       const now = new Date();
       const dobFilter: any = { not: null };
       if (dto.maxAge !== undefined) {
         // maxAge => born after this date (younger)
-        const minBirthDate = new Date(now.getFullYear() - dto.maxAge - 1, now.getMonth(), now.getDate());
+        const minBirthDate = new Date(
+          now.getFullYear() - dto.maxAge - 1,
+          now.getMonth(),
+          now.getDate(),
+        );
         dobFilter.gte = minBirthDate;
       }
       if (dto.minAge !== undefined) {
         // minAge => born before this date (older)
-        const maxBirthDate = new Date(now.getFullYear() - dto.minAge, now.getMonth(), now.getDate());
+        const maxBirthDate = new Date(
+          now.getFullYear() - dto.minAge,
+          now.getMonth(),
+          now.getDate(),
+        );
         dobFilter.lte = maxBirthDate;
       }
-      where.user.is.profile.is.dateOfBirth = dobFilter;
+      profileFilters.push({ dateOfBirth: dobFilter });
+    }
+
+    if (profileFilters.length > 0) {
+      where.user.is.profile = {
+        is:
+          profileFilters.length === 1
+            ? profileFilters[0]
+            : { AND: profileFilters },
+      };
     }
 
     // Available now filter (active within last 15 minutes)
@@ -341,9 +446,43 @@ export class PartnersService {
     if (dto.q) {
       where.OR = [
         { introduction: { contains: dto.q, mode: 'insensitive' } },
-        { user: { is: { profile: { is: { fullName: { contains: dto.q, mode: 'insensitive' } } } } } },
+        {
+          user: {
+            is: {
+              profile: {
+                is: { fullName: { contains: dto.q, mode: 'insensitive' } },
+              },
+            },
+          },
+        },
       ];
     }
+
+    // Resolve search coordinates: query params first, then current user's saved location.
+    let searchLat = dto.lat;
+    let searchLng = dto.lng;
+    if ((searchLat === undefined || searchLng === undefined) && currentUserId) {
+      const currentUserProfile = await this.prisma.profile.findUnique({
+        where: { userId: currentUserId },
+        select: { currentLat: true, currentLng: true },
+      });
+      searchLat =
+        currentUserProfile?.currentLat !== null &&
+        currentUserProfile?.currentLat !== undefined
+          ? Number(currentUserProfile.currentLat)
+          : searchLat;
+      searchLng =
+        currentUserProfile?.currentLng !== null &&
+        currentUserProfile?.currentLng !== undefined
+          ? Number(currentUserProfile.currentLng)
+          : searchLng;
+    }
+
+    const hasSearchCoordinates =
+      searchLat !== undefined && searchLng !== undefined;
+    const shouldSortByDistance =
+      dto.sortBy === 'distance' && hasSearchCoordinates;
+    const shouldFilterByRadius = dto.radius !== undefined && hasSearchCoordinates;
 
     // Build order by
     let orderBy: any = { averageRating: 'desc' };
@@ -355,11 +494,12 @@ export class PartnersService {
       orderBy = { createdAt: 'desc' };
     }
 
-    const [partners, total] = await Promise.all([
-      this.prisma.partnerProfile.findMany({
+    let partners: any[] = [];
+    let total = 0;
+
+    if (shouldSortByDistance || shouldFilterByRadius) {
+      const matchedPartners = await this.prisma.partnerProfile.findMany({
         where,
-        skip,
-        take: limit,
         orderBy,
         include: {
           user: {
@@ -371,9 +511,80 @@ export class PartnersService {
             },
           },
         },
-      }),
-      this.prisma.partnerProfile.count({ where }),
-    ]);
+      });
+
+      const withDistance = matchedPartners.map((partner) => {
+        const partnerLatRaw = partner.user?.profile?.currentLat;
+        const partnerLngRaw = partner.user?.profile?.currentLng;
+
+        if (partnerLatRaw === null || partnerLatRaw === undefined) {
+          return { partner, distanceKm: null as number | null };
+        }
+        if (partnerLngRaw === null || partnerLngRaw === undefined) {
+          return { partner, distanceKm: null as number | null };
+        }
+
+        const partnerLat = Number(partnerLatRaw);
+        const partnerLng = Number(partnerLngRaw);
+
+        return {
+          partner,
+          distanceKm: calculateDistance(
+            searchLat!,
+            searchLng!,
+            partnerLat,
+            partnerLng,
+          ),
+        };
+      });
+
+      const filteredByRadius = shouldFilterByRadius
+        ? withDistance.filter(
+            (item) =>
+              item.distanceKm !== null && item.distanceKm <= (dto.radius as number),
+          )
+        : withDistance;
+
+      const sorted = shouldSortByDistance
+        ? [...filteredByRadius].sort((a, b) => {
+            if (a.distanceKm === null && b.distanceKm === null) return 0;
+            if (a.distanceKm === null) return 1;
+            if (b.distanceKm === null) return -1;
+            return a.distanceKm - b.distanceKm;
+          })
+        : filteredByRadius;
+
+      total = sorted.length;
+      partners = sorted.slice(skip, skip + limit).map(({ partner, distanceKm }) => {
+        if (distanceKm === null) return partner;
+        return {
+          ...partner,
+          distanceKm: Number(distanceKm.toFixed(2)),
+        };
+      });
+    } else {
+      const [pagedPartners, count] = await Promise.all([
+        this.prisma.partnerProfile.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy,
+          include: {
+            user: {
+              include: {
+                profile: true,
+              },
+              omit: {
+                passwordHash: true,
+              },
+            },
+          },
+        }),
+        this.prisma.partnerProfile.count({ where }),
+      ]);
+      partners = pagedPartners;
+      total = count;
+    }
 
     const totalPages = Math.ceil(total / limit);
 
@@ -531,7 +742,12 @@ export class PartnersService {
         ? this.prisma.serviceType.findMany({
             where: { code: { in: serviceTypeCodes }, isActive: true },
           })
-        : ([] as { code: string; name: string; nameVi: string; icon: string | null }[]),
+        : ([] as {
+            code: string;
+            name: string;
+            nameVi: string;
+            icon: string | null;
+          }[]),
       interestCodes.length > 0
         ? this.prisma.interest.findMany({
             where: { code: { in: interestCodes }, isActive: true },
@@ -544,15 +760,52 @@ export class PartnersService {
         : ([] as { code: string; name: string; icon: string | null }[]),
     ]);
 
-    const serviceTypesMap = new Map<string, { code: string; name: string; nameVi: string; icon: string | null }>();
+    const reviewRows = await this.prisma.review.findMany({
+      where: {
+        revieweeId: partner.userId,
+        isVisible: true,
+      },
+      select: {
+        overallRating: true,
+      },
+    });
+
+    const reviewTotal = reviewRows.length;
+    const ratingDistribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    for (const row of reviewRows) {
+      const rating = row.overallRating as keyof typeof ratingDistribution;
+      if (ratingDistribution[rating] !== undefined) {
+        ratingDistribution[rating] += 1;
+      }
+    }
+    const averageRating =
+      reviewTotal > 0
+        ? Number(
+            (
+              reviewRows.reduce((sum, r) => sum + r.overallRating, 0) /
+              reviewTotal
+            ).toFixed(1),
+          )
+        : 0;
+
+    const serviceTypesMap = new Map<
+      string,
+      { code: string; name: string; nameVi: string; icon: string | null }
+    >();
     for (const s of serviceTypesData) {
       serviceTypesMap.set(s.code, s);
     }
-    const interestsMap = new Map<string, { code: string; name: string; icon: string | null }>();
+    const interestsMap = new Map<
+      string,
+      { code: string; name: string; icon: string | null }
+    >();
     for (const i of interestsData) {
       interestsMap.set(i.code, i);
     }
-    const talentsMap = new Map<string, { code: string; name: string; icon: string | null }>();
+    const talentsMap = new Map<
+      string,
+      { code: string; name: string; icon: string | null }
+    >();
     for (const t of talentsData) {
       talentsMap.set(t.code, t);
     }
@@ -607,8 +860,14 @@ export class PartnersService {
     return {
       ...partner,
       hourlyRate: Number(partner.hourlyRate),
-      averageRating: Number(partner.averageRating),
+      averageRating,
+      totalReviews: reviewTotal,
       responseRate: Number(partner.responseRate),
+      reviewStats: {
+        averageRating,
+        totalReviews: reviewTotal,
+        ratingDistribution,
+      },
       serviceTypesDetail,
       user: partner.user
         ? {
@@ -689,7 +948,11 @@ export class PartnersService {
   /**
    * Get availability slots for a partner
    */
-  async getAvailabilitySlots(userId: string, startDate?: string, endDate?: string) {
+  async getAvailabilitySlots(
+    userId: string,
+    startDate?: string,
+    endDate?: string,
+  ) {
     const partnerProfile = await this.prisma.partnerProfile.findUnique({
       where: { userId },
     });
@@ -721,7 +984,11 @@ export class PartnersService {
   /**
    * Update availability slot
    */
-  async updateAvailabilitySlot(userId: string, slotId: string, dto: UpdateAvailabilitySlotDto) {
+  async updateAvailabilitySlot(
+    userId: string,
+    slotId: string,
+    dto: UpdateAvailabilitySlotDto,
+  ) {
     const partnerProfile = await this.prisma.partnerProfile.findUnique({
       where: { userId },
     });
@@ -820,14 +1087,23 @@ export class PartnersService {
    * Get partner stats for admin dashboard
    */
   async adminGetPartnerStats() {
-    const [total, active, pending, suspended, banned, available] = await Promise.all([
-      this.prisma.partnerProfile.count(),
-      this.prisma.partnerProfile.count({ where: { user: { status: UserStatus.ACTIVE } } }),
-      this.prisma.partnerProfile.count({ where: { user: { status: UserStatus.PENDING } } }),
-      this.prisma.partnerProfile.count({ where: { user: { status: UserStatus.SUSPENDED } } }),
-      this.prisma.partnerProfile.count({ where: { user: { status: UserStatus.BANNED } } }),
-      this.prisma.partnerProfile.count({ where: { isAvailable: true } }),
-    ]);
+    const [total, active, pending, suspended, banned, available] =
+      await Promise.all([
+        this.prisma.partnerProfile.count(),
+        this.prisma.partnerProfile.count({
+          where: { user: { status: UserStatus.ACTIVE } },
+        }),
+        this.prisma.partnerProfile.count({
+          where: { user: { status: UserStatus.PENDING } },
+        }),
+        this.prisma.partnerProfile.count({
+          where: { user: { status: UserStatus.SUSPENDED } },
+        }),
+        this.prisma.partnerProfile.count({
+          where: { user: { status: UserStatus.BANNED } },
+        }),
+        this.prisma.partnerProfile.count({ where: { isAvailable: true } }),
+      ]);
 
     const avgRating = await this.prisma.partnerProfile.aggregate({
       _avg: { averageRating: true },
@@ -884,7 +1160,11 @@ export class PartnersService {
       where.OR = [
         { user: { email: { contains: search, mode: 'insensitive' } } },
         { user: { phone: { contains: search } } },
-        { user: { profile: { fullName: { contains: search, mode: 'insensitive' } } } },
+        {
+          user: {
+            profile: { fullName: { contains: search, mode: 'insensitive' } },
+          },
+        },
       ];
     }
 
@@ -923,7 +1203,10 @@ export class PartnersService {
   /**
    * Update partner status (admin only)
    */
-  async adminUpdatePartnerStatus(partnerId: string, dto: UpdatePartnerStatusDto) {
+  async adminUpdatePartnerStatus(
+    partnerId: string,
+    dto: UpdatePartnerStatusDto,
+  ) {
     const partner = await this.prisma.partnerProfile.findUnique({
       where: { id: partnerId },
       include: { user: true },
@@ -934,16 +1217,21 @@ export class PartnersService {
     }
 
     const result = await this.prisma.$transaction(async (tx) => {
-      // Update user status
+      // Update user status + nếu approve (ACTIVE) thì set role = PARTNER
+      const isActive = dto.status === UserStatus.ACTIVE;
       await tx.user.update({
         where: { id: partner.userId },
-        data: { status: dto.status },
+        data: {
+          status: dto.status,
+          ...(isActive && partner.user.role !== UserRole.PARTNER
+            ? { role: UserRole.PARTNER }
+            : {}),
+        },
       });
 
       // Update partner profile based on status
       // When activated, set isVerified = true
       // When suspended/banned, set isAvailable = false
-      const isActive = dto.status === UserStatus.ACTIVE;
       const updatedPartner = await tx.partnerProfile.update({
         where: { id: partnerId },
         data: {

@@ -171,10 +171,7 @@ export class DeviceTokenService {
 
     const result = await this.prisma.deviceToken.deleteMany({
       where: {
-        OR: [
-          { isActive: false },
-          { lastUsedAt: { lt: cutoffDate } },
-        ],
+        OR: [{ isActive: false }, { lastUsedAt: { lt: cutoffDate } }],
       },
     });
 

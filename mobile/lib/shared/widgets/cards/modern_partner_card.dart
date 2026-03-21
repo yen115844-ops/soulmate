@@ -86,17 +86,7 @@ class _ModernPartnerCardState extends State<ModernPartnerCard> {
               // Gradient Overlay
               Container(
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.transparent,
-                      Colors.black.withOpacity(0.4),
-                      Colors.black.withOpacity(0.8),
-                    ],
-                    stops: const [0.0, 0.4, 0.7, 1.0],
-                  ),
+                  color: Colors.transparent,
                 ),
               ),
 
@@ -111,9 +101,7 @@ class _ModernPartnerCardState extends State<ModernPartnerCard> {
                       vertical: 5,
                     ),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-                      ),
+                      color: const Color(0xFFFFD700),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
@@ -395,14 +383,7 @@ class CompactPartnerCard extends StatelessWidget {
                     height: 60,
                     child: Container(
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withOpacity(0.5),
-                          ],
-                        ),
+                        color: Colors.transparent,
                       ),
                     ),
                   ),

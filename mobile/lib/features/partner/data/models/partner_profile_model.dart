@@ -253,15 +253,19 @@ class PartnerUserProfileInfo {
 /// Partner detail response with full user info (for booking, profile view)
 class PartnerDetailResponse {
   final PartnerProfileResponse profile;
+  final String? userId;
   final PartnerUserInfo? userInfo;
   final PartnerUserProfileInfo? userProfile;
   final List<Map<String, dynamic>> serviceTypesDetail;
+  final PartnerReviewStats? reviewStats;
 
   PartnerDetailResponse({
     required this.profile,
+    this.userId,
     this.userInfo,
     this.userProfile,
     this.serviceTypesDetail = const [],
+    this.reviewStats,
   });
 
   /// Get display name
@@ -341,9 +345,59 @@ class PartnerDetailResponse {
 
     return PartnerDetailResponse(
       profile: profile,
+      userId: json['user'] is Map<String, dynamic>
+          ? (json['user'] as Map<String, dynamic>)['id'] as String?
+          : null,
       userInfo: userInfo,
       userProfile: userProfile,
       serviceTypesDetail: serviceTypesDetail,
+      reviewStats: json['reviewStats'] is Map<String, dynamic>
+          ? PartnerReviewStats.fromJson(json['reviewStats'] as Map<String, dynamic>)
+          : null,
     );
+  }
+}
+
+class PartnerReviewStats {
+  final double averageRating;
+  final int totalReviews;
+  final int rating1Count;
+  final int rating2Count;
+  final int rating3Count;
+  final int rating4Count;
+  final int rating5Count;
+
+  PartnerReviewStats({
+    required this.averageRating,
+    required this.totalReviews,
+    required this.rating1Count,
+    required this.rating2Count,
+    required this.rating3Count,
+    required this.rating4Count,
+    required this.rating5Count,
+  });
+
+  factory PartnerReviewStats.fromJson(Map<String, dynamic> json) {
+    final distribution = json['ratingDistribution'] as Map<String, dynamic>?;
+    return PartnerReviewStats(
+      averageRating: PartnerProfileResponse._parseDouble(json['averageRating']),
+      totalReviews: json['totalReviews'] is int ? json['totalReviews'] as int : 0,
+      rating1Count: distribution?['1'] is int ? distribution!['1'] as int : 0,
+      rating2Count: distribution?['2'] is int ? distribution!['2'] as int : 0,
+      rating3Count: distribution?['3'] is int ? distribution!['3'] as int : 0,
+      rating4Count: distribution?['4'] is int ? distribution!['4'] as int : 0,
+      rating5Count: distribution?['5'] is int ? distribution!['5'] as int : 0,
+    );
+  }
+
+  double getPercentage(int stars) {
+    if (totalReviews == 0) return 0;
+    int count = 0;
+    if (stars == 5) count = rating5Count;
+    if (stars == 4) count = rating4Count;
+    if (stars == 3) count = rating3Count;
+    if (stars == 2) count = rating2Count;
+    if (stars == 1) count = rating1Count;
+    return count / totalReviews;
   }
 }

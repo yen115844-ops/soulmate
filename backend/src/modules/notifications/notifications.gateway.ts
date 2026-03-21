@@ -2,14 +2,14 @@ import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import {
-    ConnectedSocket,
-    MessageBody,
-    OnGatewayConnection,
-    OnGatewayDisconnect,
-    OnGatewayInit,
-    SubscribeMessage,
-    WebSocketGateway,
-    WebSocketServer,
+  ConnectedSocket,
+  MessageBody,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  OnGatewayInit,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Notification } from '../../generated/prisma/client';
@@ -64,7 +64,7 @@ export class NotificationsGateway
 
   handleDisconnect(client: Socket) {
     this.logger.debug(`Client disconnected: ${client.id}`);
-    
+
     // Remove client from all user rooms
     this.userSockets.forEach((sockets, userId) => {
       if (sockets.has(client.id)) {
@@ -129,7 +129,7 @@ export class NotificationsGateway
   ) {
     const { userId } = payload;
     const roomName = this.getUserRoom(userId);
-    
+
     client.leave(roomName);
 
     // Remove from tracking

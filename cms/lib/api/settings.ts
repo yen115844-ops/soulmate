@@ -33,6 +33,7 @@ export const SETTINGS_KEY_MAP = {
   partnerCommissionPercent: "partner_commission_percent",
   autoConfirmBooking: "auto_confirm_booking",
   allowInstantBooking: "allow_instant_booking",
+  requirePremiumForBooking: "require_premium_for_booking",
   // Notifications
   emailNotifications: "email_notifications",
   pushNotifications: "push_notifications",
@@ -45,6 +46,7 @@ export const SETTINGS_KEY_MAP = {
   requireEmailVerification: "require_email_verification",
   requirePhoneVerification: "require_phone_verification",
   requireKycForPartner: "require_kyc_for_partner",
+  requireApprovalForPartner: "require_approval_for_partner",
   maxLoginAttempts: "max_login_attempts",
   sessionTimeout: "session_timeout",
   passwordMinLength: "password_min_length",

@@ -5,23 +5,17 @@ import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
 import '../bloc/subscription_bloc.dart';
 import '../bloc/subscription_event.dart';
 import '../bloc/subscription_state.dart';
 
 /// Premium color palette
 class _PremiumColors {
-  static const goldLight = Color(0xFFFFE082);
   static const gold = Color(0xFFFFD54F);
   static const goldDark = Color(0xFFFFC107);
   static const amber = Color(0xFFFF8F00);
-  static const deepOrange = Color(0xFFFF6D00);
-  
-  static const gradientPrimary = LinearGradient(
-    colors: [goldDark, amber, deepOrange],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
 }
 
 /// Premium Banner Widget - displays on home page to promote Premium
@@ -75,194 +69,182 @@ class _PremiumBannerContentState extends State<_PremiumBannerContent>
 
   @override
   Widget build(BuildContext context) {
+    // Ẩn banner nếu chưa đăng nhập
+    try {
+      final authState = context.watch<AuthBloc>().state;
+      if (authState is! AuthAuthenticated) {
+        return const SizedBox.shrink();
+      }
+
+      // Ẩn banner nếu đã VIP - người dùng tự vào Cài đặt để quản lý gói
+      if (authState.user.isPremium) {
+        return const SizedBox.shrink();
+      }
+    } catch (_) {
+      return const SizedBox.shrink();
+    }
+
     return BlocBuilder<SubscriptionBloc, SubscriptionState>(
       builder: (context, state) {
-        // Don't show banner if already premium
+        // Fallback: ẩn nếu API trả về đã premium
         if (state.premiumStatus?.isPremium == true) {
           return const SizedBox.shrink();
         }
 
-        return GestureDetector(
-          onTap: () => context.push('/premium'),
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: _PremiumColors.amber.withValues(alpha: 0.3),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Stack(
-                children: [
-                  // Dark gradient background
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Color(0xFF1A1A2E),
-                          Color(0xFF16213E),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        // Animated diamond icon
-                        AnimatedBuilder(
-                          animation: _animationController,
-                          builder: (context, child) {
-                            return Container(
-                              width: 56,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                gradient: _PremiumColors.gradientPrimary,
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: _PremiumColors.gold.withValues(alpha: 0.5 + (_animationController.value * 0.2)),
-                                    blurRadius: 16 + (_animationController.value * 8),
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.diamond_rounded,
-                                color: Colors.white,
-                                size: 30,
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(width: 16),
+        return _buildUpgradeBanner(context);
+      },
+    );
+  }
 
-                        // Text content
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+  /// Banner cho user chưa VIP - mời nâng cấp
+  Widget _buildUpgradeBanner(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push('/premium'),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            children: [
+              // Dark gradient background
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF1A1A2E),
+                ),
+                child: Row(
+                  children: [
+                    // Animated diamond icon
+                    AnimatedBuilder(
+                      animation: _animationController,
+                      builder: (context, child) {
+                        return Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: _PremiumColors.goldDark,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Icon(
+                            Icons.diamond_rounded,
+                            color: Colors.white,
+                            size: 30,
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 16),
+
+                    // Text content
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Shimmer title
+                          AnimatedBuilder(
+                            animation: _shimmerAnimation,
+                            builder: (context, child) {
+                              final animatedColor = Color.lerp(
+                                _PremiumColors.gold,
+                                _PremiumColors.goldDark,
+                                (_shimmerAnimation.value + 1) / 3,
+                              );
+                              return Text(
+                                'Trở thành VIP',
+                                style: AppTypography.titleMedium.copyWith(
+                                  color: animatedColor ?? _PremiumColors.gold,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.5,
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
                             children: [
-                              // Shimmer title
-                              AnimatedBuilder(
-                                animation: _shimmerAnimation,
-                                builder: (context, child) {
-                                  return ShaderMask(
-                                    shaderCallback: (bounds) {
-                                      return LinearGradient(
-                                        begin: Alignment(_shimmerAnimation.value - 1, 0),
-                                        end: Alignment(_shimmerAnimation.value, 0),
-                                        colors: const [
-                                          _PremiumColors.gold,
-                                          _PremiumColors.goldLight,
-                                          _PremiumColors.gold,
-                                        ],
-                                      ).createShader(bounds);
-                                    },
-                                    child: Text(
-                                      'Trở thành VIP',
-                                      style: AppTypography.titleMedium.copyWith(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
-                                  );
-                                },
+                              Icon(
+                                Ionicons.infinite,
+                                color: Colors.white.withValues(alpha: 0.7),
+                                size: 14,
                               ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Icon(
-                                    Ionicons.infinite,
+                              const SizedBox(width: 6),
+                              Flexible(
+                                child: Text(
+                                  'Chat thoải mái, tăng cơ hội ghép đôi',
+                                  style: AppTypography.bodySmall.copyWith(
                                     color: Colors.white.withValues(alpha: 0.7),
-                                    size: 14,
                                   ),
-                                  const SizedBox(width: 6),
-                                  Flexible(
-                                    child: Text(
-                                      'Chat thoải mái, tăng cơ hội ghép đôi',
-                                      style: AppTypography.bodySmall.copyWith(
-                                        color: Colors.white.withValues(alpha: 0.7),
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ],
                           ),
-                        ),
-                        const SizedBox(width: 8),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
 
-                        // CTA button
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: _PremiumColors.gradientPrimary,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            'Xem',
-                            style: AppTypography.labelMedium.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                    // CTA button
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _PremiumColors.goldDark,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'Xem',
+                        style: AppTypography.labelMedium.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Decorative elements
+              Positioned(
+                top: -20,
+                right: -20,
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        _PremiumColors.gold.withValues(alpha: 0.1),
+                        Colors.transparent,
                       ],
                     ),
                   ),
-
-                  // Decorative elements
-                  Positioned(
-                    top: -20,
-                    right: -20,
-                    child: Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            _PremiumColors.gold.withValues(alpha: 0.1),
-                            Colors.transparent,
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: -30,
-                    left: 50,
-                    child: Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            _PremiumColors.amber.withValues(alpha: 0.08),
-                            Colors.transparent,
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+              Positioned(
+                bottom: -30,
+                left: 50,
+                child: Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        _PremiumColors.amber.withValues(alpha: 0.08),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
@@ -284,9 +266,7 @@ class PremiumBadge extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-          ),
+          color: const Color(0xFFFFD700),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(

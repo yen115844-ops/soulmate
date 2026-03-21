@@ -1,29 +1,46 @@
 import {
-    BadRequestException,
-    Body,
-    Controller,
-    Delete,
-    Get,
-    HttpCode,
-    HttpStatus,
-    Param,
-    Patch,
-    Post,
-    Put,
-    Query,
-    UploadedFile,
-    UseGuards,
-    UseInterceptors,
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { UserRole } from '../../generated/prisma/client';
-import { AdminUserQueryDto, CreateEmergencyContactDto, UpdateEmergencyContactDto, UpdateLocationDto, UpdateProfileDto, UpdateSettingsDto, UpdateUserStatusDto } from './dto';
+import {
+  AdminUserQueryDto,
+  CreateEmergencyContactDto,
+  DeletePhotoDto,
+  UpdateEmergencyContactDto,
+  UpdateLocationDto,
+  UpdateProfileDto,
+  UpdateSettingsDto,
+  UpdateUserStatusDto,
+} from './dto';
 import { UsersService } from './users.service';
 
 @ApiTags('Users')
@@ -109,6 +126,49 @@ export class UsersController {
       throw new BadRequestException('No file uploaded');
     }
     return this.usersService.updateAvatar(userId, file);
+  }
+
+  @Post('profile/photos')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Upload a profile photo' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Profile photo uploaded successfully',
+  })
+  async uploadProfilePhoto(
+    @CurrentUser('id') userId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+    return this.usersService.uploadProfilePhoto(userId, file);
+  }
+
+  @Delete('profile/photos')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete a profile photo by URL' })
+  @ApiResponse({
+    status: 200,
+    description: 'Profile photo deleted successfully',
+  })
+  async deleteProfilePhoto(
+    @CurrentUser('id') userId: string,
+    @Body() dto: DeletePhotoDto,
+  ) {
+    return this.usersService.deleteProfilePhoto(userId, dto.photoUrl);
   }
 
   @Put('location')

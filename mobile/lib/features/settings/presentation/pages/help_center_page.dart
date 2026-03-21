@@ -10,6 +10,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/responsive.dart';
+import '../../../../shared/widgets/auth_guard.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
 
@@ -83,13 +84,13 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
           'question': 'Làm sao để đăng ký Premium?',
           'answer': Platform.isIOS
               ? 'Vào Hồ sơ > Premium > Chọn gói phù hợp và thanh toán qua App Store.'
-            : 'Vào Hồ sơ > Premium > Chọn gói phù hợp và thanh toán qua cửa hàng ứng dụng trên thiết bị của bạn.',
+              : 'Vào Hồ sơ > Premium > Chọn gói phù hợp và thanh toán qua cửa hàng ứng dụng trên thiết bị của bạn.',
         },
         {
           'question': 'Làm sao để hủy Premium?',
           'answer': Platform.isIOS
               ? 'Bạn có thể hủy đăng ký trong Cài đặt > [Apple ID] > Đăng ký. Gói sẽ còn hiệu lực đến hết chu kỳ hiện tại.'
-            : 'Bạn có thể hủy đăng ký trong cài đặt tài khoản cửa hàng ứng dụng trên thiết bị. Gói sẽ còn hiệu lực đến hết chu kỳ hiện tại.',
+              : 'Bạn có thể hủy đăng ký trong cài đặt tài khoản cửa hàng ứng dụng trên thiết bị. Gói sẽ còn hiệu lực đến hết chu kỳ hiện tại.',
         },
       ],
     },
@@ -143,23 +144,32 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
     if (_searchQuery.isEmpty) return _faqCategories;
 
     final query = _searchQuery.toLowerCase();
-    return _faqCategories.map((category) {
-      final filteredFaqs = (category['faqs'] as List<Map<String, String>>)
-          .where((faq) =>
-              faq['question']!.toLowerCase().contains(query) ||
-              faq['answer']!.toLowerCase().contains(query))
-          .toList();
+    return _faqCategories
+        .map((category) {
+          final filteredFaqs = (category['faqs'] as List<Map<String, String>>)
+              .where(
+                (faq) =>
+                    faq['question']!.toLowerCase().contains(query) ||
+                    faq['answer']!.toLowerCase().contains(query),
+              )
+              .toList();
 
-      if (filteredFaqs.isEmpty) return null;
+          if (filteredFaqs.isEmpty) return null;
 
-      return {...category, 'faqs': filteredFaqs};
-    }).whereType<Map<String, dynamic>>().toList();
+          return {...category, 'faqs': filteredFaqs};
+        })
+        .whereType<Map<String, dynamic>>()
+        .toList();
   }
 
   Future<void> _contactSupport(String method) async {
     if (method == 'chat') {
       if (context.mounted) {
-        context.push(RouteNames.chat);
+        AuthGuard.requireAuth(
+          context,
+          onAuthenticated: () => context.push(RouteNames.chat),
+          message: 'Đăng nhập để chat với hỗ trợ.',
+        );
       }
       return;
     }
@@ -200,12 +210,11 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 16),
             // Search Section
             Container(
               padding: ResponsiveLayout.pagePadding(context),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withAlpha(10),
-              ),
+              decoration: BoxDecoration(color: AppColors.primary.withAlpha(10)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -232,6 +241,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
                 ],
               ),
             ),
+            const SizedBox(height: 16),
 
             // FAQ Categories
             Padding(
@@ -239,10 +249,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Câu hỏi thường gặp',
-                    style: AppTypography.titleMedium,
-                  ),
+                  Text('Câu hỏi thường gặp', style: AppTypography.titleMedium),
                   const SizedBox(height: 16),
                   if (filteredFaqs.isEmpty)
                     Center(
@@ -270,12 +277,14 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
                       ),
                     )
                   else
-                    ...filteredFaqs.map((category) => _FaqCategory(
-                          icon: category['icon'] as IconData,
-                          title: category['title'] as String,
-                          color: category['color'] as Color,
-                          faqs: category['faqs'] as List<Map<String, String>>,
-                        )),
+                    ...filteredFaqs.map(
+                      (category) => _FaqCategory(
+                        icon: category['icon'] as IconData,
+                        title: category['title'] as String,
+                        color: category['color'] as Color,
+                        faqs: category['faqs'] as List<Map<String, String>>,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -292,10 +301,9 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Cần hỗ trợ thêm?',
-                    style: AppTypography.titleMedium,
-                  ),
+                  const SizedBox(height: 16),
+
+                  Text('Cần hỗ trợ thêm?', style: AppTypography.titleMedium),
                   const SizedBox(height: 4),
                   Text(
                     'Liên hệ với đội ngũ hỗ trợ của chúng tôi',
@@ -331,13 +339,17 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
+            const SizedBox(height: 16),
 
             // Support Hours
             Padding(
-              padding: ResponsiveLayout.pagePadding(context).copyWith(top: 0, bottom: 20),
+              padding: ResponsiveLayout.pagePadding(
+                context,
+              ).copyWith(top: 0, bottom: 20),
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -346,10 +358,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      Ionicons.time_outline,
-                      color: AppColors.info,
-                    ),
+                    Icon(Ionicons.time_outline, color: AppColors.info),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -441,9 +450,7 @@ class _FaqItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: context.appColors.border),
-        ),
+        border: Border(top: BorderSide(color: context.appColors.border)),
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -456,7 +463,12 @@ class _FaqItem extends StatelessWidget {
           ),
           children: [
             Padding(
-              padding: EdgeInsets.fromLTRB(ResponsiveLayout.horizontalPadding(context), 0, ResponsiveLayout.horizontalPadding(context), 16),
+              padding: EdgeInsets.fromLTRB(
+                ResponsiveLayout.horizontalPadding(context),
+                0,
+                ResponsiveLayout.horizontalPadding(context),
+                16,
+              ),
               child: Text(
                 faq['answer']!,
                 style: AppTypography.bodySmall.copyWith(
@@ -497,10 +509,7 @@ class _ContactButton extends StatelessWidget {
           children: [
             Icon(icon, color: AppColors.primary),
             const SizedBox(height: 8),
-            Text(
-              label,
-              style: AppTypography.labelMedium,
-            ),
+            Text(label, style: AppTypography.labelMedium),
           ],
         ),
       ),

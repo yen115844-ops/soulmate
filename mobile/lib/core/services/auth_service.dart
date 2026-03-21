@@ -35,9 +35,10 @@ class AuthService {
   }
   
   /// Emit session expired state (token expired and refresh failed)
-  /// Only emits if user was previously authenticated — avoids false
-  /// "session expired" messages on cold start with stale tokens.
+  /// Clears any previously authenticated session
   void setSessionExpired() {
+    // Only emit if user was previously authenticated OR if we had tokens
+    // (to avoid spurious messages on cold start)
     if (_currentState != AuthState.authenticated) {
       debugPrint('🔐 AuthService: Ignoring sessionExpired (current state: $_currentState)');
       return;
@@ -45,6 +46,14 @@ class AuthService {
     _currentState = AuthState.sessionExpired;
     _authStateController.add(AuthState.sessionExpired);
     debugPrint('🔐 AuthService: Session expired');
+  }
+  
+  /// Force session clear (for cold start with stale tokens)
+  /// Called when refresh fails regardless of previous state
+  void forceSessionClear() {
+    _currentState = AuthState.unauthenticated;
+    _authStateController.add(AuthState.unauthenticated);
+    debugPrint('🔐 AuthService: Forced session clear (stale tokens)');
   }
   
   /// Dispose the service

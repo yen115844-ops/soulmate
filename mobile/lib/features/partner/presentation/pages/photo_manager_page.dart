@@ -6,10 +6,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/di/injection.dart';
-import '../../../../core/network/api_config.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../../core/utils/image_utils.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
@@ -36,12 +36,7 @@ class _PhotoManagerPageState extends State<PhotoManagerPage> {
 
   /// Get full URL for photo (adds base URL if relative path)
   String _getFullPhotoUrl(String url) {
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-    // Remove /api suffix from base URL for static files
-    final baseUrl = ApiConfig.baseUrl.replaceAll('/api', '');
-    return '$baseUrl$url';
+    return ImageUtils.buildImageUrl(url);
   }
 
   @override
@@ -191,11 +186,12 @@ class _PhotoManagerPageState extends State<PhotoManagerPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Huỷ thay đổi?', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
-              const SizedBox(height: 16),
               const Text(
-                'Bạn có thay đổi chưa lưu. Bạn có chắc muốn thoát?',
+                'Huỷ thay đổi?',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
               ),
+              const SizedBox(height: 16),
+              const Text('Bạn có thay đổi chưa lưu. Bạn có chắc muốn thoát?'),
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -238,11 +234,14 @@ class _PhotoManagerPageState extends State<PhotoManagerPage> {
       child: Scaffold(
         appBar: AppBar(
           leading: const AppBackButton(),
-          title:   Text('Quản lý ảnh', style: TextStyle(
+          title: Text(
+            'Quản lý ảnh',
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: context.theme.colorScheme.onSurface,
-            ),),
+            ),
+          ),
           actions: [
             if (_hasChanges)
               TextButton(

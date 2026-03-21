@@ -12,7 +12,7 @@ class ApiConfig {
   /// In debug mode, falls back to localhost; in release mode, uses production URL.
   static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL');
   static const String _defaultDebugUrl =
-      'https://gomate-backend.trancongtien.io.vn/api'; // For development, use localhost or
+      'http://localhost:3222/api'; // For development, use localhost or
   static const String _defaultReleaseUrl =
       'https://gomate-backend.trancongtien.io.vn/api'; // TODO: Replace with real production URL
 
@@ -29,13 +29,34 @@ class ApiConfig {
   static const String deepLinkScheme = 'matesocial';
 
   static String get baseUrl {
-    if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
+    if (_envBaseUrl.isNotEmpty) return _normalizeLocalhostIfNeeded(_envBaseUrl);
 
     if (kDebugMode) {
-      return _defaultDebugUrl;
+      return _normalizeLocalhostIfNeeded(_defaultDebugUrl);
     }
 
     return _defaultReleaseUrl;
+  }
+
+  /// Android emulator cannot reach host-machine localhost directly.
+  /// Convert localhost -> 10.0.2.2 so both API calls and image URLs work.
+  static String _normalizeLocalhostIfNeeded(String url) {
+    if (kIsWeb) return url;
+
+    final uri = Uri.tryParse(url);
+    if (uri == null) return url;
+
+    final host = uri.host.toLowerCase();
+    final isLocalHost =
+        host == 'localhost' || host == '127.0.0.1' || host == '0.0.0.0';
+
+    if (!isLocalHost) return url;
+
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return uri.replace(host: '10.0.2.2').toString();
+    }
+
+    return url;
   }
 
   /// Web URL for generating shareable links
@@ -72,6 +93,7 @@ class ApiConfig {
   static const String notifications = '/notifications';
   static const String safety = '/safety';
   static const String publicTerms = '/public/terms';
+  static const String publicAppConfig = '/public/app-config';
 }
 
 /// Auth Endpoints
@@ -147,8 +169,7 @@ class BookingEndpoints {
 class TermsEndpoints {
   TermsEndpoints._();
 
-  static String termsOfService =
-      '${ApiConfig.publicTerms}/terms-of-service';
+  static String termsOfService = '${ApiConfig.publicTerms}/terms-of-service';
   static String termsAndConditions =
       '${ApiConfig.publicTerms}/terms-and-conditions';
   static String privacyPolicy = '${ApiConfig.publicTerms}/privacy-policy';

@@ -1,10 +1,10 @@
 import {
-    ArgumentsHost,
-    Catch,
-    ExceptionFilter,
-    HttpException,
-    HttpStatus,
-    Logger,
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  HttpException,
+  HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
@@ -22,7 +22,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const error =
       typeof exceptionResponse === 'string'
         ? { message: exceptionResponse }
-        : (exceptionResponse as object);
+        : exceptionResponse;
 
     const errorResponse = {
       success: false,
@@ -31,6 +31,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
       path: request.url,
       method: request.method,
       ...error,
+      ...(status === HttpStatus.PAYLOAD_TOO_LARGE
+        ? this.buildUploadMeta(request)
+        : {}),
     };
 
     this.logger.error(
@@ -39,6 +42,32 @@ export class HttpExceptionFilter implements ExceptionFilter {
     );
 
     response.status(status).json(errorResponse);
+  }
+
+  private buildUploadMeta(request: Request) {
+    const contentLengthRaw = request.headers['content-length'];
+    const contentLength = Number.parseInt(String(contentLengthRaw ?? '0'), 10);
+    const contentLengthMb =
+      Number.isFinite(contentLength) && contentLength > 0
+        ? Number((contentLength / (1024 * 1024)).toFixed(2))
+        : null;
+
+    return {
+      upload: {
+        contentType: request.headers['content-type'] ?? null,
+        contentLengthBytes: contentLength > 0 ? contentLength : null,
+        contentLengthMb,
+        configuredLimitMb: this.resolveConfiguredLimitMb(request.url),
+      },
+    };
+  }
+
+  private resolveConfiguredLimitMb(url: string): number | null {
+    if (url.includes('/users/profile/avatar')) return 10;
+    if (url.includes('/verification/submit-selfie')) return 10;
+    if (url.includes('/upload/image') || url.includes('/upload/images'))
+      return 10;
+    return null;
   }
 }
 

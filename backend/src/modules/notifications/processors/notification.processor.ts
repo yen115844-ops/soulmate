@@ -3,8 +3,8 @@ import { Logger } from '@nestjs/common';
 import type { Job } from 'bull';
 import { PrismaService } from '../../../database/prisma/prisma.service';
 import {
-    BatchNotificationJobData,
-    NotificationJobData,
+  BatchNotificationJobData,
+  NotificationJobData,
 } from '../dto/send-notification.dto';
 import { FcmService } from '../services/fcm.service';
 
@@ -44,7 +44,9 @@ export class NotificationProcessor {
       notificationId: jobNotificationId,
     } = job.data;
 
-    this.logger.log(`[NotificationProcessor] Processing push notification job for user ${userId}, type: ${type}, sendPush: ${sendPush}`);
+    this.logger.log(
+      `[NotificationProcessor] Processing push notification job for user ${userId}, type: ${type}, sendPush: ${sendPush}`,
+    );
 
     try {
       // Save notification to database if requested
@@ -140,16 +142,8 @@ export class NotificationProcessor {
    */
   @Process(NOTIFICATION_JOBS.SEND_BATCH)
   async handleBatchSend(job: Job<BatchNotificationJobData>) {
-    const {
-      userIds,
-      type,
-      title,
-      body,
-      imageUrl,
-      actionType,
-      actionId,
-      data,
-    } = job.data;
+    const { userIds, type, title, body, imageUrl, actionType, actionId, data } =
+      job.data;
 
     this.logger.debug(
       `Processing batch notification for ${userIds.length} users`,
@@ -205,7 +199,9 @@ export class NotificationProcessor {
 
       return { ...result };
     } catch (error: any) {
-      this.logger.error(`Failed to process batch notification: ${error.message}`);
+      this.logger.error(
+        `Failed to process batch notification: ${error.message}`,
+      );
       throw error;
     }
   }

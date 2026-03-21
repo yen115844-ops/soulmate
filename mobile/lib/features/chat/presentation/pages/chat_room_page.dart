@@ -17,8 +17,8 @@ import '../../../../core/services/local_storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
-import '../../../../core/utils/responsive.dart';
 import '../../../../core/utils/image_utils.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../auth/data/models/user_enums.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
@@ -1079,19 +1079,9 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
               height: 46,
               margin: const EdgeInsets.only(bottom: 1),
               decoration: BoxDecoration(
-                gradient: _messageController.text.trim().isEmpty || isSending
-                    ? null
-                    : LinearGradient(
-                        colors: [
-                          AppColors.primary,
-                          AppColors.primary.withAlpha(200),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
                 color: _messageController.text.trim().isEmpty || isSending
                     ? AppColors.primary.withAlpha(80)
-                    : null,
+                    : AppColors.primary,
                 shape: BoxShape.circle,
                 boxShadow: _messageController.text.trim().isNotEmpty && !isSending
                     ? [

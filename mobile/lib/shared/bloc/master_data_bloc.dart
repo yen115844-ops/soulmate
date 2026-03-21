@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/utils/error_utils.dart';
+import '../../core/utils/service_type_display_resolver.dart';
 import '../data/repositories/master_data_repository.dart';
 import 'master_data_event.dart';
 import 'master_data_state.dart';
@@ -58,6 +59,7 @@ class MasterDataBloc extends Bloc<MasterDataEvent, MasterDataState> {
 
     try {
       final masterData = await _repository.getPartnerMasterData();
+      ServiceTypeDisplayResolver.seedFromApi(masterData.serviceTypes);
 
       emit(PartnerMasterDataLoaded(
         provinces: masterData.provinces,

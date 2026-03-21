@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_exceptions.dart';
+import '../../../../core/services/auth_service.dart' as auth_service;
 import '../../../../core/services/push_notification_service.dart';
 import '../../../../core/utils/error_utils.dart';
 import '../../data/auth_repository.dart';
@@ -55,32 +56,29 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     switch (status) {
       case UserStatus.active:
-        // Check if profile is complete
-        final profile = user.profile;
-        final isProfileComplete =
-            profile != null &&
-            profile.fullName != null &&
-            profile.fullName!.isNotEmpty &&
-            profile.dateOfBirth != null &&
-            profile.gender != null;
-
-        if (isProfileComplete) {
+        if (user.hasCompletedBasicProfile) {
           emit(AuthAuthenticated(user: user));
+          // Update AuthService state so session expiry detection works
+          getIt<auth_service.AuthService>().setAuthenticated();
         } else {
           emit(AuthNeedsProfileSetup(user: user));
+          getIt<auth_service.AuthService>().setAuthenticated();
         }
         break;
 
       case UserStatus.pending:
         emit(AuthPendingVerification(user: user));
+        getIt<auth_service.AuthService>().setAuthenticated();
         break;
 
       case UserStatus.suspended:
         emit(AuthSuspended(user: user));
+        getIt<auth_service.AuthService>().setAuthenticated();
         break;
 
       case UserStatus.banned:
         emit(AuthBanned(user: user));
+        getIt<auth_service.AuthService>().setAuthenticated();
         break;
     }
   }
@@ -94,13 +92,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     try {
       if (_authRepository.hasValidSession) {
-        // Try to get current user from API with full details
-        final user = await _authRepository.getCurrentUser();
-        
-        // Register FCM token when session is valid
-        await _registerFcmToken();
-        
-        _emitUserState(user, emit);
+        try {
+          // Try to get current user from API with full details
+          final user = await _authRepository.getCurrentUser();
+          
+          // Register FCM token when session is valid
+          await _registerFcmToken();
+          
+          _emitUserState(user, emit);
+        } on UnauthorizedException {
+          // Token is invalid (401) - may be expired or stale after reinstall
+          // This error should have been handled by API client (refresh + clear),
+          // but explicitly clear here to ensure no stale data appears
+          debugPrint('🔐 Auth check: Unauthorized (stale token?). Clearing auth data.');
+          await _authRepository.logout();
+          emit(const AuthUnauthenticated());
+        }
       } else {
         emit(const AuthUnauthenticated());
       }

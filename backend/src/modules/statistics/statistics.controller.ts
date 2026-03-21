@@ -1,5 +1,10 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -16,7 +21,9 @@ export class StatisticsController {
   constructor(private readonly statisticsService: StatisticsService) {}
 
   @Get('report')
-  @ApiOperation({ summary: 'Full statistics report (overview + charts + breakdowns)' })
+  @ApiOperation({
+    summary: 'Full statistics report (overview + charts + breakdowns)',
+  })
   @ApiResponse({ status: 200, description: 'Report with date range' })
   async getFullReport(@Query() dto: QueryStatsDto) {
     return this.statisticsService.getFullReport(dto);
@@ -30,17 +37,23 @@ export class StatisticsController {
   }
 
   @Get('revenue-chart')
-  @ApiOperation({ summary: 'Revenue over time (completed bookings, service fee)' })
-  @ApiResponse({ status: 200, description: 'Array of { date, revenue, count }' })
+  @ApiOperation({
+    summary: 'Revenue over time (completed bookings, service fee)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Array of { date, revenue, count }',
+  })
   async getRevenueChart(@Query() dto: QueryStatsDto) {
-    const range = dto.from && dto.to
-      ? { from: new Date(dto.from), to: new Date(dto.to) }
-      : (() => {
-          const to = new Date();
-          const from = new Date(to);
-          from.setMonth(from.getMonth() - 1);
-          return { from, to };
-        })();
+    const range =
+      dto.from && dto.to
+        ? { from: new Date(dto.from), to: new Date(dto.to) }
+        : (() => {
+            const to = new Date();
+            const from = new Date(to);
+            from.setMonth(from.getMonth() - 1);
+            return { from, to };
+          })();
     return this.statisticsService.getRevenueChart(
       range.from,
       range.to,
@@ -52,32 +65,34 @@ export class StatisticsController {
   @ApiOperation({ summary: 'Booking counts by status in period' })
   @ApiResponse({ status: 200, description: 'Array of { status, count }' })
   async getBookingsByStatus(@Query() dto: QueryStatsDto) {
-    const range = dto.from && dto.to
-      ? { from: new Date(dto.from), to: new Date(dto.to) }
-      : (() => {
-          const to = new Date();
-          const from = new Date(to);
-          from.setMonth(from.getMonth() - 1);
-          return { from, to };
-        })();
-    return this.statisticsService.getBookingsByStatus(
-      range.from,
-      range.to,
-    );
+    const range =
+      dto.from && dto.to
+        ? { from: new Date(dto.from), to: new Date(dto.to) }
+        : (() => {
+            const to = new Date();
+            const from = new Date(to);
+            from.setMonth(from.getMonth() - 1);
+            return { from, to };
+          })();
+    return this.statisticsService.getBookingsByStatus(range.from, range.to);
   }
 
   @Get('bookings-by-service-type')
   @ApiOperation({ summary: 'Booking counts by service type in period' })
-  @ApiResponse({ status: 200, description: 'Array of { serviceType, count, totalAmount }' })
+  @ApiResponse({
+    status: 200,
+    description: 'Array of { serviceType, count, totalAmount }',
+  })
   async getBookingsByServiceType(@Query() dto: QueryStatsDto) {
-    const range = dto.from && dto.to
-      ? { from: new Date(dto.from), to: new Date(dto.to) }
-      : (() => {
-          const to = new Date();
-          const from = new Date(to);
-          from.setMonth(from.getMonth() - 1);
-          return { from, to };
-        })();
+    const range =
+      dto.from && dto.to
+        ? { from: new Date(dto.from), to: new Date(dto.to) }
+        : (() => {
+            const to = new Date();
+            const from = new Date(to);
+            from.setMonth(from.getMonth() - 1);
+            return { from, to };
+          })();
     return this.statisticsService.getBookingsByServiceType(
       range.from,
       range.to,
@@ -88,14 +103,15 @@ export class StatisticsController {
   @ApiOperation({ summary: 'New users over time' })
   @ApiResponse({ status: 200, description: 'Array of { date, count }' })
   async getUserGrowth(@Query() dto: QueryStatsDto) {
-    const range = dto.from && dto.to
-      ? { from: new Date(dto.from), to: new Date(dto.to) }
-      : (() => {
-          const to = new Date();
-          const from = new Date(to);
-          from.setMonth(from.getMonth() - 1);
-          return { from, to };
-        })();
+    const range =
+      dto.from && dto.to
+        ? { from: new Date(dto.from), to: new Date(dto.to) }
+        : (() => {
+            const to = new Date();
+            const from = new Date(to);
+            from.setMonth(from.getMonth() - 1);
+            return { from, to };
+          })();
     return this.statisticsService.getUserGrowth(
       range.from,
       range.to,
@@ -107,14 +123,15 @@ export class StatisticsController {
   @ApiOperation({ summary: 'New partners over time' })
   @ApiResponse({ status: 200, description: 'Array of { date, count }' })
   async getPartnerGrowth(@Query() dto: QueryStatsDto) {
-    const range = dto.from && dto.to
-      ? { from: new Date(dto.from), to: new Date(dto.to) }
-      : (() => {
-          const to = new Date();
-          const from = new Date(to);
-          from.setMonth(from.getMonth() - 1);
-          return { from, to };
-        })();
+    const range =
+      dto.from && dto.to
+        ? { from: new Date(dto.from), to: new Date(dto.to) }
+        : (() => {
+            const to = new Date();
+            const from = new Date(to);
+            from.setMonth(from.getMonth() - 1);
+            return { from, to };
+          })();
     return this.statisticsService.getPartnerGrowth(
       range.from,
       range.to,
@@ -124,7 +141,10 @@ export class StatisticsController {
 
   @Get('kyc-breakdown')
   @ApiOperation({ summary: 'KYC counts by status' })
-  @ApiResponse({ status: 200, description: 'Array of { status, count, label }' })
+  @ApiResponse({
+    status: 200,
+    description: 'Array of { status, count, label }',
+  })
   async getKycBreakdown() {
     return this.statisticsService.getKycBreakdown();
   }
@@ -133,14 +153,15 @@ export class StatisticsController {
   @ApiOperation({ summary: 'Top partners by revenue in period' })
   @ApiResponse({ status: 200, description: 'Array of partner revenue summary' })
   async getTopPartnersByRevenue(@Query() dto: QueryStatsDto) {
-    const range = dto.from && dto.to
-      ? { from: new Date(dto.from), to: new Date(dto.to) }
-      : (() => {
-          const to = new Date();
-          const from = new Date(to);
-          from.setMonth(from.getMonth() - 1);
-          return { from, to };
-        })();
+    const range =
+      dto.from && dto.to
+        ? { from: new Date(dto.from), to: new Date(dto.to) }
+        : (() => {
+            const to = new Date();
+            const from = new Date(to);
+            from.setMonth(from.getMonth() - 1);
+            return { from, to };
+          })();
     return this.statisticsService.getTopPartnersByRevenue(
       10,
       range.from,

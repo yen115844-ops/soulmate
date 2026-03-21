@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { NotificationType } from '../../generated/prisma/client';
 import { NotificationsService } from '../notifications';
@@ -57,9 +62,13 @@ export class ReportsService {
         `Báo cáo mới về ${dto.type}: ${dto.reason}`,
         { reportId: report.id, type: dto.type },
       )
-      .catch((err) => this.logger.warn(`Failed to notify admins of report: ${err?.message}`));
+      .catch((err) =>
+        this.logger.warn(`Failed to notify admins of report: ${err?.message}`),
+      );
 
-    this.logger.log(`Report created by ${reporterId} against ${dto.reportedId}`);
+    this.logger.log(
+      `Report created by ${reporterId} against ${dto.reportedId}`,
+    );
 
     return {
       success: true,
@@ -167,8 +176,14 @@ export class ReportsService {
   /**
    * Admin: Resolve a report
    */
-  async adminResolveReport(reportId: string, adminId: string, dto: ResolveReportDto) {
-    const report = await this.prisma.report.findUnique({ where: { id: reportId } });
+  async adminResolveReport(
+    reportId: string,
+    adminId: string,
+    dto: ResolveReportDto,
+  ) {
+    const report = await this.prisma.report.findUnique({
+      where: { id: reportId },
+    });
     if (!report) throw new NotFoundException('Report not found');
 
     if (report.status !== 'pending' && report.status !== 'reviewing') {
@@ -197,9 +212,13 @@ export class ReportsService {
             : 'Báo cáo của bạn đã được xem xét nhưng không vi phạm.',
         data: { reportId },
       })
-      .catch((err) => this.logger.warn(`Failed to notify report resolution: ${err?.message}`));
+      .catch((err) =>
+        this.logger.warn(`Failed to notify report resolution: ${err?.message}`),
+      );
 
-    this.logger.log(`Report ${reportId} resolved by admin ${adminId}: ${dto.status}`);
+    this.logger.log(
+      `Report ${reportId} resolved by admin ${adminId}: ${dto.status}`,
+    );
     return updated;
   }
 }

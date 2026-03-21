@@ -7,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/theme_context.dart';
 import '../../../core/utils/image_utils.dart';
+import '../../../core/utils/service_type_display_resolver.dart';
 
 /// Booking Card - For bookings list
 class BookingCard extends StatelessWidget {
@@ -95,11 +96,10 @@ class BookingCard extends StatelessWidget {
     }
   }
 
-  String _formatPrice(int price) {
-    return price.toString().replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (Match m) => '${m[1]}.',
-        );
+  String get _displayService {
+    final normalized = service.trim();
+    if (normalized.isEmpty) return service;
+    return ServiceTypeDisplayResolver.resolveName(normalized);
   }
 
   @override
@@ -172,9 +172,8 @@ class BookingCard extends StatelessWidget {
                           child: CachedNetworkImage(
                             imageUrl: ImageUtils.buildImageUrl(partnerAvatar),
                             fit: BoxFit.cover,
-                            placeholder: (context, url) => Container(
-                              color: context.appColors.background,
-                            ),
+                            placeholder: (context, url) =>
+                                Container(color: context.appColors.background),
                             errorWidget: (context, url, error) => Container(
                               color: context.appColors.background,
                               child: const Icon(Ionicons.person_outline),
@@ -204,7 +203,7 @@ class BookingCard extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
-                                service,
+                                _displayService,
                                 style: AppTypography.labelSmall.copyWith(
                                   color: AppColors.primary,
                                 ),
@@ -212,18 +211,6 @@ class BookingCard extends StatelessWidget {
                             ),
                           ],
                         ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            '${_formatPrice(totalAmount)}đ',
-                            style: AppTypography.titleSmall.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
                       ),
                     ],
                   ),
@@ -244,7 +231,7 @@ class BookingCard extends StatelessWidget {
                                 color: context.appColors.background,
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child:   Icon(
+                              child: Icon(
                                 Ionicons.calendar_outline,
                                 size: 18,
                                 color: context.appColors.textSecondary,
@@ -288,7 +275,7 @@ class BookingCard extends StatelessWidget {
                                 color: context.appColors.background,
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child:   Icon(
+                              child: Icon(
                                 Ionicons.time_outline,
                                 size: 18,
                                 color: context.appColors.textSecondary,
@@ -350,6 +337,12 @@ class MiniBookingCard extends StatelessWidget {
     this.onTap,
   });
 
+  String get _displayService {
+    final normalized = service.trim();
+    if (normalized.isEmpty) return service;
+    return ServiceTypeDisplayResolver.resolveName(normalized);
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -357,7 +350,7 @@ class MiniBookingCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          gradient: AppColors.primaryGradient,
+          color: AppColors.primaryGradient,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -401,12 +394,14 @@ class MiniBookingCard extends StatelessWidget {
                     child: CachedNetworkImage(
                       imageUrl: ImageUtils.buildImageUrl(partnerAvatar),
                       fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(
-                        color: Colors.white24,
-                      ),
+                      placeholder: (context, url) =>
+                          Container(color: Colors.white24),
                       errorWidget: (context, url, error) => Container(
                         color: Colors.white24,
-                        child: const Icon(Ionicons.person_outline, color: Colors.white),
+                        child: const Icon(
+                          Ionicons.person_outline,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -425,7 +420,7 @@ class MiniBookingCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '$service • $date • $time',
+                        '$_displayService • $date • $time',
                         style: AppTypography.bodySmall.copyWith(
                           color: Colors.white.withOpacity(0.8),
                         ),

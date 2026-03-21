@@ -1,9 +1,17 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsIn, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsIn,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 import { KycStatus } from '../../../generated/prisma/client';
 
 export class SubmitSelfieDto {
-  @ApiPropertyOptional({ description: 'Device fingerprint/info for fraud detection' })
+  @ApiPropertyOptional({
+    description: 'Device fingerprint/info for fraud detection',
+  })
   @IsOptional()
   @IsString()
   deviceInfo?: string;

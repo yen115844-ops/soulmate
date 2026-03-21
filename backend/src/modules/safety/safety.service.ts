@@ -1,13 +1,18 @@
-import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { NotificationType, SosStatus } from '../../generated/prisma/client';
 import { NotificationsService } from '../notifications';
 import {
-    CreateEmergencyContactDto,
-    LogLocationDto,
-    ResolveSosDto,
-    TriggerSosDto,
-    UpdateEmergencyContactDto,
+  CreateEmergencyContactDto,
+  LogLocationDto,
+  ResolveSosDto,
+  TriggerSosDto,
+  UpdateEmergencyContactDto,
 } from './dto';
 
 @Injectable()
@@ -70,14 +75,19 @@ export class SafetyService {
           longitude: dto.longitude,
         },
       )
-      .catch((err) => this.logger.error(`Failed to notify admins of SOS: ${err?.message}`));
+      .catch((err) =>
+        this.logger.error(`Failed to notify admins of SOS: ${err?.message}`),
+      );
 
-    this.logger.warn(`🚨 SOS triggered by user ${userId} at ${dto.latitude},${dto.longitude}`);
+    this.logger.warn(
+      `🚨 SOS triggered by user ${userId} at ${dto.latitude},${dto.longitude}`,
+    );
 
     return {
       id: sosEvent.id,
       status: sosEvent.status,
-      message: 'SOS đã được gửi. Đội hỗ trợ và liên hệ khẩn cấp đã được thông báo.',
+      message:
+        'SOS đã được gửi. Đội hỗ trợ và liên hệ khẩn cấp đã được thông báo.',
       emergencyContactsNotified: emergencyContacts.length,
     };
   }
@@ -89,11 +99,16 @@ export class SafetyService {
     const sos = await this.prisma.sosEvent.findUnique({ where: { id: sosId } });
     if (!sos) throw new NotFoundException('SOS event not found');
 
-    if (sos.status === SosStatus.RESOLVED || sos.status === SosStatus.FALSE_ALARM) {
+    if (
+      sos.status === SosStatus.RESOLVED ||
+      sos.status === SosStatus.FALSE_ALARM
+    ) {
       return { message: 'SOS event already resolved' };
     }
 
-    const status = dto.isFalseAlarm ? SosStatus.FALSE_ALARM : SosStatus.RESOLVED;
+    const status = dto.isFalseAlarm
+      ? SosStatus.FALSE_ALARM
+      : SosStatus.RESOLVED;
 
     const updated = await this.prisma.sosEvent.update({
       where: { id: sosId },
@@ -117,7 +132,11 @@ export class SafetyService {
           : 'Đội hỗ trợ đã xử lý sự kiện khẩn cấp của bạn.',
         data: { sosEventId: sosId },
       })
-      .catch((err) => this.logger.warn(`Failed to send SOS resolve notification: ${err?.message}`));
+      .catch((err) =>
+        this.logger.warn(
+          `Failed to send SOS resolve notification: ${err?.message}`,
+        ),
+      );
 
     this.logger.log(`SOS ${sosId} resolved by ${responderId}`);
     return updated;
@@ -131,7 +150,10 @@ export class SafetyService {
     if (!sos) throw new NotFoundException('SOS event not found');
     if (sos.userId !== userId) throw new ForbiddenException('Access denied');
 
-    if (sos.status !== SosStatus.TRIGGERED && sos.status !== SosStatus.RESPONDING) {
+    if (
+      sos.status !== SosStatus.TRIGGERED &&
+      sos.status !== SosStatus.RESPONDING
+    ) {
       return { message: 'SOS event cannot be cancelled' };
     }
 
@@ -184,7 +206,9 @@ export class SafetyService {
 
   async createEmergencyContact(userId: string, dto: CreateEmergencyContactDto) {
     // Max 5 contacts
-    const count = await this.prisma.emergencyContact.count({ where: { userId } });
+    const count = await this.prisma.emergencyContact.count({
+      where: { userId },
+    });
     if (count >= 5) {
       throw new ForbiddenException('Tối đa 5 liên hệ khẩn cấp');
     }
@@ -208,10 +232,17 @@ export class SafetyService {
     });
   }
 
-  async updateEmergencyContact(contactId: string, userId: string, dto: UpdateEmergencyContactDto) {
-    const contact = await this.prisma.emergencyContact.findUnique({ where: { id: contactId } });
+  async updateEmergencyContact(
+    contactId: string,
+    userId: string,
+    dto: UpdateEmergencyContactDto,
+  ) {
+    const contact = await this.prisma.emergencyContact.findUnique({
+      where: { id: contactId },
+    });
     if (!contact) throw new NotFoundException('Contact not found');
-    if (contact.userId !== userId) throw new ForbiddenException('Access denied');
+    if (contact.userId !== userId)
+      throw new ForbiddenException('Access denied');
 
     if (dto.isPrimary) {
       await this.prisma.emergencyContact.updateMany({
@@ -227,9 +258,12 @@ export class SafetyService {
   }
 
   async deleteEmergencyContact(contactId: string, userId: string) {
-    const contact = await this.prisma.emergencyContact.findUnique({ where: { id: contactId } });
+    const contact = await this.prisma.emergencyContact.findUnique({
+      where: { id: contactId },
+    });
     if (!contact) throw new NotFoundException('Contact not found');
-    if (contact.userId !== userId) throw new ForbiddenException('Access denied');
+    if (contact.userId !== userId)
+      throw new ForbiddenException('Access denied');
 
     await this.prisma.emergencyContact.delete({ where: { id: contactId } });
     return { success: true };
@@ -253,7 +287,9 @@ export class SafetyService {
 
   async getBookingLocationLogs(bookingId: string, userId: string) {
     // Verify user has access to the booking
-    const booking = await this.prisma.booking.findUnique({ where: { id: bookingId } });
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+    });
     if (!booking) throw new NotFoundException('Booking not found');
     if (booking.userId !== userId && booking.partnerId !== userId) {
       throw new ForbiddenException('Access denied');

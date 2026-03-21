@@ -1,6 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:ionicons/ionicons.dart';
 
 import '../../../../core/di/injection.dart';
@@ -9,6 +11,8 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../core/utils/responsive.dart';
+import '../../../../core/utils/service_type_display_resolver.dart';
+import '../../../../shared/data/repositories/master_data_repository.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../data/booking_repository.dart';
@@ -25,13 +29,26 @@ class BookingDetailPage extends StatefulWidget {
 
 class _BookingDetailPageState extends State<BookingDetailPage> {
   BookingRepository get _bookingRepository => getIt<BookingRepository>();
+  MasterDataRepository get _masterDataRepository => getIt<MasterDataRepository>();
+  final DateFormat _dateTimeFormat = DateFormat('dd/MM/yyyy HH:mm');
+
   bool _isLoading = true;
   String? _errorMessage;
   BookingEntity? _booking;
 
+  bool get _hasValidBookingId {
+    final bookingId = widget.bookingId;
+    return bookingId != null && bookingId.trim().isNotEmpty;
+  }
+
   String get _statusText {
     if (_booking == null) return '';
     return _booking!.statusText;
+  }
+
+  String get _displayServiceType {
+    if (_booking == null) return '';
+    return ServiceTypeDisplayResolver.resolveName(_booking!.serviceType);
   }
 
   Color get _statusColor {
@@ -79,13 +96,22 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
   @override
   void initState() {
     super.initState();
-    if (widget.bookingId != null) {
+    if (_hasValidBookingId) {
       _loadBookingDetail();
+    } else {
+      _isLoading = false;
+      _errorMessage = 'Không tìm thấy mã hoạt động hợp lệ';
     }
   }
 
   Future<void> _loadBookingDetail() async {
-    if (widget.bookingId == null) return;
+    if (!_hasValidBookingId) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Không tìm thấy mã hoạt động hợp lệ';
+      });
+      return;
+    }
 
     setState(() {
       _isLoading = true;
@@ -93,7 +119,8 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
     });
 
     try {
-      final booking = await _bookingRepository.getBookingById(widget.bookingId!);
+      await _warmupServiceTypes();
+      final booking = await _bookingRepository.getBookingById(widget.bookingId!.trim());
 
       if (mounted) {
         setState(() {
@@ -112,28 +139,80 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
     }
   }
 
-  int get _duration {
-    if (_booking == null) return 0;
-    return _booking!.endTime.difference(_booking!.startTime).inHours;
+  Future<void> _warmupServiceTypes() async {
+    try {
+      final serviceTypes = await _masterDataRepository.getServiceTypes();
+      ServiceTypeDisplayResolver.seedFromApi(serviceTypes);
+    } catch (_) {
+      // Keep detail page usable even when master-data request fails.
+    }
+  }
+
+  String get _durationText {
+    if (_booking == null) return '0 phút';
+
+    final totalMinutes = _booking!.endTime
+        .difference(_booking!.startTime)
+        .inMinutes
+        .abs();
+    final hours = totalMinutes ~/ 60;
+    final minutes = totalMinutes % 60;
+
+    if (hours == 0) return '$minutes phút';
+    if (minutes == 0) return '$hours giờ';
+    return '$hours giờ $minutes phút';
+  }
+
+  String get _formattedTotalAmount {
+    if (_booking == null) return '0 đ';
+    return NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: 'đ',
+    ).format(_booking!.totalAmount);
+  }
+
+  String _formatDateTime(DateTime dateTime) {
+    return _dateTimeFormat.format(dateTime);
+  }
+
+  String _nonEmptyOrFallback(
+    String? value, {
+    String fallback = 'Chưa cập nhật',
+  }) {
+    final normalized = value?.trim();
+    if (normalized == null || normalized.isEmpty) {
+      return fallback;
+    }
+    return normalized;
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(leading: const AppBackButton(), title: const Text('Chi tiết hoạt động')),
+        appBar: AppBar(
+          leading: const AppBackButton(),
+          title: const Text('Chi tiết hoạt động'),
+        ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_errorMessage != null || _booking == null) {
       return Scaffold(
-        appBar: AppBar(leading: const AppBackButton(), title: const Text('Chi tiết hoạt động')),
+        appBar: AppBar(
+          leading: const AppBackButton(),
+          title: const Text('Chi tiết hoạt động'),
+        ),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Ionicons.alert_circle_outline, size: 64, color: AppColors.error),
+              Icon(
+                Ionicons.alert_circle_outline,
+                size: 64,
+                color: AppColors.error,
+              ),
               const SizedBox(height: 16),
               Text(_errorMessage ?? 'Không tìm thấy hoạt động'),
               const SizedBox(height: 16),
@@ -153,8 +232,11 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
       backgroundColor: context.appColors.background,
       body: Stack(
         children: [
-          CustomScrollView(
-            slivers: [
+          RefreshIndicator(
+            onRefresh: _loadBookingDetail,
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
               // App Bar
               SliverAppBar(
                 pinned: true,
@@ -178,16 +260,9 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
               SliverToBoxAdapter(
                 child: Container(
                   margin: ResponsiveLayout.pagePadding(context),
-                  padding: ResponsiveLayout.pagePadding(context),
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        _statusColor,
-                        _statusColor.withAlpha(180),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: _statusColor,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
@@ -240,6 +315,8 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                   ),
                 ),
               ),
+              // sizedbox heigth
+              const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
               // Partner Info Card
               SliverToBoxAdapter(
@@ -268,18 +345,21 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                           borderRadius: BorderRadius.circular(12),
                           child: booking.partnerAvatar != null
                               ? CachedNetworkImage(
-                                  imageUrl: ImageUtils.buildImageUrl(booking.partnerAvatar!),
+                                  imageUrl: ImageUtils.buildImageUrl(
+                                    booking.partnerAvatar!,
+                                  ),
                                   fit: BoxFit.cover,
                                   placeholder: (_, placeholderUrl) => Container(
                                     color: AppColors.primary.withAlpha(50),
                                   ),
-                                  errorWidget: (_, errorUrl, error) => Container(
-                                    color: AppColors.primary.withAlpha(50),
-                                    child: Icon(
-                                      Ionicons.person_outline,
-                                      color: AppColors.primary,
-                                    ),
-                                  ),
+                                  errorWidget: (_, errorUrl, error) =>
+                                      Container(
+                                        color: AppColors.primary.withAlpha(50),
+                                        child: Icon(
+                                          Ionicons.person_outline,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
                                 )
                               : Container(
                                   color: AppColors.primary.withAlpha(50),
@@ -313,19 +393,11 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                         ),
                       ),
                       // Actions
-                      Row(
-                        children: [
-                          _CircleButton(
-                            icon: Ionicons.call_outline,
-                            onTap: () {},
-                          ),
-                          const SizedBox(width: 10),
-                          _CircleButton(
-                            icon: Ionicons.chatbubble_outline,
-                            isPrimary: true,
-                            onTap: () => context.push('/chat/user/${booking.partnerId}'),
-                          ),
-                        ],
+                      _CircleButton(
+                        icon: Ionicons.chatbubble_outline,
+                        isPrimary: true,
+                        onTap: () =>
+                            context.push('/chat/user/${booking.partnerId}'),
                       ),
                     ],
                   ),
@@ -359,7 +431,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                       _DetailRow(
                         icon: Ionicons.cafe_outline,
                         label: 'Hoạt động',
-                        value: booking.serviceType,
+                        value: _displayServiceType,
                       ),
                       const SizedBox(height: 16),
 
@@ -375,16 +447,54 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                       _DetailRow(
                         icon: Ionicons.time_outline,
                         label: 'Thời gian',
-                        value: '${booking.formattedTimeRange} ($_duration giờ)',
+                        value: '${booking.formattedTimeRange} ($_durationText)',
+                      ),
+                      const SizedBox(height: 16),
+
+                      _DetailRow(
+                        icon: Ionicons.cash_outline,
+                        label: 'Chi phí',
+                        value: _formattedTotalAmount,
+                      ),
+                      const SizedBox(height: 16),
+
+                      _DetailRow(
+                        icon: Ionicons.time_outline,
+                        label: 'Tạo lúc',
+                        value: _formatDateTime(booking.createdAt),
+                      ),
+                      const SizedBox(height: 16),
+
+                      _DetailRow(
+                        icon: Ionicons.refresh_outline,
+                        label: 'Cập nhật lúc',
+                        value: _formatDateTime(booking.updatedAt),
                       ),
 
                       // Location
-                      if (booking.location != null) ...[
+                      if (_nonEmptyOrFallback(
+                        booking.location,
+                        fallback: '',
+                      ).isNotEmpty) ...[
                         const SizedBox(height: 16),
                         _DetailRow(
                           icon: Ionicons.location_outline,
                           label: 'Địa điểm',
-                          value: booking.location!,
+                          value: _nonEmptyOrFallback(booking.location),
+                        ),
+                      ],
+
+                      if ((booking.status == 'CANCELLED' ||
+                              booking.status == 'REJECTED') &&
+                          _nonEmptyOrFallback(
+                            booking.cancelledBy,
+                            fallback: '',
+                          ).isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        _DetailRow(
+                          icon: Ionicons.person_remove_outline,
+                          label: 'Người hủy',
+                          value: _nonEmptyOrFallback(booking.cancelledBy),
                         ),
                       ],
                     ],
@@ -393,10 +503,15 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
               ),
 
               // Notes
-              if (booking.note != null && booking.note!.isNotEmpty)
+              if (_nonEmptyOrFallback(booking.note, fallback: '').isNotEmpty)
                 SliverToBoxAdapter(
                   child: Container(
-                    margin: EdgeInsets.fromLTRB(ResponsiveLayout.horizontalPadding(context), 20, ResponsiveLayout.horizontalPadding(context), 0),
+                    margin: EdgeInsets.fromLTRB(
+                      ResponsiveLayout.horizontalPadding(context),
+                      20,
+                      ResponsiveLayout.horizontalPadding(context),
+                      0,
+                    ),
                     padding: ResponsiveLayout.pagePadding(context),
                     decoration: BoxDecoration(
                       color: context.appColors.card,
@@ -424,7 +539,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          booking.note!,
+                          _nonEmptyOrFallback(booking.note),
                           style: AppTypography.bodyMedium.copyWith(
                             color: context.appColors.textSecondary,
                           ),
@@ -435,11 +550,17 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                 ),
 
               // Cancellation reason if cancelled
-              if ((booking.status == 'CANCELLED' || booking.status == 'REJECTED') &&
+              if ((booking.status == 'CANCELLED' ||
+                      booking.status == 'REJECTED') &&
                   booking.cancellationReason != null)
                 SliverToBoxAdapter(
                   child: Container(
-                    margin: EdgeInsets.fromLTRB(ResponsiveLayout.horizontalPadding(context), 20, ResponsiveLayout.horizontalPadding(context), 0),
+                    margin: EdgeInsets.fromLTRB(
+                      ResponsiveLayout.horizontalPadding(context),
+                      20,
+                      ResponsiveLayout.horizontalPadding(context),
+                      0,
+                    ),
                     padding: ResponsiveLayout.pagePadding(context),
                     decoration: BoxDecoration(
                       color: AppColors.error.withAlpha(20),
@@ -481,6 +602,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
               // Bottom padding for action buttons
               const SliverToBoxAdapter(child: SizedBox(height: 120)),
             ],
+            ),
           ),
 
           // Action Buttons - Hoàn thành (user completes when IN_PROGRESS)
@@ -531,8 +653,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
             ),
 
           // Action Buttons - Cancel / Message
-          if (booking.status == 'CONFIRMED' ||
-              booking.status == 'PENDING')
+          if (booking.status == 'CONFIRMED' || booking.status == 'PENDING')
             Positioned(
               left: 0,
               right: 0,
@@ -577,7 +698,9 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                             : null,
                         onPressed: booking.status == 'PENDING'
                             ? null
-                            : () => context.push('/chat/user/${booking.partnerId}'),
+                            : () => context.push(
+                                '/chat/user/${booking.partnerId}',
+                              ),
                       ),
                     ),
                   ],
@@ -608,12 +731,76 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                     ),
                   ],
                 ),
-                child: AppButton(
-                  text: 'Đánh giá',
-                  icon: Ionicons.star_outline,
-                  onPressed: () {
-                    context.push('/booking/${_booking!.id}/review');
-                  },
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: AppButton(
+                        text: 'Nhắn tin',
+                        isOutlined: true,
+                        onPressed: () =>
+                            context.push('/chat/user/${booking.partnerId}'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: AppButton(
+                        text: 'Đánh giá',
+                        icon: Ionicons.star_outline,
+                        onPressed: () {
+                          context.push('/booking/${_booking!.id}/review');
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+          if (booking.status == 'CANCELLED' || booking.status == 'REJECTED')
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: EdgeInsets.fromLTRB(
+                  ResponsiveLayout.horizontalPadding(context),
+                  16,
+                  ResponsiveLayout.horizontalPadding(context),
+                  MediaQuery.of(context).padding.bottom + 16,
+                ),
+                decoration: BoxDecoration(
+                  color: context.appColors.surface,
+                  boxShadow: [
+                    BoxShadow(
+                      color: context.appColors.shadow,
+                      blurRadius: 10,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: AppButton(
+                        text: 'Nhắn tin',
+                        isOutlined: true,
+                        onPressed: () =>
+                            context.push('/chat/user/${booking.partnerId}'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: AppButton(
+                        text: 'Đặt lại',
+                        icon: Ionicons.refresh_outline,
+                        onPressed: () => context.push(
+                          '/booking/create?partnerId=${booking.partnerId}',
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -642,19 +829,48 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 20),
-              ListTile(
-                leading: const Icon(Ionicons.share_social_outline),
-                title: const Text('Chia sẻ'),
-                onTap: () => Navigator.pop(ctx),
-              ),
+            
               ListTile(
                 leading: const Icon(Ionicons.copy_outline),
                 title: const Text('Sao chép ID'),
-                onTap: () => Navigator.pop(ctx),
+                onTap: () {
+                  final booking = _booking;
+                  Navigator.pop(ctx);
+                  if (booking == null) return;
+
+                  Clipboard.setData(ClipboardData(text: booking.id));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Đã sao chép ID hoạt động')),
+                  );
+                },
               ),
               ListTile(
-                leading: Icon(Ionicons.alert_circle_outline, color: AppColors.error),
-                title: Text('Báo cáo', style: TextStyle(color: AppColors.error)),
+                leading: const Icon(Ionicons.pricetag_outline),
+                title: const Text('Sao chép mã hoạt động'),
+                onTap: () {
+                  final booking = _booking;
+                  Navigator.pop(ctx);
+                  if (booking == null) return;
+
+                  final text = booking.bookingCode?.trim().isNotEmpty == true
+                      ? booking.bookingCode!
+                      : booking.id;
+
+                  Clipboard.setData(ClipboardData(text: text));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Đã sao chép mã hoạt động')),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(
+                  Ionicons.alert_circle_outline,
+                  color: AppColors.error,
+                ),
+                title: Text(
+                  'Báo cáo',
+                  style: TextStyle(color: AppColors.error),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   _showReportDialog();
@@ -668,6 +884,10 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
   }
 
   void _showCancelDialog() {
+    final reasonController = TextEditingController(
+      text: 'Thay đổi kế hoạch cá nhân',
+    );
+
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
@@ -678,9 +898,22 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Hủy hoạt động', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+              const Text(
+                'Hủy hoạt động',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+              ),
               const SizedBox(height: 16),
               const Text('Bạn có chắc chắn muốn hủy hoạt động này không?'),
+              const SizedBox(height: 12),
+              TextField(
+                controller: reasonController,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: 'Lý do hủy',
+                  hintText: 'Nhập lý do hủy để đối phương nắm thông tin',
+                  border: OutlineInputBorder(),
+                ),
+              ),
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -691,10 +924,22 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                   ),
                   TextButton(
                     onPressed: () {
+                      final reason = reasonController.text.trim();
+                      if (reason.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Vui lòng nhập lý do hủy hoạt động'),
+                          ),
+                        );
+                        return;
+                      }
                       Navigator.pop(ctx);
-                      _cancelBooking();
+                      _cancelBooking(reason: reason);
                     },
-                    child: Text('Hủy', style: TextStyle(color: AppColors.error)),
+                    child: Text(
+                      'Hủy',
+                      style: TextStyle(color: AppColors.error),
+                    ),
                   ),
                 ],
               ),
@@ -705,25 +950,25 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
     );
   }
 
-  Future<void> _cancelBooking() async {
+  Future<void> _cancelBooking({required String reason}) async {
     if (_booking == null) return;
 
     try {
       await _bookingRepository.cancelBooking(
         bookingId: _booking!.id,
-        reason: 'Hủy bởi người dùng',
+        reason: reason,
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã hủy hoạt động')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Đã hủy hoạt động')));
         context.pop();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
       }
     }
   }
@@ -746,14 +991,19 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setDialogState) => Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text('Báo cáo người dùng', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+                  const Text(
+                    'Báo cáo người dùng',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+                  ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: selectedReason,
@@ -793,7 +1043,9 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(
-                        onPressed: isSubmitting ? null : () => Navigator.pop(ctx),
+                        onPressed: isSubmitting
+                            ? null
+                            : () => Navigator.pop(ctx),
                         child: const Text('Hủy'),
                       ),
                       FilledButton(
@@ -806,7 +1058,8 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                                     reportedUserId: _booking!.partnerId,
                                     bookingId: _booking!.id,
                                     reason: selectedReason,
-                                    description: descriptionController.text.trim(),
+                                    description: descriptionController.text
+                                        .trim(),
                                   );
 
                                   if (!mounted || !ctx.mounted) return;
@@ -824,7 +1077,9 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                                   setDialogState(() => isSubmitting = false);
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('Không thể gửi báo cáo: $e'),
+                                      content: Text(
+                                        'Không thể gửi báo cáo: $e',
+                                      ),
                                       backgroundColor: AppColors.error,
                                     ),
                                   );
@@ -834,7 +1089,9 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                             ? const SizedBox(
                                 width: 16,
                                 height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Text('Gửi báo cáo'),
                       ),
@@ -861,7 +1118,10 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Hoàn thành hoạt động', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+              const Text(
+                'Hoàn thành hoạt động',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+              ),
               const SizedBox(height: 16),
               const Text(
                 'Xác nhận bạn đã hoàn thành hoạt động. Bạn có thể thêm ghi chú (tùy chọn):',
@@ -918,14 +1178,12 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
       }
     }
   }
-
-  // Payment dialog and payment flow removed - app now uses free activity model
 }
 
 class _CircleButton extends StatelessWidget {
@@ -949,12 +1207,16 @@ class _CircleButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: isPrimary ? AppColors.primary : context.appColors.background,
           borderRadius: BorderRadius.circular(12),
-          border: isPrimary ? null : Border.all(color: context.appColors.border),
+          border: isPrimary
+              ? null
+              : Border.all(color: context.appColors.border),
         ),
         child: Icon(
           icon,
           size: 18,
-          color: isPrimary ? AppColors.textWhite : context.appColors.textSecondary,
+          color: isPrimary
+              ? AppColors.textWhite
+              : context.appColors.textSecondary,
         ),
       ),
     );
@@ -984,11 +1246,7 @@ class _DetailRow extends StatelessWidget {
             color: AppColors.primary.withAlpha(20),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(
-            icon,
-            color: AppColors.primary,
-            size: 18,
-          ),
+          child: Icon(icon, color: AppColors.primary, size: 18),
         ),
         const SizedBox(width: 14),
         Expanded(

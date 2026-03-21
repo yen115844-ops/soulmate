@@ -28,12 +28,12 @@ import '../../features/rating/data/reviews_repository.dart';
 import '../../features/rating/presentation/bloc/my_reviews_bloc.dart';
 import '../../features/safety/data/emergency_contacts_repository.dart';
 import '../../features/safety/presentation/bloc/emergency_contacts_bloc.dart';
+import '../../features/settings/data/app_config_repository.dart';
 import '../../features/settings/data/settings_repository.dart';
 import '../../features/settings/data/terms_repository.dart';
 import '../../features/settings/presentation/bloc/settings_bloc.dart';
 import '../../features/subscription/data/repositories/subscription_repository_impl.dart';
 import '../../features/subscription/presentation/bloc/subscription_bloc.dart';
-import '../services/iap_service.dart';
 import '../../features/verification/data/repositories/verification_repository_impl.dart';
 import '../../features/verification/presentation/bloc/verification_bloc.dart';
 import '../../shared/bloc/master_data_bloc.dart';
@@ -42,6 +42,7 @@ import '../../shared/data/repositories/notification_repository.dart';
 import '../network/api_client.dart';
 import '../services/auth_service.dart';
 import '../services/chat_socket_service.dart';
+import '../services/iap_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/push_notification_service.dart';
 import '../theme/theme_cubit.dart';
@@ -123,6 +124,11 @@ Future<void> setupDependencies() async {
   // Terms Repository
   getIt.registerLazySingleton<TermsRepository>(
     () => TermsRepository(apiClient: getIt<ApiClient>()),
+  );
+
+  // App Config Repository
+  getIt.registerLazySingleton<AppConfigRepository>(
+    () => AppConfigRepository(apiClient: getIt<ApiClient>()),
   );
 
   // Favorites Repository

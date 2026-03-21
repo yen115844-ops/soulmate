@@ -1,15 +1,15 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import {
-    IsArray,
-    IsBoolean,
-    IsEnum,
-    IsNumber,
-    IsOptional,
-    IsString,
-    MaxLength,
-    Min,
-    MinLength,
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+  MinLength,
 } from 'class-validator';
 import { NotificationType } from '../../../generated/prisma/client';
 
@@ -102,7 +102,9 @@ export class AdminSendNotificationDto {
   @IsBoolean()
   sendPush?: boolean = true;
 
-  @ApiPropertyOptional({ description: 'User IDs to send to (for targeted send)' })
+  @ApiPropertyOptional({
+    description: 'User IDs to send to (for targeted send)',
+  })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
@@ -110,7 +112,9 @@ export class AdminSendNotificationDto {
 }
 
 export class PushQueueStatusDto {
-  @ApiPropertyOptional({ description: 'Last push/queue error message (e.g. on production VPS)' })
+  @ApiPropertyOptional({
+    description: 'Last push/queue error message (e.g. on production VPS)',
+  })
   lastError?: string | null;
   @ApiPropertyOptional({ description: 'ISO timestamp of last error' })
   lastErrorAt?: string | null;

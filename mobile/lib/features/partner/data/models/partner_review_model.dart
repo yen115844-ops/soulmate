@@ -7,8 +7,12 @@ class PartnerReview {
   final double overallRating;
   final double? punctualityRating;
   final double? communicationRating;
-  final double? personalityRating;
+  final double? attitudeRating;
+  final double? appearanceRating;
+  final double? serviceQualityRating;
   final String? comment;
+  final List<String> tags;
+  final bool isAnonymous;
   final ReviewerInfo reviewer;
   final DateTime createdAt;
 
@@ -18,8 +22,12 @@ class PartnerReview {
     required this.overallRating,
     this.punctualityRating,
     this.communicationRating,
-    this.personalityRating,
+    this.attitudeRating,
+    this.appearanceRating,
+    this.serviceQualityRating,
     this.comment,
+    this.tags = const [],
+    this.isAnonymous = false,
     required this.reviewer,
     required this.createdAt,
   });
@@ -35,10 +43,18 @@ class PartnerReview {
       communicationRating: json['communicationRating'] != null
           ? PartnerStats.parseDouble(json['communicationRating'])
           : null,
-      personalityRating: json['personalityRating'] != null
-          ? PartnerStats.parseDouble(json['personalityRating'])
+      attitudeRating: json['attitudeRating'] != null
+          ? PartnerStats.parseDouble(json['attitudeRating'])
+          : null,
+      appearanceRating: json['appearanceRating'] != null
+          ? PartnerStats.parseDouble(json['appearanceRating'])
+          : null,
+      serviceQualityRating: json['serviceQualityRating'] != null
+          ? PartnerStats.parseDouble(json['serviceQualityRating'])
           : null,
       comment: json['comment'] is String ? json['comment'] : null,
+      tags: (json['tags'] as List?)?.cast<String>() ?? [],
+      isAnonymous: json['isAnonymous'] == true,
       reviewer: json['reviewer'] is Map<String, dynamic>
           ? ReviewerInfo.fromJson(json['reviewer'])
           : ReviewerInfo.empty(),

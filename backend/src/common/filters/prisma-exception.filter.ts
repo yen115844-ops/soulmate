@@ -1,9 +1,9 @@
 import {
-    ArgumentsHost,
-    Catch,
-    ExceptionFilter,
-    HttpStatus,
-    Logger,
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { Prisma } from '../../generated/prisma/client';
@@ -58,7 +58,8 @@ export class PrismaExceptionFilter implements ExceptionFilter {
       success: false,
       statusCode: status,
       message,
-      error: process.env.NODE_ENV === 'development' ? exception.code : undefined,
+      error:
+        process.env.NODE_ENV === 'development' ? exception.code : undefined,
       timestamp: new Date().toISOString(),
       path: request.url,
     };

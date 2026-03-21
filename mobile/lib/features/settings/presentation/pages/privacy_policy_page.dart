@@ -69,7 +69,10 @@ class PrivacyPolicyPage extends StatelessWidget {
             if (state is TermsLoaded) {
               return Markdown(
                 data: state.content,
-                padding: ResponsiveLayout.pagePadding(context),
+                padding: EdgeInsets.symmetric(
+                  horizontal: ResponsiveLayout.horizontalPadding(context),
+                  vertical: 16,
+                ),
                 styleSheet: MarkdownStyleSheet(
                   h1: AppTypography.headlineSmall,
                   h2: AppTypography.titleLarge.copyWith(

@@ -1,17 +1,10 @@
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import {
-    Body,
-    Controller,
-    Get,
-    Post,
-    Query,
-    UseGuards,
-} from '@nestjs/common';
-import {
-    ApiBearerAuth,
-    ApiOperation,
-    ApiQuery,
-    ApiResponse,
-    ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -50,7 +43,10 @@ export class SubscriptionsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Verify IAP purchase and activate subscription' })
-  @ApiResponse({ status: 201, description: 'Purchase verified and subscription activated' })
+  @ApiResponse({
+    status: 201,
+    description: 'Purchase verified and subscription activated',
+  })
   @ApiResponse({ status: 400, description: 'Invalid receipt' })
   async verifyPurchase(
     @CurrentUser('id') userId: string,
@@ -74,7 +70,9 @@ export class SubscriptionsController {
   @Get('can-send-message')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Check if user can send message (free limit check)' })
+  @ApiOperation({
+    summary: 'Check if user can send message (free limit check)',
+  })
   @ApiResponse({ status: 200, description: 'Limit status returned' })
   async canSendMessage(@CurrentUser('id') userId: string) {
     return this.subscriptionsService.canSendMessage(userId);
@@ -83,7 +81,9 @@ export class SubscriptionsController {
   @Get('admirers')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get list of users who favorited you (Premium only)' })
+  @ApiOperation({
+    summary: 'Get list of users who favorited you (Premium only)',
+  })
   @ApiResponse({ status: 200, description: 'Admirers list returned' })
   @ApiResponse({ status: 403, description: 'Premium required' })
   async getAdmirers(@CurrentUser('id') userId: string) {
@@ -109,7 +109,11 @@ export class SubscriptionsController {
   @ApiOperation({ summary: 'Get all subscriptions with pagination' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'status', required: false, enum: ['ACTIVE', 'EXPIRED', 'CANCELLED'] })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['ACTIVE', 'EXPIRED', 'CANCELLED'],
+  })
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiResponse({ status: 200, description: 'Subscriptions list returned' })
   async adminGetList(

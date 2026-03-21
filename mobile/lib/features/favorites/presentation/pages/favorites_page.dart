@@ -7,7 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/responsive.dart';
-import '../../../../shared/widgets/cards/partner_card.dart';
+import '../../../home/presentation/widgets/home_partner_card.dart';
 import '../bloc/favorites_bloc.dart';
 import '../bloc/favorites_event.dart';
 import '../bloc/favorites_state.dart';
@@ -21,14 +21,50 @@ class FavoritesPage extends StatelessWidget {
   }
 }
 
-class _FavoritesView extends StatelessWidget {
+class _FavoritesView extends StatefulWidget {
   const _FavoritesView();
+
+  @override
+  State<_FavoritesView> createState() => _FavoritesViewState();
+}
+
+class _FavoritesViewState extends State<_FavoritesView> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final bloc = context.read<FavoritesBloc>();
+      if (bloc.state.status == FavoritesStatus.initial ||
+          bloc.state.favorites.isEmpty) {
+        bloc.add(const FavoritesLoadRequested());
+      }
+    });
+  }
+
+  Future<void> _onRefresh(BuildContext context) async {
+    context.read<FavoritesBloc>().add(const FavoritesRefreshRequested());
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Yêu thích')),
+      backgroundColor: context.appColors.background,
+      appBar: AppBar(
+        title: Text(
+          'Yêu thích',
+          style: AppTypography.titleLarge.copyWith(
+            color: context.appColors.textPrimary,
+          ),
+        ),
+        centerTitle: true,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: context.appColors.background,
+      ),
       body: BlocConsumer<FavoritesBloc, FavoritesState>(
+        listenWhen: (previous, current) =>
+            previous.errorMessage != current.errorMessage &&
+            current.errorMessage != null,
         listener: (context, state) {
           if (state.errorMessage != null) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -40,7 +76,8 @@ class _FavoritesView extends StatelessWidget {
           }
         },
         builder: (context, state) {
-          if (state.status == FavoritesStatus.loading) {
+          if (state.status == FavoritesStatus.initial ||
+              state.status == FavoritesStatus.loading) {
             return const Center(child: CircularProgressIndicator());
           }
 
@@ -62,18 +99,18 @@ class _FavoritesView extends StatelessWidget {
 
           final crossAxisCount = ResponsiveLayout.gridCrossAxisCount(
             context,
-            minCellWidth: 320,
+            minCellWidth: 280,
             horizontalPadding: ResponsiveLayout.horizontalPadding(context) * 2,
             spacing: 16,
           );
           final padding = ResponsiveLayout.pagePadding(context);
           return RefreshIndicator(
-            onRefresh: () async {
-              context.read<FavoritesBloc>().add(
-                const FavoritesRefreshRequested(),
-              );
-            },
+            onRefresh: () => _onRefresh(context),
             child: GridView.builder(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              cacheExtent: 1200,
               padding: padding.copyWith(
                 top: padding.top,
                 bottom: padding.bottom + 24,
@@ -82,37 +119,22 @@ class _FavoritesView extends StatelessWidget {
                 crossAxisCount: crossAxisCount,
                 mainAxisSpacing: 16,
                 crossAxisSpacing: 16,
-                childAspectRatio: 0.72,
+                childAspectRatio: 0.67,
               ),
               itemCount: state.favorites.length,
               itemBuilder: (context, index) {
                 final favorite = state.favorites[index];
                 final partner = favorite.partner;
-                return PartnerCard(
-                  id: partner.id,
-                  name: partner.name,
-                  age: partner.age,
-                  avatarUrl: partner.avatarUrl,
-                  rating: partner.rating,
-                  reviews: partner.reviewCount,
-                  hourlyRate: partner.formattedHourlyRate,
-                  isOnline: partner.isOnline,
-                  isVerified: partner.isVerified,
-                  isFavorite: true,
-                  onTap: () {
-                    context.push('/partner/${partner.id}');
-                  },
-                  onFavorite: () {
-                    context.read<FavoritesBloc>().add(
-                      FavoriteRemoveRequested(partner.id),
-                    );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Đã xóa khỏi danh sách yêu thích'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  },
+                return RepaintBoundary(
+                  child: GestureDetector(
+                    onTap: () {
+                      context.push('/partner/${partner.id}');
+                    },
+                    child: HomePartnerCard(
+                      key: ValueKey(partner.id),
+                      partner: partner,
+                    ),
+                  ),
                 );
               },
             ),

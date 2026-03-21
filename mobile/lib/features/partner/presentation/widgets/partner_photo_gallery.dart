@@ -6,7 +6,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
-import '../../../../core/utils/responsive.dart';
 import '../../data/models/partner_profile_model.dart';
 import 'fullscreen_image_viewer.dart';
 
@@ -18,12 +17,12 @@ class PartnerPhotoGallery extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Combine avatar + photos for a complete gallery
+    // Start with profile photos so hero image and gallery stay consistent.
     final allPhotos = <String>[];
+    allPhotos.addAll(detail.photos);
     if (detail.avatarUrl != null && detail.avatarUrl!.isNotEmpty) {
       allPhotos.add(detail.avatarUrl!);
     }
-    allPhotos.addAll(detail.photos);
 
     // Deduplicate
     final uniquePhotos = allPhotos.toSet().toList();
@@ -84,49 +83,93 @@ class PartnerPhotoGallery extends StatelessWidget {
   }
 
   Widget _buildPhotoGrid(BuildContext context, List<String> photos) {
-    const maxVisible = 6;
-    final visiblePhotos = photos.take(maxVisible).toList();
-    final hasMore = photos.length > maxVisible;
+    final mainImage = photos.first;
+    final smallTiles = photos.skip(1).take(4).toList();
+    final moreCount = photos.length - 5;
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: ResponsiveLayout.gridCrossAxisCount(
+    if (photos.length == 1) {
+      return AspectRatio(
+        aspectRatio: 16 / 10,
+        child: _buildPhotoTile(
           context,
-          minCellWidth: 90,
-          horizontalPadding: 40,
-          spacing: 8,
-          maxColumns: 6,
+          allPhotos: photos,
+          imageUrl: mainImage,
+          initialIndex: 0,
         ),
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-        childAspectRatio: 1,
-      ),
-      itemCount: visiblePhotos.length,
-      itemBuilder: (context, index) {
-        final isLast = hasMore && index == visiblePhotos.length - 1;
-        return _buildPhotoTile(context, photos, index, isLast,
-            photos.length - maxVisible);
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const spacing = 8.0;
+        final width = constraints.maxWidth;
+        final mainWidth = (width - spacing) * 0.58;
+        final sideWidth = width - spacing - mainWidth;
+        final smallSize = (sideWidth - spacing) / 2;
+
+        return SizedBox(
+          height: mainWidth,
+          child: Row(
+            children: [
+              SizedBox(
+                width: mainWidth,
+                child: _buildPhotoTile(
+                  context,
+                  allPhotos: photos,
+                  imageUrl: mainImage,
+                  initialIndex: 0,
+                ),
+              ),
+              const SizedBox(width: spacing),
+              SizedBox(
+                width: sideWidth,
+                child: Wrap(
+                  spacing: spacing,
+                  runSpacing: spacing,
+                  children: List.generate(4, (i) {
+                    if (i >= smallTiles.length) {
+                      return SizedBox(width: smallSize, height: smallSize);
+                    }
+
+                    final isOverlayTile = i == 3 && moreCount > 0;
+                    return SizedBox(
+                      width: smallSize,
+                      height: smallSize,
+                      child: _buildPhotoTile(
+                        context,
+                        allPhotos: photos,
+                        imageUrl: smallTiles[i],
+                        initialIndex: i + 1,
+                        overlayText: isOverlayTile ? '+$moreCount' : null,
+                      ),
+                    );
+                  }),
+                ),
+              ),
+            ],
+          ),
+        );
       },
     );
   }
 
   Widget _buildPhotoTile(
     BuildContext context,
-    List<String> allPhotos,
-    int index,
-    bool showOverlay,
-    int moreCount,
+    {
+    required List<String> allPhotos,
+    required String imageUrl,
+    required int initialIndex,
+    String? overlayText,
+  }
   ) {
-    final url = ImageUtils.buildImageUrlNullable(allPhotos[index]);
+    final url = ImageUtils.buildImageUrlNullable(imageUrl);
 
     return GestureDetector(
       onTap: () {
         FullscreenImageViewer.show(
           context,
           imageUrls: allPhotos,
-          initialIndex: index,
+          initialIndex: initialIndex,
         );
       },
       child: ClipRRect(
@@ -156,12 +199,12 @@ class PartnerPhotoGallery extends StatelessWidget {
                     child: const Icon(Ionicons.image_outline,
                         color: AppColors.textHint),
                   ),
-            if (showOverlay)
+            if (overlayText != null)
               Container(
                 color: Colors.black.withOpacity(0.6),
                 child: Center(
                   child: Text(
-                    '+$moreCount',
+                    overlayText,
                     style: AppTypography.titleLarge.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,

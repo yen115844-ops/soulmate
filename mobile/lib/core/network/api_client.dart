@@ -115,8 +115,9 @@ class ApiClient {
                 return handler.next(error);
               }
             } else {
-              // Refresh failed - notify app to redirect to login
-              debugPrint('🔐 Auth: Token refresh failed, redirecting to login');
+              // Refresh failed - clear auth data and notify app to redirect to login
+              debugPrint('🔐 Auth: Token refresh failed, clearing data and redirecting');
+              await _storage.clearAuthData();
               onAuthFailed?.call();
             }
           }

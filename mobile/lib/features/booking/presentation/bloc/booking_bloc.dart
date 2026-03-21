@@ -23,6 +23,11 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
     on<BookingFilterChanged>(_onFilterChanged);
   }
 
+  String? _normalizeStatusForApi(String? status) {
+    if (status == null) return null;
+    return status == 'REJECTED' ? 'DISPUTED' : status;
+  }
+
   Future<void> _onLoadRequested(
     BookingLoadRequested event,
     Emitter<BookingState> emit,
@@ -43,7 +48,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
       final response = await _bookingRepository.getUserBookings(
         page: 1,
         limit: _pageSize,
-        status: event.status,
+        status: _normalizeStatusForApi(event.status),
         startDate: startDateStr,
         endDate: endDateStr,
       );
@@ -99,7 +104,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
       final response = await _bookingRepository.getUserBookings(
         page: nextPage,
         limit: _pageSize,
-        status: currentState.currentFilter,
+        status: _normalizeStatusForApi(currentState.currentFilter),
         startDate: startDateStr,
         endDate: endDateStr,
       );
@@ -224,7 +229,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
       final response = await _bookingRepository.getUserBookings(
         page: 1,
         limit: _pageSize,
-        status: event.status,
+        status: _normalizeStatusForApi(event.status),
         startDate: startDateStr,
         endDate: endDateStr,
       );

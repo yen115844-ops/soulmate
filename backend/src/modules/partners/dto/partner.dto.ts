@@ -1,6 +1,17 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { IsArray, IsBoolean, IsEnum, IsNumber, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
+import {
+    IsArray,
+    IsBoolean,
+    IsEnum,
+    IsNumber,
+    IsOptional,
+    IsString,
+    Max,
+    MaxLength,
+    Min,
+    MinLength,
+} from 'class-validator';
 import { SlotStatus, UserStatus } from '../../../generated/prisma/client';
 
 export class CreatePartnerProfileDto {
@@ -23,7 +34,10 @@ export class CreatePartnerProfileDto {
   @IsString()
   currency?: string;
 
-  @ApiProperty({ example: ['walking', 'movie', 'coffee'], description: 'Service types offered' })
+  @ApiProperty({
+    example: ['walking', 'movie', 'coffee'],
+    description: 'Service types offered',
+  })
   @IsArray()
   @IsString({ each: true })
   serviceTypes: string[];
@@ -189,7 +203,10 @@ export class SearchPartnersDto {
   @Max(50)
   limit?: number;
 
-  @ApiPropertyOptional({ example: 'Nguyen', description: 'Search keyword (name, introduction)' })
+  @ApiPropertyOptional({
+    example: 'Nguyen',
+    description: 'Search keyword (name, introduction)',
+  })
   @IsOptional()
   @IsString()
   q?: string;
@@ -246,9 +263,6 @@ export class SearchPartnersDto {
   @ApiPropertyOptional({ example: 10, description: 'Radius in km' })
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
-  @Min(1)
-  @Max(100)
   radius?: number;
 
   @ApiPropertyOptional({ description: 'Province/City ID from master data' })
@@ -256,7 +270,9 @@ export class SearchPartnersDto {
   @IsString()
   provinceId?: string;
 
-  @ApiPropertyOptional({ description: 'Province/City ID from master data (alias for provinceId)' })
+  @ApiPropertyOptional({
+    description: 'Province/City ID from master data (alias for provinceId)',
+  })
   @IsOptional()
   @IsString()
   cityId?: string;
@@ -266,7 +282,10 @@ export class SearchPartnersDto {
   @IsString()
   districtId?: string;
 
-  @ApiPropertyOptional({ example: 'rating', enum: ['rating', 'price_low', 'price_high', 'distance', 'newest'] })
+  @ApiPropertyOptional({
+    example: 'rating',
+    enum: ['rating', 'price_low', 'price_high', 'distance', 'newest'],
+  })
   @IsOptional()
   @IsString()
   sortBy?: string;

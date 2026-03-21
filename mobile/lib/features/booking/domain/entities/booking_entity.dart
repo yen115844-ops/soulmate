@@ -20,7 +20,7 @@ class BookingEntity extends Equatable {
   final String serviceType;
   final DateTime startTime;
   final DateTime endTime;
-  final String status; // PENDING, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED, REJECTED
+  final String status; // PENDING, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED, DISPUTED
   final int totalAmount;
   final String? note;
   final String? location;
@@ -130,6 +130,7 @@ class BookingEntity extends Equatable {
   bool get isPast {
     return status == 'COMPLETED' ||
         status == 'CANCELLED' ||
+      status == 'DISPUTED' ||
         status == 'REJECTED';
   }
 
@@ -170,6 +171,7 @@ class BookingEntity extends Equatable {
       case 'COMPLETED':
         return 'info';
       case 'CANCELLED':
+      case 'DISPUTED':
       case 'REJECTED':
         return 'error';
       default:
@@ -192,6 +194,7 @@ class BookingEntity extends Equatable {
         return 'Hoàn thành';
       case 'CANCELLED':
         return 'Đã hủy';
+      case 'DISPUTED':
       case 'REJECTED':
         return 'Bị từ chối';
       default:

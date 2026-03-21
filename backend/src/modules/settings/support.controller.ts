@@ -10,7 +10,9 @@ export class SupportController {
 
   @Get()
   @Public()
-  @ApiOperation({ summary: 'Get support info for public support page (no auth)' })
+  @ApiOperation({
+    summary: 'Get support info for public support page (no auth)',
+  })
   @ApiResponse({ status: 200, description: 'Support email, phone, URL' })
   async getSupportInfo() {
     const values = await this.settingsService.getValues([

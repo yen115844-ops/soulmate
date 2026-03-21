@@ -8,6 +8,8 @@ class HomeFilter extends Equatable {
   final int? maxAge;
   final int? minRate;
   final int? maxRate;
+  final double? lat;
+  final double? lng;
   final int? radius;
   final String? provinceId; // Province UUID for API
   final String? districtId; // District UUID for API
@@ -24,6 +26,8 @@ class HomeFilter extends Equatable {
     this.maxAge,
     this.minRate,
     this.maxRate,
+    this.lat,
+    this.lng,
     this.radius,
     this.provinceId,
     this.districtId,
@@ -57,6 +61,8 @@ class HomeFilter extends Equatable {
     int? maxAge,
     int? minRate,
     int? maxRate,
+    double? lat,
+    double? lng,
     int? radius,
     String? provinceId,
     String? districtId,
@@ -73,6 +79,8 @@ class HomeFilter extends Equatable {
       maxAge: maxAge ?? this.maxAge,
       minRate: minRate ?? this.minRate,
       maxRate: maxRate ?? this.maxRate,
+      lat: lat ?? this.lat,
+      lng: lng ?? this.lng,
       radius: radius ?? this.radius,
       provinceId: provinceId ?? this.provinceId,
       districtId: districtId ?? this.districtId,
@@ -102,6 +110,8 @@ class HomeFilter extends Equatable {
       maxAge: clearAgeRange ? null : maxAge,
       minRate: clearPriceRange ? null : minRate,
       maxRate: clearPriceRange ? null : maxRate,
+      lat: clearLocation ? null : lat,
+      lng: clearLocation ? null : lng,
       radius: clearRadius ? null : radius,
       provinceId: (clearCity || clearLocation) ? null : provinceId,
       districtId: (clearDistrict || clearLocation) ? null : districtId,
@@ -116,6 +126,8 @@ class HomeFilter extends Equatable {
   /// Clear all filters except location
   HomeFilter clearAllExceptLocation() {
     return HomeFilter(
+      lat: lat,
+      lng: lng,
       provinceId: provinceId,
       districtId: districtId,
       city: city,
@@ -138,6 +150,8 @@ class HomeFilter extends Equatable {
     maxAge,
     minRate,
     maxRate,
+    lat,
+    lng,
     radius,
     provinceId,
     districtId,

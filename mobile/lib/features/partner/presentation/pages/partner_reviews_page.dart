@@ -432,7 +432,7 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
                   Text(
                     filter['label'] as String,
                     style: AppTypography.labelMedium.copyWith(
-                      color: isSelected ? Colors.white : context.appColors.textPrimary,
+                      color: isSelected ? Colors.white : context.appColors.background,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                     ),
                   ),
@@ -574,7 +574,9 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
           // Sub-ratings if available
           if (review.punctualityRating != null ||
               review.communicationRating != null ||
-              review.personalityRating != null) ...[
+              review.attitudeRating != null ||
+              review.appearanceRating != null ||
+              review.serviceQualityRating != null) ...[
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -584,8 +586,12 @@ class _PartnerReviewsContentState extends State<_PartnerReviewsContent> {
                   _buildSubRatingChip(Ionicons.time_outline, 'Đúng giờ', review.punctualityRating!),
                 if (review.communicationRating != null)
                   _buildSubRatingChip(Ionicons.chatbubbles_outline, 'Giao tiếp', review.communicationRating!),
-                if (review.personalityRating != null)
-                  _buildSubRatingChip(Ionicons.happy_outline, 'Tính cách', review.personalityRating!),
+                if (review.attitudeRating != null)
+                  _buildSubRatingChip(Ionicons.happy_outline, 'Thái độ', review.attitudeRating!),
+                if (review.appearanceRating != null)
+                  _buildSubRatingChip(Ionicons.sparkles_outline, 'Ngoại hình', review.appearanceRating!),
+                if (review.serviceQualityRating != null)
+                  _buildSubRatingChip(Ionicons.star_outline, 'Chất lượng DV', review.serviceQualityRating!),
               ],
             ),
           ],

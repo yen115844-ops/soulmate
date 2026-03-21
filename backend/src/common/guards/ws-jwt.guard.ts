@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable, Logger } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Socket } from 'socket.io';
 
@@ -19,7 +24,7 @@ export class WsJwtGuard implements CanActivate {
       }
 
       const payload = await this.jwtService.verifyAsync(token);
-      
+
       // Attach user info to socket
       (client as any).userId = payload.sub;
       (client as any).user = payload;

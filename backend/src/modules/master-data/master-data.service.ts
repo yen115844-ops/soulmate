@@ -1,20 +1,20 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import {
-    CreateDistrictDto,
-    CreateInterestCategoryDto,
-    CreateInterestDto,
-    CreateLanguageDto,
-    CreateProvinceDto,
-    CreateServiceTypeDto,
-    CreateTalentCategoryDto,
-    CreateTalentDto,
-    UpdateDistrictDto,
-    UpdateInterestDto,
-    UpdateLanguageDto,
-    UpdateProvinceDto,
-    UpdateServiceTypeDto,
-    UpdateTalentDto,
+  CreateDistrictDto,
+  CreateInterestCategoryDto,
+  CreateInterestDto,
+  CreateLanguageDto,
+  CreateProvinceDto,
+  CreateServiceTypeDto,
+  CreateTalentCategoryDto,
+  CreateTalentDto,
+  UpdateDistrictDto,
+  UpdateInterestDto,
+  UpdateLanguageDto,
+  UpdateProvinceDto,
+  UpdateServiceTypeDto,
+  UpdateTalentDto,
 } from './dto';
 
 @Injectable()

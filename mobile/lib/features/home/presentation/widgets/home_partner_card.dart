@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ionicons/ionicons.dart';
 
+import '../../../../core/services/app_image_cache_manager.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
+import '../../../../core/utils/service_type_display_resolver.dart';
 import '../../../../features/favorites/presentation/bloc/favorites_bloc.dart';
 import '../../../../features/favorites/presentation/bloc/favorites_event.dart';
 import '../../../../features/favorites/presentation/bloc/favorites_state.dart';
@@ -18,6 +20,23 @@ class HomePartnerCard extends StatelessWidget {
   final PartnerEntity partner;
 
   const HomePartnerCard({super.key, required this.partner});
+
+  List<String> get _displayServices {
+    if (partner.serviceTypesDetail != null && partner.serviceTypesDetail!.isNotEmpty) {
+      final fromDetail = partner.serviceTypesDetail!
+          .map((item) => (item['name'] ?? item['displayName'] ?? item['label'])?.toString().trim() ?? '')
+          .where((name) => name.isNotEmpty)
+          .toList();
+      if (fromDetail.isNotEmpty) {
+        return fromDetail;
+      }
+    }
+
+    return partner.services
+      .map((service) => ServiceTypeDisplayResolver.resolveName(service))
+        .where((name) => name.trim().isNotEmpty)
+        .toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,23 +80,29 @@ class HomePartnerCard extends StatelessWidget {
                       ? partner.gallery.first
                       : partner.avatarUrl,
                 ),
-                fit: BoxFit.cover,
-                placeholder: (_, __) => Container(
-                  height: 200,
-                  color: context.appColors.border,
-                  child: const Center(
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                ),
-                errorWidget: (_, __, ___) => Container(
-                  height: 200,
-                  color: context.appColors.border,
-                  child: Icon(
-                    Icons.person,
-                    size: 48,
-                    color: context.appColors.textHint,
-                  ),
-                ),
+                cacheManager: AppImageCacheManager.instance,
+              fit: BoxFit.cover,
+                memCacheWidth: 720,
+                memCacheHeight: 960,
+                maxWidthDiskCache: 1080,
+                maxHeightDiskCache: 1440,
+                fadeInDuration: Duration.zero,
+                placeholderFadeInDuration: Duration.zero,
+                useOldImageOnUrlChange: true,
+                placeholder: (_, __) =>
+                    Container(height: 200, color: context.appColors.border),
+                errorWidget: (_, err, object) {
+                  debugPrint('Image load error for partner ${partner.id}: $object');
+                  return Container(
+                    height: 200,
+                    color: context.appColors.border,
+                    child: Icon(
+                      Icons.person,
+                      size: 48,
+                      color: context.appColors.textHint,
+                    ),
+                  );
+                },
               ),
             ),
           ),
@@ -99,9 +124,7 @@ class HomePartnerCard extends StatelessWidget {
                   if (partner.isOnline) const SizedBox(width: 6),
                   const _Badge(
                     text: 'Premium',
-                    gradient: LinearGradient(
-                      colors: [Color(0xFFFFD700), Color(0xFFFF8C00)],
-                    ),
+                    color: Color(0xFFFFD700),
                   ),
                 ],
                 const Spacer(),
@@ -277,11 +300,11 @@ class HomePartnerCard extends StatelessWidget {
           const SizedBox(height: 8),
 
           // Services tags
-          if (partner.services.isNotEmpty)
+          if (_displayServices.isNotEmpty)
             Wrap(
               spacing: 6,
               runSpacing: 6,
-              children: partner.services.take(3).map((service) {
+              children: _displayServices.take(3).map((service) {
                 return Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
@@ -350,14 +373,12 @@ class HomePartnerCard extends StatelessWidget {
 class _Badge extends StatelessWidget {
   final String text;
   final Color? color;
-  final Gradient? gradient;
   final IconData? icon;
   final double? iconSize;
 
   const _Badge({
     required this.text,
     this.color,
-    this.gradient,
     this.icon,
     this.iconSize,
   });
@@ -367,8 +388,7 @@ class _Badge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: gradient == null ? (color ?? AppColors.primary) : null,
-        gradient: gradient,
+        color: color ?? AppColors.primary,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(

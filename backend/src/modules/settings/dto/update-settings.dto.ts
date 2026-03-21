@@ -34,8 +34,16 @@ export class AppSettingItemDto {
 }
 
 export class AppSettingsResponseDto {
-  @ApiProperty({ type: [Object], description: 'List of settings with id, key, value, description' })
-  items!: Array<{ id: string; key: string; value: string; description?: string }>;
+  @ApiProperty({
+    type: [Object],
+    description: 'List of settings with id, key, value, description',
+  })
+  items!: Array<{
+    id: string;
+    key: string;
+    value: string;
+    description?: string;
+  }>;
 
   @ApiProperty({ description: 'Key-value map for easy form binding' })
   values!: Record<string, string>;

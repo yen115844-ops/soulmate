@@ -1,6 +1,13 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcryptjs';
-import { PrismaClient } from '../src/generated/prisma/client';
+import * as fs from 'fs';
+import * as path from 'path';
+import {
+  PrismaClient,
+  type DrinkingHabit,
+  type Education,
+  type SmokingHabit,
+} from '../src/generated/prisma/client';
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,
@@ -15,16 +22,215 @@ const ServiceTypeCode = {
   COFFEE: 'coffee',
   MOVIE: 'movie',
   DINNER: 'dinner',
+  LUNCH: 'lunch',
+  KARAOKE: 'karaoke',
   PARTY: 'party',
   EVENT: 'event',
   SHOPPING: 'shopping',
   GYM: 'gym',
   TRAVEL: 'travel',
+  PICNIC: 'picnic',
+  BOARD_GAME: 'board_game',
+  MUSEUM: 'museum',
   OTHER: 'other',
 } as const;
 
+type CommuneSeed = {
+  code: string;
+  name: string;
+  nameEn: string;
+  sortOrder: number;
+};
+
+type ProvinceSeed = {
+  code: string;
+  name: string;
+  nameEn: string;
+  sortOrder: number;
+  addressKitCode: string;
+};
+
+function mapProvinceCode(addressKitCode: string): string {
+  const code = addressKitCode.trim();
+  if (code === '79') return 'HCM';
+  if (code === '01') return 'HN';
+  if (code === '48') return 'DN';
+  if (code === '31') return 'HP';
+  if (code === '92') return 'CT';
+  return `VN${code}`;
+}
+
+async function fetchAddressKitProvinces(
+  baseUrl: string,
+  effectiveDate: string,
+): Promise<ProvinceSeed[]> {
+  const url = `${baseUrl.replace(/\/$/, '')}/${effectiveDate}/provinces`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`AddressKit provinces request failed: ${response.status}`);
+  }
+
+  const payload = await response.json() as Record<string, unknown>;
+  const list = Array.isArray(payload.provinces)
+    ? payload.provinces
+    : Array.isArray(payload.data)
+      ? payload.data
+      : Array.isArray(payload.result)
+        ? payload.result
+        : [];
+
+  const provinces = list
+    .map((item, index) => {
+      const row = item as Record<string, unknown>;
+      const rawCode = row.code ?? row.id;
+      const rawName = row.name ?? row.provinceName;
+      const rawNameEn = row.englishName ?? row.nameEn;
+
+      if (typeof rawCode !== 'string' || typeof rawName !== 'string') {
+        return null;
+      }
+
+      return {
+        code: mapProvinceCode(rawCode),
+        name: rawName.trim(),
+        nameEn: typeof rawNameEn === 'string' && rawNameEn.trim().length > 0
+          ? rawNameEn.trim()
+          : rawName.trim(),
+        sortOrder: index + 1,
+        addressKitCode: rawCode.trim(),
+      } as ProvinceSeed;
+    })
+    .filter((item): item is ProvinceSeed => item !== null);
+
+  if (provinces.length === 0) {
+    throw new Error('AddressKit provinces payload has no valid rows');
+  }
+
+  return provinces;
+}
+
+async function fetchAddressKitCommunes(
+  baseUrl: string,
+  effectiveDate: string,
+  provinceId: string,
+  fallback: CommuneSeed[],
+): Promise<{ communes: CommuneSeed[]; source: 'api' | 'fallback' }> {
+  try {
+    const url = `${baseUrl.replace(/\/$/, '')}/${effectiveDate}/provinces/${provinceId}/communes`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      return { communes: fallback, source: 'fallback' };
+    }
+
+    const payload = await response.json() as Record<string, unknown>;
+    const list = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload.communes)
+        ? payload.communes
+      : Array.isArray(payload.data)
+        ? payload.data
+        : Array.isArray(payload.result)
+          ? payload.result
+          : [];
+
+    if (!Array.isArray(list) || list.length === 0) {
+      return { communes: fallback, source: 'fallback' };
+    }
+
+    const communes = list
+      .map((item, index) => {
+        const row = item as Record<string, unknown>;
+        const rawCode = row.id ?? row.code ?? row.communeID ?? row.communeId ?? row.codeName;
+        const rawName = row.name ?? row.communeName ?? row.fullName;
+        if (typeof rawName !== 'string' || rawName.trim().length === 0) {
+          return null;
+        }
+
+        const normalizedCode = String(rawCode ?? `C${index + 1}`)
+          .replace(/[^A-Za-z0-9]/g, '')
+          .slice(0, 12)
+          .toUpperCase();
+
+        return {
+          code: normalizedCode.length > 0 ? normalizedCode : `C${index + 1}`,
+          name: rawName.trim(),
+          nameEn: rawName.trim(),
+          sortOrder: index + 1,
+        } as CommuneSeed;
+      })
+      .filter((item): item is CommuneSeed => item !== null);
+
+    if (communes.length === 0) {
+      return { communes: fallback, source: 'fallback' };
+    }
+
+    return { communes, source: 'api' };
+  } catch {
+    return { communes: fallback, source: 'fallback' };
+  }
+}
+
+async function deleteAllData() {
+  console.log('🗑️  Deleting all existing data...');
+
+  // Xoá theo thứ tự: bảng con trước, bảng cha sau (tránh lỗi foreign key)
+  await prisma.reviewResponse.deleteMany();
+  await prisma.review.deleteMany();
+  await prisma.bookingStatusHistory.deleteMany();
+  await prisma.locationLog.deleteMany();
+  await prisma.sosEvent.deleteMany();
+  await prisma.booking.deleteMany();
+  await prisma.message.deleteMany();
+  await prisma.conversationParticipant.deleteMany();
+  await prisma.conversation.deleteMany();
+  await prisma.transaction.deleteMany();
+  await prisma.escrowHolding.deleteMany();
+  await prisma.creditPurchase.deleteMany();
+  await prisma.subscription.deleteMany();
+  await prisma.favorite.deleteMany();
+  await prisma.notification.deleteMany();
+  await prisma.deviceToken.deleteMany();
+  await prisma.refreshToken.deleteMany();
+  await prisma.emergencyContact.deleteMany();
+  await prisma.userBlacklist.deleteMany();
+  await prisma.systemBlacklist.deleteMany();
+  await prisma.report.deleteMany();
+  await prisma.otpCode.deleteMany();
+  await prisma.availabilitySlot.deleteMany();
+  await prisma.partnerProfile.deleteMany();
+  await prisma.kycVerification.deleteMany();
+  await prisma.wallet.deleteMany();
+  await prisma.userSettings.deleteMany();
+  await prisma.profile.deleteMany();
+  await prisma.user.deleteMany();
+  await prisma.interest.deleteMany();
+  await prisma.interestCategory.deleteMany();
+  await prisma.talent.deleteMany();
+  await prisma.talentCategory.deleteMany();
+  await prisma.language.deleteMany();
+  await prisma.district.deleteMany();
+  await prisma.province.deleteMany();
+  await prisma.serviceType.deleteMany();
+  await prisma.appSetting.deleteMany();
+  await prisma.subscriptionPlan.deleteMany();
+  await prisma.creditPackage.deleteMany();
+
+  console.log('✅ All existing data deleted!');
+}
+
 async function main() {
   console.log('Start seeding...');
+
+  // Xoá toàn bộ dữ liệu cũ trước khi seed dữ liệu mới
+  await deleteAllData();
+
+  const getRealAvatarUrl = (seed: number, gender: 'men' | 'women') =>
+    `https://randomuser.me/api/portraits/${gender}/${Math.abs(seed) % 100}.jpg`;
+  const getRealPhotoGallery = (seed: number, gender: 'men' | 'women') => [
+    getRealAvatarUrl(seed, gender),
+    getRealAvatarUrl(seed + 17, gender),
+    getRealAvatarUrl(seed + 43, gender),
+  ];
 
   // Seed Service Types - icon dùng emoji để đồng bộ giữa CMS và mobile
   const serviceTypes = [
@@ -32,11 +238,16 @@ async function main() {
     { code: ServiceTypeCode.COFFEE, name: 'Coffee', nameVi: 'Uống cà phê', description: 'Đi uống cà phê cùng partner', icon: '☕', sortOrder: 2 },
     { code: ServiceTypeCode.MOVIE, name: 'Movie', nameVi: 'Xem phim', description: 'Đi xem phim cùng partner', icon: '🎬', sortOrder: 3 },
     { code: ServiceTypeCode.DINNER, name: 'Dinner', nameVi: 'Ăn tối', description: 'Đi ăn tối cùng partner', icon: '🍽️', sortOrder: 4 },
-    { code: ServiceTypeCode.PARTY, name: 'Party', nameVi: 'Tiệc tùng', description: 'Tham gia tiệc cùng partner', icon: '🎉', sortOrder: 5 },
-    { code: ServiceTypeCode.EVENT, name: 'Event', nameVi: 'Sự kiện', description: 'Tham gia sự kiện cùng partner', icon: '📅', sortOrder: 6 },
-    { code: ServiceTypeCode.SHOPPING, name: 'Shopping', nameVi: 'Mua sắm', description: 'Đi mua sắm cùng partner', icon: '🛍️', sortOrder: 7 },
-    { code: ServiceTypeCode.GYM, name: 'Gym', nameVi: 'Tập gym', description: 'Đi tập gym cùng partner', icon: '💪', sortOrder: 8 },
-    { code: ServiceTypeCode.TRAVEL, name: 'Travel', nameVi: 'Du lịch', description: 'Du lịch cùng partner', icon: '✈️', sortOrder: 9 },
+    { code: ServiceTypeCode.LUNCH, name: 'Lunch', nameVi: 'Ăn trưa', description: 'Đi ăn trưa cùng partner', icon: '🥗', sortOrder: 5 },
+    { code: ServiceTypeCode.KARAOKE, name: 'Karaoke', nameVi: 'Hát karaoke', description: 'Đi hát karaoke cùng partner', icon: '🎤', sortOrder: 6 },
+    { code: ServiceTypeCode.PARTY, name: 'Party', nameVi: 'Tiệc tùng', description: 'Tham gia tiệc cùng partner', icon: '🎉', sortOrder: 7 },
+    { code: ServiceTypeCode.EVENT, name: 'Event', nameVi: 'Sự kiện', description: 'Tham gia sự kiện cùng partner', icon: '📅', sortOrder: 8 },
+    { code: ServiceTypeCode.SHOPPING, name: 'Shopping', nameVi: 'Mua sắm', description: 'Đi mua sắm cùng partner', icon: '🛍️', sortOrder: 9 },
+    { code: ServiceTypeCode.GYM, name: 'Gym', nameVi: 'Tập gym', description: 'Đi tập gym cùng partner', icon: '💪', sortOrder: 10 },
+    { code: ServiceTypeCode.TRAVEL, name: 'Travel', nameVi: 'Du lịch', description: 'Du lịch cùng partner', icon: '✈️', sortOrder: 11 },
+    { code: ServiceTypeCode.PICNIC, name: 'Picnic', nameVi: 'Dã ngoại', description: 'Đi dã ngoại cùng partner', icon: '🧺', sortOrder: 12 },
+    { code: ServiceTypeCode.BOARD_GAME, name: 'Board Game', nameVi: 'Chơi board game', description: 'Đi chơi board game cùng partner', icon: '🎲', sortOrder: 13 },
+    { code: ServiceTypeCode.MUSEUM, name: 'Museum', nameVi: 'Tham quan bảo tàng', description: 'Đi bảo tàng cùng partner', icon: '🏛️', sortOrder: 14 },
     { code: ServiceTypeCode.OTHER, name: 'Other', nameVi: 'Khác', description: 'Hoạt động khác', icon: '➕', sortOrder: 99 },
   ];
 
@@ -61,6 +272,8 @@ async function main() {
     { key: 'default_currency', value: 'VND', description: 'Default currency code' },
     { key: 'default_language', value: 'vi', description: 'Default language code' },
     { key: 'timezone', value: 'Asia/Ho_Chi_Minh', description: 'Default timezone' },
+    { key: 'addresskit_api_base_url', value: 'https://production.cas.so/address-kit', description: 'AddressKit API base URL for Vietnam administrative units' },
+    { key: 'addresskit_effective_date', value: 'latest', description: 'AddressKit effectiveDate. Use latest or yyyy-mm-dd' },
     { key: 'support_hotline', value: '1900-xxxx', description: 'Support hotline number' },
     // Booking
     { key: 'min_booking_hours', value: '1', description: 'Minimum booking hours' },
@@ -70,6 +283,7 @@ async function main() {
     { key: 'service_fee_percent', value: '15', description: 'Platform service fee percentage' },
     { key: 'partner_commission_percent', value: '85', description: 'Partner commission percentage' },
     { key: 'auto_confirm_booking', value: 'false', description: 'Auto-confirm bookings without partner approval' },
+    { key: 'require_premium_for_booking', value: 'true', description: 'Require premium subscription to create booking. If false, booking is free for all users.' },
     { key: 'allow_instant_booking', value: 'true', description: 'Allow instant booking' },
     { key: 'platform_fee_rate', value: '0.15', description: 'Platform fee rate (15%)' },
     { key: 'escrow_release_delay_hours', value: '24', description: 'Hours to wait before releasing escrow' },
@@ -86,7 +300,11 @@ async function main() {
     { key: 'require_email_verification', value: 'true', description: 'Require email verification' },
     { key: 'require_phone_verification', value: 'false', description: 'Require phone verification' },
     { key: 'require_kyc_for_partner', value: 'true', description: 'Require KYC for partners' },
+    { key: 'require_approval_for_partner', value: 'false', description: 'Require admin approval when user registers as partner. If false, user becomes partner immediately.' },
     { key: 'max_login_attempts', value: '5', description: 'Max failed login attempts before lock' },
+    { key: 'login_lock_minutes', value: '15', description: 'Account lock duration in minutes after too many failed logins' },
+    { key: 'otp_expiry_minutes', value: '5', description: 'OTP expiry time in minutes' },
+    { key: 'otp_max_attempts', value: '5', description: 'Max OTP verification attempts before invalidation' },
     { key: 'session_timeout', value: '30', description: 'Token expiry in days' },
     { key: 'password_min_length', value: '8', description: 'Minimum password length' },
     { key: 'enforce_strong_password', value: 'false', description: 'Enforce strong password policy (only min length 8)' },
@@ -102,94 +320,99 @@ async function main() {
 
   console.log(`Seeded ${appSettings.length} app settings`);
 
-  // Seed Master Data - Provinces (Vietnam)
-  const provinces = [
-    { code: 'HCM', name: 'TP. Hồ Chí Minh', nameEn: 'Ho Chi Minh City', sortOrder: 1 },
-    { code: 'HN', name: 'Hà Nội', nameEn: 'Hanoi', sortOrder: 2 },
-    { code: 'DN', name: 'Đà Nẵng', nameEn: 'Da Nang', sortOrder: 3 },
-    { code: 'HP', name: 'Hải Phòng', nameEn: 'Hai Phong', sortOrder: 4 },
-    { code: 'CT', name: 'Cần Thơ', nameEn: 'Can Tho', sortOrder: 5 },
-    { code: 'BD', name: 'Bình Dương', nameEn: 'Binh Duong', sortOrder: 6 },
-    { code: 'DNG', name: 'Đồng Nai', nameEn: 'Dong Nai', sortOrder: 7 },
-    { code: 'KH', name: 'Khánh Hòa', nameEn: 'Khanh Hoa', sortOrder: 8 },
-    { code: 'TTH', name: 'Thừa Thiên Huế', nameEn: 'Thua Thien Hue', sortOrder: 9 },
-    { code: 'QN', name: 'Quảng Ninh', nameEn: 'Quang Ninh', sortOrder: 10 },
+  // Seed Master Data - Provinces + Communes từ AddressKit
+  const addressKitBaseUrl = process.env.ADDRESSKIT_API_BASE_URL ?? 'https://production.cas.so/address-kit';
+  const addressKitEffectiveDate = process.env.ADDRESSKIT_EFFECTIVE_DATE ?? 'latest';
+
+  const provincesFallback: ProvinceSeed[] = [
+    { code: 'HN', name: 'Thành phố Hà Nội', nameEn: 'Ha Noi', sortOrder: 1, addressKitCode: '01' },
+    { code: 'HCM', name: 'Thành phố Hồ Chí Minh', nameEn: 'Ho Chi Minh City', sortOrder: 2, addressKitCode: '79' },
+    { code: 'DN', name: 'Thành phố Đà Nẵng', nameEn: 'Da Nang', sortOrder: 3, addressKitCode: '48' },
+    { code: 'HP', name: 'Thành phố Hải Phòng', nameEn: 'Hai Phong', sortOrder: 4, addressKitCode: '31' },
+    { code: 'CT', name: 'Thành phố Cần Thơ', nameEn: 'Can Tho', sortOrder: 5, addressKitCode: '92' },
   ];
+
+  let provinces: ProvinceSeed[] = provincesFallback;
+  let provinceSource: 'api' | 'fallback' = 'fallback';
+
+  try {
+    provinces = await fetchAddressKitProvinces(addressKitBaseUrl, addressKitEffectiveDate);
+    provinceSource = 'api';
+  } catch {
+    provinces = provincesFallback;
+    provinceSource = 'fallback';
+  }
 
   for (const province of provinces) {
     await prisma.province.upsert({
       where: { code: province.code },
-      update: province,
-      create: province,
+      update: {
+        name: province.name,
+        nameEn: province.nameEn,
+        sortOrder: province.sortOrder,
+        isActive: true,
+      },
+      create: {
+        code: province.code,
+        name: province.name,
+        nameEn: province.nameEn,
+        sortOrder: province.sortOrder,
+      },
     });
   }
-  console.log(`Seeded ${provinces.length} provinces`);
+  console.log(`Seeded ${provinces.length} provinces (${provinceSource})`);
 
-  // Seed Districts for HCM
-  const hcmProvince = await prisma.province.findUnique({ where: { code: 'HCM' } });
-  if (hcmProvince) {
-    const hcmDistricts = [
-      { code: 'Q1', name: 'Quận 1', nameEn: 'District 1', sortOrder: 1 },
-      { code: 'Q2', name: 'Quận 2 (TP Thủ Đức)', nameEn: 'District 2', sortOrder: 2 },
-      { code: 'Q3', name: 'Quận 3', nameEn: 'District 3', sortOrder: 3 },
-      { code: 'Q4', name: 'Quận 4', nameEn: 'District 4', sortOrder: 4 },
-      { code: 'Q5', name: 'Quận 5', nameEn: 'District 5', sortOrder: 5 },
-      { code: 'Q6', name: 'Quận 6', nameEn: 'District 6', sortOrder: 6 },
-      { code: 'Q7', name: 'Quận 7', nameEn: 'District 7', sortOrder: 7 },
-      { code: 'Q8', name: 'Quận 8', nameEn: 'District 8', sortOrder: 8 },
-      { code: 'Q9', name: 'Quận 9 (TP Thủ Đức)', nameEn: 'District 9', sortOrder: 9 },
-      { code: 'Q10', name: 'Quận 10', nameEn: 'District 10', sortOrder: 10 },
-      { code: 'Q11', name: 'Quận 11', nameEn: 'District 11', sortOrder: 11 },
-      { code: 'Q12', name: 'Quận 12', nameEn: 'District 12', sortOrder: 12 },
-      { code: 'BT', name: 'Quận Bình Thạnh', nameEn: 'Binh Thanh District', sortOrder: 13 },
-      { code: 'GV', name: 'Quận Gò Vấp', nameEn: 'Go Vap District', sortOrder: 14 },
-      { code: 'PN', name: 'Quận Phú Nhuận', nameEn: 'Phu Nhuan District', sortOrder: 15 },
-      { code: 'TB', name: 'Quận Tân Bình', nameEn: 'Tan Binh District', sortOrder: 16 },
-      { code: 'TP', name: 'Quận Tân Phú', nameEn: 'Tan Phu District', sortOrder: 17 },
-      { code: 'TD', name: 'TP Thủ Đức', nameEn: 'Thu Duc City', sortOrder: 18 },
-    ];
+  const defaultCommuneFallback: CommuneSeed[] = [
+    { code: 'C001', name: 'Phường Trung tâm', nameEn: 'Central Ward', sortOrder: 1 },
+    { code: 'C002', name: 'Xã Trung tâm', nameEn: 'Central Commune', sortOrder: 2 },
+  ];
 
-    for (const district of hcmDistricts) {
+  let totalCommunesSeeded = 0;
+  for (const province of provinces) {
+    const provinceRow = await prisma.province.findUnique({ where: { code: province.code } });
+    if (!provinceRow) {
+      continue;
+    }
+
+    const { communes } = await fetchAddressKitCommunes(
+      addressKitBaseUrl,
+      addressKitEffectiveDate,
+      province.addressKitCode,
+      defaultCommuneFallback,
+    );
+
+    for (const commune of communes) {
       const existingDistrict = await prisma.district.findFirst({
-        where: { code: district.code, provinceId: hcmProvince.id },
+        where: { code: commune.code, provinceId: provinceRow.id },
       });
-      if (!existingDistrict) {
+
+      if (existingDistrict) {
+        await prisma.district.update({
+          where: { id: existingDistrict.id },
+          data: {
+            name: commune.name,
+            nameEn: commune.nameEn,
+            sortOrder: commune.sortOrder,
+            isActive: true,
+          },
+        });
+      } else {
         await prisma.district.create({
-          data: { ...district, provinceId: hcmProvince.id },
+          data: {
+            code: commune.code,
+            name: commune.name,
+            nameEn: commune.nameEn,
+            sortOrder: commune.sortOrder,
+            provinceId: provinceRow.id,
+          },
         });
       }
     }
-    console.log(`Seeded ${hcmDistricts.length} districts for HCM`);
+
+    totalCommunesSeeded += communes.length;
   }
 
-  // Seed Districts for HN
-  const hnProvince = await prisma.province.findUnique({ where: { code: 'HN' } });
-  if (hnProvince) {
-    const hnDistricts = [
-      { code: 'HK', name: 'Quận Hoàn Kiếm', nameEn: 'Hoan Kiem District', sortOrder: 1 },
-      { code: 'BD', name: 'Quận Ba Đình', nameEn: 'Ba Dinh District', sortOrder: 2 },
-      { code: 'DD', name: 'Quận Đống Đa', nameEn: 'Dong Da District', sortOrder: 3 },
-      { code: 'TX', name: 'Quận Thanh Xuân', nameEn: 'Thanh Xuan District', sortOrder: 4 },
-      { code: 'CG', name: 'Quận Cầu Giấy', nameEn: 'Cau Giay District', sortOrder: 5 },
-      { code: 'HM', name: 'Quận Hai Bà Trưng', nameEn: 'Hai Ba Trung District', sortOrder: 6 },
-      { code: 'LB', name: 'Quận Long Biên', nameEn: 'Long Bien District', sortOrder: 7 },
-      { code: 'TH', name: 'Quận Tây Hồ', nameEn: 'Tay Ho District', sortOrder: 8 },
-      { code: 'HE', name: 'Quận Hoàng Mai', nameEn: 'Hoang Mai District', sortOrder: 9 },
-      { code: 'NT', name: 'Quận Nam Từ Liêm', nameEn: 'Nam Tu Liem District', sortOrder: 10 },
-    ];
-
-    for (const district of hnDistricts) {
-      const existingDistrict = await prisma.district.findFirst({
-        where: { code: district.code, provinceId: hnProvince.id },
-      });
-      if (!existingDistrict) {
-        await prisma.district.create({
-          data: { ...district, provinceId: hnProvince.id },
-        });
-      }
-    }
-    console.log(`Seeded ${hnDistricts.length} districts for HN`);
-  }
+  console.log(`Seeded ${totalCommunesSeeded} ward/commune records across ${provinces.length} provinces`);
 
   // Seed Interest Categories
   const interestCategories = [
@@ -379,6 +602,9 @@ async function main() {
         dateOfBirth: new Date('1995-05-15'),
         heightCm: 175,
         weightKg: 70,
+        education: 'BACHELOR',
+        smokingHabit: 'NEVER',
+        drinkingHabit: 'SOCIALLY',
         city: 'TP. Hồ Chí Minh',
         district: 'Quận 1',
         languages: ['Tiếng Việt', 'English'],
@@ -398,6 +624,9 @@ async function main() {
         dateOfBirth: new Date('1998-08-20'),
         heightCm: 165,
         weightKg: 52,
+        education: 'HIGH_SCHOOL',
+        smokingHabit: 'NEVER',
+        drinkingHabit: 'NEVER',
         city: 'TP. Hồ Chí Minh',
         district: 'Quận 3',
         languages: ['Tiếng Việt', 'English', 'Tiếng Hàn'],
@@ -417,6 +646,9 @@ async function main() {
         dateOfBirth: new Date('1992-03-10'),
         heightCm: 180,
         weightKg: 78,
+        education: 'MASTER',
+        smokingHabit: 'NEVER',
+        drinkingHabit: 'REGULARLY',
         city: 'Hà Nội',
         district: 'Quận Cầu Giấy',
         languages: ['Tiếng Việt', 'English'],
@@ -436,6 +668,9 @@ async function main() {
         dateOfBirth: new Date('1997-11-25'),
         heightCm: 162,
         weightKg: 48,
+        education: 'BACHELOR',
+        smokingHabit: 'NEVER',
+        drinkingHabit: 'SOCIALLY',
         city: 'Đà Nẵng',
         district: '',
         languages: ['Tiếng Việt', 'English', 'Tiếng Nhật'],
@@ -455,6 +690,9 @@ async function main() {
         dateOfBirth: new Date('1990-07-08'),
         heightCm: 172,
         weightKg: 68,
+        education: 'VOCATIONAL',
+        smokingHabit: 'QUIT',
+        drinkingHabit: 'NEVER',
         city: 'TP. Hồ Chí Minh',
         district: 'Quận Bình Thạnh',
         languages: ['Tiếng Việt', 'English'],
@@ -464,12 +702,58 @@ async function main() {
     },
   ];
 
-  for (const userData of sampleUsers) {
+  for (const [index, userData] of sampleUsers.entries()) {
+    const avatarGender: 'men' | 'women' = userData.profile.gender === 'FEMALE' ? 'women' : 'men';
+    const avatarUrl = getRealAvatarUrl(index + 1, avatarGender);
+    const photos = getRealPhotoGallery(index + 1, avatarGender);
+
     await prisma.user.upsert({
       where: { email: userData.email },
       update: {
         passwordHash: userPassword,
         status: 'ACTIVE',
+        profile: {
+          upsert: {
+            create: {
+              fullName: userData.profile.fullName,
+              displayName: userData.profile.displayName,
+              bio: userData.profile.bio,
+              gender: userData.profile.gender,
+              dateOfBirth: userData.profile.dateOfBirth,
+              heightCm: userData.profile.heightCm,
+              weightKg: userData.profile.weightKg,
+              education: userData.profile.education as Education,
+              smokingHabit: userData.profile.smokingHabit as SmokingHabit,
+              drinkingHabit: userData.profile.drinkingHabit as DrinkingHabit,
+              city: userData.profile.city,
+              district: userData.profile.district,
+              languages: userData.profile.languages,
+              interests: userData.profile.interests,
+              talents: userData.profile.talents,
+              avatarUrl,
+              photos,
+            },
+            update: {
+              fullName: userData.profile.fullName,
+              displayName: userData.profile.displayName,
+              bio: userData.profile.bio,
+              gender: userData.profile.gender,
+              dateOfBirth: userData.profile.dateOfBirth,
+              heightCm: userData.profile.heightCm,
+              weightKg: userData.profile.weightKg,
+              education: userData.profile.education as Education,
+              smokingHabit: userData.profile.smokingHabit as SmokingHabit,
+              drinkingHabit: userData.profile.drinkingHabit as DrinkingHabit,
+              city: userData.profile.city,
+              district: userData.profile.district,
+              languages: userData.profile.languages,
+              interests: userData.profile.interests,
+              talents: userData.profile.talents,
+              avatarUrl,
+              photos,
+            },
+          },
+        },
       },
       create: {
         email: userData.email,
@@ -487,12 +771,16 @@ async function main() {
             dateOfBirth: userData.profile.dateOfBirth,
             heightCm: userData.profile.heightCm,
             weightKg: userData.profile.weightKg,
+            education: userData.profile.education as Education,
+            smokingHabit: userData.profile.smokingHabit as SmokingHabit,
+            drinkingHabit: userData.profile.drinkingHabit as DrinkingHabit,
             city: userData.profile.city,
             district: userData.profile.district,
             languages: userData.profile.languages,
             interests: userData.profile.interests,
             talents: userData.profile.talents,
-            photos: [],
+            avatarUrl,
+            photos,
           },
         },
         settings: {
@@ -519,6 +807,9 @@ async function main() {
         dateOfBirth: new Date('1996-02-14'),
         heightCm: 168,
         weightKg: 55,
+        education: 'BACHELOR',
+        smokingHabit: 'NEVER',
+        drinkingHabit: 'SOCIALLY',
         city: 'TP. Hồ Chí Minh',
         district: 'Quận 1',
         languages: ['Tiếng Việt', 'English', 'Tiếng Trung'],
@@ -548,6 +839,9 @@ async function main() {
         dateOfBirth: new Date('1994-06-20'),
         heightCm: 182,
         weightKg: 82,
+        education: 'HIGH_SCHOOL',
+        smokingHabit: 'NEVER',
+        drinkingHabit: 'SOCIALLY',
         city: 'TP. Hồ Chí Minh',
         district: 'Quận 7',
         languages: ['Tiếng Việt', 'English'],
@@ -577,6 +871,9 @@ async function main() {
         dateOfBirth: new Date('2000-12-05'),
         heightCm: 165,
         weightKg: 50,
+        education: 'BACHELOR',
+        smokingHabit: 'NEVER',
+        drinkingHabit: 'NEVER',
         city: 'TP. Hồ Chí Minh',
         district: 'Quận 10',
         languages: ['Tiếng Việt', 'English', 'Tiếng Hàn'],
@@ -606,6 +903,9 @@ async function main() {
         dateOfBirth: new Date('1993-09-18'),
         heightCm: 175,
         weightKg: 70,
+        education: 'VOCATIONAL',
+        smokingHabit: 'QUIT',
+        drinkingHabit: 'SOCIALLY',
         city: 'Hà Nội',
         district: 'Quận Hoàn Kiếm',
         languages: ['Tiếng Việt', 'English'],
@@ -635,6 +935,9 @@ async function main() {
         dateOfBirth: new Date('1997-04-30'),
         heightCm: 170,
         weightKg: 54,
+        education: 'HIGH_SCHOOL',
+        smokingHabit: 'SOMETIMES',
+        drinkingHabit: 'REGULARLY',
         city: 'TP. Hồ Chí Minh',
         district: 'Quận 2 (TP Thủ Đức)',
         languages: ['Tiếng Việt', 'English'],
@@ -664,6 +967,9 @@ async function main() {
         dateOfBirth: new Date('1991-01-12'),
         heightCm: 170,
         weightKg: 65,
+        education: 'MASTER',
+        smokingHabit: 'NEVER',
+        drinkingHabit: 'SOCIALLY',
         city: 'Đà Nẵng',
         district: '',
         languages: ['Tiếng Việt', 'English', 'Tiếng Nhật'],
@@ -693,6 +999,9 @@ async function main() {
         dateOfBirth: new Date('1998-07-22'),
         heightCm: 172,
         weightKg: 52,
+        education: 'BACHELOR',
+        smokingHabit: 'NEVER',
+        drinkingHabit: 'SOCIALLY',
         city: 'TP. Hồ Chí Minh',
         district: 'Quận 3',
         languages: ['Tiếng Việt', 'English', 'Tiếng Hàn'],
@@ -722,6 +1031,9 @@ async function main() {
         dateOfBirth: new Date('1989-11-08'),
         heightCm: 173,
         weightKg: 72,
+        education: 'BACHELOR',
+        smokingHabit: 'QUIT',
+        drinkingHabit: 'SOCIALLY',
         city: 'Hà Nội',
         district: 'Quận Ba Đình',
         languages: ['Tiếng Việt', 'English', 'Tiếng Pháp'],
@@ -741,7 +1053,11 @@ async function main() {
     },
   ];
 
-  for (const partnerData of samplePartners) {
+  for (const [index, partnerData] of samplePartners.entries()) {
+    const avatarGender: 'men' | 'women' = partnerData.profile.gender === 'FEMALE' ? 'women' : 'men';
+    const avatarUrl = getRealAvatarUrl(index + 101, avatarGender);
+    const photos = getRealPhotoGallery(index + 101, avatarGender);
+
     const existingPartner = await prisma.user.findUnique({
       where: { email: partnerData.email },
     });
@@ -759,18 +1075,21 @@ async function main() {
             create: {
               fullName: partnerData.profile.fullName,
               displayName: partnerData.profile.displayName,
-              avatarUrl: partnerData.profile.avatarUrl,
+              avatarUrl,
               bio: partnerData.profile.bio,
               gender: partnerData.profile.gender,
               dateOfBirth: partnerData.profile.dateOfBirth,
               heightCm: partnerData.profile.heightCm,
               weightKg: partnerData.profile.weightKg,
+              education: partnerData.profile.education as Education,
+              smokingHabit: partnerData.profile.smokingHabit as SmokingHabit,
+              drinkingHabit: partnerData.profile.drinkingHabit as DrinkingHabit,
               city: partnerData.profile.city,
               district: partnerData.profile.district,
               languages: partnerData.profile.languages,
               interests: partnerData.profile.interests,
               talents: partnerData.profile.talents,
-              photos: [],
+              photos,
             },
           },
           partnerProfile: {
@@ -802,37 +1121,53 @@ async function main() {
         data: {
           passwordHash: partnerPassword,
           status: 'ACTIVE',
+          profile: {
+            upsert: {
+              create: {
+                fullName: partnerData.profile.fullName,
+                displayName: partnerData.profile.displayName,
+                avatarUrl,
+                bio: partnerData.profile.bio,
+                gender: partnerData.profile.gender,
+                dateOfBirth: partnerData.profile.dateOfBirth,
+                heightCm: partnerData.profile.heightCm,
+                weightKg: partnerData.profile.weightKg,
+                education: partnerData.profile.education as Education,
+                smokingHabit: partnerData.profile.smokingHabit as SmokingHabit,
+                drinkingHabit: partnerData.profile.drinkingHabit as DrinkingHabit,
+                city: partnerData.profile.city,
+                district: partnerData.profile.district,
+                languages: partnerData.profile.languages,
+                interests: partnerData.profile.interests,
+                talents: partnerData.profile.talents,
+                photos,
+              },
+              update: {
+                fullName: partnerData.profile.fullName,
+                displayName: partnerData.profile.displayName,
+                avatarUrl,
+                bio: partnerData.profile.bio,
+                gender: partnerData.profile.gender,
+                dateOfBirth: partnerData.profile.dateOfBirth,
+                heightCm: partnerData.profile.heightCm,
+                weightKg: partnerData.profile.weightKg,
+                education: partnerData.profile.education as Education,
+                smokingHabit: partnerData.profile.smokingHabit as SmokingHabit,
+                drinkingHabit: partnerData.profile.drinkingHabit as DrinkingHabit,
+                city: partnerData.profile.city,
+                district: partnerData.profile.district,
+                languages: partnerData.profile.languages,
+                interests: partnerData.profile.interests,
+                talents: partnerData.profile.talents,
+                photos,
+              },
+            },
+          },
         },
       });
     }
   }
   console.log(`Seeded ${samplePartners.length} sample partners`);
-
-  // Post-process: update all profiles with provinceId/districtId based on city/district names
-  const allProvinces = await prisma.province.findMany();
-  const allDistricts = await prisma.district.findMany();
-  const allProfiles = await prisma.profile.findMany();
-
-  let updatedCount = 0;
-  for (const profile of allProfiles) {
-    if (profile.city && !profile.provinceId) {
-      const province = allProvinces.find(p => p.name === profile.city);
-      if (province) {
-        const district = profile.district
-          ? allDistricts.find(d => d.name === profile.district && d.provinceId === province.id)
-          : null;
-        await prisma.profile.update({
-          where: { id: profile.id },
-          data: {
-            provinceId: province.id,
-            districtId: district?.id || null,
-          },
-        });
-        updatedCount++;
-      }
-    }
-  }
-  console.log(`Updated ${updatedCount} profiles with provinceId/districtId`);
 
   // Seed Subscription Plans
   // Pricing Strategy:
@@ -1011,7 +1346,389 @@ async function main() {
   }
   console.log(`Seeded ${creditPackages.length} credit packages`);
 
-  console.log('Seeding completed!');
+    // =================== SEED PARTNERS + BOOKINGS ===================
+    // Load real images from image_links.txt (4 photos per partner)
+    const imageLinksPath = path.join(__dirname, 'image_links.txt');
+    const allImageLinks = fs.readFileSync(imageLinksPath, 'utf-8')
+      .split('\n')
+      .map(l => l.trim())
+      .filter(l => l.length > 0);
+    const PHOTOS_PER_PARTNER = 4;
+    const TOTAL_PARTNERS = Math.floor(allImageLinks.length / PHOTOS_PER_PARTNER);
+    console.log(`🚀 Starting to seed ${TOTAL_PARTNERS} partners (from ${allImageLinks.length} images, ${PHOTOS_PER_PARTNER} per partner)...`);
+
+    // Vietnamese names
+    const firstNames = ['Nguyễn', 'Trần', 'Lê', 'Phạm', 'Hoàng', 'Võ', 'Đỗ', 'Ngo', 'Vương', 'Tạ', 'Huỳnh', 'Đinh', 'Bùi', 'Tôn', 'Mạc', 'Vũ'];
+    const lastNames = ['Minh', 'Anh', 'Hà', 'Huy', 'Tuấn', 'Linh', 'Ngân', 'Khoa', 'An', 'Duyên', 'Bảo', 'Thắng', 'Mai', 'Sơn', 'Long', 'Hải', 'Nam', 'Tâm', 'Hạnh', 'Vy'];
+    const hcmDistricts = ['Phường Xuân Hòa', 'Phường Bến Thành', 'Phường Bàn Cờ', 'Phường Diên Hồng', 'Phường Gia Định', 'Phường Cầu Ông Lãnh', 'Phường Tân Hưng', 'Phường Tân Mỹ', 'Phường Thủ Đức', 'Phường Tân Sơn Nhất'];
+    const dnDistricts = ['Phường Hải Châu', 'Phường Thanh Khê', 'Phường Sơn Trà', 'Phường Ngũ Hành Sơn', 'Phường Liên Chiểu', 'Phường Cẩm Lệ', 'Xã Hòa Vang'];
+    const partnerSeedCity = 'Đà Nẵng';
+    const jobTitles = ['Hướng dẫn viên du lịch', 'Huấn luyện viên gym', 'Nhà thiết kế', 'Lập trình viên', 'Giáo viên', 'Thợ ảnh', 'Bartender', 'Blogger', 'Stylist'];
+    const hobbies = ['du lịch', 'thể thao', 'âm nhạc', 'ẩm thực', 'công nghệ'];
+    const allServiceTypes = ['walking', 'coffee', 'movie', 'dinner', 'lunch', 'karaoke', 'party', 'event', 'shopping', 'gym', 'travel', 'picnic', 'board_game', 'museum'];
+    const educations_: Education[] = ['HIGH_SCHOOL', 'BACHELOR', 'MASTER', 'VOCATIONAL'];
+    const smokings_: SmokingHabit[] = ['NEVER', 'SOMETIMES', 'QUIT'];
+    const drinkings_: DrinkingHabit[] = ['NEVER', 'SOCIALLY', 'REGULARLY', 'QUIT'];
+
+    const getRandomItem = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+    const getRandomItems = (arr: any[], count: number): any[] => {
+      const result: any[] = [], copy = [...arr];
+      for (let i = 0; i < Math.min(count, copy.length); i++) {
+        const idx = Math.floor(Math.random() * copy.length);
+            const item = copy[idx];
+            if (item !== undefined) {
+              result.push(item);
+            }
+        copy.splice(idx, 1);
+      }
+      return result;
+    };
+    const getDistrictsByCity = (city: string): string[] => city === 'Đà Nẵng' ? dnDistricts : [''];
+
+    const BATCH_SIZE = 50;
+  
+    for (let batch = 0; batch < Math.ceil(TOTAL_PARTNERS / BATCH_SIZE); batch++) {
+      const batchStart = batch * BATCH_SIZE;
+      const batchEnd = Math.min((batch + 1) * BATCH_SIZE, TOTAL_PARTNERS);
+
+      for (let i = batchStart; i < batchEnd; i++) {
+        const firstName = getRandomItem(firstNames);
+        const lastName = getRandomItem(lastNames);
+        const city = partnerSeedCity;
+        const district = getRandomItem(getDistrictsByCity(city));
+        const email = `partner${i}@matesocial.local`;
+        const phone = `+8410${String(i).padStart(8, '0')}`;
+        const fullName = `${firstName} ${lastName}`;
+        const displayName = lastName;
+        const partnerGender = Math.random() > 0.5 ? 'MALE' : 'FEMALE';
+        // Lấy 4 ảnh thật từ image_links.txt cho mỗi partner
+        const photoStartIdx = i * PHOTOS_PER_PARTNER;
+        const photos = allImageLinks.slice(photoStartIdx, photoStartIdx + PHOTOS_PER_PARTNER);
+        const avatarUrl = photos[0];
+        const experienceYears = Math.floor(Math.random() * 15) + 1;
+        const avgRating = 4.5 + Math.random() * 0.5;
+        const completedBookings = Math.floor(Math.random() * 300) + 50;
+        const serviceTypes = getRandomItems(allServiceTypes, Math.floor(Math.random() * 4) + 2);
+        const languages = ['Tiếng Việt', 'English'];
+        const interests = getRandomItems(['movies', 'gaming', 'gym', 'yoga', 'running', 'coffee', 'foodie', 'photography', 'travel'], 4);
+        const talents = getRandomItems(['singing', 'guitar', 'dance_modern', 'english', 'photography_talent', 'makeup'], 2);
+        const dob = new Date();
+        dob.setFullYear(1985 + Math.floor(Math.random() * 35));
+        dob.setMonth(Math.floor(Math.random() * 12));
+        dob.setDate(Math.floor(Math.random() * 28) + 1);
+        const bio = `Yêu thích ${getRandomItem(hobbies)}. ${experienceYears} năm kinh nghiệm.`;
+      
+        try {
+          const existingPartner = await prisma.user.findUnique({ where: { email } });
+          if (!existingPartner) {
+            const hashedPassword = await bcrypt.hash(`Partner@${Math.random().toString(36).slice(2, 8)}`, SALT_ROUNDS);
+            await prisma.user.create({
+              data: {
+                email, phone, passwordHash: hashedPassword, role: 'PARTNER', status: 'ACTIVE', kycStatus: 'VERIFIED',
+                profile: {
+                  create: {
+                    fullName, displayName, bio, city, district, gender: partnerGender,
+                    avatarUrl,
+                    dateOfBirth: dob, heightCm: 155 + Math.floor(Math.random() * 30), weightKg: 45 + Math.floor(Math.random() * 35),
+                    education: getRandomItem(educations_), smokingHabit: getRandomItem(smokings_), drinkingHabit: getRandomItem(drinkings_),
+                    languages, interests, talents, photos,
+                  },
+                },
+                partnerProfile: {
+                  create: {
+                    hourlyRate: 200000 + Math.floor(Math.random() * 200000), minimumHours: Math.floor(Math.random() * 3) + 1,
+                    serviceTypes: serviceTypes as any,
+                    introduction: `Xin chào! Mình là ${displayName}, ${getRandomItem(jobTitles)}. Có ${experienceYears} năm kinh nghiệm!`,
+                      experienceYears, averageRating: parseFloat(avgRating.toFixed(2)), totalReviews: Math.floor(completedBookings * 0.7),
+                    completedBookings, isVerified: true,
+                    verificationBadge: avgRating >= 4.9 ? 'gold' : avgRating >= 4.7 ? 'silver' : 'bronze',
+                      isAvailable: true, lastActiveAt: new Date(), responseRate: parseFloat((85 + Math.random() * 15).toFixed(2)),
+                    responseTime: 15 + Math.floor(Math.random() * 100),
+                  },
+                },
+                settings: { create: {} },
+              },
+            });
+          } else {
+            await prisma.user.update({
+              where: { id: existingPartner.id },
+              data: {
+                phone,
+                role: 'PARTNER',
+                status: 'ACTIVE',
+                kycStatus: 'VERIFIED',
+                profile: {
+                  upsert: {
+                    create: {
+                      fullName,
+                      displayName,
+                      bio,
+                      city,
+                      district,
+                      gender: partnerGender,
+                      avatarUrl,
+                      dateOfBirth: dob,
+                      heightCm: 155 + Math.floor(Math.random() * 30),
+                      weightKg: 45 + Math.floor(Math.random() * 35),
+                      education: getRandomItem(educations_),
+                      smokingHabit: getRandomItem(smokings_),
+                      drinkingHabit: getRandomItem(drinkings_),
+                      languages,
+                      interests,
+                      talents,
+                      photos,
+                    },
+                    update: {
+                      fullName,
+                      displayName,
+                      bio,
+                      city,
+                      district,
+                      gender: partnerGender,
+                      avatarUrl,
+                      dateOfBirth: dob,
+                      heightCm: 155 + Math.floor(Math.random() * 30),
+                      weightKg: 45 + Math.floor(Math.random() * 35),
+                      education: getRandomItem(educations_),
+                      smokingHabit: getRandomItem(smokings_),
+                      drinkingHabit: getRandomItem(drinkings_),
+                      languages,
+                      interests,
+                      talents,
+                      photos,
+                    },
+                  },
+                },
+                partnerProfile: {
+                  upsert: {
+                    create: {
+                      hourlyRate: 200000 + Math.floor(Math.random() * 200000),
+                      minimumHours: Math.floor(Math.random() * 3) + 1,
+                      serviceTypes: serviceTypes as any,
+                      introduction: `Xin chào! Mình là ${displayName}, ${getRandomItem(jobTitles)}. Có ${experienceYears} năm kinh nghiệm!`,
+                      experienceYears,
+                      averageRating: parseFloat(avgRating.toFixed(2)),
+                      totalReviews: Math.floor(completedBookings * 0.7),
+                      completedBookings,
+                      isVerified: true,
+                      verificationBadge: avgRating >= 4.9 ? 'gold' : avgRating >= 4.7 ? 'silver' : 'bronze',
+                      isAvailable: true,
+                      lastActiveAt: new Date(),
+                      responseRate: parseFloat((85 + Math.random() * 15).toFixed(2)),
+                      responseTime: 15 + Math.floor(Math.random() * 100),
+                    },
+                    update: {
+                      hourlyRate: 200000 + Math.floor(Math.random() * 200000),
+                      minimumHours: Math.floor(Math.random() * 3) + 1,
+                      serviceTypes: serviceTypes as any,
+                      introduction: `Xin chào! Mình là ${displayName}, ${getRandomItem(jobTitles)}. Có ${experienceYears} năm kinh nghiệm!`,
+                      experienceYears,
+                      averageRating: parseFloat(avgRating.toFixed(2)),
+                      totalReviews: Math.floor(completedBookings * 0.7),
+                      completedBookings,
+                      isVerified: true,
+                      verificationBadge: avgRating >= 4.9 ? 'gold' : avgRating >= 4.7 ? 'silver' : 'bronze',
+                      isAvailable: true,
+                      lastActiveAt: new Date(),
+                      responseRate: parseFloat((85 + Math.random() * 15).toFixed(2)),
+                      responseTime: 15 + Math.floor(Math.random() * 100),
+                    },
+                  },
+                },
+                settings: {
+                  upsert: {
+                    create: {},
+                    update: {},
+                  },
+                },
+              },
+            });
+          }
+        } catch (error) {}
+      }
+
+      console.log(`✓ Batch ${batch + 1}/${Math.ceil(TOTAL_PARTNERS / BATCH_SIZE)} (${batchEnd}/${TOTAL_PARTNERS} partners)`);
+    }
+
+    console.log(`✓ Seeded ${TOTAL_PARTNERS} partners!`);
+
+    // Post-process: update all profiles with provinceId/districtId based on city/district names
+    console.log('🔄 Updating profiles with provinceId/districtId...');
+    const allProvinces = await prisma.province.findMany();
+    const allDistricts = await prisma.district.findMany();
+    const allProfiles = await prisma.profile.findMany();
+
+    const normalizeProvinceName = (value: string) => value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/^thanh pho\s+/u, '')
+      .replace(/^tinh\s+/u, '')
+      .replace(/^tp\.?\s*/u, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    let updatedCount = 0;
+    for (const profile of allProfiles) {
+      const needsProvince = !profile.provinceId;
+      const needsDistrict = !profile.districtId && !!profile.district;
+      if (!needsProvince && !needsDistrict) {
+        continue;
+      }
+
+      let province = profile.provinceId
+        ? allProvinces.find((p) => p.id === profile.provinceId)
+        : null;
+
+      if (!province && profile.city) {
+        const profileCityNormalized = normalizeProvinceName(profile.city);
+        province = allProvinces.find((p) => {
+          const nameNormalized = normalizeProvinceName(p.name);
+          const nameEnNormalized = p.nameEn ? normalizeProvinceName(p.nameEn) : '';
+          return profileCityNormalized === nameNormalized || profileCityNormalized === nameEnNormalized;
+        }) ?? null;
+      }
+
+      if (!province) {
+        continue;
+      }
+
+      const district = profile.district
+        ? allDistricts.find((d) => d.name === profile.district && d.provinceId === province.id)
+        : null;
+
+      await prisma.profile.update({
+        where: { id: profile.id },
+        data: {
+          provinceId: province.id,
+          districtId: district?.id || profile.districtId || null,
+        },
+      });
+      updatedCount++;
+    }
+    console.log(`✓ Updated ${updatedCount} profiles with provinceId/districtId`);
+
+    // Seed bookings
+    console.log('📅 Seeding bookings...');
+    const allUsers = await prisma.user.findMany({ where: { role: 'USER' }, select: { id: true } });
+    const allPartners = await prisma.user.findMany({ where: { role: 'PARTNER' }, select: { id: true, partnerProfile: { select: { serviceTypes: true } } } });
+
+    if (allUsers.length > 0 && allPartners.length > 0) {
+      let bookingCount = 0;
+      for (let i = 0; i < allPartners.length; i += BATCH_SIZE) {
+        const partnerBatch = allPartners.slice(i, Math.min(i + BATCH_SIZE, allPartners.length));
+        for (const partner of partnerBatch) {
+          const bookingCount_ = Math.floor(Math.random() * 3) + 2;
+          const serviceTypesArray = (partner.partnerProfile?.serviceTypes as string[]) || ['walking'];
+          for (let b = 0; b < bookingCount_; b++) {
+            try {
+              const user = getRandomItem(allUsers);
+              const serviceType = getRandomItem(serviceTypesArray);
+              const hoursBooked = Math.floor(Math.random() * 6) + 1;
+              const dateOffset = Math.floor(Math.random() * 60) - 30;
+              const bookingDate = new Date();
+              bookingDate.setDate(bookingDate.getDate() + dateOffset);
+              bookingDate.setHours(0, 0, 0, 0);
+              const startHour = 6 + Math.floor(Math.random() * 12);
+              const startTime = new Date(bookingDate);
+              startTime.setHours(startHour, 0, 0, 0);
+              const endTime = new Date(startTime);
+              endTime.setHours(startHour + hoursBooked, 0, 0, 0);
+              let status = 'PENDING' as any;
+              if (dateOffset < -3) status = 'COMPLETED';
+              else if (dateOffset < 0) status = getRandomItem(['COMPLETED', 'CANCELLED']);
+              else if (dateOffset === 0) status = getRandomItem(['IN_PROGRESS', 'CONFIRMED', 'PENDING']);
+              else status = getRandomItem(['PENDING', 'CONFIRMED']);
+              const bookingCode = `BK-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+              await prisma.booking.create({
+                data: {
+                  bookingCode, userId: user.id, partnerId: partner.id, serviceType, date: bookingDate,
+                    startTime, endTime, durationHours: hoursBooked, totalHours: hoursBooked,
+                   status, createdAt: new Date(bookingDate.getTime() - 3600000),
+                  confirmedAt: status !== 'PENDING' ? new Date(bookingDate.getTime() - 1800000) : null,
+                  completedAt: status === 'COMPLETED' ? endTime : null,
+                  cancelledAt: status === 'CANCELLED' ? new Date() : null,
+                },
+              });
+              bookingCount++;
+            } catch (error) {}
+          }
+        }
+        console.log(`✓ Bookings for: ${Math.min(i + BATCH_SIZE, allPartners.length)}/${allPartners.length} partners`);
+      }
+      console.log(`✓ Seeded ${bookingCount} bookings!`);
+    }
+
+    // Seed Reviews for Completed Bookings
+    console.log('⭐ Seeding reviews...');
+    const completedBookings = await prisma.booking.findMany({
+      where: { status: 'COMPLETED' },
+      select: { id: true, userId: true, partnerId: true },
+    });
+
+    console.log(`📊 Found ${completedBookings.length} COMPLETED bookings for review seeding`);
+
+    const reviewComments = [
+      'Tuyệt vời, rất vui được gặp bạn! 😊',
+      'Bạn thật tuyệt vời, sẽ liên hệ lại lần sau',
+      'Chuyên nghiệp, vui vẻ và thân thiện',
+      'Đúng giờ, giao tiếp tốt, sẽ đặt lại',
+      'Rất hài lòng với dịch vụ, cảm ơn bạn',
+      'Gặp được bạn là may mắn, cảm ơn nhiều',
+      'Bạn rất cute 😍 Sẽ liên hệ lại',
+      'Thái độ tốt, thân thiện, đúng giờ',
+      'Không hối hận khi chọn bạn',
+      'Bạn giành được lòng tin của mình',
+      'Chuyên nghiệp và vui vẻ',
+      'Giao tiếp dễ chịu, vui vẻ',
+      'Đơn giản là tuyệt vời!',
+      'Bạn thật là một người tuyệt vời',
+      'Offically a fan of you! 💕',
+    ];
+
+    const reviewTags = [
+      ['friendly', 'professional', 'on_time'],
+      ['cute', 'friendly', 'fun'],
+      ['professional', 'on_time', 'kind'],
+      ['talkative', 'fun', 'friendly'],
+      ['attentive', 'professional', 'kind'],
+      ['honest', 'authentic', 'fun'],
+      ['joyful', 'energetic', 'friendly'],
+      ['respectful', 'professional', 'warm'],
+    ];
+
+    let reviewCount = 0;
+    for (const booking of completedBookings) {
+      try {
+        // User review for Partner
+        const hasReview = Math.random() > 0.3; // 70% chance of review
+        if (hasReview) {
+          const overallRating = Math.floor(Math.random() * 2) + 4; // 4-5 stars
+          await prisma.review.create({
+            data: {
+              bookingId: booking.id,
+              reviewerId: booking.userId,
+              revieweeId: booking.partnerId,
+              reviewType: 'user_to_partner',
+              overallRating,
+              punctualityRating: Math.floor(Math.random() * 2) + 4,
+              communicationRating: Math.floor(Math.random() * 2) + 4,
+              attitudeRating: Math.floor(Math.random() * 2) + 4,
+              appearanceRating: Math.floor(Math.random() * 2) + 4,
+              serviceQualityRating: Math.floor(Math.random() * 2) + 4,
+              comment: getRandomItem(reviewComments),
+              tags: getRandomItem(reviewTags),
+              isVisible: true,
+              isAnonymous: false,
+            },
+          });
+          reviewCount++;
+        }
+      } catch (error) {}
+    }
+    console.log(`✓ Seeded ${reviewCount} reviews!`);
+
+    console.log('✅ Seeding completed!');
 }
 
 main()

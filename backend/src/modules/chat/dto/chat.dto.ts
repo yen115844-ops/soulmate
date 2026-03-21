@@ -1,6 +1,15 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsBoolean, IsNumber, IsObject, IsOptional, IsString, MaxLength, Min, ValidateNested } from 'class-validator';
+import {
+  IsBoolean,
+  IsNumber,
+  IsObject,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+  ValidateNested,
+} from 'class-validator';
 
 export class CreateConversationDto {
   @ApiProperty({ description: 'User ID of the other participant' })
@@ -20,7 +29,10 @@ export class SendMessageDto {
   @MaxLength(2000)
   content: string;
 
-  @ApiPropertyOptional({ description: 'Message type: text, image, system', default: 'text' })
+  @ApiPropertyOptional({
+    description: 'Message type: text, image, system',
+    default: 'text',
+  })
   @IsOptional()
   @IsString()
   type?: string;
@@ -48,7 +60,10 @@ export class SendMessageWithMediaDto {
   @MaxLength(2000)
   content?: string;
 
-  @ApiPropertyOptional({ description: 'Message type: text, image, voice, location', default: 'text' })
+  @ApiPropertyOptional({
+    description: 'Message type: text, image, voice, location',
+    default: 'text',
+  })
   @IsOptional()
   @IsString()
   type?: string;
@@ -141,7 +156,9 @@ export class SocketSendMessageDto {
   @IsString()
   type?: 'text' | 'image' | 'voice' | 'location';
 
-  @ApiPropertyOptional({ description: 'Client-side temporary ID for optimistic UI' })
+  @ApiPropertyOptional({
+    description: 'Client-side temporary ID for optimistic UI',
+  })
   @IsOptional()
   @IsString()
   tempId?: string;

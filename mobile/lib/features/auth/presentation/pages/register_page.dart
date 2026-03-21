@@ -153,8 +153,10 @@ class _RegisterPageState extends State<RegisterPage> {
             },
           );
         }
-        if (state is AuthAuthenticated || state is AuthNeedsProfileSetup) {
+        if (state is AuthAuthenticated) {
           context.go(RouteNames.home);
+        } else if (state is AuthNeedsProfileSetup) {
+          context.go(RouteNames.editProfile);
         } else if (state is AuthPendingVerification) {
           _showSuccess('Tài khoản đang chờ xác minh.');
           context.go(RouteNames.home);

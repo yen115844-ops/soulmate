@@ -81,8 +81,9 @@ class PartnerDetailBottomBar extends StatelessWidget {
       child: Container(
         height: 52,
         decoration: BoxDecoration(
-          gradient: isAvailable ? AppColors.accentGradient : null,
-          color: isAvailable ? null : context.appColors.border,
+          color: isAvailable
+              ? AppColors.accentGradient
+              : context.appColors.border,
           borderRadius: BorderRadius.circular(16),
           boxShadow: isAvailable
               ? [

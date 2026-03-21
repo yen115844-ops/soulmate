@@ -38,12 +38,7 @@ class AuthAuthenticated extends AuthState {
 
   /// Check if user profile is complete
   bool get isProfileComplete {
-    final profile = user.profile;
-    if (profile == null) return false;
-    return profile.fullName != null &&
-        profile.fullName!.isNotEmpty &&
-        profile.dateOfBirth != null &&
-        profile.gender != null;
+    return user.hasCompletedBasicProfile;
   }
 
   @override

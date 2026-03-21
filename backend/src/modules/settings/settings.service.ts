@@ -102,7 +102,9 @@ export class SettingsService {
   /**
    * Get terms content by type. Returns default content if not found.
    */
-  async getTermsContent(type: 'terms_of_service' | 'terms_and_conditions'): Promise<string> {
+  async getTermsContent(
+    type: 'terms_of_service' | 'terms_and_conditions',
+  ): Promise<string> {
     const content = await this.getValue(type);
     if (content) return content;
     // Default content if not in DB
@@ -137,7 +139,7 @@ a) Thông tin bạn cung cấp:
 - Họ tên, ngày sinh, giới tính
 - Số điện thoại, email
 - Ảnh đại diện, ảnh xác minh danh tính
-- Thông tin thanh toán (qua Apple/Google cho gói Premium)
+- Thông tin thanh toán và giao dịch (qua Apple App Store / Google Play Store cho gói Premium và Xu)
 - Nội dung tin nhắn, đánh giá
 
 b) Thông tin tự động thu thập:
@@ -236,6 +238,8 @@ Cán bộ bảo vệ dữ liệu (DPO)
   private getDefaultTermsOfService(): string {
     return `# Điều khoản sử dụng Mate Social
 
+Cập nhật lần cuối: 01/01/2026
+
 ## 1. Giới thiệu
 Chào mừng bạn đến với Mate Social. Bằng việc truy cập và sử dụng ứng dụng Mate Social, bạn đồng ý tuân thủ các điều khoản và điều kiện sau đây.
 
@@ -265,7 +269,30 @@ Chúng tôi có quyền từ chối hoặc chấm dứt tài khoản của bạn
 - Tiền hoàn trả sẽ được xử lý trong vòng 1-3 ngày làm việc
 - Mate Social thu phí dịch vụ trên mỗi giao dịch theo chính sách hiện hành
 
-## 5. Quy tắc ứng xử
+## 5. Gói Premium – Đăng ký tự động gia hạn (Auto-Renewable Subscriptions)
+
+Mate Social cung cấp gói Premium với các tùy chọn đăng ký tự động gia hạn sau:
+
+| Gói | Thời hạn | Giá (VND) |
+|---|---|---|
+| Premium 1 Tuần | 1 tuần | 49.000đ |
+| Premium 1 Tháng | 1 tháng | 99.000đ |
+| Premium 3 Tháng | 3 tháng | 249.000đ |
+| Premium 12 Tháng | 12 tháng | 699.000đ |
+
+**Điều khoản thanh toán và gia hạn:**
+- Thanh toán sẽ được tính vào tài khoản Apple ID / Google Play của bạn khi xác nhận mua.
+- Gói đăng ký sẽ **tự động gia hạn** trừ khi bạn tắt tự động gia hạn ít nhất **24 giờ** trước khi kết thúc chu kỳ hiện tại.
+- Tài khoản của bạn sẽ bị tính phí gia hạn trong vòng 24 giờ trước khi kết thúc chu kỳ hiện tại, với cùng mức giá đã chọn.
+- Bạn có thể quản lý và hủy đăng ký bất kỳ lúc nào trong phần **Cài đặt > Quản lý đăng ký** trên thiết bị của mình (Settings > Apple ID > Subscriptions trên iOS, hoặc Google Play Store > Subscriptions trên Android).
+- Phần chưa sử dụng của bản dùng thử miễn phí (nếu có) sẽ bị mất khi bạn mua gói đăng ký.
+- Việc hủy đăng ký sẽ có hiệu lực vào cuối chu kỳ thanh toán hiện tại. Bạn vẫn được sử dụng Premium cho đến hết chu kỳ đã thanh toán.
+
+## 6. Gói Xu (Credits) – Mua trong ứng dụng
+
+Mate Social cung cấp gói Xu (Credits) dùng để thanh toán các dịch vụ trong ứng dụng. Xu là sản phẩm mua một lần (consumable), không tự động gia hạn. Giá và số lượng Xu được hiển thị rõ ràng trước khi mua. Thanh toán được tính vào tài khoản Apple ID / Google Play của bạn.
+
+## 7. Quy tắc ứng xử
 Khi sử dụng Mate Social, bạn cam kết:
 - Tôn trọng người khác
 - Không có hành vi quấy rối, đe dọa
@@ -274,7 +301,7 @@ Khi sử dụng Mate Social, bạn cam kết:
 - Giữ an toàn cho bản thân và người khác
 - Báo cáo các hành vi vi phạm qua kênh hỗ trợ
 
-## 6. Nội dung do người dùng tạo và hành vi không chấp nhận (EULA – User-Generated Content)
+## 8. Nội dung do người dùng tạo và hành vi không chấp nhận (EULA – User-Generated Content)
 Ứng dụng Mate Social cho phép người dùng tạo và chia sẻ nội dung (tin nhắn, đánh giá, ảnh, thông tin hồ sơ). Chúng tôi **không dung thứ** mọi nội dung phản cảm, xúc phạm, bạo lực, kỳ thị, quấy rối hoặc vi phạm pháp luật, cũng như mọi hành vi lạm dụng, lừa đảo hoặc gây hại cho người khác.
 
 - **Bạn cam kết** không đăng tải, gửi hoặc chia sẻ nội dung vi phạm các chuẩn mực trên. Vi phạm có thể dẫn đến **cảnh cáo, tạm khóa tài khoản hoặc khóa vĩnh viễn** tùy mức độ, và có thể bị báo cáo cho cơ quan chức năng khi cần thiết.
@@ -282,7 +309,7 @@ Khi sử dụng Mate Social, bạn cam kết:
 
 Bằng việc sử dụng dịch vụ, bạn xác nhận đã đọc, hiểu và đồng ý với các điều khoản này.
 
-## 7. Liên hệ
+## 9. Liên hệ
 Nếu bạn có câu hỏi về các điều khoản này, vui lòng liên hệ:
 - Email: legal@matesocial.vn
 - Hotline: 1900 1234`;
@@ -335,7 +362,9 @@ Mọi thắc mắc về điều kiện sử dụng, vui lòng liên hệ:
   /**
    * Update multiple settings by key. Creates if key does not exist.
    */
-  async updateValues(values: Record<string, string>): Promise<AppSettingsResponseDto> {
+  async updateValues(
+    values: Record<string, string>,
+  ): Promise<AppSettingsResponseDto> {
     const keys = Object.keys(values);
     for (const key of keys) {
       const value = String(values[key]);

@@ -1,7 +1,14 @@
-import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../database/prisma/prisma.service';
-import { NotificationType, SubscriptionStatus } from '../../generated/prisma/client';
+import {
+  NotificationType,
+  SubscriptionStatus,
+} from '../../generated/prisma/client';
 import { NotificationsService } from '../notifications';
 import { AppleIapService } from './apple-iap.service';
 import { VerifyPurchaseDto } from './dto';
@@ -89,9 +96,10 @@ export class SubscriptionsService {
 
     // Find the plan
     const plan = await this.prisma.subscriptionPlan.findFirst({
-      where: dto.platform === 'ios'
-        ? { appleProductId: dto.productId }
-        : { googleProductId: dto.productId },
+      where:
+        dto.platform === 'ios'
+          ? { appleProductId: dto.productId }
+          : { googleProductId: dto.productId },
     });
 
     if (!plan) {
@@ -113,7 +121,7 @@ export class SubscriptionsService {
     // Calculate dates
     const startDate = new Date();
     const endDate = new Date();
-    
+
     // Support both weekly (durationDays) and monthly (durationMonths) plans
     if (plan.durationDays && plan.durationDays > 0) {
       // Weekly plan: use durationDays
@@ -171,7 +179,10 @@ export class SubscriptionsService {
   /**
    * Restore purchases (for when user reinstalls app)
    */
-  async restorePurchases(userId: string, dto: { platform: string; receiptData: string }) {
+  async restorePurchases(
+    userId: string,
+    dto: { platform: string; receiptData: string },
+  ) {
     const verificationResult = await this.verifyReceipt({
       platform: dto.platform as 'ios' | 'android',
       receiptData: dto.receiptData,
@@ -225,7 +236,9 @@ export class SubscriptionsService {
   /**
    * Check if user has premium subscription (required for chat and booking)
    */
-  async canSendMessage(userId: string): Promise<{ allowed: boolean; reason?: string }> {
+  async canSendMessage(
+    userId: string,
+  ): Promise<{ allowed: boolean; reason?: string }> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { isPremium: true },
@@ -237,14 +250,17 @@ export class SubscriptionsService {
 
     return {
       allowed: false,
-      reason: 'Tính năng chat yêu cầu gói Premium. Vui lòng nâng cấp để tiếp tục.',
+      reason:
+        'Tính năng chat yêu cầu gói Premium. Vui lòng nâng cấp để tiếp tục.',
     };
   }
 
   /**
    * Check if user can create bookings (requires Premium)
    */
-  async canCreateBooking(userId: string): Promise<{ allowed: boolean; reason?: string }> {
+  async canCreateBooking(
+    userId: string,
+  ): Promise<{ allowed: boolean; reason?: string }> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { isPremium: true },
@@ -256,14 +272,17 @@ export class SubscriptionsService {
 
     return {
       allowed: false,
-      reason: 'Tính năng booking yêu cầu gói Premium. Vui lòng nâng cấp để tiếp tục.',
+      reason:
+        'Tính năng booking yêu cầu gói Premium. Vui lòng nâng cấp để tiếp tục.',
     };
   }
 
   /**
    * Check if user can see who favorited them
    */
-  async canSeeAdmirers(userId: string): Promise<{ allowed: boolean; reason?: string }> {
+  async canSeeAdmirers(
+    userId: string,
+  ): Promise<{ allowed: boolean; reason?: string }> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { isPremium: true },
@@ -400,7 +419,10 @@ export class SubscriptionsService {
     return { isValid: false };
   }
 
-  private async verifyGoogleReceipt(receiptData: string, productId: string): Promise<{
+  private async verifyGoogleReceipt(
+    receiptData: string,
+    productId: string,
+  ): Promise<{
     isValid: boolean;
     transactionId?: string;
     originalTransactionId?: string;
@@ -449,7 +471,9 @@ export class SubscriptionsService {
       });
     }
 
-    console.log(`[Subscription] Expired ${expiredSubscriptions.length} subscriptions`);
+    console.log(
+      `[Subscription] Expired ${expiredSubscriptions.length} subscriptions`,
+    );
   }
 
   // ==================== Admin Functions ====================
@@ -458,12 +482,17 @@ export class SubscriptionsService {
    * Get subscription stats for admin
    */
   async adminGetStats() {
-    const [totalActive, totalExpired, totalRevenue, monthlyRevenue] = await Promise.all([
-      this.prisma.subscription.count({ where: { status: SubscriptionStatus.ACTIVE } }),
-      this.prisma.subscription.count({ where: { status: SubscriptionStatus.EXPIRED } }),
-      this.prisma.subscription.count(), // Placeholder for actual revenue calculation
-      this.getMonthlyRevenue(),
-    ]);
+    const [totalActive, totalExpired, totalRevenue, monthlyRevenue] =
+      await Promise.all([
+        this.prisma.subscription.count({
+          where: { status: SubscriptionStatus.ACTIVE },
+        }),
+        this.prisma.subscription.count({
+          where: { status: SubscriptionStatus.EXPIRED },
+        }),
+        this.prisma.subscription.count(), // Placeholder for actual revenue calculation
+        this.getMonthlyRevenue(),
+      ]);
 
     return {
       totalActive,
@@ -486,7 +515,10 @@ export class SubscriptionsService {
       include: { plan: true },
     });
 
-    return subscriptions.reduce((sum, sub) => sum + Number(sub.plan.priceVnd), 0);
+    return subscriptions.reduce(
+      (sum, sub) => sum + Number(sub.plan.priceVnd),
+      0,
+    );
   }
 
   /**
@@ -502,7 +534,7 @@ export class SubscriptionsService {
     const skip = (page - 1) * limit;
 
     const where: any = {};
-    
+
     if (status) {
       where.status = status;
     }

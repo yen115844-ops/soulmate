@@ -8,18 +8,18 @@ import { AppService } from './app.service';
 import { OptionalJwtAuthGuard } from './common/guards/optional-jwt-auth.guard';
 import { ThrottlerUserGuard } from './common/guards/throttler-user.guard';
 import {
-    appConfig,
-    cloudinaryConfig,
-    databaseConfig,
-    emailConfig,
-    firebaseConfig,
-    jwtConfig,
-    redisConfig,
-    sosConfig,
-    stripeConfig,
-    twilioConfig,
-    uploadConfig,
-    validationSchema,
+  appConfig,
+  cloudinaryConfig,
+  databaseConfig,
+  emailConfig,
+  firebaseConfig,
+  jwtConfig,
+  redisConfig,
+  sosConfig,
+  stripeConfig,
+  twilioConfig,
+  uploadConfig,
+  validationSchema,
 } from './config';
 import { PrismaModule } from './database/prisma';
 import { AuthModule } from './modules/auth';
@@ -44,7 +44,11 @@ import { VerificationModule } from './modules/verification';
     // Config module - load .env with validation
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: [`.env.${process.env.NODE_ENV || 'development'}`, '.env.local', '.env'],
+      envFilePath: [
+        `.env.${process.env.NODE_ENV || 'development'}`,
+        '.env.local',
+        '.env',
+      ],
       load: [
         appConfig,
         databaseConfig,

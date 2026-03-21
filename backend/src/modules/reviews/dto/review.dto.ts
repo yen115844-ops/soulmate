@@ -1,14 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
-    IsArray,
-    IsBoolean,
-    IsInt,
-    IsOptional,
-    IsString,
-    Max,
-    MaxLength,
-    Min,
+  IsArray,
+  IsBoolean,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
 } from 'class-validator';
 
 export class CreateReviewDto {
@@ -125,7 +125,7 @@ export class QueryReviewsDto {
   @Max(50)
   limit?: number;
 
-  @ApiPropertyOptional({ example: 4, description: 'Minimum rating filter' })
+  @ApiPropertyOptional({ example: 4, description: 'Exact rating filter (1-5)' })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -133,7 +133,10 @@ export class QueryReviewsDto {
   @Max(5)
   minRating?: number;
 
-  @ApiPropertyOptional({ example: 'newest', enum: ['newest', 'oldest', 'highest', 'lowest'] })
+  @ApiPropertyOptional({
+    example: 'newest',
+    enum: ['newest', 'oldest', 'highest', 'lowest'],
+  })
   @IsOptional()
   @IsString()
   sortBy?: string;

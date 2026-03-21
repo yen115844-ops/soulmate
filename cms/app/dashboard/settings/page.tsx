@@ -57,6 +57,7 @@ interface BookingSettings {
   partnerCommissionPercent: number;
   autoConfirmBooking: boolean;
   allowInstantBooking: boolean;
+  requirePremiumForBooking: boolean;
 }
 
 interface NotificationSettings {
@@ -73,6 +74,7 @@ interface SecuritySettings {
   requireEmailVerification: boolean;
   requirePhoneVerification: boolean;
   requireKycForPartner: boolean;
+  requireApprovalForPartner: boolean;
   maxLoginAttempts: number;
   sessionTimeout: number;
   passwordMinLength: number;
@@ -98,6 +100,7 @@ const DEFAULT_BOOKING: BookingSettings = {
   partnerCommissionPercent: 85,
   autoConfirmBooking: false,
   allowInstantBooking: true,
+  requirePremiumForBooking: true,
 };
 const DEFAULT_NOTIFICATION: NotificationSettings = {
   emailNotifications: true,
@@ -112,6 +115,7 @@ const DEFAULT_SECURITY: SecuritySettings = {
   requireEmailVerification: true,
   requirePhoneVerification: false,
   requireKycForPartner: true,
+  requireApprovalForPartner: false,
   maxLoginAttempts: 5,
   sessionTimeout: 30, // ngày (thời gian hết hạn token)
   passwordMinLength: 8,
@@ -535,6 +539,20 @@ export default function SettingsPage() {
                     }
                   />
                 </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Yêu cầu Premium để đặt chỗ</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Nếu tắt, tất cả người dùng đều có thể tạo đặt chỗ miễn phí mà không cần gói Premium
+                    </p>
+                  </div>
+                  <Switch
+                    checked={bookingSettings.requirePremiumForBooking}
+                    onCheckedChange={(checked) =>
+                      setBookingSettings({ ...bookingSettings, requirePremiumForBooking: checked })
+                    }
+                  />
+                </div>
               </div>
 
               <div className="flex justify-end">
@@ -735,6 +753,20 @@ export default function SettingsPage() {
                     checked={securitySettings.requireKycForPartner}
                     onCheckedChange={(checked) =>
                       setSecuritySettings({ ...securitySettings, requireKycForPartner: checked })
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Duyệt đối tác khi đăng ký</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Nếu bật, người dùng đăng ký làm đối tác phải chờ admin duyệt. Nếu tắt, tự động trở thành đối tác ngay.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={securitySettings.requireApprovalForPartner}
+                    onCheckedChange={(checked) =>
+                      setSecuritySettings({ ...securitySettings, requireApprovalForPartner: checked })
                     }
                   />
                 </div>

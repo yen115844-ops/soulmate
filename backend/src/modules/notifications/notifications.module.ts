@@ -7,8 +7,8 @@ import { NotificationsController } from './notifications.controller';
 import { NotificationsGateway } from './notifications.gateway';
 import { NotificationsService } from './notifications.service';
 import {
-    NOTIFICATION_QUEUE,
-    NotificationProcessor,
+  NOTIFICATION_QUEUE,
+  NotificationProcessor,
 } from './processors/notification.processor';
 import { DeviceTokenService } from './services/device-token.service';
 import { FcmService } from './services/fcm.service';
@@ -30,7 +30,11 @@ import { FcmService } from './services/fcm.service';
     NotificationProcessor,
     NotificationsGateway,
   ],
-  exports: [NotificationsService, FcmService, DeviceTokenService, NotificationsGateway],
+  exports: [
+    NotificationsService,
+    FcmService,
+    DeviceTokenService,
+    NotificationsGateway,
+  ],
 })
 export class NotificationsModule {}
-

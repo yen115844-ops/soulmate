@@ -1,23 +1,29 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    Post,
-    Query,
-    Request,
-    UseGuards,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+  Request,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { UserRole } from '../../generated/prisma/client';
-import { AdminQueryNotificationsDto, AdminSendNotificationDto } from './dto/admin-notification.dto';
+import {
+  AdminQueryNotificationsDto,
+  AdminSendNotificationDto,
+} from './dto/admin-notification.dto';
 import { MarkReadDto } from './dto/mark-read.dto';
 import { QueryNotificationsDto } from './dto/query-notifications.dto';
-import { RegisterDeviceDto, UnregisterDeviceDto } from './dto/register-device.dto';
+import {
+  RegisterDeviceDto,
+  UnregisterDeviceDto,
+} from './dto/register-device.dto';
 import { NotificationsService } from './notifications.service';
 import { DeviceTokenService } from './services/device-token.service';
 
@@ -131,7 +137,9 @@ export class NotificationsController {
   }
 
   @Delete('device-tokens/all')
-  @ApiOperation({ summary: 'Unregister all device tokens (logout all devices)' })
+  @ApiOperation({
+    summary: 'Unregister all device tokens (logout all devices)',
+  })
   async unregisterAllDeviceTokens(@Request() req) {
     return this.deviceTokenService.unregisterAllTokens(req.user.id);
   }
@@ -142,4 +150,3 @@ export class NotificationsController {
     return this.deviceTokenService.getUserTokens(req.user.id);
   }
 }
-

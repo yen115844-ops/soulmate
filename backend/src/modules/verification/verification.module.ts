@@ -5,6 +5,7 @@ import { extname, join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaModule } from '../../database/prisma/prisma.module';
 import { NotificationsModule } from '../notifications';
+import { UploadModule } from '../upload/upload.module';
 import { VerificationController } from './verification.controller';
 import { VerificationService } from './verification.service';
 
@@ -12,6 +13,7 @@ import { VerificationService } from './verification.service';
   imports: [
     PrismaModule,
     NotificationsModule,
+    UploadModule,
     MulterModule.register({
       storage: diskStorage({
         destination: join(process.cwd(), 'uploads', 'verification'),

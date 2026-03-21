@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
@@ -23,7 +24,9 @@ class ServiceCategoriesSection extends StatelessWidget {
   Widget build(BuildContext context) {
     // Use backend service types if available, otherwise fall back to hardcoded
     final categories = serviceTypes.isNotEmpty
-        ? serviceTypes.map((s) => ServiceCategoryData.fromServiceType(s)).toList()
+        ? serviceTypes
+              .map((s) => ServiceCategoryData.fromServiceType(s))
+              .toList()
         : serviceCategories;
 
     return Container(
@@ -41,59 +44,62 @@ class ServiceCategoriesSection extends StatelessWidget {
             ),
           ),
           SizedBox(
-            height: 100,
-            child: ListView.builder(
+            height: 120,
+            child: MasonryGridView.count(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              crossAxisCount: 1,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 20,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
               itemCount: categories.length,
+              shrinkWrap: true,
+              physics: const ClampingScrollPhysics(),
               itemBuilder: (context, index) {
                 final cat = categories[index];
                 final isSelected = selectedService == cat.code;
-                return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: GestureDetector(
-                        onTap: () => onServiceTap(cat.code),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          width: 72,
-                          child: Column(
-                            children: [
-                              AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
-                                width: 56,
-                                height: 56,
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? cat.color
-                                      : cat.color.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: isSelected
-                                      ? Border.all(color: cat.color, width: 2)
-                                      : null,
-                                ),
-                                child: Icon(
-                                  cat.icon,
-                                  color: isSelected ? Colors.white : cat.color,
-                                  size: 26,
-                                ),
+                return GestureDetector(
+                      onTap: () => onServiceTap(cat.code),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              width: 60,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? cat.color
+                                    : cat.color.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(16),
+                                border: isSelected
+                                    ? Border.all(color: cat.color, width: 2)
+                                    : null,
                               ),
-                              const SizedBox(height: 6),
-                              Text(
-                                cat.label,
-                                style: AppTypography.labelSmall.copyWith(
-                                  color: isSelected
-                                      ? cat.color
-                                      : context.appColors.textSecondary,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w700
-                                      : FontWeight.w500,
-                                  fontSize: 11,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                              child: Icon(
+                                cat.icon,
+                                color: isSelected ? Colors.white : cat.color,
+                                size: 20,
                               ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              cat.label,
+                              textAlign: TextAlign.center,
+                              style: AppTypography.labelSmall.copyWith(
+                                color: isSelected
+                                    ? cat.color
+                                    : context.appColors.textSecondary,
+                                fontWeight: isSelected
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                                fontSize: 11,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
                       ),
                     )

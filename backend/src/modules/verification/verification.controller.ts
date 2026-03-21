@@ -1,36 +1,40 @@
 import {
-    Body,
-    Controller,
-    Get,
-    Param,
-    Patch,
-    Post,
-    Query,
-    UploadedFile,
-    UseGuards,
-    UseInterceptors,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
-    ApiBearerAuth,
-    ApiConsumes,
-    ApiOperation,
-    ApiQuery,
-    ApiResponse,
-    ApiTags,
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { UserRole } from '../../generated/prisma/client';
+import { UploadService } from '../upload/upload.service';
 import { ReviewVerificationDto, SubmitSelfieDto } from './dto';
 import { VerificationService } from './verification.service';
 
 @ApiTags('Verification')
 @Controller('verification')
 export class VerificationController {
-  constructor(private readonly verificationService: VerificationService) {}
+  constructor(
+    private readonly verificationService: VerificationService,
+    private readonly uploadService: UploadService,
+  ) {}
 
   // ==================== User Routes ====================
 
@@ -39,7 +43,9 @@ export class VerificationController {
   @ApiBearerAuth()
   @UseInterceptors(FileInterceptor('selfie'))
   @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: 'Submit selfie for soft verification (liveness check)' })
+  @ApiOperation({
+    summary: 'Submit selfie for soft verification (liveness check)',
+  })
   @ApiResponse({ status: 201, description: 'Selfie submitted and processed' })
   @ApiResponse({ status: 400, description: 'Invalid file or already verified' })
   async submitSelfie(
@@ -50,6 +56,14 @@ export class VerificationController {
     if (!selfie) {
       throw new Error('Selfie file is required');
     }
+
+    this.uploadService.validateMagicBytes(selfie);
+    await this.uploadService.optimizeImage(selfie, {
+      maxWidth: 1280,
+      maxHeight: 1280,
+      quality: 84,
+    });
+
     return this.verificationService.submitSelfie(userId, selfie, dto);
   }
 
@@ -81,7 +95,11 @@ export class VerificationController {
   @ApiOperation({ summary: 'Get paginated verification list' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'status', required: false, enum: ['NONE', 'PENDING', 'VERIFIED', 'REJECTED'] })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['NONE', 'PENDING', 'VERIFIED', 'REJECTED'],
+  })
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'sortBy', required: false, type: String })
   @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'] })

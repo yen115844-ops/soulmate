@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/theme_context.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/theme_context.dart';
 import '../../../core/utils/image_utils.dart';
 
 /// Story Ring Widget - Instagram-style story avatar with gradient ring
@@ -44,24 +44,10 @@ class StoryRingAvatar extends StatelessWidget {
               padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: hasStory
+                color: hasStory
                     ? (isViewed
-                          ? LinearGradient(
-                              colors: [
-                                context.appColors.border,
-                                context.appColors.textHint,
-                              ],
-                            )
-                          : const LinearGradient(
-                              colors: [
-                                Color(0xFFFF6B6B),
-                                Color(0xFFFF8E53),
-                                Color(0xFFEC4899),
-                                Color(0xFF8B5CF6),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ))
+                          ? context.appColors.border
+                          : const Color(0xFFFF6B6B))
                     : null,
                 border: !hasStory
                     ? Border.all(color: context.appColors.border, width: 2)
@@ -211,17 +197,9 @@ class _AnimatedStoryRingState extends State<AnimatedStoryRing>
                   padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: widget.isLive
-                        ? const LinearGradient(
-                            colors: [Color(0xFFEF4444), Color(0xFFEC4899)],
-                          )
-                        : const LinearGradient(
-                            colors: [
-                              Color(0xFFFF6B6B),
-                              Color(0xFFFF8E53),
-                              Color(0xFFEC4899),
-                            ],
-                          ),
+                    color: widget.isLive
+                        ? const Color(0xFFEF4444)
+                        : const Color(0xFFFF6B6B),
                   ),
                   child: Container(
                     padding: const EdgeInsets.all(2),
@@ -276,9 +254,7 @@ class _AnimatedStoryRingState extends State<AnimatedStoryRing>
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFEF4444), Color(0xFFEC4899)],
-                        ),
+                        color: const Color(0xFFEF4444),
                         borderRadius: BorderRadius.circular(4),
                         border: Border.all(color: Colors.white, width: 1.5),
                       ),

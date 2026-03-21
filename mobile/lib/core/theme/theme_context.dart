@@ -55,10 +55,10 @@ class AppThemeColors {
   Color get iconColor =>
       isDark ? AppColors.textPrimaryDark : AppColors.textPrimary;
 
-  // ─── Gradients ─────────────────────────────────────────────────────
+    // ─── Solid colors (formerly gradients) ────────────────────────────
 
-  LinearGradient get primaryGradient => AppColors.primaryGradient;
-  LinearGradient get accentGradient => AppColors.accentGradient;
+    Color get primaryGradient => AppColors.primaryGradient;
+    Color get accentGradient => AppColors.accentGradient;
 
   // ─── Non-adaptive colors (same in both modes) ─────────────────────
 

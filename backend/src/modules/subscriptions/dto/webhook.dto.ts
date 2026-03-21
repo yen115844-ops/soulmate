@@ -7,7 +7,9 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 // Top-level notification body from Apple
 export class AppleNotificationV2Dto {
-  @ApiProperty({ description: 'The signed payload in JWS format (signedPayload)' })
+  @ApiProperty({
+    description: 'The signed payload in JWS format (signedPayload)',
+  })
   signedPayload: string;
 }
 
@@ -37,7 +39,11 @@ export interface AppleTransactionInfo {
   purchaseDate: number;
   originalPurchaseDate: number;
   expiresDate?: number;
-  type: 'Auto-Renewable Subscription' | 'Non-Consumable' | 'Consumable' | 'Non-Renewing Subscription';
+  type:
+    | 'Auto-Renewable Subscription'
+    | 'Non-Consumable'
+    | 'Consumable'
+    | 'Non-Renewing Subscription';
   environment: 'Sandbox' | 'Production';
   storefront: string;
   storefrontId: string;
@@ -150,19 +156,19 @@ export interface GoogleOneTimeProductNotification {
  * @see https://developer.android.com/google/play/billing/rtdn-reference#sub
  */
 export enum GoogleSubscriptionNotificationType {
-  SUBSCRIPTION_RECOVERED = 1,      // Recovered from account hold
-  SUBSCRIPTION_RENEWED = 2,        // Active subscription renewed
-  SUBSCRIPTION_CANCELED = 3,       // Subscription canceled (voluntary or involuntary)
-  SUBSCRIPTION_PURCHASED = 4,      // New subscription purchased
-  SUBSCRIPTION_ON_HOLD = 5,        // Subscription entered account hold
+  SUBSCRIPTION_RECOVERED = 1, // Recovered from account hold
+  SUBSCRIPTION_RENEWED = 2, // Active subscription renewed
+  SUBSCRIPTION_CANCELED = 3, // Subscription canceled (voluntary or involuntary)
+  SUBSCRIPTION_PURCHASED = 4, // New subscription purchased
+  SUBSCRIPTION_ON_HOLD = 5, // Subscription entered account hold
   SUBSCRIPTION_IN_GRACE_PERIOD = 6, // Subscription entered grace period
-  SUBSCRIPTION_RESTARTED = 7,      // Subscription restored from Paused state
+  SUBSCRIPTION_RESTARTED = 7, // Subscription restored from Paused state
   SUBSCRIPTION_PRICE_CHANGE_CONFIRMED = 8,
-  SUBSCRIPTION_DEFERRED = 9,       // Subscription deferred
-  SUBSCRIPTION_PAUSED = 10,        // Subscription paused
+  SUBSCRIPTION_DEFERRED = 9, // Subscription deferred
+  SUBSCRIPTION_PAUSED = 10, // Subscription paused
   SUBSCRIPTION_PAUSE_SCHEDULE_CHANGED = 11,
-  SUBSCRIPTION_REVOKED = 12,       // Subscription revoked before expiry
-  SUBSCRIPTION_EXPIRED = 13,       // Subscription expired
+  SUBSCRIPTION_REVOKED = 12, // Subscription revoked before expiry
+  SUBSCRIPTION_EXPIRED = 13, // Subscription expired
   SUBSCRIPTION_PENDING_PURCHASE_CANCELED = 20,
 }
 

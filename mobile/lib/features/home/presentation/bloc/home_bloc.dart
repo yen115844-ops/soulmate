@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/network/base_repository.dart';
 import '../../../../core/services/location_service.dart';
+import '../../../../core/utils/service_type_display_resolver.dart';
 import '../../../../shared/data/models/master_data_models.dart';
 import '../../../favorites/data/favorites_repository.dart';
 import '../../data/home_repository.dart';
@@ -52,6 +53,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> with BaseRepositoryMixin {
         maxAge: state.filter.maxAge,
         minRate: state.filter.minRate,
         maxRate: state.filter.maxRate,
+        lat: state.filter.lat,
+        lng: state.filter.lng,
         radius: state.filter.radius,
         provinceId: state.filter.provinceId,
         districtId: state.filter.districtId,
@@ -98,6 +101,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> with BaseRepositoryMixin {
         maxAge: state.filter.maxAge,
         minRate: state.filter.minRate,
         maxRate: state.filter.maxRate,
+        lat: state.filter.lat,
+        lng: state.filter.lng,
         radius: state.filter.radius,
         provinceId: state.filter.provinceId,
         districtId: state.filter.districtId,
@@ -166,6 +171,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> with BaseRepositoryMixin {
         maxAge: state.filter.maxAge,
         minRate: state.filter.minRate,
         maxRate: state.filter.maxRate,
+        lat: state.filter.lat,
+        lng: state.filter.lng,
         radius: state.filter.radius,
         provinceId: state.filter.provinceId,
         districtId: state.filter.districtId,
@@ -246,7 +253,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> with BaseRepositoryMixin {
         // Permission denied or location unavailable → default to first province
         final firstProvince = provinces.isNotEmpty ? provinces.first : null;
         if (firstProvince != null) {
-          final newFilter = state.filter.copyWith(
+          final newFilter = state.filter
+              .clear(clearLocation: true)
+              .copyWith(
             provinceId: firstProvince.id,
             city: firstProvince.name,
           );
@@ -298,6 +307,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> with BaseRepositoryMixin {
   ) async {
     try {
       final serviceTypes = await _repository.getServiceTypes();
+      ServiceTypeDisplayResolver.seedFromApi(serviceTypes);
       emit(state.copyWith(serviceTypes: serviceTypes));
     } catch (e) {
       debugPrint('HomeBloc: Load service types error: $e');
@@ -368,6 +378,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> with BaseRepositoryMixin {
       final newFilter = state.filter
           .clear(clearDistrict: matchedDistrict == null)
           .copyWith(
+            lat: info.latitude,
+            lng: info.longitude,
             provinceId: matchedProvince.id,
             city: matchedProvince.name,
             districtId: matchedDistrict?.id,
@@ -379,11 +391,21 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> with BaseRepositoryMixin {
           locationStatus: LocationDetectionStatus.detected,
         ),
       );
+
+      await _syncCurrentLocation(
+        info,
+        provinceId: matchedProvince.id,
+        districtId: matchedDistrict?.id,
+        city: matchedProvince.name,
+        district: matchedDistrict?.name,
+      );
     } else {
       // GPS worked but no matching city → default to first province
       final firstProvince = provinces.isNotEmpty ? provinces.first : null;
       if (firstProvince != null) {
         final newFilter = state.filter.copyWith(
+          lat: info.latitude,
+          lng: info.longitude,
           provinceId: firstProvince.id,
           city: firstProvince.name,
         );
@@ -404,9 +426,36 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> with BaseRepositoryMixin {
         'HomeBloc: No matching city for "$rawCity". '
         'Defaulted to "${firstProvince?.name ?? "null"}".',
       );
+
+      await _syncCurrentLocation(
+        info,
+        city: rawCity,
+        district: rawDistrict,
+      );
     }
 
     add(const HomeLoadPartners(refresh: true));
+  }
+
+  Future<void> _syncCurrentLocation(
+    LocationInfo info, {
+    String? provinceId,
+    String? districtId,
+    String? city,
+    String? district,
+  }) async {
+    try {
+      await _repository.updateCurrentLocation(
+        latitude: info.latitude,
+        longitude: info.longitude,
+        provinceId: provinceId,
+        districtId: districtId,
+        city: city,
+        district: district,
+      );
+    } catch (e) {
+      debugPrint('HomeBloc: Sync location to backend failed: $e');
+    }
   }
 
   // ───────────────────────── Fuzzy Matching Utils ─────────────────────────

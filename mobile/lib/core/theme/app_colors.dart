@@ -10,18 +10,9 @@ class AppColors {
   static const Color primaryLight = Color(0xFFF0D4F7);
   static const Color primaryDark = Color(0xFFC77DD4);
 
-  // Gradient
-  static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFFE1A8F0), Color(0xFFF0D4F7)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
-  static const LinearGradient accentGradient = LinearGradient(
-    colors: [Color(0xFFE1A8F0), Color(0xFFC77DD4)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
+  // Solid colors used where gradient was previously applied
+  static const Color primaryGradient = Color(0xFFE1A8F0);
+  static const Color accentGradient = Color(0xFFE1A8F0);
 
   // === Secondary Colors ===
   static const Color secondary = Color(0xFF0984E3);

@@ -39,6 +39,34 @@ enum Gender {
   OTHER
 }
 
+enum Education {
+  PRIMARY
+  SECONDARY
+  HIGH_SCHOOL
+  VOCATIONAL
+  BACHELOR
+  MASTER
+  DOCTORATE
+  OTHER
+}
+
+enum SmokingHabit {
+  NEVER
+  SOMETIMES
+  REGULARLY
+  QUIT
+  NOT_SPECIFIED
+}
+
+enum DrinkingHabit {
+  NEVER
+  SOCIALLY
+  REGULARLY
+  HEAVILY
+  QUIT
+  NOT_SPECIFIED
+}
+
 enum BookingStatus {
   PENDING
   CONFIRMED
@@ -199,6 +227,9 @@ model Profile {
   dateOfBirth   DateTime? @map("date_of_birth")
   heightCm      Int?     @map("height_cm")
   weightKg      Int?     @map("weight_kg")
+  education     Education? @map("education")
+  smokingHabit  SmokingHabit? @map("smoking_habit")
+  drinkingHabit DrinkingHabit? @map("drinking_habit")
   
   // Location
   currentLat    Decimal? @map("current_lat") @db.Decimal(10, 8)
@@ -1112,14 +1143,14 @@ model Province {
   @@map("provinces")
 }
 
-// Districts - Quận/Huyện
+// Districts (legacy name) - lưu đơn vị cấp xã/phường để tương thích dữ liệu mới
 model District {
   id           String   @id @default(uuid())
   provinceId   String   @map("province_id")
   province     Province @relation(fields: [provinceId], references: [id], onDelete: Cascade)
   
-  code         String   // Mã quận: "Q1", "Q2", "BTH"
-  name         String   // Tên: "Quận 1", "Quận Bình Thạnh"
+  code         String   // Mã đơn vị cấp xã/phường
+  name         String   // Tên đơn vị: "Phường ...", "Xã ..."
   nameEn       String?  @map("name_en")
   sortOrder    Int      @default(0) @map("sort_order")
   isActive     Boolean  @default(true) @map("is_active")

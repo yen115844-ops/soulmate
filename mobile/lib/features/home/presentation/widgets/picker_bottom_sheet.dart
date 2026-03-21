@@ -57,112 +57,136 @@ class _PickerBottomSheetState extends State<PickerBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.65,
-      decoration: BoxDecoration(
-        color: context.appColors.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        children: [
-          Container(
-            margin: const EdgeInsets.only(top: 12),
-            width: 40,
-            height: 4,
+    final mediaQuery = MediaQuery.of(context);
+    final keyboardInset = mediaQuery.viewInsets.bottom;
+    final bottomSafeInset = mediaQuery.padding.bottom;
+
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+      padding: EdgeInsets.only(bottom: keyboardInset),
+      child: DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.65,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        builder: (context, scrollController) {
+          return Container(
             decoration: BoxDecoration(
-              color: context.appColors.border,
-              borderRadius: BorderRadius.circular(2),
+              color: context.appColors.surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 12),
-            child: Row(
+            child: Column(
               children: [
-                Icon(widget.icon, size: 22, color: AppColors.primary),
-                const SizedBox(width: 10),
-                Text(
-                  widget.title,
-                  style: AppTypography.titleLarge.copyWith(
-                    fontWeight: FontWeight.w700,
+                Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: context.appColors.border,
+                    borderRadius: BorderRadius.circular(2),
                   ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 12),
+                  child: Row(
+                    children: [
+                      Icon(widget.icon, size: 22, color: AppColors.primary),
+                      const SizedBox(width: 10),
+                      Text(
+                        widget.title,
+                        style: AppTypography.titleLarge.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: _onSearch,
+                    decoration: InputDecoration(
+                      hintText: 'Tìm kiếm...',
+                      hintStyle: AppTypography.bodyMedium.copyWith(
+                        color: context.appColors.textHint,
+                      ),
+                      prefixIcon: Icon(
+                        Ionicons.search_outline,
+                        size: 20,
+                        color: context.appColors.textHint,
+                      ),
+                      filled: true,
+                      fillColor: context.appColors.background,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Divider(height: 1, color: context.appColors.border),
+                Expanded(
+                  child: _filtered.isEmpty
+                      ? ListView(
+                          controller: scrollController,
+                          padding: EdgeInsets.only(bottom: bottomSafeInset + 24),
+                          children: [
+                            const SizedBox(height: 120),
+                            Center(
+                              child: Text(
+                                'Không tìm thấy kết quả',
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: context.appColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : ListView.builder(
+                          controller: scrollController,
+                          padding: EdgeInsets.only(bottom: bottomSafeInset + 8),
+                          itemCount: _filtered.length,
+                          itemBuilder: (context, index) {
+                            final item = _filtered[index];
+                            final isSelected = widget.selectedValue == item.code;
+                            return ListTile(
+                              onTap: () => widget.onSelect(item.code),
+                              title: Text(
+                                item.label,
+                                style: AppTypography.bodyMedium.copyWith(
+                                  fontWeight: isSelected
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                  color: isSelected
+                                      ? AppColors.primary
+                                      : context.textTheme.displayMedium!.color,
+                                ),
+                              ),
+                              trailing: isSelected
+                                  ? Icon(
+                                      Ionicons.checkmark_circle,
+                                      color: AppColors.primary,
+                                      size: 22,
+                                    )
+                                  : null,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                              ),
+                            );
+                          },
+                        ),
                 ),
               ],
             ),
-          ),
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _onSearch,
-              decoration: InputDecoration(
-                hintText: 'Tìm kiếm...',
-                hintStyle: AppTypography.bodyMedium.copyWith(
-                  color: context.appColors.textHint,
-                ),
-                prefixIcon: Icon(
-                  Ionicons.search_outline,
-                  size: 20,
-                  color: context.appColors.textHint,
-                ),
-                filled: true,
-                fillColor: context.appColors.background,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Divider(height: 1, color: context.appColors.border),
-          Expanded(
-            child: _filtered.isEmpty
-                ? Center(
-                    child: Text(
-                      'Không tìm thấy kết quả',
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: context.appColors.textSecondary,
-                      ),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: _filtered.length,
-                    itemBuilder: (context, index) {
-                      final item = _filtered[index];
-                      final isSelected = widget.selectedValue == item.code;
-                      return ListTile(
-                        onTap: () => widget.onSelect(item.code),
-                        title: Text(
-                          item.label,
-                          style: AppTypography.bodyMedium.copyWith(
-                            fontWeight: isSelected
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                            color: isSelected
-                                ? AppColors.primary
-                                : context.textTheme.displayMedium!.color,
-                          ),
-                        ),
-                        trailing: isSelected
-                            ? Icon(
-                                Ionicons.checkmark_circle,
-                                color: AppColors.primary,
-                                size: 22,
-                              )
-                            : null,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }

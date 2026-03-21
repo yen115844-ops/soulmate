@@ -1,5 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsIn, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsArray,
+  IsIn,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 
 export class CreateReportDto {
   @ApiProperty({ description: 'ID of the user being reported' })
@@ -7,12 +14,17 @@ export class CreateReportDto {
   @IsString()
   reportedId: string;
 
-  @ApiProperty({ description: 'Report type', enum: ['user', 'review', 'message', 'booking'] })
+  @ApiProperty({
+    description: 'Report type',
+    enum: ['user', 'review', 'message', 'booking'],
+  })
   @IsNotEmpty()
   @IsIn(['user', 'review', 'message', 'booking'])
   type: string;
 
-  @ApiPropertyOptional({ description: 'Reference ID (e.g., review ID, booking ID)' })
+  @ApiPropertyOptional({
+    description: 'Reference ID (e.g., review ID, booking ID)',
+  })
   @IsOptional()
   @IsString()
   referenceId?: string;
@@ -36,7 +48,10 @@ export class CreateReportDto {
 }
 
 export class ResolveReportDto {
-  @ApiProperty({ description: 'Resolution status', enum: ['resolved', 'rejected'] })
+  @ApiProperty({
+    description: 'Resolution status',
+    enum: ['resolved', 'rejected'],
+  })
   @IsNotEmpty()
   @IsIn(['resolved', 'rejected'])
   status: string;

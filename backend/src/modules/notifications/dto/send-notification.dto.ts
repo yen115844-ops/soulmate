@@ -1,11 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
-    IsArray,
-    IsEnum,
-    IsNotEmpty,
-    IsObject,
-    IsOptional,
-    IsString,
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsObject,
+  IsOptional,
+  IsString,
 } from 'class-validator';
 import { NotificationType } from '../../../generated/prisma/client';
 

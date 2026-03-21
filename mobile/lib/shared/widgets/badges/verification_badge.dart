@@ -125,9 +125,7 @@ class PremiumBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-        ),
+        color: const Color(0xFFFFD700),
         shape: BoxShape.circle,
       ),
       child: Icon(
@@ -144,16 +142,11 @@ class PremiumBadge extends StatelessWidget {
       children: [
         _buildIcon(),
         const SizedBox(width: 4),
-        ShaderMask(
-          shaderCallback: (bounds) => const LinearGradient(
-            colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-          ).createShader(bounds),
-          child: Text(
-            'Premium',
-            style: AppTypography.labelSmall.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+        Text(
+          'Premium',
+          style: AppTypography.labelSmall.copyWith(
+            color: const Color(0xFFFFD700),
+            fontWeight: FontWeight.bold,
           ),
         ),
       ],
@@ -164,9 +157,7 @@ class PremiumBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-        ),
+        color: const Color(0xFFFFD700),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -195,9 +186,7 @@ class PremiumBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-        ),
+        color: const Color(0xFFFFD700),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(

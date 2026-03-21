@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_config.dart';
 import '../../../core/network/base_repository.dart';
+import '../../../core/utils/image_upload_optimizer.dart';
 import 'models/partner_models.dart';
 
 // Re-export models for backward compatibility
@@ -261,26 +262,41 @@ class PartnerRepository with BaseRepositoryMixin {
   /// Upload photos to server
   Future<List<String>> _uploadPhotos(List<File> photos) async {
     final List<MultipartFile> files = [];
+    final optimizedFiles = <OptimizedUploadImage>[];
 
-    for (final photo in photos) {
-      files.add(
-        await MultipartFile.fromFile(
+    try {
+      for (final photo in photos) {
+        final optimized = await ImageUploadOptimizer.optimize(
           photo.path,
-          filename: photo.path.split('/').last,
-        ),
-      );
+          maxWidth: 1440,
+          maxHeight: 1440,
+          quality: 82,
+        );
+        optimizedFiles.add(optimized);
+
+        files.add(
+          await MultipartFile.fromFile(
+            optimized.path,
+            filename: photo.path.split('/').last,
+          ),
+        );
+      }
+
+      final formData = FormData.fromMap({'files': files});
+
+      final response = await _apiClient.post('/upload/images', data: formData);
+
+      final data = extractRawData(response.data);
+      if (data['urls'] != null) {
+        return List<String>.from(data['urls']);
+      }
+
+      return [];
+    } finally {
+      for (final optimized in optimizedFiles) {
+        await optimized.dispose();
+      }
     }
-
-    final formData = FormData.fromMap({'files': files});
-
-    final response = await _apiClient.post('/upload/images', data: formData);
-
-    final data = extractRawData(response.data);
-    if (data['urls'] != null) {
-      return List<String>.from(data['urls']);
-    }
-
-    return [];
   }
 
   // ==================== Partner Profile ====================

@@ -1,9 +1,9 @@
 import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  Logger,
-  NotFoundException,
+    BadRequestException,
+    ForbiddenException,
+    Injectable,
+    Logger,
+    NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { BookingStatus, NotificationType } from '../../generated/prisma/client';
@@ -11,7 +11,13 @@ import { CreditsService } from '../credits/credits.service';
 import { NotificationsService } from '../notifications';
 import { SettingsService } from '../settings/settings.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
-import { AdminBookingQueryDto, BookingQueryDto, CancelBookingDto, CreateBookingDto, UpdateBookingStatusDto } from './dto';
+import {
+    AdminBookingQueryDto,
+    BookingQueryDto,
+    CancelBookingDto,
+    CreateBookingDto,
+    UpdateBookingStatusDto,
+} from './dto';
 
 /** Combine date with time-only (DB Time → full DateTime for API) */
 function combineDateAndTime(date: Date, time: Date): Date {
@@ -73,8 +79,14 @@ export class BookingsService {
    * Create a new booking
    */
   async createBooking(userId: string, dto: CreateBookingDto) {
-    // Check premium subscription
-    await this.requirePremium(userId);
+    // Kiểm tra setting có yêu cầu premium cho booking không
+    const requirePremium = await this.settingsService.getBool(
+      'require_premium_for_booking',
+      true,
+    );
+    if (requirePremium) {
+      await this.requirePremium(userId);
+    }
 
     // Check if either user has blocked the other
     const blockExists = await this.prisma.userBlacklist.findFirst({
@@ -85,7 +97,7 @@ export class BookingsService {
         ],
       },
     });
-    
+
     if (blockExists) {
       throw new ForbiddenException('Không thể đặt lịch với người dùng này');
     }
@@ -108,16 +120,36 @@ export class BookingsService {
       throw new BadRequestException('Cannot book yourself');
     }
 
-    const requireKycForPartner = await this.settingsService.getBool('require_kyc_for_partner', true);
+    const requireKycForPartner = await this.settingsService.getBool(
+      'require_kyc_for_partner',
+      true,
+    );
     if (requireKycForPartner && partnerProfile.user.kycStatus !== 'VERIFIED') {
-      throw new BadRequestException('Đối tác chưa xác minh KYC, chưa thể nhận đặt chỗ');
+      throw new BadRequestException(
+        'Đối tác chưa xác minh KYC, chưa thể nhận đặt chỗ',
+      );
     }
 
-    const minBookingHours = await this.settingsService.getNumber('min_booking_hours', 1);
-    const maxBookingHours = await this.settingsService.getNumber('max_booking_hours', 8);
-    const advanceBookingDays = await this.settingsService.getNumber('advance_booking_days', 30);
-    const serviceFeePercent = await this.settingsService.getNumber('service_fee_percent', 15);
-    const autoConfirmBooking = await this.settingsService.getBool('auto_confirm_booking', false);
+    const minBookingHours = await this.settingsService.getNumber(
+      'min_booking_hours',
+      1,
+    );
+    const maxBookingHours = await this.settingsService.getNumber(
+      'max_booking_hours',
+      8,
+    );
+    const advanceBookingDays = await this.settingsService.getNumber(
+      'advance_booking_days',
+      30,
+    );
+    const serviceFeePercent = await this.settingsService.getNumber(
+      'service_fee_percent',
+      15,
+    );
+    const autoConfirmBooking = await this.settingsService.getBool(
+      'auto_confirm_booking',
+      false,
+    );
 
     const date = new Date(dto.date);
     const today = new Date();
@@ -128,7 +160,9 @@ export class BookingsService {
       throw new BadRequestException('Ngày đặt chỗ không được ở quá khứ');
     }
     if (date > maxAdvanceDate) {
-      throw new BadRequestException(`Chỉ có thể đặt trước tối đa ${advanceBookingDays} ngày`);
+      throw new BadRequestException(
+        `Chỉ có thể đặt trước tối đa ${advanceBookingDays} ngày`,
+      );
     }
 
     const startTime = new Date(`1970-01-01T${dto.startTime}:00`);
@@ -138,10 +172,14 @@ export class BookingsService {
 
     const minHours = Math.max(minBookingHours, partnerProfile.minimumHours);
     if (durationHours < minHours) {
-      throw new BadRequestException(`Thời lượng đặt tối thiểu là ${minHours} giờ`);
+      throw new BadRequestException(
+        `Thời lượng đặt tối thiểu là ${minHours} giờ`,
+      );
     }
     if (durationHours > maxBookingHours) {
-      throw new BadRequestException(`Thời lượng đặt tối đa là ${maxBookingHours} giờ`);
+      throw new BadRequestException(
+        `Thời lượng đặt tối đa là ${maxBookingHours} giờ`,
+      );
     }
 
     const hourlyRate = partnerProfile.hourlyRate;
@@ -149,7 +187,9 @@ export class BookingsService {
     const serviceFee = Math.round((subtotal * serviceFeePercent) / 100);
     const totalAmount = subtotal + serviceFee;
 
-    const initialStatus = autoConfirmBooking ? BookingStatus.CONFIRMED : BookingStatus.PENDING;
+    const initialStatus = autoConfirmBooking
+      ? BookingStatus.CONFIRMED
+      : BookingStatus.PENDING;
 
     const booking = await this.prisma.booking.create({
       data: {
@@ -187,8 +227,15 @@ export class BookingsService {
     this.logger.log(`Booking created: ${booking.bookingCode}`);
 
     await this.notificationsService
-      .notifyAdminsIfEnabled('new_booking_alert', 'Đặt chỗ mới', `Mã đặt chỗ ${booking.bookingCode} vừa được tạo.`, { bookingId: booking.id, bookingCode: booking.bookingCode })
-      .catch((err) => this.logger.warn(`Failed to notify admins: ${err?.message}`));
+      .notifyAdminsIfEnabled(
+        'new_booking_alert',
+        'Đặt chỗ mới',
+        `Mã đặt chỗ ${booking.bookingCode} vừa được tạo.`,
+        { bookingId: booking.id, bookingCode: booking.bookingCode },
+      )
+      .catch((err) =>
+        this.logger.warn(`Failed to notify admins: ${err?.message}`),
+      );
 
     // Send notification to partner (fire-and-forget - avoid blocking response on Redis/FCM)
     const userName = booking.user.profile?.displayName || booking.user.email;
@@ -207,7 +254,11 @@ export class BookingsService {
           endTime: dto.endTime,
         },
       })
-      .catch((err) => this.logger.warn(`Failed to send booking notification: ${err?.message}`));
+      .catch((err) =>
+        this.logger.warn(
+          `Failed to send booking notification: ${err?.message}`,
+        ),
+      );
 
     return withCombinedDateTime(booking);
   }
@@ -384,7 +435,7 @@ export class BookingsService {
       include: { profile: true },
     });
     const partnerName = partner?.profile?.displayName || 'Partner';
-    
+
     await this.notificationsService.sendNotification({
       userId: booking.userId,
       type: NotificationType.BOOKING,
@@ -403,7 +454,11 @@ export class BookingsService {
   /**
    * Cancel booking
    */
-  async cancelBooking(bookingId: string, userId: string, dto: CancelBookingDto) {
+  async cancelBooking(
+    bookingId: string,
+    userId: string,
+    dto: CancelBookingDto,
+  ) {
     const booking = await this.prisma.booking.findUnique({
       where: { id: bookingId },
     });
@@ -423,13 +478,17 @@ export class BookingsService {
       BookingStatus.CONFIRMED,
     ];
 
-    if (!cancellableStatuses.includes(booking.status as BookingStatus)) {
+    if (!cancellableStatuses.includes(booking.status)) {
       throw new BadRequestException('Booking cannot be cancelled');
     }
 
-    const cancellationHours = await this.settingsService.getNumber('cancellation_hours', 24);
+    const cancellationHours = await this.settingsService.getNumber(
+      'cancellation_hours',
+      24,
+    );
     const bookingStart = combineDateAndTime(booking.date, booking.startTime);
-    const hoursUntilStart = (bookingStart.getTime() - Date.now()) / (1000 * 60 * 60);
+    const hoursUntilStart =
+      (bookingStart.getTime() - Date.now()) / (1000 * 60 * 60);
     if (hoursUntilStart < cancellationHours) {
       throw new BadRequestException(
         `Chỉ có thể hủy miễn phí trước ${cancellationHours} giờ so với giờ bắt đầu. Còn ${Math.max(0, Math.ceil(hoursUntilStart))} giờ.`,
@@ -452,13 +511,17 @@ export class BookingsService {
     });
 
     // Refund escrow if exists (in case booking was paid)
-    await this.creditsService.refundEscrow(bookingId)
-      .catch((err) => this.logger.warn(`Failed to refund escrow: ${err?.message}`));
+    await this.creditsService
+      .refundEscrow(bookingId)
+      .catch((err) =>
+        this.logger.warn(`Failed to refund escrow: ${err?.message}`),
+      );
 
     this.logger.log(`Booking cancelled: ${booking.bookingCode} by ${userId}`);
 
     // Send notification to the other party (fire-and-forget - avoid blocking response)
-    const recipientId = userId === booking.userId ? booking.partnerId : booking.userId;
+    const recipientId =
+      userId === booking.userId ? booking.partnerId : booking.userId;
     this.prisma.user
       .findUnique({
         where: { id: userId },
@@ -479,7 +542,9 @@ export class BookingsService {
           },
         });
       })
-      .catch((err) => this.logger.warn(`Failed to send cancel notification: ${err?.message}`));
+      .catch((err) =>
+        this.logger.warn(`Failed to send cancel notification: ${err?.message}`),
+      );
 
     return withCombinedDateTime(updatedBooking);
   }
@@ -505,9 +570,14 @@ export class BookingsService {
     }
 
     // Check user has enough credits
-    const hasBalance = await this.creditsService.checkBalance(userId, booking.totalAmount);
+    const hasBalance = await this.creditsService.checkBalance(
+      userId,
+      booking.totalAmount,
+    );
     if (!hasBalance) {
-      throw new BadRequestException('Số dư credits không đủ. Vui lòng nạp thêm credits.');
+      throw new BadRequestException(
+        'Số dư credits không đủ. Vui lòng nạp thêm credits.',
+      );
     }
 
     // Process payment (deduct credits, create escrow)
@@ -527,7 +597,9 @@ export class BookingsService {
       },
     });
 
-    this.logger.log(`Booking paid: ${booking.bookingCode}, amount: ${booking.totalAmount} credits`);
+    this.logger.log(
+      `Booking paid: ${booking.bookingCode}, amount: ${booking.totalAmount} credits`,
+    );
 
     // Notify partner
     void this.notificationsService
@@ -540,7 +612,11 @@ export class BookingsService {
         actionId: bookingId,
         data: { bookingCode: booking.bookingCode },
       })
-      .catch((err) => this.logger.warn(`Failed to send payment notification: ${err?.message}`));
+      .catch((err) =>
+        this.logger.warn(
+          `Failed to send payment notification: ${err?.message}`,
+        ),
+      );
 
     return withCombinedDateTime(updatedBooking);
   }
@@ -592,7 +668,9 @@ export class BookingsService {
 
     // Only user can complete the booking
     if (booking.userId !== userId) {
-      throw new ForbiddenException('Only the customer can complete the booking');
+      throw new ForbiddenException(
+        'Only the customer can complete the booking',
+      );
     }
 
     if (booking.status !== BookingStatus.IN_PROGRESS) {
@@ -606,24 +684,33 @@ export class BookingsService {
         data: {
           status: BookingStatus.COMPLETED,
           completedAt: new Date(),
-          userNote: note ? `${booking.userNote || ''}\n${note}` : booking.userNote,
+          userNote: note
+            ? `${booking.userNote || ''}\n${note}`
+            : booking.userNote,
         },
       });
 
       // Update partner stats
-      await tx.partnerProfile.update({
-        where: { userId: booking.partnerId },
-        data: {
-          completedBookings: { increment: 1 },
-        },
-      }).catch(() => { /* partner profile may not have completedBookings field */ });
+      await tx.partnerProfile
+        .update({
+          where: { userId: booking.partnerId },
+          data: {
+            completedBookings: { increment: 1 },
+          },
+        })
+        .catch(() => {
+          /* partner profile may not have completedBookings field */
+        });
 
       return updated;
     });
 
     // Release escrow to partner
-    await this.creditsService.releaseEscrow(bookingId)
-      .catch((err) => this.logger.warn(`Failed to release escrow: ${err?.message}`));
+    await this.creditsService
+      .releaseEscrow(bookingId)
+      .catch((err) =>
+        this.logger.warn(`Failed to release escrow: ${err?.message}`),
+      );
 
     this.logger.log(`Booking completed: ${booking.bookingCode}`);
 
@@ -638,7 +725,11 @@ export class BookingsService {
         actionId: bookingId,
         data: { bookingCode: booking.bookingCode },
       })
-      .catch((err) => this.logger.warn(`Failed to send complete notification: ${err?.message}`));
+      .catch((err) =>
+        this.logger.warn(
+          `Failed to send complete notification: ${err?.message}`,
+        ),
+      );
 
     return withCombinedDateTime(updatedBooking);
   }
@@ -649,8 +740,12 @@ export class BookingsService {
   async getUserBookingStats(userId: string) {
     const [total, completed, cancelled, pending] = await Promise.all([
       this.prisma.booking.count({ where: { userId } }),
-      this.prisma.booking.count({ where: { userId, status: BookingStatus.COMPLETED } }),
-      this.prisma.booking.count({ where: { userId, status: BookingStatus.CANCELLED } }),
+      this.prisma.booking.count({
+        where: { userId, status: BookingStatus.COMPLETED },
+      }),
+      this.prisma.booking.count({
+        where: { userId, status: BookingStatus.CANCELLED },
+      }),
       this.prisma.booking.count({
         where: {
           userId,
@@ -683,8 +778,12 @@ export class BookingsService {
   async getPartnerBookingStats(partnerId: string) {
     const [total, completed, cancelled, pending] = await Promise.all([
       this.prisma.booking.count({ where: { partnerId } }),
-      this.prisma.booking.count({ where: { partnerId, status: BookingStatus.COMPLETED } }),
-      this.prisma.booking.count({ where: { partnerId, status: BookingStatus.CANCELLED } }),
+      this.prisma.booking.count({
+        where: { partnerId, status: BookingStatus.COMPLETED },
+      }),
+      this.prisma.booking.count({
+        where: { partnerId, status: BookingStatus.CANCELLED },
+      }),
       this.prisma.booking.count({
         where: {
           partnerId,
@@ -752,8 +851,16 @@ export class BookingsService {
     if (search) {
       where.OR = [
         { bookingCode: { contains: search, mode: 'insensitive' } },
-        { user: { profile: { fullName: { contains: search, mode: 'insensitive' } } } },
-        { partner: { profile: { fullName: { contains: search, mode: 'insensitive' } } } },
+        {
+          user: {
+            profile: { fullName: { contains: search, mode: 'insensitive' } },
+          },
+        },
+        {
+          partner: {
+            profile: { fullName: { contains: search, mode: 'insensitive' } },
+          },
+        },
       ];
     }
 
@@ -802,7 +909,11 @@ export class BookingsService {
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    const lastDayOfMonth = new Date(
+      today.getFullYear(),
+      today.getMonth() + 1,
+      0,
+    );
 
     const [
       total,
@@ -820,7 +931,9 @@ export class BookingsService {
       this.prisma.booking.count({ where: { status: BookingStatus.PENDING } }),
       this.prisma.booking.count({ where: { status: BookingStatus.CONFIRMED } }),
       this.prisma.booking.count({ where: { status: BookingStatus.PAID } }),
-      this.prisma.booking.count({ where: { status: BookingStatus.IN_PROGRESS } }),
+      this.prisma.booking.count({
+        where: { status: BookingStatus.IN_PROGRESS },
+      }),
       this.prisma.booking.count({ where: { status: BookingStatus.COMPLETED } }),
       this.prisma.booking.count({ where: { status: BookingStatus.CANCELLED } }),
       this.prisma.booking.count({ where: { status: BookingStatus.DISPUTED } }),
@@ -855,7 +968,10 @@ export class BookingsService {
   /**
    * Admin: Update booking status
    */
-  async adminUpdateBookingStatus(bookingId: string, dto: UpdateBookingStatusDto) {
+  async adminUpdateBookingStatus(
+    bookingId: string,
+    dto: UpdateBookingStatusDto,
+  ) {
     const booking = await this.prisma.booking.findUnique({
       where: { id: bookingId },
     });
@@ -900,7 +1016,9 @@ export class BookingsService {
       },
     });
 
-    this.logger.log(`Admin updated booking ${booking.bookingCode} status to ${dto.status}`);
+    this.logger.log(
+      `Admin updated booking ${booking.bookingCode} status to ${dto.status}`,
+    );
 
     return withCombinedDateTime(updatedBooking);
   }

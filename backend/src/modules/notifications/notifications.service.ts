@@ -1,15 +1,24 @@
 import { InjectQueue } from '@nestjs/bull';
-import { Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  OnModuleInit,
+} from '@nestjs/common';
 import type { Queue } from 'bull';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { NotificationType } from '../../generated/prisma/client';
 import { SettingsService } from '../settings/settings.service';
-import { AdminQueryNotificationsDto, AdminSendNotificationDto, NotificationStats } from './dto/admin-notification.dto';
+import {
+  AdminQueryNotificationsDto,
+  AdminSendNotificationDto,
+  NotificationStats,
+} from './dto/admin-notification.dto';
 import { QueryNotificationsDto } from './dto/query-notifications.dto';
 import { NotificationJobData } from './dto/send-notification.dto';
 import {
-    NOTIFICATION_JOBS,
-    NOTIFICATION_QUEUE,
+  NOTIFICATION_JOBS,
+  NOTIFICATION_QUEUE,
 } from './processors/notification.processor';
 
 const ADMIN_ALERT_SETTINGS_KEYS = {
@@ -45,16 +54,24 @@ export class NotificationsService implements OnModuleInit {
       const msg = `Job ${job?.id} failed: ${err?.message ?? String(err)}`;
       this.lastPushError = msg;
       this.lastPushErrorAt = new Date();
-      this.logger.error(`[NotificationsService] Push queue job failed: ${msg}`, err?.stack ?? '');
+      this.logger.error(
+        `[NotificationsService] Push queue job failed: ${msg}`,
+        err?.stack ?? '',
+      );
     });
     this.notificationQueue.on('error', (err: Error) => {
       const msg = `Queue error: ${err?.message ?? String(err)}`;
       this.lastPushError = msg;
       this.lastPushErrorAt = new Date();
-      this.logger.error(`[NotificationsService] Push queue error: ${msg}`, err?.stack ?? '');
+      this.logger.error(
+        `[NotificationsService] Push queue error: ${msg}`,
+        err?.stack ?? '',
+      );
     });
     this.notificationQueue.on('stalled', (jobId: string) => {
-      this.logger.warn(`[NotificationsService] Push queue job stalled: ${jobId}`);
+      this.logger.warn(
+        `[NotificationsService] Push queue job stalled: ${jobId}`,
+      );
       this.lastPushError = `Job stalled: ${jobId}`;
       this.lastPushErrorAt = new Date();
     });
@@ -67,11 +84,15 @@ export class NotificationsService implements OnModuleInit {
       failedCount = await this.notificationQueue.getFailedCount();
       waitingCount = await this.notificationQueue.getWaitingCount();
     } catch (e: any) {
-      this.logger.warn(`[NotificationsService] Could not get queue counts: ${e?.message}`);
+      this.logger.warn(
+        `[NotificationsService] Could not get queue counts: ${e?.message}`,
+      );
     }
     return {
       lastError: this.lastPushError,
-      lastErrorAt: this.lastPushErrorAt ? this.lastPushErrorAt.toISOString() : null,
+      lastErrorAt: this.lastPushErrorAt
+        ? this.lastPushErrorAt.toISOString()
+        : null,
       failedCount,
       waitingCount,
     };
@@ -105,7 +126,9 @@ export class NotificationsService implements OnModuleInit {
         },
       });
     }
-    this.logger.log(`Admin alert [${settingsKey}]: ${title} -> ${adminUsers.length} admin(s)`);
+    this.logger.log(
+      `Admin alert [${settingsKey}]: ${title} -> ${adminUsers.length} admin(s)`,
+    );
   }
 
   /**
@@ -113,7 +136,9 @@ export class NotificationsService implements OnModuleInit {
    */
   async sendPushNotification(data: NotificationJobData) {
     try {
-      this.logger.log(`[NotificationsService] Queueing push notification for user ${data.userId}, type: ${data.type}`);
+      this.logger.log(
+        `[NotificationsService] Queueing push notification for user ${data.userId}, type: ${data.type}`,
+      );
       await this.notificationQueue.add(NOTIFICATION_JOBS.SEND_PUSH, data, {
         attempts: 3,
         backoff: {
@@ -123,11 +148,15 @@ export class NotificationsService implements OnModuleInit {
         removeOnComplete: true,
         removeOnFail: false,
       });
-      this.logger.log(`[NotificationsService] Successfully queued push notification for user ${data.userId}`);
+      this.logger.log(
+        `[NotificationsService] Successfully queued push notification for user ${data.userId}`,
+      );
     } catch (error: any) {
       this.lastPushError = `Queue add failed: ${error?.message ?? String(error)}`;
       this.lastPushErrorAt = new Date();
-      this.logger.error(`[NotificationsService] Failed to queue notification: ${error.message}`);
+      this.logger.error(
+        `[NotificationsService] Failed to queue notification: ${error.message}`,
+      );
     }
   }
 
@@ -147,7 +176,9 @@ export class NotificationsService implements OnModuleInit {
     saveToDb?: boolean;
   }) {
     const shouldSaveToDb = data.saveToDb !== false;
-    this.logger.log(`[NotificationsService] sendNotification called for user ${data.userId}, type: ${data.type}, sendPush: ${data.sendPush !== false}, saveToDb: ${shouldSaveToDb}`);
+    this.logger.log(
+      `[NotificationsService] sendNotification called for user ${data.userId}, type: ${data.type}, sendPush: ${data.sendPush !== false}, saveToDb: ${shouldSaveToDb}`,
+    );
 
     let notification: any = null;
 
@@ -165,7 +196,9 @@ export class NotificationsService implements OnModuleInit {
           data: data.data,
         },
       });
-      this.logger.log(`[NotificationsService] Notification saved to DB with id: ${notification.id}`);
+      this.logger.log(
+        `[NotificationsService] Notification saved to DB with id: ${notification.id}`,
+      );
     }
 
     // Queue push notification if requested
@@ -180,7 +213,6 @@ export class NotificationsService implements OnModuleInit {
 
     return notification;
   }
-
 
   async getNotifications(userId: string, query: QueryNotificationsDto) {
     const { page = 1, limit = 20, isRead, type } = query;
@@ -429,31 +461,43 @@ export class NotificationsService implements OnModuleInit {
 
   async adminGetStats(): Promise<NotificationStats> {
     const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
     const weekStart = new Date(todayStart);
     weekStart.setDate(weekStart.getDate() - 7);
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const [total, unread, read, byTypeRaw, today, thisWeek, thisMonth, pushQueue] =
-      await Promise.all([
-        this.prisma.notification.count(),
-        this.prisma.notification.count({ where: { isRead: false } }),
-        this.prisma.notification.count({ where: { isRead: true } }),
-        this.prisma.notification.groupBy({
-          by: ['type'],
-          _count: { type: true },
-        }),
-        this.prisma.notification.count({
-          where: { createdAt: { gte: todayStart } },
-        }),
-        this.prisma.notification.count({
-          where: { createdAt: { gte: weekStart } },
-        }),
-        this.prisma.notification.count({
-          where: { createdAt: { gte: monthStart } },
-        }),
-        this.getPushQueueStatus(),
-      ]);
+    const [
+      total,
+      unread,
+      read,
+      byTypeRaw,
+      today,
+      thisWeek,
+      thisMonth,
+      pushQueue,
+    ] = await Promise.all([
+      this.prisma.notification.count(),
+      this.prisma.notification.count({ where: { isRead: false } }),
+      this.prisma.notification.count({ where: { isRead: true } }),
+      this.prisma.notification.groupBy({
+        by: ['type'],
+        _count: { type: true },
+      }),
+      this.prisma.notification.count({
+        where: { createdAt: { gte: todayStart } },
+      }),
+      this.prisma.notification.count({
+        where: { createdAt: { gte: weekStart } },
+      }),
+      this.prisma.notification.count({
+        where: { createdAt: { gte: monthStart } },
+      }),
+      this.getPushQueueStatus(),
+    ]);
 
     const byType = byTypeRaw.map((item) => ({
       type: item.type,
@@ -473,7 +517,16 @@ export class NotificationsService implements OnModuleInit {
   }
 
   async adminGetNotifications(query: AdminQueryNotificationsDto) {
-    const { page = 1, limit = 20, search, type, userId, isRead, sortBy = 'createdAt', sortOrder = 'desc' } = query;
+    const {
+      page = 1,
+      limit = 20,
+      search,
+      type,
+      userId,
+      isRead,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+    } = query;
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -495,7 +548,11 @@ export class NotificationsService implements OnModuleInit {
         { title: { contains: search, mode: 'insensitive' } },
         { body: { contains: search, mode: 'insensitive' } },
         { user: { email: { contains: search, mode: 'insensitive' } } },
-        { user: { profile: { fullName: { contains: search, mode: 'insensitive' } } } },
+        {
+          user: {
+            profile: { fullName: { contains: search, mode: 'insensitive' } },
+          },
+        },
       ];
     }
 
@@ -535,7 +592,17 @@ export class NotificationsService implements OnModuleInit {
   }
 
   async adminSendNotification(dto: AdminSendNotificationDto) {
-    const { userIds, title, body, type = NotificationType.SYSTEM, imageUrl, actionType, actionId, data, sendPush = true } = dto;
+    const {
+      userIds,
+      title,
+      body,
+      type = NotificationType.SYSTEM,
+      imageUrl,
+      actionType,
+      actionId,
+      data,
+      sendPush = true,
+    } = dto;
 
     if (!userIds || userIds.length === 0) {
       return { success: false, message: 'No user IDs provided' };
@@ -574,7 +641,16 @@ export class NotificationsService implements OnModuleInit {
   }
 
   async adminBroadcastNotification(dto: AdminSendNotificationDto) {
-    const { title, body, type = NotificationType.SYSTEM, imageUrl, actionType, actionId, data, sendPush = true } = dto;
+    const {
+      title,
+      body,
+      type = NotificationType.SYSTEM,
+      imageUrl,
+      actionType,
+      actionId,
+      data,
+      sendPush = true,
+    } = dto;
 
     // Get all active users
     const users = await this.prisma.user.findMany({

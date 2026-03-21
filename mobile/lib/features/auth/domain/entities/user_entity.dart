@@ -98,6 +98,9 @@ class ProfileEntity extends Equatable {
   final String? photoUrl;
   final double? heightCm;
   final double? weightKg;
+  final String? education;
+  final String? smokingHabit;
+  final String? drinkingHabit;
   final String? city;
   final String? district;
   final String? address;
@@ -116,6 +119,9 @@ class ProfileEntity extends Equatable {
     this.photoUrl,
     this.heightCm,
     this.weightKg,
+    this.education,
+    this.smokingHabit,
+    this.drinkingHabit,
     this.city,
     this.district,
     this.address,
@@ -147,6 +153,9 @@ class ProfileEntity extends Equatable {
     String? photoUrl,
     double? heightCm,
     double? weightKg,
+    String? education,
+    String? smokingHabit,
+    String? drinkingHabit,
     String? city,
     String? district,
     String? address,
@@ -165,6 +174,9 @@ class ProfileEntity extends Equatable {
       photoUrl: photoUrl ?? this.photoUrl,
       heightCm: heightCm ?? this.heightCm,
       weightKg: weightKg ?? this.weightKg,
+      education: education ?? this.education,
+      smokingHabit: smokingHabit ?? this.smokingHabit,
+      drinkingHabit: drinkingHabit ?? this.drinkingHabit,
       city: city ?? this.city,
       district: district ?? this.district,
       address: address ?? this.address,
@@ -186,6 +198,9 @@ class ProfileEntity extends Equatable {
         photoUrl,
         heightCm,
         weightKg,
+        education,
+        smokingHabit,
+        drinkingHabit,
         city,
         district,
         address,

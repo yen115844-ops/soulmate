@@ -9,12 +9,14 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
-import '../../../../core/utils/responsive.dart';
 import '../../../../core/utils/image_utils.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/bloc/master_data_bloc.dart';
 import '../../../../shared/data/models/master_data_models.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../auth/data/models/user_model.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_event.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
@@ -30,11 +32,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
   @override
   void initState() {
     super.initState();
-    // Dispatch load once (not in build) to avoid jank and duplicate API calls
+    // Always load fresh profile and master data to avoid stale data
     final profileBloc = getIt<ProfileBloc>();
-    if (profileBloc.state is ProfileInitial) {
-      profileBloc.add(const ProfileLoadRequested());
-    }
+    profileBloc.add(const ProfileLoadRequested());
+    
     final masterDataBloc = getIt<MasterDataBloc>();
     if (masterDataBloc.state is MasterDataInitial) {
       masterDataBloc.add(const MasterDataLoadRequested());
@@ -65,6 +66,9 @@ class _EditProfileContentState extends State<_EditProfileContent> {
   String? _gender;
   int? _heightCm;
   int? _weightKg;
+  String? _education;
+  String? _smokingHabit;
+  String? _drinkingHabit;
 
   // Selected IDs from master data
   String? _selectedProvinceId;
@@ -102,6 +106,9 @@ class _EditProfileContentState extends State<_EditProfileContent> {
       _gender = profile.gender;
       _heightCm = profile.heightCm;
       _weightKg = profile.weightKg;
+      _education = profile.education;
+      _smokingHabit = profile.smokingHabit;
+      _drinkingHabit = profile.drinkingHabit;
 
       // Store city/district names to match with master data later
       _savedCityName = profile.city;
@@ -193,6 +200,7 @@ class _EditProfileContentState extends State<_EditProfileContent> {
               backgroundColor: AppColors.success,
             ),
           );
+          context.read<AuthBloc>().add(const AuthRefreshRequested());
         } else if (state is ProfileAvatarUpdateSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -382,6 +390,28 @@ class _EditProfileContentState extends State<_EditProfileContent> {
                   ),
                   const SizedBox(height: 24),
 
+                  // Lifestyle Information
+                  _buildSectionTitle('Lối sống'),
+                  const SizedBox(height: 16),
+
+                  _FormField(
+                    label: 'Học vấn',
+                    child: _buildEducationSelector(),
+                  ),
+                  const SizedBox(height: 16),
+
+                  _FormField(
+                    label: 'Hút thuốc',
+                    child: _buildSmokingHabitSelector(),
+                  ),
+                  const SizedBox(height: 16),
+
+                  _FormField(
+                    label: 'Uống rượu',
+                    child: _buildDrinkingHabitSelector(),
+                  ),
+                  const SizedBox(height: 24),
+
                   // Bio
                   _buildSectionTitle('Giới thiệu bản thân'),
                   const SizedBox(height: 16),
@@ -537,72 +567,259 @@ class _EditProfileContentState extends State<_EditProfileContent> {
   }
 
   Widget _buildProvinceDropdown(List<ProvinceModel> provinces) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: context.appColors.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.appColors.border),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: _selectedProvinceId,
-          isExpanded: true,
-          hint: Text(
-            'Chọn tỉnh/thành',
-            style:
-                AppTypography.bodyLarge.copyWith(color: context.appColors.textHint),
+    final selectedProvinceName = provinces
+        .where((province) => province.id == _selectedProvinceId)
+        .map((province) => province.name)
+        .firstOrNull;
+
+    return _buildLocationPickerField(
+      text: selectedProvinceName ?? 'Chọn tỉnh/thành',
+      isPlaceholder: selectedProvinceName == null,
+      onTap: () async {
+        final selected = await _showSearchableLocationBottomSheet<ProvinceModel>(
+          title: 'Chọn tỉnh/thành phố',
+          items: provinces,
+          selectedId: _selectedProvinceId,
+          idOf: (province) => province.id,
+          titleOf: (province) => province.name,
+          searchHint: 'Tìm tỉnh/thành...',
+        );
+
+        if (selected == null || !mounted) return;
+
+        if (selected.id != _selectedProvinceId) {
+          setState(() {
+            _selectedProvinceId = selected.id;
+            _selectedDistrictId = null;
+          });
+          context.read<MasterDataBloc>().add(DistrictsLoadRequested(selected.id));
+        }
+      },
+    );
+  }
+
+  Widget _buildDistrictDropdown(List<DistrictModel> districts) {
+    final selectedDistrictName = districts
+        .where((district) => district.id == _selectedDistrictId)
+        .map((district) => district.name)
+        .firstOrNull;
+    final isDisabled = _selectedProvinceId == null;
+
+    return _buildLocationPickerField(
+      text: selectedDistrictName ?? (isDisabled ? 'Chọn tỉnh trước' : 'Chọn quận/huyện'),
+      isPlaceholder: selectedDistrictName == null,
+      isDisabled: isDisabled,
+      onTap: isDisabled
+          ? null
+          : () async {
+              final selected = await _showSearchableLocationBottomSheet<DistrictModel>(
+                title: 'Chọn quận/huyện',
+                items: districts,
+                selectedId: _selectedDistrictId,
+                idOf: (district) => district.id,
+                titleOf: (district) => district.name,
+                searchHint: 'Tìm quận/huyện...',
+              );
+
+              if (selected == null || !mounted) return;
+              setState(() => _selectedDistrictId = selected.id);
+            },
+    );
+  }
+
+  Widget _buildLocationPickerField({
+    required String text,
+    required bool isPlaceholder,
+    required VoidCallback? onTap,
+    bool isDisabled = false,
+  }) {
+    return Opacity(
+      opacity: isDisabled ? 0.7 : 1,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Ink(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            decoration: BoxDecoration(
+              color: context.appColors.card,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: context.appColors.border),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    text,
+                    style: AppTypography.bodyLarge.copyWith(
+                      color: isPlaceholder
+                          ? context.appColors.textHint
+                          : context.appColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Icon(
+                  Ionicons.chevron_down_outline,
+                  size: 18,
+                  color: context.appColors.textHint,
+                ),
+              ],
+            ),
           ),
-          items: provinces.map((province) {
-            return DropdownMenuItem(
-              value: province.id,
-              child: Text(province.name),
-            );
-          }).toList(),
-          onChanged: (value) {
-            setState(() {
-              _selectedProvinceId = value;
-              _selectedDistrictId = null;
-            });
-            if (value != null) {
-              context.read<MasterDataBloc>().add(DistrictsLoadRequested(value));
-            }
-          },
         ),
       ),
     );
   }
 
-  Widget _buildDistrictDropdown(List<DistrictModel> districts) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: context.appColors.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.appColors.border),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: _selectedDistrictId,
-          isExpanded: true,
-          hint: Text(
-            _selectedProvinceId == null ? 'Chọn tỉnh trước' : 'Chọn quận/huyện',
-            style:
-                AppTypography.bodyLarge.copyWith(color: context.appColors.textHint),
-          ),
-          items: districts.map((district) {
-            return DropdownMenuItem(
-              value: district.id,
-              child: Text(district.name),
-            );
-          }).toList(),
-          onChanged: _selectedProvinceId == null
-              ? null
-              : (value) {
-                  setState(() => _selectedDistrictId = value);
+  Future<T?> _showSearchableLocationBottomSheet<T>({
+    required String title,
+    required List<T> items,
+    required String? selectedId,
+    required String Function(T item) idOf,
+    required String Function(T item) titleOf,
+    required String searchHint,
+  }) {
+    return showModalBottomSheet<T>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (bottomSheetContext) {
+        String query = '';
+
+        return StatefulBuilder(
+          builder: (context, setBottomSheetState) {
+            final mediaQuery = MediaQuery.of(context);
+            final keyboardInset = mediaQuery.viewInsets.bottom;
+            final bottomSafeInset = mediaQuery.padding.bottom;
+            final filteredItems = items.where((item) {
+              if (query.isEmpty) return true;
+              return titleOf(item).toLowerCase().contains(query.toLowerCase());
+            }).toList();
+
+            return AnimatedPadding(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOut,
+              padding: EdgeInsets.only(bottom: keyboardInset),
+              child: DraggableScrollableSheet(
+                expand: false,
+                initialChildSize: 0.72,
+                minChildSize: 0.42,
+                maxChildSize: 0.9,
+                builder: (context, scrollController) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: context.appColors.surface,
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                    ),
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 4,
+                          margin: const EdgeInsets.only(top: 10, bottom: 14),
+                          decoration: BoxDecoration(
+                            color: context.appColors.border,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  title,
+                                  style: AppTypography.titleLarge.copyWith(
+                                    color: context.appColors.textPrimary,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: () => Navigator.of(bottomSheetContext).pop(),
+                                icon: const Icon(Ionicons.close_outline),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                          child: TextField(
+                            autofocus: true,
+                            decoration: _inputDecoration(searchHint).copyWith(
+                              prefixIcon: Icon(
+                                Ionicons.search_outline,
+                                color: context.appColors.textHint,
+                              ),
+                            ),
+                            onChanged: (value) {
+                              setBottomSheetState(() {
+                                query = value.trim();
+                              });
+                            },
+                          ),
+                        ),
+                        Expanded(
+                          child: filteredItems.isEmpty
+                              ? ListView(
+                                  controller: scrollController,
+                                  padding: EdgeInsets.only(bottom: bottomSafeInset + 24),
+                                  children: [
+                                    const SizedBox(height: 120),
+                                    Center(
+                                      child: Text(
+                                        'Không tìm thấy kết quả phù hợp',
+                                        style: AppTypography.bodyMedium.copyWith(
+                                          color: context.appColors.textHint,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : ListView.separated(
+                                  controller: scrollController,
+                                  padding: EdgeInsets.only(bottom: bottomSafeInset + 8),
+                                  itemCount: filteredItems.length,
+                                  separatorBuilder: (_, __) => Divider(
+                                    height: 1,
+                                    color: context.appColors.border,
+                                  ),
+                                  itemBuilder: (context, index) {
+                                    final item = filteredItems[index];
+                                    final itemId = idOf(item);
+                                    final isSelected = itemId == selectedId;
+
+                                    return ListTile(
+                                      title: Text(
+                                        titleOf(item),
+                                        style: AppTypography.bodyLarge.copyWith(
+                                          color: context.appColors.textPrimary,
+                                        ),
+                                      ),
+                                      trailing: isSelected
+                                          ? const Icon(
+                                              Ionicons.checkmark_circle,
+                                              color: AppColors.primary,
+                                            )
+                                          : null,
+                                      onTap: () {
+                                        Navigator.of(bottomSheetContext).pop(item);
+                                      },
+                                    );
+                                  },
+                                ),
+                        ),
+                      ],
+                    ),
+                  );
                 },
-        ),
-      ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -696,7 +913,7 @@ class _EditProfileContentState extends State<_EditProfileContent> {
           checkmarkColor: AppColors.primary,
           labelStyle: TextStyle(
             color: isSelected ? AppColors.primary : context.appColors.textSecondary,
-          ),
+           ),
         );
       }).toList(),
     );
@@ -869,11 +1086,132 @@ class _EditProfileContentState extends State<_EditProfileContent> {
     );
   }
 
+  Widget _buildEducationSelector() {
+    final educations = [
+      ('PRIMARY', 'Tiểu học'),
+      ('SECONDARY', 'THCS'),
+      ('HIGH_SCHOOL', 'THPT'),
+      ('VOCATIONAL', 'Cao đẳng'),
+      ('BACHELOR', 'Đại học'),
+      ('MASTER', 'Thạc sĩ'),
+      ('DOCTORATE', 'Tiến sĩ'),
+      ('OTHER', 'Khác'),
+    ];
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: educations.map((e) {
+        final isSelected = _education == e.$1;
+        return GestureDetector(
+          onTap: () => setState(() => _education = e.$1),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: isSelected ? AppColors.primary : context.appColors.card,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isSelected ? AppColors.primary : context.appColors.border,
+              ),
+            ),
+            child: Text(
+              e.$2,
+              style: AppTypography.labelSmall.copyWith(
+                color: isSelected
+                    ? AppColors.textWhite
+                    : context.appColors.textSecondary,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildSmokingHabitSelector() {
+    final habits = [
+      ('NEVER', 'Không'),
+      ('SOMETIMES', 'Thỉnh thoảng'),
+      ('REGULARLY', 'Thường xuyên'),
+      ('QUIT', 'Bỏ rồi'),
+      ('NOT_SPECIFIED', 'Không nói'),
+    ];
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: habits.map((h) {
+        final isSelected = _smokingHabit == h.$1;
+        return GestureDetector(
+          onTap: () => setState(() => _smokingHabit = h.$1),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: isSelected ? AppColors.primary : context.appColors.card,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isSelected ? AppColors.primary : context.appColors.border,
+              ),
+            ),
+            child: Text(
+              h.$2,
+              style: AppTypography.labelSmall.copyWith(
+                color: isSelected
+                    ? AppColors.textWhite
+                    : context.appColors.textSecondary,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildDrinkingHabitSelector() {
+    final habits = [
+      ('NEVER', 'Không'),
+      ('SOCIALLY', 'Dự tiệc'),
+      ('REGULARLY', 'Thường xuyên'),
+      ('HEAVILY', 'Nặng'),
+      ('QUIT', 'Bỏ rồi'),
+      ('NOT_SPECIFIED', 'Không nói'),
+    ];
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: habits.map((h) {
+        final isSelected = _drinkingHabit == h.$1;
+        return GestureDetector(
+          onTap: () => setState(() => _drinkingHabit = h.$1),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: isSelected ? AppColors.primary : context.appColors.card,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isSelected ? AppColors.primary : context.appColors.border,
+              ),
+            ),
+            child: Text(
+              h.$2,
+              style: AppTypography.labelSmall.copyWith(
+                color: isSelected
+                    ? AppColors.textWhite
+                    : context.appColors.textSecondary,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
       style: AppTypography.titleMedium.copyWith(
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w400,
       ),
     );
   }
@@ -912,7 +1250,7 @@ class _EditProfileContentState extends State<_EditProfileContent> {
               leading: const Icon(Ionicons.camera_outline),
               title:   Text('Chụp ảnh',  style: TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.w500 ,
+                fontWeight: FontWeight.w400 ,
                 color: context.theme.colorScheme.onSurface
                 )),
               onTap: () async {
@@ -946,7 +1284,7 @@ class _EditProfileContentState extends State<_EditProfileContent> {
               title:   Text('Chọn từ thư viện',
               style: TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.w500 ,
+                fontWeight: FontWeight.w400 ,
                 color: context.theme.colorScheme.onSurface
                 )
               ),
@@ -1024,6 +1362,9 @@ class _EditProfileContentState extends State<_EditProfileContent> {
             dateOfBirth: _birthday,
             heightCm: _heightCm,
             weightKg: _weightKg,
+            education: _education,
+            smokingHabit: _smokingHabit,
+            drinkingHabit: _drinkingHabit,
             provinceId: _selectedProvinceId,
             districtId: _selectedDistrictId,
             city: cityName,

@@ -15,7 +15,7 @@ class PartnerDetailHeader extends StatelessWidget {
   final VoidCallback? onShare;
   final VoidCallback? onFavorite;
   final bool isFavorite;
-  final VoidCallback? onImageTap;
+  final ValueChanged<int>? onImageTap;
 
   const PartnerDetailHeader({
     super.key,
@@ -30,9 +30,10 @@ class PartnerDetailHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final headerImages = _buildHeaderImages();
 
     return SliverAppBar(
-      expandedHeight: screenWidth * 1.1,
+      expandedHeight: screenWidth * 1.1 + 150,
       pinned: true,
       stretch: true,
       backgroundColor: context.appColors.surface,
@@ -53,26 +54,20 @@ class PartnerDetailHeader extends StatelessWidget {
         const SizedBox(width: 16),
       ],
       flexibleSpace: FlexibleSpaceBar(
-        background: GestureDetector(
-          onTap: onImageTap,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              // Avatar image
-              _buildAvatarImage(context),
-              // Gradient overlay — pass through taps to the GestureDetector
-              _buildGradientOverlay(),
-              // Bottom info — pass through taps on empty areas
-              Positioned(
-                left: 20,
-                right: 20,
-                bottom: 16,
-                child: IgnorePointer(
-                  child: _buildProfileInfo(context),
-                ),
+        background: Column(
+          children: [
+            Expanded(
+              child: SizedBox.expand(
+                child: _buildImageCarousel(context, headerImages),
               ),
-            ],
-          ),
+            ),
+            Container(
+              width: double.infinity,
+              color: context.appColors.surface,
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
+              child: _buildProfileInfo(context, onImageBackground: false),
+            ),
+          ],
         ),
       ),
     );
@@ -101,50 +96,96 @@ class PartnerDetailHeader extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatarImage(BuildContext context) {
-    final url = ImageUtils.buildImageUrlNullable(detail.avatarUrl);
-    if (url != null && url.isNotEmpty) {
-      return CachedNetworkImage(
-        imageUrl: url,
-        fit: BoxFit.cover,
-        placeholder: (_, __) => Container(
-          color: context.appColors.background,
-          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-        ),
-        errorWidget: (_, __, ___) => Container(
-          color: context.appColors.background,
-          child: const Icon(Ionicons.person, size: 80, color: AppColors.textHint),
-        ),
+  List<String> _buildHeaderImages() {
+    final allPhotos = <String>[];
+    allPhotos.addAll(detail.photos.where((p) => p.trim().isNotEmpty));
+    if (detail.avatarUrl != null && detail.avatarUrl!.trim().isNotEmpty) {
+      allPhotos.add(detail.avatarUrl!);
+    }
+    return allPhotos.toSet().toList();
+  }
+
+  Widget _buildImageCarousel(BuildContext context, List<String> images) {
+    if (images.isEmpty) {
+      return Container(
+        color: context.appColors.background,
+        child: const Icon(Ionicons.person, size: 80, color: AppColors.textHint),
       );
     }
-    return Container(
-      color: context.appColors.background,
-      child: const Icon(Ionicons.person, size: 80, color: AppColors.textHint),
-    );
-  }
 
-  Widget _buildGradientOverlay() {
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.transparent,
-                Colors.transparent,
-                Colors.black.withOpacity(0.7),
-              ],
-              stops: const [0.0, 0.5, 1.0],
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        PageView.builder(
+          itemCount: images.length,
+          itemBuilder: (context, index) {
+            final url = ImageUtils.buildImageUrlNullable(images[index]);
+            return GestureDetector(
+              onTap: () => onImageTap?.call(index),
+              child: url != null && url.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: url,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) => Container(
+                        color: context.appColors.background,
+                        child: const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                      errorWidget: (_, __, ___) => Container(
+                        color: context.appColors.background,
+                        child: const Icon(
+                          Ionicons.image_outline,
+                          size: 56,
+                          color: AppColors.textHint,
+                        ),
+                      ),
+                    )
+                  : Container(
+                      color: context.appColors.background,
+                      child: const Icon(
+                        Ionicons.image_outline,
+                        size: 56,
+                        color: AppColors.textHint,
+                      ),
+                    ),
+            );
+          },
+        ),
+        if (images.length > 1)
+          Positioned(
+            right: 16,
+            bottom: 16,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.45),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '${images.length} ảnh',
+                style: AppTypography.labelSmall.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+      ],
     );
   }
 
-  Widget _buildProfileInfo(BuildContext context) {
+  Widget _buildProfileInfo(BuildContext context, {required bool onImageBackground}) {
+    final primaryColor = onImageBackground
+        ? Colors.white
+        : context.appColors.textPrimary;
+    final secondaryColor = onImageBackground
+        ? Colors.white70
+        : context.appColors.textSecondary;
+    final tertiaryColor = onImageBackground
+        ? Colors.white60
+        : context.appColors.textHint;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -156,7 +197,7 @@ class PartnerDetailHeader extends StatelessWidget {
               child: Text(
                 detail.displayName,
                 style: AppTypography.headlineMedium.copyWith(
-                  color: Colors.white,
+                  color: primaryColor,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -172,22 +213,21 @@ class PartnerDetailHeader extends StatelessWidget {
         Row(
           children: [
             if (detail.age != null) ...[
-              Icon(Ionicons.calendar_outline, size: 14, color: Colors.white70),
+              Icon(Ionicons.calendar_outline, size: 14, color: secondaryColor),
               const SizedBox(width: 4),
               Text(
                 '${detail.age} tuổi',
-                style: AppTypography.bodyMedium.copyWith(color: Colors.white70),
+                style: AppTypography.bodyMedium.copyWith(color: secondaryColor),
               ),
               const SizedBox(width: 12),
             ],
             if (detail.location != null) ...[
-              Icon(Ionicons.location_outline, size: 14, color: Colors.white70),
+              Icon(Ionicons.location_outline, size: 14, color: secondaryColor),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
                   detail.location!,
-                  style:
-                      AppTypography.bodyMedium.copyWith(color: Colors.white70),
+                  style: AppTypography.bodyMedium.copyWith(color: secondaryColor),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -204,14 +244,14 @@ class PartnerDetailHeader extends StatelessWidget {
             Text(
               detail.profile.averageRating.toStringAsFixed(2),
               style: AppTypography.titleSmall.copyWith(
-                color: Colors.white,
+                color: primaryColor,
                 fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(width: 4),
             Text(
               '(${detail.profile.totalReviews} đánh giá)',
-              style: AppTypography.bodySmall.copyWith(color: Colors.white60),
+              style: AppTypography.bodySmall.copyWith(color: tertiaryColor),
             ),
             const Spacer(),
             _buildOnlineIndicator(),

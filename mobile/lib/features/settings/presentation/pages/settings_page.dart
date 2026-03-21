@@ -16,6 +16,7 @@ import '../../../../core/theme/theme_cubit.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
+import '../../../auth/data/models/user_enums.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
@@ -363,17 +364,35 @@ class _SettingsContent extends StatelessWidget {
             ),
           ),
           const Divider(height: 1, indent: 72),
-          _SettingsTile(
-            icon: Ionicons.shield_checkmark_outline,
-            title: 'Xác minh danh tính',
-            subtitle: 'Nhận huy hiệu tick xanh',
-            iconColor: const Color(0xFF3B82F6), // Blue color
-            onTap: () => context.push(RouteNames.verification),
-            trailing: Icon(
-              Ionicons.chevron_forward_outline,
-              color: context.appColors.textHint,
-              size: 18,
-            ),
+          BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, authState) {
+              final isVerified = authState is AuthAuthenticated &&
+                  authState.kycStatus == KycStatus.approved;
+              return _SettingsTile(
+                icon: Ionicons.shield_checkmark_outline,
+                title: 'Xác minh danh tính',
+                subtitle: isVerified
+                    ? 'Đã xác minh'
+                    : 'Nhận huy hiệu tick xanh',
+                iconColor: isVerified
+                    ? AppColors.success
+                    : const Color(0xFF3B82F6),
+                onTap: isVerified
+                    ? null
+                    : () => context.push(RouteNames.verification),
+                trailing: isVerified
+                    ? const Icon(
+                        Ionicons.checkmark_circle,
+                        color: AppColors.success,
+                        size: 20,
+                      )
+                    : Icon(
+                        Ionicons.chevron_forward_outline,
+                        color: context.appColors.textHint,
+                        size: 18,
+                      ),
+              );
+            },
           ),
 
           // Notifications Section

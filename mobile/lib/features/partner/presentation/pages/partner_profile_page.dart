@@ -5,13 +5,14 @@ import 'package:go_router/go_router.dart';
 import 'package:ionicons/ionicons.dart';
 
 import '../../../../config/routes/route_names.dart';
-import '../../../../core/constants/service_type_emoji.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../core/utils/responsive.dart';
+import '../../../../core/utils/service_type_display_resolver.dart';
+import '../../../../shared/data/repositories/master_data_repository.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
 import '../../data/partner_repository.dart'; // for PartnerProfileResponse model
@@ -471,10 +472,22 @@ class _PartnerProfileContent extends StatelessWidget {
     );
   }
 
-  void _showEditServices(BuildContext context, List<String> currentServices) {
-    final allServices = ServiceTypeEmoji.all
-        .where((s) => s.code != null)
-        .map((s) => {'id': s.code!, 'name': s.nameVi, 'emoji': s.emoji})
+  Future<void> _showEditServices(
+    BuildContext context,
+    List<String> currentServices,
+  ) async {
+    final repo = getIt<MasterDataRepository>();
+    final serviceTypes = await repo.getServiceTypes();
+    ServiceTypeDisplayResolver.seedFromApi(serviceTypes);
+
+    final allServices = serviceTypes
+        .map(
+          (s) => {
+            'id': s.code,
+            'name': s.displayName,
+            'emoji': (s.icon != null && s.icon!.isNotEmpty) ? s.icon! : '•',
+          },
+        )
         .toList();
 
     List<String> selectedServices = List.from(currentServices);
@@ -484,106 +497,123 @@ class _PartnerProfileContent extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModalState) => Container(
-          height: MediaQuery.of(context).size.height * 0.7,
-          decoration: BoxDecoration(
-            color: context.appColors.surface,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Chọn hoạt động', style: AppTypography.titleLarge),
-              const SizedBox(height: 8),
-              Text(
-                'Chọn các hoạt động bạn quan tâm',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: context.appColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Expanded(
-                child: GridView.builder(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: ResponsiveLayout.gridCrossAxisCount(
-                      context,
-                      minCellWidth: 140,
-                      horizontalPadding: 32,
-                      spacing: 12,
-                      maxColumns: 4,
+        builder: (ctx, setModalState) => DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.7,
+          minChildSize: 0.42,
+          maxChildSize: 0.9,
+          builder: (context, scrollController) => Container(
+            decoration: BoxDecoration(
+              color: context.appColors.surface,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 14),
+                    decoration: BoxDecoration(
+                      color: context.appColors.border,
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 2.5,
                   ),
-                  itemCount: allServices.length,
-                  itemBuilder: (context, index) {
-                    final service = allServices[index];
-                    final isSelected = selectedServices.contains(service['id']);
-                    return GestureDetector(
-                      onTap: () {
-                        setModalState(() {
-                          if (isSelected) {
-                            selectedServices.remove(service['id']);
-                          } else {
-                            selectedServices.add(service['id'] as String);
-                          }
-                        });
-                      },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppColors.primary.withAlpha(25)
-                              : context.appColors.background,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
+                ),
+                Text('Chọn hoạt động', style: AppTypography.titleLarge),
+                const SizedBox(height: 8),
+                Text(
+                  'Chọn các hoạt động bạn quan tâm',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: context.appColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Expanded(
+                  child: GridView.builder(
+                    controller: scrollController,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: ResponsiveLayout.gridCrossAxisCount(
+                        context,
+                        minCellWidth: 140,
+                        horizontalPadding: 32,
+                        spacing: 12,
+                        maxColumns: 4,
+                      ),
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 2.5,
+                    ),
+                    itemCount: allServices.length,
+                    itemBuilder: (context, index) {
+                      final service = allServices[index];
+                      final isSelected = selectedServices.contains(service['id']);
+                      return GestureDetector(
+                        onTap: () {
+                          setModalState(() {
+                            if (isSelected) {
+                              selectedServices.remove(service['id']);
+                            } else {
+                              selectedServices.add(service['id'] as String);
+                            }
+                          });
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
                             color: isSelected
-                                ? AppColors.primary
-                                : context.appColors.border,
+                                ? AppColors.primary.withAlpha(25)
+                                : context.appColors.background,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : context.appColors.border,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                service['emoji'] as String,
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  color: isSelected
+                                      ? AppColors.primary
+                                      : context.appColors.textSecondary,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                service['name'] as String,
+                                style: AppTypography.labelMedium.copyWith(
+                                  color: isSelected
+                                      ? AppColors.primary
+                                      : context.appColors.textPrimary,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              service['emoji'] as String,
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: isSelected
-                                    ? AppColors.primary
-                                    : context.appColors.textSecondary,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              service['name'] as String,
-                              style: AppTypography.labelMedium.copyWith(
-                                color: isSelected
-                                    ? AppColors.primary
-                                    : context.appColors.textPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+                AppButton(
+                  text: 'Lưu thay đổi',
+                  onPressed: () {
+                    context.read<PartnerProfileBloc>().add(
+                      PartnerProfileUpdateRequested(
+                        serviceTypes: selectedServices,
                       ),
                     );
+                    Navigator.pop(ctx);
                   },
                 ),
-              ),
-              const SizedBox(height: 16),
-              AppButton(
-                text: 'Lưu thay đổi',
-                onPressed: () {
-                  context.read<PartnerProfileBloc>().add(
-                    PartnerProfileUpdateRequested(
-                      serviceTypes: selectedServices,
-                    ),
-                  );
-                  Navigator.pop(ctx);
-                },
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -957,8 +987,6 @@ class _ServicesGrid extends StatelessWidget {
 
   const _ServicesGrid({required this.serviceTypes});
 
-  // Dùng ServiceTypeEmoji - đồng bộ với seed/CMS
-
   @override
   Widget build(BuildContext context) {
     if (serviceTypes.isEmpty) {
@@ -979,7 +1007,7 @@ class _ServicesGrid extends StatelessWidget {
         spacing: 8,
         runSpacing: 8,
         children: serviceTypes.map((serviceId) {
-          final display = ServiceTypeEmoji.get(serviceId);
+          final displayName = ServiceTypeDisplayResolver.resolveName(serviceId);
 
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -987,18 +1015,11 @@ class _ServicesGrid extends StatelessWidget {
               color: AppColors.primary.withAlpha(25),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(display.emoji, style: const TextStyle(fontSize: 16)),
-                const SizedBox(width: 8),
-                Text(
-                  display.nameVi,
-                  style: AppTypography.labelMedium.copyWith(
-                    color: AppColors.primary,
-                  ),
-                ),
-              ],
+            child: Text(
+              displayName,
+              style: AppTypography.labelMedium.copyWith(
+                color: AppColors.primary,
+              ),
             ),
           );
         }).toList(),

@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { PrismaModule } from '../../database/prisma/prisma.module';
 import { ChatModule } from '../chat/chat.module';
 import { NotificationsModule } from '../notifications';
+import { UploadModule } from '../upload/upload.module';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 
@@ -13,6 +14,7 @@ import { UsersService } from './users.service';
   imports: [
     PrismaModule,
     NotificationsModule,
+    UploadModule,
     forwardRef(() => ChatModule),
     MulterModule.register({
       storage: diskStorage({
@@ -24,7 +26,7 @@ import { UsersService } from './users.service';
         },
       }),
       limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB for avatars
+        fileSize: 10 * 1024 * 1024, // 10MB for avatars
       },
       fileFilter: (req, file, callback) => {
         if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {

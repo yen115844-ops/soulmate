@@ -24,6 +24,7 @@ class PartnerCard extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onFavorite;
   final bool isFavorite;
+  final bool useGridLayout;
 
   const PartnerCard({
     super.key,
@@ -40,6 +41,7 @@ class PartnerCard extends StatelessWidget {
     this.onTap,
     this.onFavorite,
     this.isFavorite = false,
+    this.useGridLayout = false,
   });
 
   @override
@@ -47,8 +49,10 @@ class PartnerCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap ?? () => context.push('/partner/$id'),
       child: Container(
-        width: 180,
-        margin: const EdgeInsets.only(right: 12),
+        width: useGridLayout ? double.infinity : 180,
+        margin: useGridLayout
+            ? EdgeInsets.zero
+            : const EdgeInsets.only(right: 12),
         decoration: BoxDecoration(
           color: context.appColors.surface,
           borderRadius: BorderRadius.circular(20),
@@ -64,17 +68,10 @@ class PartnerCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Avatar Section
             Stack(
               children: [
-                // Avatar
-                Container(
-                   width: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(20),
-                    ),
-                  ),
+                AspectRatio(
+                  aspectRatio: useGridLayout ? 1.02 : 1,
                   child: ClipRRect(
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(20),
@@ -96,7 +93,6 @@ class PartnerCard extends StatelessWidget {
                   ),
                 ),
 
-                // Online indicator
                 if (isOnline)
                   Positioned(
                     top: 12,
@@ -116,7 +112,7 @@ class PartnerCard extends StatelessWidget {
                           Container(
                             width: 6,
                             height: 6,
-                            decoration:   BoxDecoration(
+                            decoration: BoxDecoration(
                               color: context.appColors.surface,
                               shape: BoxShape.circle,
                             ),
@@ -146,6 +142,7 @@ class PartnerCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: context.appColors.surface.withOpacity(0.9),
                         shape: BoxShape.circle,
+                        border: Border.all(color: context.appColors.border),
                       ),
                       child: Icon(
                         isFavorite ? Icons.favorite : Ionicons.heart_outline,
@@ -195,13 +192,11 @@ class PartnerCard extends StatelessWidget {
               ],
             ),
 
-            // Info Section
             Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Name & Verified
                   Row(
                     children: [
                       Expanded(
@@ -224,13 +219,12 @@ class PartnerCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
 
-                  // Rating
                   Row(
                     children: [
                       const Icon(
-                        Ionicons.star_outline,
+                        Ionicons.star,
                         size: 14,
-                        color: AppColors.warning,
+                        color: AppColors.starFilled,
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -248,7 +242,42 @@ class PartnerCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.withAlpha(
+                        context.appColors.primary,
+                        0.1,
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Ionicons.cash_outline,
+                          size: 13,
+                          color: context.appColors.primaryDark,
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            hourlyRate,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.labelMedium.copyWith(
+                              color: context.appColors.primaryDark,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -294,7 +323,7 @@ class PartnerListItem extends StatelessWidget {
     this.isFavorite = false,
   });
 
-   @override
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap ?? () => context.push('/partner/$id'),
@@ -341,7 +370,10 @@ class PartnerListItem extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: AppColors.success,
                         shape: BoxShape.circle,
-                        border: Border.all(color: context.appColors.surface, width: 2),
+                        border: Border.all(
+                          color: context.appColors.surface,
+                          width: 2,
+                        ),
                       ),
                     ),
                   ),
@@ -391,7 +423,7 @@ class PartnerListItem extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 12),
-                        Icon(
+                      Icon(
                         Ionicons.location_outline,
                         size: 14,
                         color: context.appColors.textHint,
@@ -444,7 +476,9 @@ class PartnerListItem extends StatelessWidget {
                   child: Icon(
                     isFavorite ? Icons.favorite : Ionicons.heart_outline,
                     size: 22,
-                    color: isFavorite ? AppColors.error : context.appColors.textHint,
+                    color: isFavorite
+                        ? AppColors.error
+                        : context.appColors.textHint,
                   ),
                 ),
               ],

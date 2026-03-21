@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/network/api_config.dart';
 import '../../../core/network/base_repository.dart';
 import '../../../core/utils/image_utils.dart';
 import '../../../shared/data/models/master_data_models.dart';
@@ -117,6 +118,28 @@ class HomeRepository with BaseRepositoryMixin {
       debugPrint('Search partners error: $e');
       rethrow;
     }
+  }
+
+  /// Persist current user location so other users can discover nearby.
+  Future<void> updateCurrentLocation({
+    required double latitude,
+    required double longitude,
+    String? provinceId,
+    String? districtId,
+    String? city,
+    String? district,
+  }) async {
+    await _apiClient.put(
+      UserEndpoints.location,
+      data: {
+        'currentLat': latitude,
+        'currentLng': longitude,
+        if (provinceId != null) 'provinceId': provinceId,
+        if (districtId != null) 'districtId': districtId,
+        if (city != null) 'city': city,
+        if (district != null) 'district': district,
+      },
+    );
   }
 
   /// Get partner by ID for detail view
@@ -359,7 +382,7 @@ class HomePartnersResponse {
       isPremium: isPremium,
       bio: bio,
       location: _buildLocation(profile),
-      distance: null,
+      distance: _parseNullableDouble(data['distanceKm']),
       services: services,
       interests: interests,
       talents: talents,
@@ -408,5 +431,13 @@ class HomePartnersResponse {
     if (value is int) return value.toDouble();
     if (value is String) return double.tryParse(value) ?? 0.0;
     return 0.0;
+  }
+
+  static double? _parseNullableDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
   }
 }

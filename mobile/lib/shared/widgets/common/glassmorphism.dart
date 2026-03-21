@@ -92,15 +92,8 @@ class GlassCard extends StatelessWidget {
               child: Container(
                 padding: padding ?? const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: gradient ??
-                      LinearGradient(
-                        colors: [
-                          Colors.white.withOpacity(0.15),
-                          Colors.white.withOpacity(0.05),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                  color: gradient == null ? Colors.white.withOpacity(0.15) : null,
+                  gradient: gradient,
                   borderRadius: BorderRadius.circular(borderRadius),
                   border: Border.all(
                     color: Colors.white.withOpacity(0.2),
@@ -284,17 +277,9 @@ class _AnimatedGradientContainerState extends State<AnimatedGradientContainer>
           padding: widget.padding ?? const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(widget.borderRadius),
-            gradient: LinearGradient(
-              colors: widget.colors,
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              stops: [
-                0.0 + _controller.value,
-                0.33 + _controller.value,
-                0.66 + _controller.value,
-                1.0,
-              ].map((s) => s > 1 ? s - 1 : s).toList(),
-            ),
+            color: widget.colors.isNotEmpty
+                ? widget.colors.first
+                : Colors.transparent,
           ),
           child: widget.child,
         );
@@ -353,20 +338,19 @@ class _ShimmerContainerState extends State<ShimmerContainer>
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        return ShaderMask(
-          shaderCallback: (bounds) {
-            return LinearGradient(
-              colors: [
-                base,
-                highlight,
-                base,
-              ],
-              stops: const [0.0, 0.5, 1.0],
-              begin: Alignment(-1.0 + 2 * _controller.value, 0),
-              end: Alignment(1.0 + 2 * _controller.value, 0),
-            ).createShader(bounds);
-          },
-          child: widget.child,
+        final shimmerColor = Color.lerp(base, highlight, _controller.value) ??
+            base;
+        return Stack(
+          children: [
+            widget.child,
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Container(
+                  color: shimmerColor.withOpacity(0.2),
+                ),
+              ),
+            ),
+          ],
         );
       },
     );

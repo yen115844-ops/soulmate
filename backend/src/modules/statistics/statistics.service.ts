@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma/prisma.service';
-import { BookingStatus, KycStatus, UserStatus } from '../../generated/prisma/client';
+import {
+  BookingStatus,
+  KycStatus,
+  UserStatus,
+} from '../../generated/prisma/client';
 import { QueryStatsDto } from './dto';
 
 type DateRange = { from: Date; to: Date };
@@ -89,8 +93,12 @@ export class StatisticsService {
    */
   async getOverview(from?: string, to?: string) {
     const range = parseRange(from, to);
-    const userWhere = range ? { createdAt: { gte: range.from, lte: range.to } } : {};
-    const userDateFilter = range ? { createdAt: { gte: range.from, lte: range.to } } : {};
+    const userWhere = range
+      ? { createdAt: { gte: range.from, lte: range.to } }
+      : {};
+    const userDateFilter = range
+      ? { createdAt: { gte: range.from, lte: range.to } }
+      : {};
     const bookingWhere = range
       ? { createdAt: { gte: range.from, lte: range.to } }
       : {};
@@ -116,12 +124,24 @@ export class StatisticsService {
       kycRejected,
     ] = await Promise.all([
       this.prisma.user.count(range ? { where: userWhere } : { where: {} }),
-      this.prisma.user.count({ where: { status: UserStatus.ACTIVE, ...userWhere } }),
-      this.prisma.user.count({ where: { status: UserStatus.PENDING, ...userWhere } }),
-      this.prisma.user.count({ where: { status: UserStatus.SUSPENDED, ...userWhere } }),
-      this.prisma.user.count({ where: { status: UserStatus.BANNED, ...userWhere } }),
+      this.prisma.user.count({
+        where: { status: UserStatus.ACTIVE, ...userWhere },
+      }),
+      this.prisma.user.count({
+        where: { status: UserStatus.PENDING, ...userWhere },
+      }),
+      this.prisma.user.count({
+        where: { status: UserStatus.SUSPENDED, ...userWhere },
+      }),
+      this.prisma.user.count({
+        where: { status: UserStatus.BANNED, ...userWhere },
+      }),
       this.prisma.partnerProfile.count(
-        range ? { where: { user: userDateFilter } } : ({ where: {} } as Parameters<typeof this.prisma.partnerProfile.count>[0]),
+        range
+          ? { where: { user: userDateFilter } }
+          : ({ where: {} } as Parameters<
+              typeof this.prisma.partnerProfile.count
+            >[0]),
       ),
       this.prisma.partnerProfile.count({
         where: {
@@ -136,7 +156,9 @@ export class StatisticsService {
           ? { isAvailable: true, user: userDateFilter }
           : { isAvailable: true },
       }),
-      this.prisma.booking.count(range ? { where: bookingWhere } : { where: {} }),
+      this.prisma.booking.count(
+        range ? { where: bookingWhere } : { where: {} },
+      ),
       this.prisma.booking.count({
         where: { status: BookingStatus.COMPLETED, ...bookingWhere },
       }),
@@ -150,9 +172,15 @@ export class StatisticsService {
         },
         _sum: { serviceFee: true },
       }),
-      this.prisma.kycVerification.count({ where: { status: KycStatus.PENDING } }),
-      this.prisma.kycVerification.count({ where: { status: KycStatus.VERIFIED } }),
-      this.prisma.kycVerification.count({ where: { status: KycStatus.REJECTED } }),
+      this.prisma.kycVerification.count({
+        where: { status: KycStatus.PENDING },
+      }),
+      this.prisma.kycVerification.count({
+        where: { status: KycStatus.VERIFIED },
+      }),
+      this.prisma.kycVerification.count({
+        where: { status: KycStatus.REJECTED },
+      }),
     ]);
 
     const avgRating = await this.prisma.partnerProfile.aggregate({
@@ -190,7 +218,11 @@ export class StatisticsService {
   /**
    * Revenue over time (completed bookings, service fee sum)
    */
-  async getRevenueChart(from: Date, to: Date, groupBy: 'day' | 'week' | 'month') {
+  async getRevenueChart(
+    from: Date,
+    to: Date,
+    groupBy: 'day' | 'week' | 'month',
+  ) {
     // Use Prisma $queryRaw with SQL GROUP BY for efficient aggregation
     let dateFormat: string;
     if (groupBy === 'month') {
@@ -264,7 +296,12 @@ export class StatisticsService {
    * New users over time
    */
   async getUserGrowth(from: Date, to: Date, groupBy: 'day' | 'week' | 'month') {
-    const groupFn = groupBy === 'month' ? groupByMonth : groupBy === 'week' ? groupByWeek : groupByDay;
+    const groupFn =
+      groupBy === 'month'
+        ? groupByMonth
+        : groupBy === 'week'
+          ? groupByWeek
+          : groupByDay;
 
     const users = await this.prisma.user.findMany({
       where: { createdAt: { gte: from, lte: to } },
@@ -284,8 +321,17 @@ export class StatisticsService {
   /**
    * New partners over time
    */
-  async getPartnerGrowth(from: Date, to: Date, groupBy: 'day' | 'week' | 'month') {
-    const groupFn = groupBy === 'month' ? groupByMonth : groupBy === 'week' ? groupByWeek : groupByDay;
+  async getPartnerGrowth(
+    from: Date,
+    to: Date,
+    groupBy: 'day' | 'week' | 'month',
+  ) {
+    const groupFn =
+      groupBy === 'month'
+        ? groupByMonth
+        : groupBy === 'week'
+          ? groupByWeek
+          : groupByDay;
 
     const partners = await this.prisma.partnerProfile.findMany({
       where: { createdAt: { gte: from, lte: to } },
@@ -307,9 +353,15 @@ export class StatisticsService {
    */
   async getKycBreakdown() {
     const [pending, verified, rejected, none] = await Promise.all([
-      this.prisma.kycVerification.count({ where: { status: KycStatus.PENDING } }),
-      this.prisma.kycVerification.count({ where: { status: KycStatus.VERIFIED } }),
-      this.prisma.kycVerification.count({ where: { status: KycStatus.REJECTED } }),
+      this.prisma.kycVerification.count({
+        where: { status: KycStatus.PENDING },
+      }),
+      this.prisma.kycVerification.count({
+        where: { status: KycStatus.VERIFIED },
+      }),
+      this.prisma.kycVerification.count({
+        where: { status: KycStatus.REJECTED },
+      }),
       this.prisma.user.count({ where: { kycStatus: KycStatus.NONE } }),
     ]);
     return [
@@ -344,7 +396,12 @@ export class StatisticsService {
 
     const byPartner = new Map<
       string,
-      { revenue: number; fee: number; count: number; partner: (typeof completed)[0]['partner'] }
+      {
+        revenue: number;
+        fee: number;
+        count: number;
+        partner: (typeof completed)[0]['partner'];
+      }
     >();
     for (const b of completed) {
       const cur = byPartner.get(b.partnerId) ?? {

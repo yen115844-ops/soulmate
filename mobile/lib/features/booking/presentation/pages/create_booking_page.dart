@@ -6,19 +6,20 @@ import 'package:intl/intl.dart';
 import 'package:ionicons/ionicons.dart';
 
 import '../../../../config/routes/route_names.dart';
-import '../../../../core/constants/service_type_emoji.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../core/utils/responsive.dart';
+import '../../../../core/utils/service_type_display_resolver.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/common/step_indicator.dart';
 import '../../../credits/data/credits_repository.dart';
 import '../../../partner/data/partner_repository.dart';
 import '../../../partner/domain/models/partner_schedule.dart';
+import '../../../settings/data/app_config_repository.dart';
 import '../../../subscription/presentation/widgets/premium_guard.dart';
 import '../../data/booking_repository.dart';
 
@@ -35,6 +36,8 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
   PartnerRepository get _partnerRepository => getIt<PartnerRepository>();
   BookingRepository get _bookingRepository => getIt<BookingRepository>();
   CreditsRepository get _creditsRepository => getIt<CreditsRepository>();
+
+  AppConfigRepository get _appConfigRepository => getIt<AppConfigRepository>();
 
   bool _isLoadingPartner = true;
   bool _isSubmitting = false;
@@ -75,8 +78,11 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
   }
 
   void _checkPremiumAndLoad() async {
-    // Check premium subscription before allowing booking
-    if (!PremiumGuard.isPremium(context)) {
+    // Kiểm tra setting từ server: có yêu cầu premium cho booking không
+    final requirePremium =
+        await _appConfigRepository.requirePremiumForBooking();
+
+    if (requirePremium && !PremiumGuard.isPremium(context)) {
       final wantUpgrade = await PremiumGuard.showPremiumDialog(
         context,
         title: 'Cần đăng ký Premium',
@@ -118,6 +124,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
       final partnerDetail = await _partnerRepository.getPartnerByIdWithUser(
         widget.partnerId,
       );
+      ServiceTypeDisplayResolver.seedFromDetail(partnerDetail.serviceTypesDetail);
 
       if (mounted) {
         setState(() {
@@ -267,17 +274,47 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
 
   List<Map<String, dynamic>> get _services {
     return _partnerServices.map((serviceType) {
-      final display = ServiceTypeEmoji.get(serviceType);
       final description =
           _serviceDescriptions[serviceType.toUpperCase()] ?? serviceType;
       return {
         'type': serviceType,
-        'name': display.nameVi,
-        'emoji': display.emoji,
-        'color': Color(display.color),
+        'name': _resolveServiceName(serviceType),
+        'emoji': _resolveServiceEmoji(serviceType),
+        'color': AppColors.primary,
         'description': description,
       };
     }).toList();
+  }
+
+  Map<String, dynamic>? _findServiceDetail(String serviceType) {
+    final normalized = serviceType.trim().toLowerCase();
+    for (final item in _partner?.serviceTypesDetail ?? const <Map<String, dynamic>>[]) {
+      final code = (item['code'] ?? '').toString().trim().toLowerCase();
+      if (code == normalized) {
+        return item;
+      }
+    }
+    return null;
+  }
+
+  String _resolveServiceName(String serviceType) {
+    final detail = _findServiceDetail(serviceType);
+    final name = (detail?['name'] ?? detail?['displayName'] ?? detail?['label'])
+        ?.toString()
+        .trim();
+    if (name != null && name.isNotEmpty) {
+      return name;
+    }
+    return ServiceTypeDisplayResolver.resolveName(serviceType);
+  }
+
+  String _resolveServiceEmoji(String serviceType) {
+    final detail = _findServiceDetail(serviceType);
+    final icon = (detail?['icon'] ?? detail?['emoji'])?.toString().trim();
+    if (icon != null && icon.isNotEmpty) {
+      return icon;
+    }
+    return '•';
   }
 
   int get _hourlyRate => _partner?.profile.hourlyRate.toInt() ?? 0;
@@ -344,7 +381,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
       return;
     }
 
-    final serviceName = ServiceTypeEmoji.get(_selectedService!).nameVi;
+    final serviceName = _resolveServiceName(_selectedService!);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1186,7 +1223,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                   icon: Ionicons.apps_outline,
                   label: 'Hoạt động',
                   value: _selectedService != null
-                      ? ServiceTypeEmoji.get(_selectedService!).nameVi
+                      ? _resolveServiceName(_selectedService!)
                       : '-',
                 ),
                 const Divider(height: 24),
@@ -1528,104 +1565,120 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.7,
-        ),
-        decoration: BoxDecoration(
-          color: context.appColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  const Icon(
-                    Ionicons.calendar_outline,
-                    color: AppColors.primary,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Lịch làm việc của ${_partner?.displayName ?? 'Partner'}',
-                      style: AppTypography.titleMedium.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Ionicons.close_circle_outline),
-                  ),
-                ],
+      builder: (context) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.7,
+        minChildSize: 0.42,
+        maxChildSize: 0.9,
+        builder: (context, scrollController) => Container(
+          decoration: BoxDecoration(
+            color: context.appColors.surface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(top: 10, bottom: 14),
+                decoration: BoxDecoration(
+                  color: context.appColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            const Divider(height: 1),
-            Flexible(
-              child: ListView.separated(
-                padding: const EdgeInsets.all(20),
-                shrinkWrap: true,
-                itemCount: DayOfWeek.values.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final day = DayOfWeek.values[index];
-                  final dailySchedule =
-                      _partnerSchedule.weeklySchedule.schedule[day];
-                  final slots = dailySchedule?.timeSlots ?? [];
-                  final hasSlots =
-                      dailySchedule?.isEnabled == true && slots.isNotEmpty;
-
-                  return Row(
-                    children: [
-                      SizedBox(
-                        width: 80,
-                        child: Text(
-                          day.displayName,
-                          style: AppTypography.bodyMedium.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Ionicons.calendar_outline,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Lịch làm việc của ${_partner?.displayName ?? 'Partner'}',
+                        style: AppTypography.titleMedium.copyWith(
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      Expanded(
-                        child: hasSlots
-                            ? Wrap(
-                                spacing: 8,
-                                runSpacing: 4,
-                                children: slots.map((slot) {
-                                  return Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.success.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text(
-                                      slot.displayString,
-                                      style: AppTypography.labelSmall.copyWith(
-                                        color: AppColors.success,
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
-                              )
-                            : Text(
-                                'Nghỉ',
-                                style: AppTypography.bodyMedium.copyWith(
-                                  color: context.appColors.textHint,
-                                ),
-                              ),
-                      ),
-                    ],
-                  );
-                },
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Ionicons.close_circle_outline),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+              const Divider(height: 1),
+              Expanded(
+                child: ListView.separated(
+                  controller: scrollController,
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    20,
+                    20,
+                    MediaQuery.of(context).padding.bottom + 8,
+                  ),
+                  itemCount: DayOfWeek.values.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final day = DayOfWeek.values[index];
+                    final dailySchedule = _partnerSchedule.weeklySchedule.schedule[day];
+                    final slots = dailySchedule?.timeSlots ?? [];
+                    final hasSlots =
+                        dailySchedule?.isEnabled == true && slots.isNotEmpty;
+
+                    return Row(
+                      children: [
+                        SizedBox(
+                          width: 80,
+                          child: Text(
+                            day.displayName,
+                            style: AppTypography.bodyMedium.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: hasSlots
+                              ? Wrap(
+                                  spacing: 8,
+                                  runSpacing: 4,
+                                  children: slots.map((slot) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.success.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        slot.displayString,
+                                        style: AppTypography.labelSmall.copyWith(
+                                          color: AppColors.success,
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                )
+                              : Text(
+                                  'Nghỉ',
+                                  style: AppTypography.bodyMedium.copyWith(
+                                    color: context.appColors.textHint,
+                                  ),
+                                ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
