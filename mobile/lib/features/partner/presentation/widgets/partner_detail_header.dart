@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:ionicons/ionicons.dart';
 
+import '../../../../core/services/app_image_cache_manager.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
@@ -125,12 +126,17 @@ class PartnerDetailHeader extends StatelessWidget {
               child: url != null && url.isNotEmpty
                   ? CachedNetworkImage(
                       imageUrl: url,
+                      cacheManager: AppImageCacheManager.instance,
                       fit: BoxFit.cover,
+                      memCacheWidth: 1080,
+                      memCacheHeight: 1440,
+                      maxWidthDiskCache: 1080,
+                      maxHeightDiskCache: 1440,
+                      fadeInDuration: Duration.zero,
+                      placeholderFadeInDuration: Duration.zero,
+                      useOldImageOnUrlChange: true,
                       placeholder: (_, __) => Container(
                         color: context.appColors.background,
-                        child: const Center(
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
                       ),
                       errorWidget: (_, __, ___) => Container(
                         color: context.appColors.background,

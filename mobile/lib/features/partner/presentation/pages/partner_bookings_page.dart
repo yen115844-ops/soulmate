@@ -21,8 +21,9 @@ class PartnerBookingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<PartnerBookingsBloc>()
-        ..add(const PartnerBookingsLoadRequested()),
+      create: (_) =>
+          getIt<PartnerBookingsBloc>()
+            ..add(const PartnerBookingsLoadRequested()),
       child: const _PartnerBookingsContent(),
     );
   }
@@ -32,7 +33,8 @@ class _PartnerBookingsContent extends StatefulWidget {
   const _PartnerBookingsContent();
 
   @override
-  State<_PartnerBookingsContent> createState() => _PartnerBookingsContentState();
+  State<_PartnerBookingsContent> createState() =>
+      _PartnerBookingsContentState();
 }
 
 class _PartnerBookingsContentState extends State<_PartnerBookingsContent>
@@ -61,7 +63,9 @@ class _PartnerBookingsContentState extends State<_PartnerBookingsContent>
         status = 'CANCELLED';
         break;
     }
-    context.read<PartnerBookingsBloc>().add(PartnerBookingsFilterChanged(status));
+    context.read<PartnerBookingsBloc>().add(
+      PartnerBookingsFilterChanged(status),
+    );
   }
 
   @override
@@ -75,11 +79,14 @@ class _PartnerBookingsContentState extends State<_PartnerBookingsContent>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-         title:   Text('Quản lý hoạt động', style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: context.theme.colorScheme.onSurface,
-            ),),
+        title: Text(
+          'Quản lý hoạt động',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: context.theme.colorScheme.onSurface,
+          ),
+        ),
         bottom: TabBar(
           controller: _tabController,
           tabs: [
@@ -96,7 +103,10 @@ class _PartnerBookingsContentState extends State<_PartnerBookingsContent>
                       if (upcomingCount > 0) ...[
                         const SizedBox(width: 4),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.primary,
                             borderRadius: BorderRadius.circular(10),
@@ -122,9 +132,9 @@ class _PartnerBookingsContentState extends State<_PartnerBookingsContent>
       body: BlocConsumer<PartnerBookingsBloc, PartnerBookingsState>(
         listener: (context, state) {
           if (state is PartnerBookingsActionSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message)));
           } else if (state is PartnerBookingsActionError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -150,9 +160,9 @@ class _PartnerBookingsContentState extends State<_PartnerBookingsContent>
             return _ErrorView(
               message: state.message,
               onRetry: () {
-                context
-                    .read<PartnerBookingsBloc>()
-                    .add(const PartnerBookingsLoadRequested());
+                context.read<PartnerBookingsBloc>().add(
+                  const PartnerBookingsLoadRequested(),
+                );
               },
             );
           }
@@ -164,10 +174,10 @@ class _PartnerBookingsContentState extends State<_PartnerBookingsContent>
             final loadedState = state is PartnerBookingsLoaded
                 ? state
                 : state is PartnerBookingsActionInProgress
-                    ? state.previousState
-                    : state is PartnerBookingsActionSuccess
-                        ? state.previousState
-                        : (state as PartnerBookingsActionError).previousState;
+                ? state.previousState
+                : state is PartnerBookingsActionSuccess
+                ? state.previousState
+                : (state as PartnerBookingsActionError).previousState;
             final processingBookingId = state is PartnerBookingsActionInProgress
                 ? state.bookingId
                 : null;
@@ -182,9 +192,9 @@ class _PartnerBookingsContentState extends State<_PartnerBookingsContent>
                   showActions: true,
                   processingBookingId: processingBookingId,
                   onRefresh: () async {
-                    context
-                        .read<PartnerBookingsBloc>()
-                        .add(const PartnerBookingsRefreshRequested());
+                    context.read<PartnerBookingsBloc>().add(
+                      const PartnerBookingsRefreshRequested(),
+                    );
                   },
                 ),
                 // Completed
@@ -192,9 +202,9 @@ class _PartnerBookingsContentState extends State<_PartnerBookingsContent>
                   bookings: loadedState.completedBookings,
                   emptyMessage: 'Chưa có hoạt động hoàn thành',
                   onRefresh: () async {
-                    context
-                        .read<PartnerBookingsBloc>()
-                        .add(const PartnerBookingsRefreshRequested());
+                    context.read<PartnerBookingsBloc>().add(
+                      const PartnerBookingsRefreshRequested(),
+                    );
                   },
                 ),
                 // Cancelled
@@ -202,9 +212,9 @@ class _PartnerBookingsContentState extends State<_PartnerBookingsContent>
                   bookings: loadedState.cancelledBookings,
                   emptyMessage: 'Không có lịch hẹn đã hủy',
                   onRefresh: () async {
-                    context
-                        .read<PartnerBookingsBloc>()
-                        .add(const PartnerBookingsRefreshRequested());
+                    context.read<PartnerBookingsBloc>().add(
+                      const PartnerBookingsRefreshRequested(),
+                    );
                   },
                 ),
               ],
@@ -232,7 +242,11 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-              Icon(Ionicons.alert_circle_outline, size: 64, color: context.appColors.textHint),
+            Icon(
+              Ionicons.alert_circle_outline,
+              size: 64,
+              color: context.appColors.textHint,
+            ),
             const SizedBox(height: 16),
             Text(
               message,
@@ -282,7 +296,12 @@ class _BookingsList extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                    Icon(Ionicons.calendar_outline, size: 64, color: context.appColors.textHint),
+                  SizedBox(height: 16),
+                  Icon(
+                    Ionicons.calendar_outline,
+                    size: 64,
+                    color: context.appColors.textHint,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     emptyMessage,
@@ -290,6 +309,7 @@ class _BookingsList extends StatelessWidget {
                       color: context.appColors.textSecondary,
                     ),
                   ),
+                  SizedBox(height: 16),
                 ],
               ),
             ),
@@ -386,7 +406,10 @@ class _PartnerBookingCard extends StatelessWidget {
                           ? CachedNetworkImageProvider(user!.avatarUrl!)
                           : null,
                       child: user?.avatarUrl == null
-                          ?   Icon(Ionicons.person_outline, color: context.appColors.textHint)
+                          ? Icon(
+                              Ionicons.person_outline,
+                              color: context.appColors.textHint,
+                            )
                           : null,
                     ),
                     const SizedBox(width: 12),
@@ -418,13 +441,7 @@ class _PartnerBookingCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Text(
-                      '${_formatCredits(booking.subtotal)} xu',
-                      style: AppTypography.titleMedium.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                     
                   ],
                 ),
 
@@ -472,7 +489,11 @@ class _PartnerBookingCard extends StatelessWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Ionicons.document_text_outline, color: AppColors.info, size: 16),
+                        const Icon(
+                          Ionicons.document_text_outline,
+                          color: AppColors.info,
+                          size: 16,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -494,7 +515,7 @@ class _PartnerBookingCard extends StatelessWidget {
           if (showActions)
             Container(
               padding: const EdgeInsets.all(16),
-              decoration:   BoxDecoration(
+              decoration: BoxDecoration(
                 color: context.appColors.background,
                 borderRadius: BorderRadius.vertical(
                   bottom: Radius.circular(16),
@@ -525,10 +546,10 @@ class _PartnerBookingCard extends StatelessWidget {
                           child: ElevatedButton(
                             onPressed: () {
                               context.read<PartnerBookingsBloc>().add(
-                                    PartnerBookingConfirmRequested(
-                                      bookingId: booking.id,
-                                    ),
-                                  );
+                                PartnerBookingConfirmRequested(
+                                  bookingId: booking.id,
+                                ),
+                              );
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.success,
@@ -544,7 +565,7 @@ class _PartnerBookingCard extends StatelessWidget {
           if (booking.status == 'CONFIRMED' || booking.status == 'PAID')
             Container(
               padding: const EdgeInsets.all(16),
-              decoration:   BoxDecoration(
+              decoration: BoxDecoration(
                 color: context.appColors.background,
                 borderRadius: BorderRadius.vertical(
                   bottom: Radius.circular(16),
@@ -576,7 +597,7 @@ class _PartnerBookingCard extends StatelessWidget {
           if (booking.status == 'IN_PROGRESS')
             Container(
               padding: const EdgeInsets.all(16),
-              decoration:   BoxDecoration(
+              decoration: BoxDecoration(
                 color: context.appColors.background,
                 borderRadius: BorderRadius.vertical(
                   bottom: Radius.circular(16),
@@ -622,11 +643,12 @@ class _PartnerBookingCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Bắt đầu cuộc hẹn', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
-              const SizedBox(height: 16),
               const Text(
-                'Xác nhận bắt đầu cuộc hẹn với khách hàng?',
+                'Bắt đầu cuộc hẹn',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
               ),
+              const SizedBox(height: 16),
+              const Text('Xác nhận bắt đầu cuộc hẹn với khách hàng?'),
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -666,7 +688,10 @@ class _PartnerBookingCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Hoàn thành cuộc hẹn', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+              const Text(
+                'Hoàn thành cuộc hẹn',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+              ),
               const SizedBox(height: 16),
               const Text('Ghi chú (tùy chọn):'),
               const SizedBox(height: 16),
@@ -724,7 +749,10 @@ class _PartnerBookingCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Từ chối lịch hẹn', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+              const Text(
+                'Từ chối lịch hẹn',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+              ),
               const SizedBox(height: 16),
               const Text('Vui lòng cho biết lý do từ chối:'),
               const SizedBox(height: 16),
@@ -755,13 +783,16 @@ class _PartnerBookingCard extends StatelessWidget {
                       }
                       Navigator.pop(dialogContext);
                       context.read<PartnerBookingsBloc>().add(
-                            PartnerBookingCancelRequested(
-                              bookingId: booking.id,
-                              reason: reason,
-                            ),
-                          );
+                        PartnerBookingCancelRequested(
+                          bookingId: booking.id,
+                          reason: reason,
+                        ),
+                      );
                     },
-                    child: const Text('Từ chối', style: TextStyle(color: AppColors.error)),
+                    child: const Text(
+                      'Từ chối',
+                      style: TextStyle(color: AppColors.error),
+                    ),
                   ),
                 ],
               ),
@@ -800,12 +831,7 @@ class _DetailRow extends StatelessWidget {
             ),
           ),
         ),
-        Expanded(
-          child: Text(
-            value,
-            style: AppTypography.bodyMedium,
-          ),
-        ),
+        Expanded(child: Text(value, style: AppTypography.bodyMedium)),
       ],
     );
   }

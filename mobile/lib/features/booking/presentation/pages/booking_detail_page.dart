@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:ionicons/ionicons.dart';
 
+import '../../../../config/routes/route_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -29,7 +30,8 @@ class BookingDetailPage extends StatefulWidget {
 
 class _BookingDetailPageState extends State<BookingDetailPage> {
   BookingRepository get _bookingRepository => getIt<BookingRepository>();
-  MasterDataRepository get _masterDataRepository => getIt<MasterDataRepository>();
+  MasterDataRepository get _masterDataRepository =>
+      getIt<MasterDataRepository>();
   final DateFormat _dateTimeFormat = DateFormat('dd/MM/yyyy HH:mm');
 
   bool _isLoading = true;
@@ -120,7 +122,9 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
 
     try {
       await _warmupServiceTypes();
-      final booking = await _bookingRepository.getBookingById(widget.bookingId!.trim());
+      final booking = await _bookingRepository.getBookingById(
+        widget.bookingId!.trim(),
+      );
 
       if (mounted) {
         setState(() {
@@ -237,282 +241,185 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
-              // App Bar
-              SliverAppBar(
-                pinned: true,
-                backgroundColor: context.appColors.surface,
-                leading: const AppBackButton(),
-                title: Text(
-                  'Chi tiết hoạt động',
-                  style: AppTypography.titleMedium.copyWith(
-                    fontWeight: FontWeight.w600,
+                // App Bar
+                SliverAppBar(
+                  pinned: true,
+                  backgroundColor: context.appColors.surface,
+                  leading: const AppBackButton(),
+                  title: Text(
+                    'Chi tiết hoạt động',
+                    style: AppTypography.titleMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
+                  actions: [
+                    IconButton(
+                      icon: const Icon(Ionicons.ellipsis_horizontal_outline),
+                      onPressed: () => _showOptionsMenu(),
+                    ),
+                  ],
                 ),
-                actions: [
-                  IconButton(
-                    icon: const Icon(Ionicons.ellipsis_horizontal_outline),
-                    onPressed: () => _showOptionsMenu(),
-                  ),
-                ],
-              ),
 
-              // Status Banner
-              SliverToBoxAdapter(
-                child: Container(
-                  margin: ResponsiveLayout.pagePadding(context),
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  decoration: BoxDecoration(
-                    color: _statusColor,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _statusColor.withAlpha(50),
-                        blurRadius: 15,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: AppColors.textWhite.withAlpha(50),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Icon(
-                          _statusIcon,
-                          color: AppColors.textWhite,
-                          size: 28,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _statusText,
-                              style: AppTypography.titleLarge.copyWith(
-                                color: AppColors.textWhite,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              booking.bookingCode != null
-                                  ? 'Mã: ${booking.bookingCode}'
-                                  : 'ID: #${booking.id.substring(0, 8).toUpperCase()}',
-                              style: AppTypography.bodyMedium.copyWith(
-                                color: AppColors.textWhite.withAlpha(200),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              // sizedbox heigth
-              const SliverToBoxAdapter(child: SizedBox(height: 20)),
-
-              // Partner Info Card
-              SliverToBoxAdapter(
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: context.appColors.card,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: context.appColors.border),
-                  ),
-                  child: Row(
-                    children: [
-                      // Avatar
-                      Container(
-                        width: 60,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: AppColors.primary,
-                            width: 2,
-                          ),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: booking.partnerAvatar != null
-                              ? CachedNetworkImage(
-                                  imageUrl: ImageUtils.buildImageUrl(
-                                    booking.partnerAvatar!,
-                                  ),
-                                  fit: BoxFit.cover,
-                                  placeholder: (_, placeholderUrl) => Container(
-                                    color: AppColors.primary.withAlpha(50),
-                                  ),
-                                  errorWidget: (_, errorUrl, error) =>
-                                      Container(
-                                        color: AppColors.primary.withAlpha(50),
-                                        child: Icon(
-                                          Ionicons.person_outline,
-                                          color: AppColors.primary,
-                                        ),
-                                      ),
-                                )
-                              : Container(
-                                  color: AppColors.primary.withAlpha(50),
-                                  child: Icon(
-                                    Ionicons.person_outline,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      // Info
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              booking.partnerName,
-                              style: AppTypography.titleMedium.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Người tham gia',
-                              style: AppTypography.labelSmall.copyWith(
-                                color: context.appColors.textHint,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Actions
-                      _CircleButton(
-                        icon: Ionicons.chatbubble_outline,
-                        isPrimary: true,
-                        onTap: () =>
-                            context.push('/chat/user/${booking.partnerId}'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SliverToBoxAdapter(child: SizedBox(height: 20)),
-
-              // Booking Details
-              SliverToBoxAdapter(
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: context.appColors.card,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: context.appColors.border),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Chi tiết hoạt động',
-                        style: AppTypography.titleMedium.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Activity type
-                      _DetailRow(
-                        icon: Ionicons.cafe_outline,
-                        label: 'Hoạt động',
-                        value: _displayServiceType,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Date
-                      _DetailRow(
-                        icon: Ionicons.calendar_outline,
-                        label: 'Ngày',
-                        value: booking.formattedDate,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Time
-                      _DetailRow(
-                        icon: Ionicons.time_outline,
-                        label: 'Thời gian',
-                        value: '${booking.formattedTimeRange} ($_durationText)',
-                      ),
-                      const SizedBox(height: 16),
-
-                      _DetailRow(
-                        icon: Ionicons.cash_outline,
-                        label: 'Chi phí',
-                        value: _formattedTotalAmount,
-                      ),
-                      const SizedBox(height: 16),
-
-                      _DetailRow(
-                        icon: Ionicons.time_outline,
-                        label: 'Tạo lúc',
-                        value: _formatDateTime(booking.createdAt),
-                      ),
-                      const SizedBox(height: 16),
-
-                      _DetailRow(
-                        icon: Ionicons.refresh_outline,
-                        label: 'Cập nhật lúc',
-                        value: _formatDateTime(booking.updatedAt),
-                      ),
-
-                      // Location
-                      if (_nonEmptyOrFallback(
-                        booking.location,
-                        fallback: '',
-                      ).isNotEmpty) ...[
-                        const SizedBox(height: 16),
-                        _DetailRow(
-                          icon: Ionicons.location_outline,
-                          label: 'Địa điểm',
-                          value: _nonEmptyOrFallback(booking.location),
-                        ),
-                      ],
-
-                      if ((booking.status == 'CANCELLED' ||
-                              booking.status == 'REJECTED') &&
-                          _nonEmptyOrFallback(
-                            booking.cancelledBy,
-                            fallback: '',
-                          ).isNotEmpty) ...[
-                        const SizedBox(height: 16),
-                        _DetailRow(
-                          icon: Ionicons.person_remove_outline,
-                          label: 'Người hủy',
-                          value: _nonEmptyOrFallback(booking.cancelledBy),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-
-              // Notes
-              if (_nonEmptyOrFallback(booking.note, fallback: '').isNotEmpty)
+                // Status Banner
                 SliverToBoxAdapter(
                   child: Container(
-                    margin: EdgeInsets.fromLTRB(
-                      ResponsiveLayout.horizontalPadding(context),
-                      20,
-                      ResponsiveLayout.horizontalPadding(context),
-                      0,
+                    margin: ResponsiveLayout.pagePadding(context),
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: _statusColor,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _statusColor.withAlpha(50),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
                     ),
-                    padding: ResponsiveLayout.pagePadding(context),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: AppColors.textWhite.withAlpha(50),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Icon(
+                            _statusIcon,
+                            color: AppColors.textWhite,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _statusText,
+                                style: AppTypography.titleLarge.copyWith(
+                                  color: AppColors.textWhite,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                booking.bookingCode != null
+                                    ? 'Mã: ${booking.bookingCode}'
+                                    : 'ID: #${booking.id.substring(0, 8).toUpperCase()}',
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: AppColors.textWhite.withAlpha(200),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // sizedbox heigth
+                const SliverToBoxAdapter(child: SizedBox(height: 20)),
+
+                // Partner Info Card
+                SliverToBoxAdapter(
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: context.appColors.card,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: context.appColors.border),
+                    ),
+                    child: Row(
+                      children: [
+                        // Avatar
+                        Container(
+                          width: 60,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: AppColors.primary,
+                              width: 2,
+                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: booking.partnerAvatar != null
+                                ? CachedNetworkImage(
+                                    imageUrl: ImageUtils.buildImageUrl(
+                                      booking.partnerAvatar!,
+                                    ),
+                                    fit: BoxFit.cover,
+                                    placeholder: (_, placeholderUrl) =>
+                                        Container(
+                                          color: AppColors.primary.withAlpha(
+                                            50,
+                                          ),
+                                        ),
+                                    errorWidget: (_, errorUrl, error) =>
+                                        Container(
+                                          color: AppColors.primary.withAlpha(
+                                            50,
+                                          ),
+                                          child: Icon(
+                                            Ionicons.person_outline,
+                                            color: AppColors.primary,
+                                          ),
+                                        ),
+                                  )
+                                : Container(
+                                    color: AppColors.primary.withAlpha(50),
+                                    child: Icon(
+                                      Ionicons.person_outline,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        // Info
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                booking.partnerName,
+                                style: AppTypography.titleMedium.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Người tham gia',
+                                style: AppTypography.labelSmall.copyWith(
+                                  color: context.appColors.textHint,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Actions
+                        _CircleButton(
+                          icon: Ionicons.chatbubble_outline,
+                          isPrimary: true,
+                          onTap: () =>
+                              context.push('/chat/user/${booking.partnerId}'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 20)),
+
+                // Booking Details
+                SliverToBoxAdapter(
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: context.appColors.card,
                       borderRadius: BorderRadius.circular(16),
@@ -521,87 +428,192 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Ionicons.document_text_outline,
-                              color: AppColors.primary,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
-                              'Ghi chú',
-                              style: AppTypography.titleMedium.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
                         Text(
-                          _nonEmptyOrFallback(booking.note),
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: context.appColors.textSecondary,
+                          'Chi tiết hoạt động',
+                          style: AppTypography.titleMedium.copyWith(
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
+                        const SizedBox(height: 20),
+
+                        // Activity type
+                        _DetailRow(
+                          icon: Ionicons.cafe_outline,
+                          label: 'Hoạt động',
+                          value: _displayServiceType,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Date
+                        _DetailRow(
+                          icon: Ionicons.calendar_outline,
+                          label: 'Ngày',
+                          value: booking.formattedDate,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Time
+                        _DetailRow(
+                          icon: Ionicons.time_outline,
+                          label: 'Thời gian',
+                          value:
+                              '${booking.formattedTimeRange} ($_durationText)',
+                        ),
+                        const SizedBox(height: 16),
+
+                        _DetailRow(
+                          icon: Ionicons.cash_outline,
+                          label: 'Chi phí',
+                          value: _formattedTotalAmount,
+                        ),
+                        const SizedBox(height: 16),
+
+                        _DetailRow(
+                          icon: Ionicons.time_outline,
+                          label: 'Tạo lúc',
+                          value: _formatDateTime(booking.createdAt),
+                        ),
+                        const SizedBox(height: 16),
+
+                        _DetailRow(
+                          icon: Ionicons.refresh_outline,
+                          label: 'Cập nhật lúc',
+                          value: _formatDateTime(booking.updatedAt),
+                        ),
+
+                        // Location
+                        if (_nonEmptyOrFallback(
+                          booking.location,
+                          fallback: '',
+                        ).isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          _DetailRow(
+                            icon: Ionicons.location_outline,
+                            label: 'Địa điểm',
+                            value: _nonEmptyOrFallback(booking.location),
+                          ),
+                        ],
+
+                        if ((booking.status == 'CANCELLED' ||
+                                booking.status == 'REJECTED') &&
+                            _nonEmptyOrFallback(
+                              booking.cancelledBy,
+                              fallback: '',
+                            ).isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          _DetailRow(
+                            icon: Ionicons.person_remove_outline,
+                            label: 'Người hủy',
+                            value: _nonEmptyOrFallback(booking.cancelledBy),
+                          ),
+                        ],
                       ],
                     ),
                   ),
                 ),
 
-              // Cancellation reason if cancelled
-              if ((booking.status == 'CANCELLED' ||
-                      booking.status == 'REJECTED') &&
-                  booking.cancellationReason != null)
-                SliverToBoxAdapter(
-                  child: Container(
-                    margin: EdgeInsets.fromLTRB(
-                      ResponsiveLayout.horizontalPadding(context),
-                      20,
-                      ResponsiveLayout.horizontalPadding(context),
-                      0,
-                    ),
-                    padding: ResponsiveLayout.pagePadding(context),
-                    decoration: BoxDecoration(
-                      color: AppColors.error.withAlpha(20),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.error.withAlpha(50)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Ionicons.information_circle_outline,
-                              color: AppColors.error,
-                              size: 20,
+                // Notes
+                if (_nonEmptyOrFallback(booking.note, fallback: '').isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Container(
+                      margin: EdgeInsets.fromLTRB(
+                        ResponsiveLayout.horizontalPadding(context),
+                        20,
+                        ResponsiveLayout.horizontalPadding(context),
+                        0,
+                      ),
+                      padding: ResponsiveLayout.pagePadding(context),
+                      decoration: BoxDecoration(
+                        color: context.appColors.card,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: context.appColors.border),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Ionicons.document_text_outline,
+                                color: AppColors.primary,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                'Ghi chú',
+                                style: AppTypography.titleMedium.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            _nonEmptyOrFallback(booking.note),
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: context.appColors.textSecondary,
                             ),
-                            const SizedBox(width: 10),
-                            Text(
-                              'Lý do hủy',
-                              style: AppTypography.titleMedium.copyWith(
-                                fontWeight: FontWeight.w600,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                // Cancellation reason if cancelled
+                if ((booking.status == 'CANCELLED' ||
+                        booking.status == 'REJECTED') &&
+                    booking.cancellationReason != null)
+                  SliverToBoxAdapter(
+                    child: Container(
+                      margin: EdgeInsets.fromLTRB(
+                        ResponsiveLayout.horizontalPadding(context),
+                        20,
+                        ResponsiveLayout.horizontalPadding(context),
+                        0,
+                      ),
+                      padding: ResponsiveLayout.pagePadding(context),
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withAlpha(20),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: AppColors.error.withAlpha(50),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Ionicons.information_circle_outline,
                                 color: AppColors.error,
+                                size: 20,
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          booking.cancellationReason!,
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: context.appColors.textSecondary,
+                              const SizedBox(width: 10),
+                              Text(
+                                'Lý do hủy',
+                                style: AppTypography.titleMedium.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.error,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 12),
+                          Text(
+                            booking.cancellationReason!,
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: context.appColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
 
-              // Bottom padding for action buttons
-              const SliverToBoxAdapter(child: SizedBox(height: 120)),
-            ],
+                // Bottom padding for action buttons
+                const SliverToBoxAdapter(child: SizedBox(height: 120)),
+              ],
             ),
           ),
 
@@ -829,10 +841,13 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 20),
-            
+
               ListTile(
                 leading: const Icon(Ionicons.copy_outline),
-                title: const Text('Sao chép ID'),
+                title: const Text(
+                  'Sao chép ID',
+                  style: TextStyle(color: AppColors.primary),
+                ),
                 onTap: () {
                   final booking = _booking;
                   Navigator.pop(ctx);
@@ -846,7 +861,10 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
               ),
               ListTile(
                 leading: const Icon(Ionicons.pricetag_outline),
-                title: const Text('Sao chép mã hoạt động'),
+                title: const Text(
+                  'Sao chép mã hoạt động',
+                  style: TextStyle(color: AppColors.primary),
+                ),
                 onTap: () {
                   final booking = _booking;
                   Navigator.pop(ctx);
@@ -860,6 +878,20 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Đã sao chép mã hoạt động')),
                   );
+                },
+              ),
+              ListTile(
+                leading: Icon(
+                  Ionicons.hand_left_outline,
+                  color: AppColors.error,
+                ),
+                title: Text(
+                  'Chặn người dùng',
+                  style: TextStyle(color: AppColors.error),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showBlockUserDialog();
                 },
               ),
               ListTile(
@@ -880,6 +912,155 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
           ),
         ),
       ),
+    );
+  }
+
+  void _showBlockUserDialog() {
+    if (_booking == null) return;
+
+    final reasons = [
+      'Quấy rối hoặc lạm dụng',
+      'Nội dung phản cảm',
+      'Lừa đảo hoặc gian lận',
+      'Vi phạm điều khoản cộng đồng',
+    ];
+    String selectedReason = reasons.first;
+    final descriptionController = TextEditingController();
+    bool isSubmitting = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'Chặn người dùng',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Người dùng này sẽ bị chặn và nội dung liên quan sẽ không còn hiển thị với bạn.',
+                    style: TextStyle(color: context.appColors.textSecondary),
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: selectedReason,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Lý do',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: reasons
+                        .map(
+                          (reason) => DropdownMenuItem<String>(
+                            value: reason,
+                            child: Text(reason),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: isSubmitting
+                        ? null
+                        : (value) {
+                            if (value != null) {
+                              setDialogState(() => selectedReason = value);
+                            }
+                          },
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: descriptionController,
+                    enabled: !isSubmitting,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      labelText: 'Mô tả thêm (tùy chọn)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: isSubmitting ? null : () => Navigator.pop(ctx),
+                        child: const Text('Hủy'),
+                      ),
+                      FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.error,
+                        ),
+                        onPressed: isSubmitting
+                            ? null
+                            : () async {
+                                setDialogState(() => isSubmitting = true);
+
+                                try {
+                                  await _bookingRepository.reportBooking(
+                                    reportedUserId: _booking!.partnerId,
+                                    bookingId: _booking!.id,
+                                    reason: selectedReason,
+                                    description: descriptionController.text
+                                        .trim(),
+                                  );
+                                } catch (_) {
+                                  // Cho phép tiếp tục chặn kể cả khi báo cáo đã tồn tại.
+                                }
+
+                                try {
+                                  await _bookingRepository.blockUser(
+                                    blockedUserId: _booking!.partnerId,
+                                  );
+
+                                  if (!mounted || !ctx.mounted) return;
+                                  Navigator.pop(ctx);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Đã chặn người dùng và gửi báo cáo cho hệ thống.',
+                                      ),
+                                      backgroundColor: AppColors.success,
+                                    ),
+                                  );
+
+                                  context.go(RouteNames.bookings);
+                                } catch (e) {
+                                  if (!mounted) return;
+                                  setDialogState(() => isSubmitting = false);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Không thể chặn người dùng: $e'),
+                                      backgroundColor: AppColors.error,
+                                    ),
+                                  );
+                                }
+                              },
+                        child: isSubmitting
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text('Chặn và gửi báo cáo'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

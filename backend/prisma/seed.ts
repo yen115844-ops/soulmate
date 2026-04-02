@@ -2,6 +2,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcryptjs';
 import * as fs from 'fs';
 import * as path from 'path';
+import sharp from 'sharp';
 import {
   PrismaClient,
   type DrinkingHabit,
@@ -15,6 +16,85 @@ const adapter = new PrismaPg({
 
 const prisma = new PrismaClient({ adapter });
 const SALT_ROUNDS = 10;
+
+type SeedPhotoItem = { url: string; width?: number; height?: number };
+
+function shouldEnrichSeedPhotos(): boolean {
+  const v = (process.env.SEED_ENRICH_PHOTO_DIMENSIONS ?? '').toLowerCase().trim();
+  return v === '1' || v === 'true' || v === 'yes';
+}
+
+async function fetchBufferLimited(
+  url: string,
+  maxBytes: number,
+  timeoutMs: number,
+): Promise<Buffer> {
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    if (!res.ok) {
+      throw new Error(`Fetch failed ${res.status} ${res.statusText}`);
+    }
+    const arr = new Uint8Array(await res.arrayBuffer());
+    if (arr.byteLength > maxBytes) {
+      throw new Error(`Image too large (${arr.byteLength} bytes)`);
+    }
+    return Buffer.from(arr);
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+async function probeImageSize(url: string): Promise<{ width?: number; height?: number }> {
+  const trimmed = url.trim();
+  if (!trimmed) return {};
+  if (!/^https?:\/\//i.test(trimmed)) return {};
+  const buf = await fetchBufferLimited(trimmed, 6 * 1024 * 1024, 15_000);
+  const meta = await sharp(buf).metadata();
+  const width = meta.width && meta.width > 0 ? meta.width : undefined;
+  const height = meta.height && meta.height > 0 ? meta.height : undefined;
+  return { width, height };
+}
+
+async function maybeEnrichPhotos(photoUrls: string[]): Promise<SeedPhotoItem[]> {
+  const urls = photoUrls.map((u) => u.trim()).filter(Boolean);
+  if (!shouldEnrichSeedPhotos()) {
+    return urls.map((url) => ({ url }));
+  }
+
+  const concurrency = process.env.SEED_ENRICH_CONCURRENCY
+    ? Math.max(1, Math.min(16, Number(process.env.SEED_ENRICH_CONCURRENCY)))
+    : 6;
+
+  const cache = (globalThis as unknown as { __seedPhotoProbeCache?: Map<string, { width?: number; height?: number }> })
+    .__seedPhotoProbeCache ?? new Map<string, { width?: number; height?: number }>();
+  (globalThis as unknown as { __seedPhotoProbeCache?: Map<string, { width?: number; height?: number }> })
+    .__seedPhotoProbeCache = cache;
+
+  const queue = [...urls];
+  const out: SeedPhotoItem[] = [];
+
+  const workers = Array.from({ length: concurrency }).map(async () => {
+    while (queue.length > 0) {
+      const url = queue.pop();
+      if (!url) break;
+      try {
+        const cached = cache.get(url);
+        const dims = cached ?? (await probeImageSize(url));
+        if (!cached) cache.set(url, dims);
+        out.push({ url, width: dims.width, height: dims.height });
+      } catch {
+        out.push({ url });
+      }
+    }
+  });
+  await Promise.all(workers);
+
+  // Preserve input order
+  const byUrl = new Map(out.map((p) => [p.url, p]));
+  return urls.map((u) => byUrl.get(u) ?? ({ url: u } as SeedPhotoItem));
+}
 
 // Service type codes
 const ServiceTypeCode = {
@@ -226,11 +306,12 @@ async function main() {
 
   const getRealAvatarUrl = (seed: number, gender: 'men' | 'women') =>
     `https://randomuser.me/api/portraits/${gender}/${Math.abs(seed) % 100}.jpg`;
-  const getRealPhotoGallery = (seed: number, gender: 'men' | 'women') => [
-    getRealAvatarUrl(seed, gender),
-    getRealAvatarUrl(seed + 17, gender),
-    getRealAvatarUrl(seed + 43, gender),
-  ];
+  const getRealPhotoGallery = (seed: number, gender: 'men' | 'women') =>
+    [
+      getRealAvatarUrl(seed, gender),
+      getRealAvatarUrl(seed + 17, gender),
+      getRealAvatarUrl(seed + 43, gender),
+    ].map((url) => ({ url }));
 
   // Seed Service Types - icon dùng emoji để đồng bộ giữa CMS và mobile
   const serviceTypes = [
@@ -284,6 +365,7 @@ async function main() {
     { key: 'partner_commission_percent', value: '85', description: 'Partner commission percentage' },
     { key: 'auto_confirm_booking', value: 'false', description: 'Auto-confirm bookings without partner approval' },
     { key: 'require_premium_for_booking', value: 'true', description: 'Require premium subscription to create booking. If false, booking is free for all users.' },
+    { key: 'require_premium_for_chat', value: 'false', description: 'Require premium subscription to send chat messages. If false, chat is free for all users.' },
     { key: 'allow_instant_booking', value: 'true', description: 'Allow instant booking' },
     { key: 'platform_fee_rate', value: '0.15', description: 'Platform fee rate (15%)' },
     { key: 'escrow_release_delay_hours', value: '24', description: 'Hours to wait before releasing escrow' },
@@ -705,7 +787,11 @@ async function main() {
   for (const [index, userData] of sampleUsers.entries()) {
     const avatarGender: 'men' | 'women' = userData.profile.gender === 'FEMALE' ? 'women' : 'men';
     const avatarUrl = getRealAvatarUrl(index + 1, avatarGender);
-    const photos = getRealPhotoGallery(index + 1, avatarGender);
+    const photosRaw = getRealPhotoGallery(index + 1, avatarGender);
+    const photoUrls = photosRaw
+      .map((p) => p?.url?.toString().trim() ?? '')
+      .filter((u) => u.length > 0);
+    const photos = await maybeEnrichPhotos(photoUrls);
 
     await prisma.user.upsert({
       where: { email: userData.email },
@@ -1396,15 +1482,19 @@ async function main() {
         const lastName = getRandomItem(lastNames);
         const city = partnerSeedCity;
         const district = getRandomItem(getDistrictsByCity(city));
-        const email = `partner${i}@matesocial.local`;
+        const email = `partner${i}@example.com`;
         const phone = `+8410${String(i).padStart(8, '0')}`;
         const fullName = `${firstName} ${lastName}`;
         const displayName = lastName;
         const partnerGender = Math.random() > 0.5 ? 'MALE' : 'FEMALE';
         // Lấy 4 ảnh thật từ image_links.txt cho mỗi partner
         const photoStartIdx = i * PHOTOS_PER_PARTNER;
-        const photos = allImageLinks.slice(photoStartIdx, photoStartIdx + PHOTOS_PER_PARTNER);
-        const avatarUrl = photos[0];
+        const photoUrls = allImageLinks.slice(
+          photoStartIdx,
+          photoStartIdx + PHOTOS_PER_PARTNER,
+        );
+        const photos = await maybeEnrichPhotos(photoUrls);
+        const avatarUrl = photoUrls[0];
         const experienceYears = Math.floor(Math.random() * 15) + 1;
         const avgRating = 4.5 + Math.random() * 0.5;
         const completedBookings = Math.floor(Math.random() * 300) + 50;
@@ -1421,7 +1511,7 @@ async function main() {
         try {
           const existingPartner = await prisma.user.findUnique({ where: { email } });
           if (!existingPartner) {
-            const hashedPassword = await bcrypt.hash(`Partner@${Math.random().toString(36).slice(2, 8)}`, SALT_ROUNDS);
+            const hashedPassword = await bcrypt.hash(`123123123`, SALT_ROUNDS);
             await prisma.user.create({
               data: {
                 email, phone, passwordHash: hashedPassword, role: 'PARTNER', status: 'ACTIVE', kycStatus: 'VERIFIED',

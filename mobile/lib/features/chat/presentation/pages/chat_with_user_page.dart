@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection.dart';
+import '../../../../core/network/api_exceptions.dart';
 import '../../../../core/services/local_storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
+import '../../../settings/data/app_config_repository.dart';
 import '../../../subscription/presentation/widgets/premium_guard.dart';
 import '../../data/chat_repository.dart';
 
@@ -45,8 +47,10 @@ class _ChatWithUserPageState extends State<ChatWithUserPage> {
   }
 
   void _checkPremiumAndOpenConversation() async {
-    // Check premium subscription before allowing chat
-    if (!PremiumGuard.isPremium(context)) {
+    final requirePremium = await getIt<AppConfigRepository>().requirePremiumForChat();
+
+    // Only gate chat with Premium when server config requires it.
+    if (requirePremium && !PremiumGuard.isPremium(context)) {
       final wantUpgrade = await PremiumGuard.showPremiumDialog(
         context,
         title: 'Cần đăng ký Premium',
@@ -119,6 +123,10 @@ class _ChatWithUserPageState extends State<ChatWithUserPage> {
   }
 
   String _getErrorMessage(dynamic error) {
+    if (error is ApiException) {
+      return error.message;
+    }
+
     final errorStr = error.toString().toLowerCase();
     if (errorStr.contains('socketexception') ||
         errorStr.contains('connection')) {

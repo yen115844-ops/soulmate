@@ -180,6 +180,17 @@ class ChatDisconnectSocket extends ChatEvent {
   const ChatDisconnectSocket();
 }
 
+/// Underlying socket connection status changed (from [ChatSocketService] stream).
+/// Does not call [ChatSocketService.connect]; use [ChatConnectSocket] to connect.
+class ChatSocketConnectionChanged extends ChatEvent {
+  final bool connected;
+
+  const ChatSocketConnectionChanged(this.connected);
+
+  @override
+  List<Object?> get props => [connected];
+}
+
 /// Join conversation room (for real-time updates)
 class ChatJoinRoom extends ChatEvent {
   final String conversationId;

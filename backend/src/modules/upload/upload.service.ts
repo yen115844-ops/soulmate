@@ -85,7 +85,7 @@ export class UploadService {
   async optimizeImage(
     file: Express.Multer.File,
     options?: { maxWidth?: number; maxHeight?: number; quality?: number },
-  ): Promise<{ size: number }> {
+  ): Promise<{ size: number; width?: number; height?: number }> {
     const filePath = this.resolveFilePath(file);
     if (!existsSync(filePath)) {
       throw new NotFoundException('Uploaded file not found for optimization');
@@ -120,11 +120,17 @@ export class UploadService {
       pipeline = pipeline.jpeg({ quality, mozjpeg: true });
     }
 
-    const optimized = await pipeline.toBuffer();
-    writeFileSync(filePath, optimized);
-    file.size = optimized.length;
+    const { data, info } = await pipeline.toBuffer({ resolveWithObject: true });
+    writeFileSync(filePath, data);
+    file.size = data.length;
 
-    return { size: optimized.length };
+    const width = info.width;
+    const height = info.height;
+    return {
+      size: data.length,
+      width: width && width > 0 ? width : undefined,
+      height: height && height > 0 ? height : undefined,
+    };
   }
 
   /**

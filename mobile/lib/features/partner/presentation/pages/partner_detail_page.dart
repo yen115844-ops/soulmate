@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_config.dart';
+import '../../../../core/services/image_warmup_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
@@ -50,7 +51,23 @@ class _PartnerDetailView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: context.appColors.background,
-      body: BlocBuilder<PartnerDetailBloc, PartnerDetailState>(
+      body: BlocConsumer<PartnerDetailBloc, PartnerDetailState>(
+        listener: (context, state) {
+          if (state is PartnerDetailLoaded) {
+            // Warmup all gallery images when detail data arrives
+            final detail = state.detail;
+            final urls = <String>[
+              ...detail.photos,
+              if (detail.avatarUrl != null) detail.avatarUrl!,
+            ];
+            ImageWarmupService.instance.warmupImages(
+              context: context,
+              imageUrls: urls,
+              maxImages: 12,
+              targetWidth: 1080,
+            );
+          }
+        },
         builder: (context, state) {
           if (state is PartnerDetailLoading) {
             return _buildLoading(context);
@@ -216,7 +233,7 @@ class _PartnerDetailView extends StatelessWidget {
                     // Bottom padding for bottom bar
                     SizedBox(
                       height:
-                          MediaQuery.of(context).padding.bottom + 80,
+                          MediaQuery.of(context).padding.bottom + 100,
                     ),
                   ],
                 ),
@@ -269,6 +286,7 @@ class _PartnerDetailView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          SizedBox(height: 16),
           Row(
             children: [
               Container(
@@ -368,6 +386,7 @@ class _PartnerDetailView extends StatelessWidget {
               ),
             ],
           ),
+         SizedBox(height: 16),
         ],
       ),
     );
@@ -406,8 +425,33 @@ class _PartnerDetailView extends StatelessWidget {
   }
 
   void _navigateToChat(BuildContext context, PartnerDetailResponse detail) {
-    final userId = detail.profile.userId;
-    context.push('/chat/user/$userId');
+    AuthGuard.requireAuth(
+      context,
+      message: 'Đăng nhập để nhắn tin.',
+      onAuthenticated: () async {
+        final requirePremium =
+            await getIt<AppConfigRepository>().requirePremiumForBooking();
+
+        if (!context.mounted) return;
+
+        if (requirePremium && !PremiumGuard.isPremium(context)) {
+          final wantUpgrade = await PremiumGuard.showPremiumDialog(
+            context,
+            title: 'Cần đăng ký Premium',
+            message:
+                'Nâng cấp Premium để nhắn tin với partner!',
+          );
+          if (wantUpgrade && context.mounted) {
+            await context.push('/premium');
+          }
+          return;
+        }
+
+        if (!context.mounted) return;
+        final userId = detail.profile.userId;
+        context.push('/chat/user/$userId');
+      },
+    );
   }
 
   void _navigateToBooking(BuildContext context, PartnerDetailResponse detail) {

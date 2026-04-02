@@ -11,8 +11,32 @@ import {
     MaxLength,
     Min,
     MinLength,
+    ValidateNested,
 } from 'class-validator';
 import { SlotStatus, UserStatus } from '../../../generated/prisma/client';
+
+/** Rich gallery entry (URL + optional size), e.g. from POST /upload/image */
+export class PartnerProfilePhotoItemDto {
+  @ApiProperty({ example: '/api/upload/files/uuid.jpg' })
+  @IsString()
+  url: string;
+
+  @ApiPropertyOptional({ example: 1080, description: 'Pixel width after optimize' })
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  @Min(1)
+  @Max(20000)
+  width?: number;
+
+  @ApiPropertyOptional({ example: 1440 })
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  @Min(1)
+  @Max(20000)
+  height?: number;
+}
 
 export class CreatePartnerProfileDto {
   @ApiProperty({ example: 500000, description: 'Hourly rate in VND' })
@@ -78,12 +102,19 @@ export class CreatePartnerProfileDto {
   @IsString()
   bankAccountName?: string;
 
-  // Photos - array of photo URLs (uploaded separately)
-  @ApiPropertyOptional({ example: ['https://...', 'https://...'] })
+  // Photos - URL strings (legacy); prefer photoItems when dimensions known
+  @ApiPropertyOptional({ example: ['/api/upload/files/a.jpg'] })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   photoUrls?: string[];
+
+  @ApiPropertyOptional({ type: [PartnerProfilePhotoItemDto] })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => PartnerProfilePhotoItemDto)
+  photoItems?: PartnerProfilePhotoItemDto[];
 }
 
 export class UpdatePartnerProfileDto {
@@ -141,15 +172,21 @@ export class UpdatePartnerProfileDto {
   @IsString()
   bankAccountName?: string;
 
-  // Photos - array of photo URLs (uploaded separately)
-  @ApiPropertyOptional({ example: ['https://...', 'https://...'] })
+  @ApiPropertyOptional({ example: ['/api/upload/files/a.jpg'] })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   photoUrls?: string[];
 
-  // Remove specific photos
-  @ApiPropertyOptional({ example: ['https://old-photo-url.jpg'] })
+  @ApiPropertyOptional({ type: [PartnerProfilePhotoItemDto] })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => PartnerProfilePhotoItemDto)
+  photoItems?: PartnerProfilePhotoItemDto[];
+
+  // Remove specific photos (match by URL)
+  @ApiPropertyOptional({ example: ['/api/upload/files/old.jpg'] })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })

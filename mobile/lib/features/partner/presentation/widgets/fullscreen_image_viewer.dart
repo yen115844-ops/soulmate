@@ -4,6 +4,7 @@ import 'package:ionicons/ionicons.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 
+import '../../../../core/services/app_image_cache_manager.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/image_utils.dart';
 
@@ -54,6 +55,7 @@ class FullscreenImageViewer extends StatefulWidget {
 class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
   late PageController _pageController;
   late int _currentIndex;
+  late List<PhotoViewScaleStateController> _scaleStateControllers;
   bool _isClosing = false;
   double _currentScale = 1.0;
   double _dragOffsetY = 0;
@@ -63,12 +65,39 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
     super.initState();
     _currentIndex = widget.initialIndex;
     _pageController = PageController(initialPage: widget.initialIndex);
+    _scaleStateControllers = List.generate(
+      widget.imageUrls.length,
+      (_) => PhotoViewScaleStateController(),
+    );
+    // Precache adjacent images from the start
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _precacheAdjacentImages(_currentIndex);
+    });
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    for (final c in _scaleStateControllers) {
+      c.dispose();
+    }
     super.dispose();
+  }
+
+  /// Precache images adjacent to current index for instant swipe
+  void _precacheAdjacentImages(int index) {
+    for (final i in [index - 1, index + 1]) {
+      if (i < 0 || i >= widget.imageUrls.length) continue;
+      final url = ImageUtils.buildImageUrlNullable(widget.imageUrls[i]);
+      if (url == null || url.isEmpty) continue;
+      precacheImage(
+        CachedNetworkImageProvider(
+          url,
+          cacheManager: AppImageCacheManager.instance,
+        ),
+        context,
+      ).catchError((_) {});
+    }
   }
 
   @override
@@ -114,12 +143,16 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
                   itemCount: widget.imageUrls.length,
                   scrollPhysics: const BouncingScrollPhysics(),
                   backgroundDecoration: const BoxDecoration(color: Colors.black),
+                  gaplessPlayback: true,
                   onPageChanged: (index) {
-                    setState(() {
-                      _currentIndex = index;
-                      _currentScale = 1.0;
-                      _dragOffsetY = 0;
-                    });
+                    if (_currentIndex != index) {
+                      setState(() {
+                        _currentIndex = index;
+                        _currentScale = 1.0;
+                        _dragOffsetY = 0;
+                      });
+                      _precacheAdjacentImages(index);
+                    }
                   },
                   builder: (context, index) {
                     final url =
@@ -134,48 +167,68 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
                             size: 64,
                           ),
                         ),
-                        minScale: PhotoViewComputedScale.contained,
-                        maxScale: PhotoViewComputedScale.covered * 4,
+                        minScale: PhotoViewComputedScale.contained * 0.8,
+                        maxScale: PhotoViewComputedScale.covered * 2.5,
                         initialScale: PhotoViewComputedScale.contained,
+                        tightMode: true,
                         scaleStateCycle: _scaleStateCycle,
                         onScaleEnd: (_, __, value) {
-                          final scale = value.scale ?? 1.0;
-                          setState(() => _currentScale = scale);
-                          if (scale < 1.0) _close();
+                          _handleScaleEnd(index, value);
                         },
                       );
                     }
 
                     return PhotoViewGalleryPageOptions(
-                      imageProvider: CachedNetworkImageProvider(url),
-                      minScale: PhotoViewComputedScale.contained,
-                      maxScale: PhotoViewComputedScale.covered * 4,
+                      imageProvider: CachedNetworkImageProvider(
+                        url,
+                        cacheManager: AppImageCacheManager.instance,
+                      ),
                       initialScale: PhotoViewComputedScale.contained,
+                      minScale: PhotoViewComputedScale.contained * 0.8,
+                      maxScale: PhotoViewComputedScale.covered * 2.5,
+                      scaleStateController: _scaleStateControllers[index],
+                      tightMode: true,
                       gestureDetectorBehavior: HitTestBehavior.opaque,
                       heroAttributes: widget.heroTag == null
                           ? null
                           : PhotoViewHeroAttributes(
                               tag: '${widget.heroTag}-$index',
                             ),
-                      errorBuilder: (_, __, ___) => const Center(
-                        child: Icon(
-                          Ionicons.image_outline,
-                          color: Colors.white38,
-                          size: 64,
+                      errorBuilder: (_, __, ___) => Container(
+                        color: Colors.black,
+                        child: const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.broken_image, size: 60, color: Colors.white54),
+                              SizedBox(height: 16),
+                              Text(
+                                'Không thể tải hình ảnh',
+                                style: TextStyle(color: Colors.white70),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       scaleStateCycle: _scaleStateCycle,
                       onScaleEnd: (_, __, value) {
-                        final scale = value.scale ?? 1.0;
-                        setState(() => _currentScale = scale);
-                        if (scale < 1.0) _close();
+                        _handleScaleEnd(index, value);
                       },
                     );
                   },
-                  loadingBuilder: (_, __) => const Center(
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
+                  loadingBuilder: (_, event) => Center(
+                    child: SizedBox(
+                      width: 30,
+                      height: 30,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        value: event == null
+                            ? 0
+                            : event.cumulativeBytesLoaded /
+                                (event.expectedTotalBytes ?? 1),
+                        valueColor:
+                            const AlwaysStoppedAnimation<Color>(Colors.white70),
+                      ),
                     ),
                   ),
                 ),
@@ -259,12 +312,30 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
   PhotoViewScaleState _scaleStateCycle(PhotoViewScaleState actual) {
     switch (actual) {
       case PhotoViewScaleState.initial:
-      case PhotoViewScaleState.zoomedOut:
-        return PhotoViewScaleState.zoomedIn;
-      case PhotoViewScaleState.zoomedIn:
+        return PhotoViewScaleState.covering;
       case PhotoViewScaleState.covering:
-      case PhotoViewScaleState.originalSize:
         return PhotoViewScaleState.initial;
+      case PhotoViewScaleState.originalSize:
+      case PhotoViewScaleState.zoomedIn:
+      case PhotoViewScaleState.zoomedOut:
+        return PhotoViewScaleState.initial;
+    }
+  }
+
+  void _handleScaleEnd(int index, PhotoViewControllerValue value) {
+    final scale = value.scale ?? 1.0;
+    setState(() => _currentScale = scale);
+
+    final initialScale = PhotoViewComputedScale.contained.multiplier;
+
+    // Reset scale state when pinched back to normal
+    if (scale <= initialScale) {
+      _scaleStateControllers[index].scaleState = PhotoViewScaleState.initial;
+    }
+
+    // Dismiss when pinched well below initial scale
+    if (scale < initialScale * 0.7) {
+      _close();
     }
   }
 

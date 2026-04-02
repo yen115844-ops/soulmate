@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:ionicons/ionicons.dart';
 
+import '../../../../core/services/app_image_cache_manager.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
@@ -17,6 +18,9 @@ class PartnerPhotoGallery extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final metaByUrl = {
+      for (final item in detail.photoItems) item.url: item,
+    };
     // Start with profile photos so hero image and gallery stay consistent.
     final allPhotos = <String>[];
     allPhotos.addAll(detail.photos);
@@ -76,20 +80,26 @@ class PartnerPhotoGallery extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          _buildPhotoGrid(context, uniquePhotos),
+          _buildPhotoGrid(context, uniquePhotos, metaByUrl),
         ],
       ),
     );
   }
 
-  Widget _buildPhotoGrid(BuildContext context, List<String> photos) {
+  Widget _buildPhotoGrid(
+    BuildContext context,
+    List<String> photos,
+    Map<String, PartnerProfilePhoto> metaByUrl,
+  ) {
     final mainImage = photos.first;
     final smallTiles = photos.skip(1).take(4).toList();
     final moreCount = photos.length - 5;
 
     if (photos.length == 1) {
+      final ar = metaByUrl[mainImage]?.aspectRatio;
+      final safeAr = (ar != null && ar > 0) ? ar.clamp(0.7, 1.8) : 16 / 10;
       return AspectRatio(
-        aspectRatio: 16 / 10,
+        aspectRatio: safeAr.toDouble(),
         child: _buildPhotoTile(
           context,
           allPhotos: photos,
@@ -180,13 +190,17 @@ class PartnerPhotoGallery extends StatelessWidget {
             url != null && url.isNotEmpty
                 ? CachedNetworkImage(
                     imageUrl: url,
+                    cacheManager: AppImageCacheManager.instance,
                     fit: BoxFit.cover,
+                    memCacheWidth: 540,
+                    memCacheHeight: 540,
+                    maxWidthDiskCache: 720,
+                    maxHeightDiskCache: 720,
+                    fadeInDuration: Duration.zero,
+                    placeholderFadeInDuration: Duration.zero,
+                    useOldImageOnUrlChange: true,
                     placeholder: (_, __) => Container(
                       color: context.appColors.background,
-                      child: const Center(
-                        child:
-                            CircularProgressIndicator(strokeWidth: 2),
-                      ),
                     ),
                     errorWidget: (_, __, ___) => Container(
                       color: context.appColors.background,

@@ -18,6 +18,18 @@ class PartnerRepository with BaseRepositoryMixin {
 
   PartnerRepository({required ApiClient apiClient}) : _apiClient = apiClient;
 
+  List<PartnerProfilePhoto> _parseUploadedPhotoItems(dynamic responseData) {
+    final data = extractRawData(responseData);
+    final files = (data is Map<String, dynamic> && data['files'] is List)
+        ? (data['files'] as List)
+        : const [];
+    return files
+        .whereType<Map>()
+        .map((e) => PartnerProfilePhoto.fromJson(Map<String, dynamic>.from(e)))
+        .where((p) => p.url.trim().isNotEmpty)
+        .toList();
+  }
+
   /// Update presence (lastActiveAt) so "online" shows on Home/Favorites.
   /// Safe to call for any user; no-op if user is not a partner.
   Future<void> updatePresence() async {
@@ -228,9 +240,9 @@ class PartnerRepository with BaseRepositoryMixin {
   }) async {
     try {
       // 1. Upload photos first
-      List<String> photoUrls = [];
+      List<PartnerProfilePhoto> uploadedPhotoItems = const [];
       if (photos.isNotEmpty) {
-        photoUrls = await _uploadPhotos(photos);
+        uploadedPhotoItems = await _uploadPhotos(photos);
       }
 
       // 2. Create partner profile
@@ -244,7 +256,14 @@ class PartnerRepository with BaseRepositoryMixin {
           'bankName': bankName,
           'bankAccountNo': bankAccountNo,
           'bankAccountName': bankAccountName,
-          'photoUrls': photoUrls,
+          if (uploadedPhotoItems.isNotEmpty)
+            'photoItems': uploadedPhotoItems
+                .map((p) => {
+                      'url': p.url,
+                      if (p.width != null) 'width': p.width,
+                      if (p.height != null) 'height': p.height,
+                    })
+                .toList(),
           if (minimumHours != null) 'minimumHours': minimumHours,
           if (experienceYears != null) 'experienceYears': experienceYears,
         },
@@ -260,7 +279,7 @@ class PartnerRepository with BaseRepositoryMixin {
   }
 
   /// Upload photos to server
-  Future<List<String>> _uploadPhotos(List<File> photos) async {
+  Future<List<PartnerProfilePhoto>> _uploadPhotos(List<File> photos) async {
     final List<MultipartFile> files = [];
     final optimizedFiles = <OptimizedUploadImage>[];
 
@@ -285,13 +304,7 @@ class PartnerRepository with BaseRepositoryMixin {
       final formData = FormData.fromMap({'files': files});
 
       final response = await _apiClient.post('/upload/images', data: formData);
-
-      final data = extractRawData(response.data);
-      if (data['urls'] != null) {
-        return List<String>.from(data['urls']);
-      }
-
-      return [];
+      return _parseUploadedPhotoItems(response.data);
     } finally {
       for (final optimized in optimizedFiles) {
         await optimized.dispose();
@@ -374,15 +387,23 @@ class PartnerRepository with BaseRepositoryMixin {
     if (photos.isEmpty) return [];
 
     // 1. Upload photos first
-    final photoUrls = await _uploadPhotos(photos);
+    final photoItems = await _uploadPhotos(photos);
 
     // 2. Update partner profile with new photo URLs
     await _apiClient.put(
       '/partners/me/profile',
-      data: {'photoUrls': photoUrls},
+      data: {
+        'photoItems': photoItems
+            .map((p) => {
+                  'url': p.url,
+                  if (p.width != null) 'width': p.width,
+                  if (p.height != null) 'height': p.height,
+                })
+            .toList(),
+      },
     );
 
-    return photoUrls;
+    return photoItems.map((p) => p.url).toList();
   }
 
   /// Remove photos from partner portfolio

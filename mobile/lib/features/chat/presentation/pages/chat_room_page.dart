@@ -103,9 +103,20 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
   final _searchController = TextEditingController();
+  final ValueNotifier<bool> _canSendText = ValueNotifier(false);
+  final FocusNode _textFocusNode = FocusNode();
   String? _currentUserId;
   bool _isSearchMode = false;
   bool _showEmojiPicker = false;
+  bool _isTextFocused = false;
+
+  /// Chỉ join socket room một lần khi chat ảo nhận [activeConversationId].
+  String? _socketJoinedRoomId;
+
+  /// Tránh scroll lặp khi chỉ đổi read receipt / status.
+  String? _lastScrollSignature;
+
+  Timer? _markReadDebounce;
 
   // Typing debounce
   Timer? _typingTimer;
@@ -116,6 +127,19 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
     super.initState();
     _loadCurrentUserId();
     _messageController.addListener(_onTextChanged);
+    _textFocusNode.addListener(() {
+      if (!mounted) return;
+
+      final focused = _textFocusNode.hasFocus;
+      if (_isTextFocused != focused) {
+        setState(() => _isTextFocused = focused);
+      }
+
+      // Khi focus vào input thì đóng emoji picker để tránh chồng border/khung.
+      if (focused && _showEmojiPicker) {
+        setState(() => _showEmojiPicker = false);
+      }
+    });
   }
 
   Future<void> _loadCurrentUserId() async {
@@ -129,12 +153,15 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
   void dispose() {
     // Cancel typing timer first
     _typingTimer?.cancel();
+    _markReadDebounce?.cancel();
 
     // Remove listeners before disposing controllers
     _messageController.removeListener(_onTextChanged);
     _messageController.dispose();
     _scrollController.dispose();
     _searchController.dispose();
+    _canSendText.dispose();
+    _textFocusNode.dispose();
 
     // Note: Don't access context.read<ChatBloc>() in dispose
     // BlocProvider will automatically close the bloc
@@ -142,7 +169,30 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
     super.dispose();
   }
 
+  void _updateSendButtonFromText() {
+    final has = _messageController.text.trim().isNotEmpty;
+    if (_canSendText.value != has) {
+      _canSendText.value = has;
+    }
+  }
+
+  void _scheduleMarkAsRead(String conversationId) {
+    _markReadDebounce?.cancel();
+    _markReadDebounce = Timer(const Duration(milliseconds: 400), () {
+      if (!mounted) return;
+      final bloc = context.read<ChatBloc>();
+      final st = bloc.state;
+      final messages = st.messagesByConversation[conversationId] ?? [];
+      final uid = _getCurrentUserId(context);
+      if (uid == null) return;
+      if (messages.any((m) => m.senderId != uid && !m.isRead)) {
+        bloc.add(ChatMarkAsRead(conversationId));
+      }
+    });
+  }
+
   void _onTextChanged() {
+    _updateSendButtonFromText();
     if (!mounted) return;
 
     final conversationId = _getCurrentConversationId();
@@ -240,7 +290,9 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Vui lòng gửi tin nhắn văn bản trước khi gửi ảnh.'),
+            content: Text(
+              'Vui lòng gửi tin nhắn đầu tiên để bắt đầu cuộc trò chuyện trước khi gửi ảnh.',
+            ),
             backgroundColor: AppColors.warning,
           ),
         );
@@ -292,7 +344,9 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Vui lòng gửi tin nhắn văn bản trước khi gửi ảnh.'),
+            content: Text(
+              'Vui lòng gửi tin nhắn đầu tiên để bắt đầu cuộc trò chuyện trước khi gửi ảnh.',
+            ),
             backgroundColor: AppColors.warning,
           ),
         );
@@ -427,11 +481,13 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
   }
 
   void _onEmojiSelected(Category? category, Emoji emoji) {
-    _messageController.text += emoji.emoji;
+    // `emoji_picker_flutter` can update the provided controller internally.
+    // So we avoid manually appending again (prevents "2x emoji" issue).
+    final text = _messageController.text;
     _messageController.selection = TextSelection.fromPosition(
-      TextPosition(offset: _messageController.text.length),
+      TextPosition(offset: text.length),
     );
-    setState(() {});
+    _updateSendButtonFromText(); // Sync send-button state with controller
   }
 
   void _scrollToBottom() {
@@ -483,9 +539,143 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
     return null;
   }
 
+  String? _partnerUserIdForSync(ChatState state) {
+    if (widget.participantId != null) return widget.participantId;
+    if (state.virtualParticipantId != null) return state.virtualParticipantId;
+    if (widget.conversationId != null) {
+      for (final c in state.conversations) {
+        if (c.id == widget.conversationId) return c.otherUser?.id;
+      }
+    }
+    return null;
+  }
+
+  int _messageListVersion(List<MessageEntity>? msgs) {
+    if (msgs == null || msgs.isEmpty) return 0;
+    var h = msgs.length;
+    for (final m in msgs) {
+      h = Object.hash(h, m.id, m.isRead, m.status);
+    }
+    return h;
+  }
+
+  bool _setEquals(Set<String>? a, Set<String>? b) {
+    if (identical(a, b)) return true;
+    if (a == null || b == null) return a == b;
+    if (a.length != b.length) return false;
+    for (final e in a) {
+      if (!b.contains(e)) return false;
+    }
+    return true;
+  }
+
+  bool _chatRoomBuildWhen(ChatState previous, ChatState current) {
+    final prevConv = widget.conversationId ?? previous.activeConversationId;
+    final currConv = widget.conversationId ?? current.activeConversationId;
+    if (prevConv != currConv) return true;
+
+    if (previous.status != current.status) return true;
+    if (previous.isSearching != current.isSearching) return true;
+    if (previous.searchQuery != current.searchQuery) return true;
+    if (previous.errorMessage != current.errorMessage) return true;
+
+    final pMsgs = prevConv != null
+        ? previous.messagesByConversation[prevConv]
+        : null;
+    final cMsgs = currConv != null
+        ? current.messagesByConversation[currConv]
+        : null;
+    if (_messageListVersion(pMsgs) != _messageListVersion(cMsgs)) return true;
+
+    if (_isSearchMode) {
+      if (previous.searchResults.length != current.searchResults.length) {
+        return true;
+      }
+      for (var i = 0; i < previous.searchResults.length; i++) {
+        if (i >= current.searchResults.length) return true;
+        if (previous.searchResults[i].id != current.searchResults[i].id) {
+          return true;
+        }
+      }
+    }
+
+    final pt = prevConv != null ? previous.typingUsers[prevConv] : null;
+    final ct = currConv != null ? current.typingUsers[currConv] : null;
+    if (!_setEquals(pt, ct)) return true;
+
+    final partnerPrev = _partnerUserIdForSync(previous);
+    final partnerCurr = _partnerUserIdForSync(current);
+    if (partnerPrev != partnerCurr) return true;
+    if (partnerCurr != null &&
+        previous.onlineUsers[partnerCurr] !=
+            current.onlineUsers[partnerCurr]) {
+      return true;
+    }
+
+    if (previous.virtualParticipantId != current.virtualParticipantId) {
+      return true;
+    }
+    if (previous.virtualParticipantName != current.virtualParticipantName) {
+      return true;
+    }
+    if (previous.virtualParticipantAvatar != current.virtualParticipantAvatar) {
+      return true;
+    }
+
+    if (previous.blockedUserIds != current.blockedUserIds) return true;
+
+    if (widget.conversationId != null) {
+      ConversationEntity? prevC;
+      ConversationEntity? currC;
+      for (final c in previous.conversations) {
+        if (c.id == widget.conversationId) {
+          prevC = c;
+          break;
+        }
+      }
+      for (final c in current.conversations) {
+        if (c.id == widget.conversationId) {
+          currC = c;
+          break;
+        }
+      }
+      if (prevC?.isMuted != currC?.isMuted) return true;
+      if (prevC?.otherUser?.isOnline != currC?.otherUser?.isOnline) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  bool _chatRoomListenWhen(ChatState previous, ChatState current) {
+    if (current.hasError &&
+        current.errorMessage != null &&
+        previous.errorMessage != current.errorMessage) {
+      return true;
+    }
+
+    // Gửi tin / upload / load list — tránh bỏ lỡ listener khi payload trùng version
+    if (previous.status != current.status) return true;
+
+    final convCurr = widget.conversationId ?? current.activeConversationId;
+    final convPrev = widget.conversationId ?? previous.activeConversationId;
+    if (convCurr != convPrev) return true;
+
+    if (convCurr != null) {
+      final pm = previous.messagesByConversation[convCurr] ?? const [];
+      final cm = current.messagesByConversation[convCurr] ?? const [];
+      if (_messageListVersion(pm) != _messageListVersion(cm)) return true;
+    }
+
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<ChatBloc, ChatState>(
+      buildWhen: _chatRoomBuildWhen,
+      listenWhen: _chatRoomListenWhen,
       listener: (context, state) {
         if (state.hasError && state.errorMessage != null) {
           // Check if it's a block-related error
@@ -538,22 +728,30 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
           }
         }
 
-        // Auto scroll when new message arrives
-        if (state.status == ChatStatus.success) {
-          _scrollToBottom();
+        // Chỉ scroll khi danh sách tin nhắn thực sự thay đổi (số lượng / tin cuối)
+        final currentConvId =
+            widget.conversationId ?? state.activeConversationId;
+        if (currentConvId != null) {
+          final msgs = state.messagesByConversation[currentConvId] ?? [];
+          final sig =
+              '${msgs.length}_${msgs.isNotEmpty ? msgs.last.id : ''}';
+          if (sig != _lastScrollSignature) {
+            _lastScrollSignature = sig;
+            _scrollToBottom();
+          }
         }
 
-        // After first message sent, join the new room
-        if (state.activeConversationId != null &&
-            widget.conversationId == null) {
+        // Join room một lần sau khi gửi tin đầu (chat ảo → có conversationId)
+        if (widget.conversationId == null &&
+            state.activeConversationId != null &&
+            _socketJoinedRoomId != state.activeConversationId) {
+          _socketJoinedRoomId = state.activeConversationId;
           context.read<ChatBloc>().add(
             ChatJoinRoom(state.activeConversationId!),
           );
         }
 
-        // Auto mark as read when new messages arrive while user is in this chat room
-        final currentConvId =
-            widget.conversationId ?? state.activeConversationId;
+        // Debounce mark read — tránh spam API/socket khi bloc emit liên tục
         final currentUserId = _getCurrentUserId(context);
         if (currentConvId != null && currentUserId != null) {
           final messages = state.messagesByConversation[currentConvId] ?? [];
@@ -561,8 +759,7 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
             (m) => m.senderId != currentUserId && !m.isRead,
           );
           if (hasUnreadFromOthers) {
-            // Đánh dấu đã đọc ngay khi đang mở chat
-            context.read<ChatBloc>().add(ChatMarkAsRead(currentConvId));
+            _scheduleMarkAsRead(currentConvId);
           }
         }
       },
@@ -610,6 +807,7 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
             if (_showEmojiPicker) {
               setState(() => _showEmojiPicker = false);
             }
+            FocusScope.of(context).unfocus();
           },
           child: Scaffold(
             backgroundColor: context.appColors.background,
@@ -640,19 +838,14 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
                     height: 280,
                     decoration: BoxDecoration(
                       color: context.appColors.surface,
-                      border: Border(
-                        top: BorderSide(color: context.appColors.border, width: 0.5),
-                      ),
                     ),
                     child: EmojiPicker(
                       textEditingController: _messageController,
                       onEmojiSelected: _onEmojiSelected,
                       onBackspacePressed: () {
-                        _messageController
-                          ..text = _messageController.text.characters.skipLast(1).toString()
-                          ..selection = TextSelection.fromPosition(
-                              TextPosition(offset: _messageController.text.length));
-                        setState(() {});
+                        // Let `emoji_picker_flutter` handle controller updates.
+                        // Only sync send-button state.
+                        _updateSendButtonFromText();
                       },
                       config: Config(
                         height: 280,
@@ -951,6 +1144,7 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
     }
 
     final isSending = state.status == ChatStatus.sending;
+    final bool isInputActive = _showEmojiPicker || _isTextFocused;
 
     return Container(
       padding: EdgeInsets.fromLTRB(
@@ -999,8 +1193,8 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
                 color: context.appColors.card,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: _showEmojiPicker ? AppColors.primary : context.appColors.border,
-                  width: _showEmojiPicker ? 1.5 : 1,
+                  color: isInputActive ? AppColors.primary : context.appColors.border,
+                  width: isInputActive ? 1.5 : 1,
                 ),
               ),
               child: Row(
@@ -1009,6 +1203,7 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
                   Expanded(
                     child: TextField(
                       controller: _messageController,
+                      focusNode: _textFocusNode,
                       enabled: !isSending,
                       decoration: InputDecoration(
                         hintText: 'Nhập tin nhắn...',
@@ -1028,15 +1223,6 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
                       maxLines: 5,
                       minLines: 1,
                       textCapitalization: TextCapitalization.sentences,
-                      onTap: () {
-                        // Hide emoji picker when focusing on text field
-                        if (_showEmojiPicker) {
-                          setState(() => _showEmojiPicker = false);
-                        }
-                      },
-                      onChanged: (value) {
-                        setState(() {});
-                      },
                       onSubmitted: (_) => _sendMessage(),
                     ),
                   ),
@@ -1071,42 +1257,47 @@ class _ChatRoomContentState extends State<_ChatRoomContent> {
             ),
           ),
           const SizedBox(width: 10),
-          // Send button
-          GestureDetector(
-            onTap: isSending ? null : _sendMessage,
-            child: Container(
-              width: 46,
-              height: 46,
-              margin: const EdgeInsets.only(bottom: 1),
-              decoration: BoxDecoration(
-                color: _messageController.text.trim().isEmpty || isSending
-                    ? AppColors.primary.withAlpha(80)
-                    : AppColors.primary,
-                shape: BoxShape.circle,
-                boxShadow: _messageController.text.trim().isNotEmpty && !isSending
-                    ? [
-                        BoxShadow(
-                          color: AppColors.primary.withAlpha(60),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
+          // Send button — chỉ rebuild nút gửi khi có/không text
+          ValueListenableBuilder<bool>(
+            valueListenable: _canSendText,
+            builder: (context, canSend, _) {
+              return GestureDetector(
+                onTap: isSending ? null : _sendMessage,
+                child: Container(
+                  width: 46,
+                  height: 46,
+                  margin: const EdgeInsets.only(bottom: 1),
+                  decoration: BoxDecoration(
+                    color: !canSend || isSending
+                        ? AppColors.primary.withAlpha(80)
+                        : AppColors.primary,
+                    shape: BoxShape.circle,
+                    boxShadow: canSend && !isSending
+                        ? [
+                            BoxShadow(
+                              color: AppColors.primary.withAlpha(60),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: isSending
+                      ? const Padding(
+                          padding: EdgeInsets.all(13),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Icon(
+                          Ionicons.send,
+                          color: AppColors.textWhite,
+                          size: 20,
                         ),
-                      ]
-                    : null,
-              ),
-              child: isSending
-                  ? const Padding(
-                      padding: EdgeInsets.all(13),
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Icon(
-                      Ionicons.send,
-                      color: AppColors.textWhite,
-                      size: 20,
-                    ),
-            ),
+                ),
+              );
+            },
           ),
         ],
       ),

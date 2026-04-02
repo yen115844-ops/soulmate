@@ -25,7 +25,8 @@
     "prisma:seed": "prisma db seed",
     "db:push": "prisma db push && prisma generate",
     "db:reset": "prisma migrate reset",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "photos:backfill": "tsx src/scripts/backfill-profile-photo-dimensions.ts"
   },
   "dependencies": {
     "@nestjs/bull": "^11.0.4",

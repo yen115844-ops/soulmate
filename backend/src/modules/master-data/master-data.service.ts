@@ -1,20 +1,20 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import {
-  CreateDistrictDto,
-  CreateInterestCategoryDto,
-  CreateInterestDto,
-  CreateLanguageDto,
-  CreateProvinceDto,
-  CreateServiceTypeDto,
-  CreateTalentCategoryDto,
-  CreateTalentDto,
-  UpdateDistrictDto,
-  UpdateInterestDto,
-  UpdateLanguageDto,
-  UpdateProvinceDto,
-  UpdateServiceTypeDto,
-  UpdateTalentDto,
+    CreateDistrictDto,
+    CreateInterestCategoryDto,
+    CreateInterestDto,
+    CreateLanguageDto,
+    CreateProvinceDto,
+    CreateServiceTypeDto,
+    CreateTalentCategoryDto,
+    CreateTalentDto,
+    UpdateDistrictDto,
+    UpdateInterestDto,
+    UpdateLanguageDto,
+    UpdateProvinceDto,
+    UpdateServiceTypeDto,
+    UpdateTalentDto,
 } from './dto';
 
 @Injectable()
@@ -120,7 +120,7 @@ export class MasterDataService {
   // ==================== Interests ====================
 
   async getInterests(categoryId?: string, includeInactive = false) {
-    return this.prisma.interest.findMany({
+    const interests = await this.prisma.interest.findMany({
       where: {
         ...(categoryId && { categoryId }),
         ...(includeInactive ? {} : { isActive: true }),
@@ -128,6 +128,11 @@ export class MasterDataService {
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
       include: { category: { select: { id: true, name: true } } },
     });
+
+    return interests.map((item) => ({
+      ...item,
+      displayName: item.name,
+    }));
   }
 
   async createInterest(dto: CreateInterestDto) {
@@ -168,7 +173,7 @@ export class MasterDataService {
   // ==================== Talents ====================
 
   async getTalents(categoryId?: string, includeInactive = false) {
-    return this.prisma.talent.findMany({
+    const talents = await this.prisma.talent.findMany({
       where: {
         ...(categoryId && { categoryId }),
         ...(includeInactive ? {} : { isActive: true }),
@@ -176,6 +181,11 @@ export class MasterDataService {
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
       include: { category: { select: { id: true, name: true } } },
     });
+
+    return talents.map((item) => ({
+      ...item,
+      displayName: item.name,
+    }));
   }
 
   async createTalent(dto: CreateTalentDto) {
@@ -219,10 +229,15 @@ export class MasterDataService {
   // ==================== Service Types ====================
 
   async getServiceTypes(includeInactive = false) {
-    return this.prisma.serviceType.findMany({
+    const serviceTypes = await this.prisma.serviceType.findMany({
       where: includeInactive ? {} : { isActive: true },
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
     });
+
+    return serviceTypes.map((item) => ({
+      ...item,
+      displayName: item.nameVi ?? item.name,
+    }));
   }
 
   async createServiceType(dto: CreateServiceTypeDto) {

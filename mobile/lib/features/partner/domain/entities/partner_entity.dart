@@ -21,6 +21,8 @@ class PartnerEntity extends Equatable {
   final List<String> talents;
   final List<String> languages;
   final List<String> gallery;
+  /// width/height của ảnh hiển thị trên card home (cover hoặc ảnh được chọn), null nếu API không có.
+  final double? cardImageAspectRatio;
   /// Chi tiết từ API (name, icon) - ưu tiên dùng cho hiển thị
   final List<Map<String, dynamic>>? serviceTypesDetail;
   final List<Map<String, dynamic>>? interestsDetail;
@@ -60,6 +62,7 @@ class PartnerEntity extends Equatable {
     this.talents = const [],
     this.languages = const ['Tiếng Việt'],
     this.gallery = const [],
+    this.cardImageAspectRatio,
     this.serviceTypesDetail,
     this.interestsDetail,
     this.talentsDetail,
@@ -134,6 +137,7 @@ class PartnerEntity extends Equatable {
         interestsDetail,
         talentsDetail,
         gallery,
+        cardImageAspectRatio,
         responseRate,
         completedBookings,
         workingHours,
@@ -169,6 +173,7 @@ class PartnerEntity extends Equatable {
     List<Map<String, dynamic>>? interestsDetail,
     List<Map<String, dynamic>>? talentsDetail,
     List<String>? gallery,
+    double? cardImageAspectRatio,
     int? responseRate,
     int? completedBookings,
     String? workingHours,
@@ -203,6 +208,7 @@ class PartnerEntity extends Equatable {
       interestsDetail: interestsDetail ?? this.interestsDetail,
       talentsDetail: talentsDetail ?? this.talentsDetail,
       gallery: gallery ?? this.gallery,
+      cardImageAspectRatio: cardImageAspectRatio ?? this.cardImageAspectRatio,
       responseRate: responseRate ?? this.responseRate,
       completedBookings: completedBookings ?? this.completedBookings,
       workingHours: workingHours ?? this.workingHours,

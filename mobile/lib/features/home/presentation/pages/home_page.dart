@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
@@ -95,6 +94,14 @@ class _HomePageViewState extends State<_HomePageView> {
 
   void _onPartnerTap(PartnerEntity partner) {
     HapticFeedback.mediumImpact();
+
+    // Preload partner gallery images during route transition (~300ms)
+    ImageWarmupService.instance.warmupPartnerGallery(
+      context: context,
+      galleryUrls: partner.gallery,
+      avatarUrl: partner.avatarUrl,
+    );
+
     context.push('/partner/${partner.id}');
   }
 
@@ -175,17 +182,32 @@ class _HomePageViewState extends State<_HomePageView> {
           _lastWarmupKey = warmupKey;
 
           final imageUrls = state.partners
-              .take(16)
-              .map((p) => p.gallery.isNotEmpty ? p.gallery.first : p.avatarUrl)
+              .take(8)
+              .map((p) {
+                if (p.coverPhotoUrl != null && p.coverPhotoUrl!.trim().isNotEmpty) {
+                  return p.coverPhotoUrl!;
+                }
+                if (p.gallery.isNotEmpty && p.gallery.first.trim().isNotEmpty) {
+                  return p.gallery.first;
+                }
+                return p.avatarUrl;
+              })
               .where((url) => url.trim().isNotEmpty)
               .toList(growable: false);
 
-          ImageWarmupService.instance.warmupImages(
-            context: context,
-            imageUrls: imageUrls,
-            maxImages: 16,
-            targetWidth: 800,
-          );
+          // Tránh warmup + decode cùng lúc frame đầu (gây jank). Ảnh vẫn load lazy qua CachedNetworkImage.
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!context.mounted) return;
+            Future<void>.delayed(const Duration(milliseconds: 350), () {
+              if (!context.mounted) return;
+              ImageWarmupService.instance.warmupImages(
+                context: context,
+                imageUrls: imageUrls,
+                maxImages: 8,
+                targetWidth: 560,
+              );
+            });
+          });
         },
         builder: (context, state) {
           return CustomScrollView(
@@ -215,7 +237,6 @@ class _HomePageViewState extends State<_HomePageView> {
                 ),
               ),
 
-           // sizedbox heigth
               const SliverToBoxAdapter(child: SizedBox(height: 15)),
 
               // Partner list
@@ -255,25 +276,30 @@ class _HomePageViewState extends State<_HomePageView> {
       spacing: 16,
     );
     final padding = ResponsiveLayout.horizontalPadding(context);
+    final screenW = MediaQuery.sizeOf(context).width;
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final gapTotal = crossAxisCount > 1 ? 16.0 * (crossAxisCount - 1) : 0.0;
+    final cellLogicalW = (screenW - padding * 2 - gapTotal) / crossAxisCount;
+    final feedMemCacheWidth = (cellLogicalW * dpr).round().clamp(360, 640);
+
     return SliverPadding(
       padding: EdgeInsets.fromLTRB(padding, 0, padding, 16),
-      sliver: SliverAlignedGrid.count(
+      sliver: SliverMasonryGrid.count(
         crossAxisCount: crossAxisCount,
         mainAxisSpacing: 16,
         crossAxisSpacing: 16,
-        itemCount: partners.length,
+        childCount: partners.length,
         itemBuilder: (context, index) {
           final partner = partners[index];
-          return GestureDetector(
-                onTap: () => _onPartnerTap(partner),
-                child: HomePartnerCard(partner: partner),
-              )
-              .animate()
-              .fadeIn(
-                delay: Duration(milliseconds: 60 * (index % 8)),
-                duration: 350.ms,
-              )
-              .slideY(begin: 0.05, end: 0);
+          return RepaintBoundary(
+            child: GestureDetector(
+              onTap: () => _onPartnerTap(partner),
+              child: HomePartnerCard(
+                partner: partner,
+                feedImageMemCacheWidth: feedMemCacheWidth,
+              ),
+            ),
+          );
         },
       ),
     );

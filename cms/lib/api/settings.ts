@@ -34,6 +34,7 @@ export const SETTINGS_KEY_MAP = {
   autoConfirmBooking: "auto_confirm_booking",
   allowInstantBooking: "allow_instant_booking",
   requirePremiumForBooking: "require_premium_for_booking",
+  requirePremiumForChat: "require_premium_for_chat",
   // Notifications
   emailNotifications: "email_notifications",
   pushNotifications: "push_notifications",

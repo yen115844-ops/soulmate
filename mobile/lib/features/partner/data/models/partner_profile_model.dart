@@ -1,3 +1,5 @@
+import 'partner_availability_model.dart';
+
 /// Partner Profile Response Model
 class PartnerProfileResponse {
   final String id;
@@ -150,6 +152,50 @@ class PartnerProfileFullResponse {
   PartnerProfileFullResponse({required this.profile, this.userProfile});
 }
 
+/// Gallery item: legacy API used plain URL strings; rich shape adds dimensions.
+class PartnerProfilePhoto {
+  final String url;
+  final int? width;
+  final int? height;
+  /// width / height when provided by API.
+  final double? aspectRatio;
+
+  const PartnerProfilePhoto({
+    required this.url,
+    this.width,
+    this.height,
+    this.aspectRatio,
+  });
+
+  factory PartnerProfilePhoto.fromJson(dynamic json) {
+    if (json is String) {
+      return PartnerProfilePhoto(url: json);
+    }
+    if (json is Map) {
+      final m = Map<String, dynamic>.from(json);
+      final url = m['url']?.toString() ?? '';
+      int? asInt(dynamic v) {
+        if (v is int) return v;
+        if (v is double) return v.round();
+        return int.tryParse(v?.toString() ?? '');
+      }
+
+      double? asDouble(dynamic v) {
+        if (v is num) return v.toDouble();
+        return double.tryParse(v?.toString() ?? '');
+      }
+
+      return PartnerProfilePhoto(
+        url: url,
+        width: asInt(m['width']),
+        height: asInt(m['height']),
+        aspectRatio: asDouble(m['aspectRatio']),
+      );
+    }
+    return PartnerProfilePhoto(url: json.toString());
+  }
+}
+
 /// User profile info from partner profile response
 class PartnerUserProfileInfo {
   final String? fullName;
@@ -162,7 +208,7 @@ class PartnerUserProfileInfo {
   final int? weightKg;
   final String? city;
   final String? district;
-  final List<String> photos;
+  final List<PartnerProfilePhoto> photoItems;
   final List<String> languages;
   final List<String> interests;
   final List<String> talents;
@@ -180,13 +226,17 @@ class PartnerUserProfileInfo {
     this.weightKg,
     this.city,
     this.district,
-    this.photos = const [],
+    this.photoItems = const [],
     this.languages = const [],
     this.interests = const [],
     this.talents = const [],
     this.interestsDetail = const [],
     this.talentsDetail = const [],
   });
+
+  /// URL list for widgets that only need strings (warmup, grid, legacy).
+  List<String> get photos =>
+      photoItems.map((p) => p.url).where((u) => u.trim().isNotEmpty).toList();
 
   /// Calculate age from dateOfBirth
   int? get age {
@@ -206,6 +256,14 @@ class PartnerUserProfileInfo {
   }
 
   factory PartnerUserProfileInfo.fromJson(Map<String, dynamic> json) {
+    final rawPhotos = json['photos'];
+    final parsedPhotos = rawPhotos is List
+        ? rawPhotos
+            .map(PartnerProfilePhoto.fromJson)
+            .where((p) => p.url.trim().isNotEmpty)
+            .toList()
+        : <PartnerProfilePhoto>[];
+
     return PartnerUserProfileInfo(
       fullName: json['fullName'] is String ? json['fullName'] : null,
       displayName: json['displayName'] is String ? json['displayName'] : null,
@@ -218,9 +276,7 @@ class PartnerUserProfileInfo {
       weightKg: json['weightKg'] is int ? json['weightKg'] : null,
       city: json['city'] is String ? json['city'] : null,
       district: json['district'] is String ? json['district'] : null,
-      photos: (json['photos'] is List)
-          ? List<String>.from((json['photos'] as List).map((e) => e.toString()))
-          : <String>[],
+      photoItems: parsedPhotos,
       languages: (json['languages'] is List)
           ? List<String>.from(
               (json['languages'] as List).map((e) => e.toString()),
@@ -257,6 +313,7 @@ class PartnerDetailResponse {
   final PartnerUserInfo? userInfo;
   final PartnerUserProfileInfo? userProfile;
   final List<Map<String, dynamic>> serviceTypesDetail;
+  final List<AvailabilitySlot> availabilitySlots;
   final PartnerReviewStats? reviewStats;
 
   PartnerDetailResponse({
@@ -265,6 +322,7 @@ class PartnerDetailResponse {
     this.userInfo,
     this.userProfile,
     this.serviceTypesDetail = const [],
+    this.availabilitySlots = const [],
     this.reviewStats,
   });
 
@@ -291,6 +349,9 @@ class PartnerDetailResponse {
 
   /// Get photos list
   List<String> get photos => userProfile?.photos ?? [];
+
+  /// Get rich photo items (url + optional width/height/aspectRatio)
+  List<PartnerProfilePhoto> get photoItems => userProfile?.photoItems ?? [];
 
   /// Get languages list
   List<String> get languages => userProfile?.languages ?? [];
@@ -343,6 +404,13 @@ class PartnerDetailResponse {
             .toList()
         : <Map<String, dynamic>>[];
 
+    final availabilitySlots = (json['availabilitySlots'] is List)
+      ? (json['availabilitySlots'] as List)
+        .whereType<Map<String, dynamic>>()
+        .map(AvailabilitySlot.fromJson)
+        .toList()
+      : <AvailabilitySlot>[];
+
     return PartnerDetailResponse(
       profile: profile,
       userId: json['user'] is Map<String, dynamic>
@@ -351,6 +419,7 @@ class PartnerDetailResponse {
       userInfo: userInfo,
       userProfile: userProfile,
       serviceTypesDetail: serviceTypesDetail,
+        availabilitySlots: availabilitySlots,
       reviewStats: json['reviewStats'] is Map<String, dynamic>
           ? PartnerReviewStats.fromJson(json['reviewStats'] as Map<String, dynamic>)
           : null,

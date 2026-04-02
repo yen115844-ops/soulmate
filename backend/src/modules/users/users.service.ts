@@ -8,6 +8,13 @@ import {
     forwardRef,
 } from '@nestjs/common';
 import { PaginationDto } from '../../common/dto/pagination.dto';
+import {
+    coerceProfilePhotosToStored,
+    normalizeProfilePhotosForApi,
+    removeProfilePhotosByUrls,
+    stripPhotosForPersistence,
+    upsertProfilePhotos,
+} from '../../common/utils/profile-photos.util';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { UserStatus } from '../../generated/prisma/client';
 import { ChatGateway } from '../chat/chat.gateway';
@@ -97,7 +104,10 @@ export class UsersService {
       throw new NotFoundException('Profile not found');
     }
 
-    return profile;
+    return {
+      ...profile,
+      photos: normalizeProfilePhotosForApi(profile.photos),
+    };
   }
 
   /**
@@ -114,6 +124,12 @@ export class UsersService {
     }
 
     const updateData: any = { ...dto };
+
+    if (dto.photos !== undefined) {
+      updateData.photos = stripPhotosForPersistence(
+        coerceProfilePhotosToStored(dto.photos),
+      );
+    }
 
     // Handle date conversion
     if (dto.dateOfBirth) {
@@ -163,7 +179,10 @@ export class UsersService {
     });
 
     this.logger.log(`Profile updated for user: ${userId}`);
-    return profile;
+    return {
+      ...profile,
+      photos: normalizeProfilePhotosForApi(profile.photos),
+    };
   }
 
   /**
@@ -221,33 +240,37 @@ export class UsersService {
     }
 
     this.uploadService.validateMagicBytes(file);
-    await this.uploadService.optimizeImage(file, {
+    const meta = await this.uploadService.optimizeImage(file, {
       maxWidth: 1440,
       maxHeight: 1440,
       quality: 82,
     });
 
     const photoUrl = this.uploadService.getFileUrl(file.filename);
-    const currentPhotos = Array.isArray(existingProfile.photos)
-      ? (existingProfile.photos as string[])
-      : [];
-
-    if (!currentPhotos.includes(photoUrl)) {
-      currentPhotos.push(photoUrl);
-    }
+    const newPhotos = stripPhotosForPersistence(
+      upsertProfilePhotos(existingProfile.photos, [
+        {
+          url: photoUrl,
+          width: meta.width,
+          height: meta.height,
+        },
+      ]),
+    );
 
     await this.prisma.profile.update({
       where: { userId },
-      data: { photos: currentPhotos },
+      data: { photos: newPhotos as object[] },
     });
 
     return {
       photoUrl,
+      width: meta.width,
+      height: meta.height,
       filename: file.filename,
       originalName: file.originalname,
       size: file.size,
       mimetype: file.mimetype,
-      totalPhotos: currentPhotos.length,
+      totalPhotos: newPhotos.length,
     };
   }
 
@@ -260,18 +283,16 @@ export class UsersService {
       throw new NotFoundException('Profile not found');
     }
 
-    const currentPhotos = Array.isArray(existingProfile.photos)
-      ? (existingProfile.photos as string[])
-      : [];
-    const nextPhotos = currentPhotos.filter((url) => url !== photoUrl);
+    const before = coerceProfilePhotosToStored(existingProfile.photos);
+    const nextPhotos = removeProfilePhotosByUrls(before, [photoUrl]);
 
-    if (nextPhotos.length === currentPhotos.length) {
+    if (nextPhotos.length === before.length) {
       throw new BadRequestException('Photo not found in profile');
     }
 
     await this.prisma.profile.update({
       where: { userId },
-      data: { photos: nextPhotos },
+      data: { photos: stripPhotosForPersistence(nextPhotos) as object[] },
     });
 
     this.uploadService.deleteFileByUrl(photoUrl);

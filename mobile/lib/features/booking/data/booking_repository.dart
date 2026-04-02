@@ -152,6 +152,17 @@ class BookingRepository with BaseRepositoryMixin {
     }
   }
 
+  /// Block an abusive user
+  Future<void> blockUser({required String blockedUserId}) async {
+    try {
+      await _apiClient.post('/reports/block/$blockedUserId');
+    } catch (e, stackTrace) {
+      debugPrint('Block user error: $e');
+      debugPrint('Stack trace: $stackTrace');
+      rethrow;
+    }
+  }
+
   /// Pay for a booking with credits
   Future<BookingEntity> payBooking(String bookingId) async {
     try {

@@ -38,6 +38,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
   CreditsRepository get _creditsRepository => getIt<CreditsRepository>();
 
   AppConfigRepository get _appConfigRepository => getIt<AppConfigRepository>();
+  AppConfig _appConfig = AppConfig.defaults();
 
   bool _isLoadingPartner = true;
   bool _isSubmitting = false;
@@ -64,9 +65,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
   // Partner data from API
   PartnerDetailResponse? _partner;
   List<String> _partnerServices = [];
-
-  // Mock partner schedule - sẽ load từ API
-  late PartnerSchedule _partnerSchedule;
+  List<AvailabilitySlot> _availabilitySlots = [];
 
   @override
   void initState() {
@@ -78,9 +77,16 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
   }
 
   void _checkPremiumAndLoad() async {
+    final config = await _appConfigRepository.getConfig();
+    if (!mounted) return;
+
+    setState(() {
+      _appConfig = config;
+      _duration = _duration.clamp(_minBookingHours, _maxBookingHours);
+    });
+
     // Kiểm tra setting từ server: có yêu cầu premium cho booking không
-    final requirePremium =
-        await _appConfigRepository.requirePremiumForBooking();
+    final requirePremium = config.requirePremiumForBooking;
 
     if (requirePremium && !PremiumGuard.isPremium(context)) {
       final wantUpgrade = await PremiumGuard.showPremiumDialog(
@@ -102,7 +108,6 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
       return;
     }
     _loadPartnerData();
-    _loadPartnerSchedule();
   }
 
   Future<void> _loadPartnerData() async {
@@ -130,7 +135,13 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
         setState(() {
           _partner = partnerDetail;
           _partnerServices = partnerDetail.profile.serviceTypes;
-          _duration = partnerDetail.profile.minimumHours;
+          _availabilitySlots = partnerDetail.availabilitySlots
+              .where((slot) => slot.isAvailable)
+              .toList();
+          _duration = partnerDetail.profile.minimumHours.clamp(
+            _effectiveMinDuration,
+            _maxBookingHours,
+          );
           _isLoadingPartner = false;
         });
       }
@@ -145,111 +156,34 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
     }
   }
 
-  void _loadPartnerSchedule() {
-    // Mock weekly schedule using DailySchedule
-    final weeklySchedule = WeeklySchedule(
-      schedule: {
-        DayOfWeek.monday: DailySchedule(
-          dayOfWeek: DayOfWeek.monday,
-          isEnabled: true,
-          timeSlots: [
-            TimeSlot(
-              startTime: const TimeOfDay(hour: 9, minute: 0),
-              endTime: const TimeOfDay(hour: 12, minute: 0),
-            ),
-            TimeSlot(
-              startTime: const TimeOfDay(hour: 14, minute: 0),
-              endTime: const TimeOfDay(hour: 18, minute: 0),
-            ),
-          ],
-        ),
-        DayOfWeek.tuesday: DailySchedule(
-          dayOfWeek: DayOfWeek.tuesday,
-          isEnabled: true,
-          timeSlots: [
-            TimeSlot(
-              startTime: const TimeOfDay(hour: 9, minute: 0),
-              endTime: const TimeOfDay(hour: 17, minute: 0),
-            ),
-          ],
-        ),
-        DayOfWeek.wednesday: DailySchedule(
-          dayOfWeek: DayOfWeek.wednesday,
-          isEnabled: true,
-          timeSlots: [
-            TimeSlot(
-              startTime: const TimeOfDay(hour: 9, minute: 0),
-              endTime: const TimeOfDay(hour: 17, minute: 0),
-            ),
-          ],
-        ),
-        DayOfWeek.thursday: DailySchedule(
-          dayOfWeek: DayOfWeek.thursday,
-          isEnabled: true,
-          timeSlots: [
-            TimeSlot(
-              startTime: const TimeOfDay(hour: 9, minute: 0),
-              endTime: const TimeOfDay(hour: 17, minute: 0),
-            ),
-          ],
-        ),
-        DayOfWeek.friday: DailySchedule(
-          dayOfWeek: DayOfWeek.friday,
-          isEnabled: true,
-          timeSlots: [
-            TimeSlot(
-              startTime: const TimeOfDay(hour: 9, minute: 0),
-              endTime: const TimeOfDay(hour: 17, minute: 0),
-            ),
-          ],
-        ),
-        DayOfWeek.saturday: DailySchedule(
-          dayOfWeek: DayOfWeek.saturday,
-          isEnabled: true,
-          timeSlots: [
-            TimeSlot(
-              startTime: const TimeOfDay(hour: 10, minute: 0),
-              endTime: const TimeOfDay(hour: 15, minute: 0),
-            ),
-          ],
-        ),
-        DayOfWeek.sunday: DailySchedule(
-          dayOfWeek: DayOfWeek.sunday,
-          isEnabled: false,
-          timeSlots: [],
-        ),
-      },
-    );
-
-    // Mock overrides (blocked dates)
-    final overrides = [
-      ScheduleOverride(
-        date: DateTime(2025, 1, 25),
-        isAvailable: false,
-        reason: 'Ngày nghỉ cá nhân',
-      ),
-      ScheduleOverride(
-        date: DateTime(2025, 1, 30),
-        isAvailable: false,
-        reason: 'Tết Nguyên Đán',
-      ),
-      ScheduleOverride(
-        date: DateTime(2025, 2, 1),
-        isAvailable: false,
-        reason: 'Tết Nguyên Đán',
-      ),
-    ];
-
-    _partnerSchedule = PartnerSchedule(
-      partnerId: widget.partnerId,
-      weeklySchedule: weeklySchedule,
-      overrides: overrides,
-    );
-  }
-
   /// Get available time slots for a date
   List<TimeSlot> _getAvailableSlotsForDate(DateTime date) {
-    return _partnerSchedule.getAvailableSlotsForDate(date);
+    final slots = _availabilitySlots.where((slot) {
+      final slotDate = slot.date;
+      return slotDate.year == date.year &&
+          slotDate.month == date.month &&
+          slotDate.day == date.day;
+    }).map((slot) {
+      return TimeSlot(
+        startTime: TimeOfDay(
+          hour: slot.startTime.hour,
+          minute: slot.startTime.minute,
+        ),
+        endTime: TimeOfDay(
+          hour: slot.endTime.hour,
+          minute: slot.endTime.minute,
+        ),
+      );
+    }).toList();
+
+    slots.sort((a, b) {
+      if (a.startTime.hour != b.startTime.hour) {
+        return a.startTime.hour.compareTo(b.startTime.hour);
+      }
+      return a.startTime.minute.compareTo(b.startTime.minute);
+    });
+
+    return slots;
   }
 
   /// Check if date has any available slots
@@ -258,30 +192,14 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
     return _getAvailableSlotsForDate(date).isNotEmpty;
   }
 
-  /// Service descriptions (bổ sung cho ServiceConstants)
-  static const Map<String, String> _serviceDescriptions = {
-    'WALKING': 'Đi dạo công viên, phố đi bộ',
-    'MOVIE': 'Xem phim tại rạp',
-    'COFFEE': 'Ngồi cafe trò chuyện',
-    'DINNER': 'Dùng bữa tại nhà hàng',
-    'DINING': 'Dùng bữa tại nhà hàng',
-    'PARTY': 'Tiệc sinh nhật, công ty',
-    'TRAVEL': 'Đi chơi xa, du lịch',
-    'SHOPPING': 'Đi mua sắm cùng',
-    'SPORTS': 'Hoạt động thể thao',
-    'OTHER': 'Hoạt động khác',
-  };
-
   List<Map<String, dynamic>> get _services {
     return _partnerServices.map((serviceType) {
-      final description =
-          _serviceDescriptions[serviceType.toUpperCase()] ?? serviceType;
       return {
         'type': serviceType,
         'name': _resolveServiceName(serviceType),
         'emoji': _resolveServiceEmoji(serviceType),
         'color': AppColors.primary,
-        'description': description,
+        'description': _resolveServiceDescription(serviceType),
       };
     }).toList();
   }
@@ -299,7 +217,10 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
 
   String _resolveServiceName(String serviceType) {
     final detail = _findServiceDetail(serviceType);
-    final name = (detail?['name'] ?? detail?['displayName'] ?? detail?['label'])
+    final name = (detail?['displayName'] ??
+            detail?['nameVi'] ??
+            detail?['name'] ??
+            detail?['label'])
         ?.toString()
         .trim();
     if (name != null && name.isNotEmpty) {
@@ -317,10 +238,37 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
     return '•';
   }
 
+  String _resolveServiceDescription(String serviceType) {
+    final detail = _findServiceDetail(serviceType);
+    final description =
+        (detail?['description'] ??
+                detail?['displayName'] ??
+                detail?['nameVi'] ??
+                detail?['name'])
+            ?.toString()
+            .trim();
+    if (description != null && description.isNotEmpty) {
+      return description;
+    }
+    return _resolveServiceName(serviceType);
+  }
+
   int get _hourlyRate => _partner?.profile.hourlyRate.toInt() ?? 0;
   int get _subtotal => _hourlyRate * _duration;
-  int get _serviceFee => (_subtotal * 0.15).round();
+  int get _serviceFee => (_subtotal * _feeRate).round();
   int get _totalAmount => _subtotal + _serviceFee;
+  int get _minBookingHours => _appConfig.minBookingHours;
+  int get _maxBookingHours => _appConfig.maxBookingHours;
+  int get _advanceBookingDays => _appConfig.advanceBookingDays;
+  int get _effectiveMinDuration {
+    final partnerMin = _partner?.profile.minimumHours ?? _minBookingHours;
+    return partnerMin.clamp(_minBookingHours, _maxBookingHours);
+  }
+
+  double get _feeRate {
+    if (_appConfig.platformFeeRate > 0) return _appConfig.platformFeeRate;
+    return _appConfig.serviceFeePercent / 100;
+  }
 
   void _nextStep() {
     if (_currentStep < 3) {
@@ -1085,7 +1033,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                   children: [
                     _DurationButton(
                       icon: Ionicons.remove_outline,
-                      onTap: _duration > (_partner?.profile.minimumHours ?? 3)
+                      onTap: _duration > _effectiveMinDuration
                           ? () => setState(() => _duration--)
                           : null,
                     ),
@@ -1101,7 +1049,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                     ),
                     _DurationButton(
                       icon: Ionicons.add_outline,
-                      onTap: _duration < 12
+                      onTap: _duration < _maxBookingHours
                           ? () => setState(() => _duration++)
                           : null,
                     ),
@@ -1335,7 +1283,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
   Widget _buildDateCalendar() {
     final today = DateTime.now();
     final dates = List.generate(
-      30,
+      _advanceBookingDays,
       (index) => today.add(Duration(days: index + 1)),
     );
 
@@ -1561,6 +1509,33 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
 
   /// Show schedule info dialog
   void _showScheduleInfo() {
+    final groupedByDate = <DateTime, List<TimeSlot>>{};
+    for (final slot in _availabilitySlots) {
+      final dateKey = DateTime(slot.date.year, slot.date.month, slot.date.day);
+      groupedByDate.putIfAbsent(dateKey, () => <TimeSlot>[]).add(
+        TimeSlot(
+          startTime: TimeOfDay(
+            hour: slot.startTime.hour,
+            minute: slot.startTime.minute,
+          ),
+          endTime: TimeOfDay(
+            hour: slot.endTime.hour,
+            minute: slot.endTime.minute,
+          ),
+        ),
+      );
+    }
+
+    final dates = groupedByDate.keys.toList()..sort();
+    for (final date in dates) {
+      groupedByDate[date]!.sort((a, b) {
+        if (a.startTime.hour != b.startTime.hour) {
+          return a.startTime.hour.compareTo(b.startTime.hour);
+        }
+        return a.startTime.minute.compareTo(b.startTime.minute);
+      });
+    }
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1613,37 +1588,43 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
               ),
               const Divider(height: 1),
               Expanded(
-                child: ListView.separated(
-                  controller: scrollController,
-                  padding: EdgeInsets.fromLTRB(
-                    20,
-                    20,
-                    20,
-                    MediaQuery.of(context).padding.bottom + 8,
-                  ),
-                  itemCount: DayOfWeek.values.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final day = DayOfWeek.values[index];
-                    final dailySchedule = _partnerSchedule.weeklySchedule.schedule[day];
-                    final slots = dailySchedule?.timeSlots ?? [];
-                    final hasSlots =
-                        dailySchedule?.isEnabled == true && slots.isNotEmpty;
-
-                    return Row(
-                      children: [
-                        SizedBox(
-                          width: 80,
-                          child: Text(
-                            day.displayName,
-                            style: AppTypography.bodyMedium.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
+                child: dates.isEmpty
+                    ? Center(
+                        child: Text(
+                          'Partner chưa có lịch rảnh khả dụng',
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: context.appColors.textSecondary,
                           ),
                         ),
-                        Expanded(
-                          child: hasSlots
-                              ? Wrap(
+                      )
+                    : ListView.separated(
+                        controller: scrollController,
+                        padding: EdgeInsets.fromLTRB(
+                          20,
+                          20,
+                          20,
+                          MediaQuery.of(context).padding.bottom + 8,
+                        ),
+                        itemCount: dates.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final date = dates[index];
+                          final slots = groupedByDate[date] ?? const <TimeSlot>[];
+
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                width: 120,
+                                child: Text(
+                                  DateFormat('EEE, dd/MM', 'vi_VN').format(date),
+                                  style: AppTypography.bodyMedium.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Wrap(
                                   spacing: 8,
                                   runSpacing: 4,
                                   children: slots.map((slot) {
@@ -1664,18 +1645,12 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                                       ),
                                     );
                                   }).toList(),
-                                )
-                              : Text(
-                                  'Nghỉ',
-                                  style: AppTypography.bodyMedium.copyWith(
-                                    color: context.appColors.textHint,
-                                  ),
                                 ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
               ),
             ],
           ),
@@ -1690,7 +1665,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 30)),
+      lastDate: DateTime.now().add(Duration(days: _advanceBookingDays)),
       selectableDayPredicate: (date) => _isDateAvailable(date),
       builder: (context, child) {
         return Theme(

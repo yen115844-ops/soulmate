@@ -12,6 +12,9 @@ class ImageWarmupService {
 
   static final ImageWarmupService instance = ImageWarmupService._();
 
+  /// Tracks URLs already warmed to avoid redundant work.
+  final Set<String> _warmedUrls = {};
+
   Future<void> warmupImages({
     required BuildContext context,
     required List<String> imageUrls,
@@ -23,22 +26,19 @@ class ImageWarmupService {
     final distinctUrls = imageUrls
         .where((url) => url.trim().isNotEmpty)
         .map(ImageUtils.buildImageUrl)
+        .where((url) => !_warmedUrls.contains(url))
         .toSet()
         .take(maxImages)
         .toList(growable: false);
 
     if (distinctUrls.isEmpty) return;
 
+    _warmedUrls.addAll(distinctUrls);
+
+    // Chỉ precache (một lần tải + decode). Tránh song song downloadFile + precache
+    // cùng URL — gây tranh băng thông và decode trùng khi lướt home.
     final futures = <Future<void>>[];
-
     for (final url in distinctUrls) {
-      futures.add(
-        AppImageCacheManager.instance
-            .downloadFile(url)
-            .then((_) {})
-            .catchError((_) {}),
-      );
-
       final imageProvider = ResizeImage.resizeIfNeeded(
         targetWidth,
         null,
@@ -47,11 +47,30 @@ class ImageWarmupService {
           cacheManager: AppImageCacheManager.instance,
         ),
       );
-
       futures.add(precacheImage(imageProvider, context).catchError((_) {}));
     }
 
-    // Run in background; warmup should never block UI thread transitions.
     unawaited(Future.wait(futures));
+  }
+
+  /// Preload a specific partner's gallery images for instant detail page render.
+  /// Call this when user taps a partner card - starts downloading while
+  /// the route transition animates (~300ms window).
+  Future<void> warmupPartnerGallery({
+    required BuildContext context,
+    required List<String> galleryUrls,
+    String? avatarUrl,
+  }) async {
+    final urls = <String>[
+      ...galleryUrls,
+      if (avatarUrl != null && avatarUrl.trim().isNotEmpty) avatarUrl,
+    ];
+
+    return warmupImages(
+      context: context,
+      imageUrls: urls,
+      maxImages: 10,
+      targetWidth: 1080,
+    );
   }
 }

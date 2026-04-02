@@ -22,7 +22,11 @@ class ServiceTypeDisplayResolver {
   static void seedFromDetail(List<Map<String, dynamic>> details) {
     for (final item in details) {
       final code = (item['code'] ?? '').toString().trim().toLowerCase();
-      final name = (item['name'] ?? item['displayName'] ?? item['label'] ?? '')
+      final name = (item['displayName'] ??
+              item['nameVi'] ??
+              item['name'] ??
+              item['label'] ??
+              '')
           .toString()
           .trim();
       if (code.isEmpty || name.isEmpty) continue;

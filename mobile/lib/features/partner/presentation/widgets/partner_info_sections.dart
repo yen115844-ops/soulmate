@@ -159,6 +159,7 @@ class PartnerServicesSection extends StatelessWidget {
         children: services.map((service) {
           final code = service['code']?.toString() ?? '';
           final nameVi =
+              service['displayName']?.toString() ??
               service['nameVi']?.toString() ??
               service['name']?.toString() ??
               code;
@@ -254,6 +255,7 @@ class PartnerInterestsSection extends StatelessWidget {
         runSpacing: 10,
         children: interestsDetail.map((interest) {
           final nameVi =
+              interest['displayName']?.toString() ??
               interest['nameVi']?.toString() ??
               interest['name']?.toString() ??
               '';
@@ -304,7 +306,10 @@ class PartnerTalentsSection extends StatelessWidget {
         runSpacing: 10,
         children: talentsDetail.map((talent) {
           final nameVi =
-              talent['nameVi']?.toString() ?? talent['name']?.toString() ?? '';
+              talent['displayName']?.toString() ??
+              talent['nameVi']?.toString() ??
+              talent['name']?.toString() ??
+              '';
           final icon = talent['icon']?.toString() ?? '⭐';
 
           return Container(

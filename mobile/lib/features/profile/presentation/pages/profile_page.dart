@@ -1297,177 +1297,173 @@ class _GuestProfileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        bottom: false,
-
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            children: [
-              // Guest Header
-              const _GuestProfileHeader(),
-
-              const SizedBox(height: 24),
-
-              // Basic Settings
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: ResponsiveLayout.horizontalPadding(context)),
-                child: Column(
-                  children: [
-                    // Appearance section (local, no API needed)
-                    _ModernMenuSection(
-                      title: 'Giao diện',
-                      items: [
-                        BlocBuilder<ThemeCubit, ThemeState>(
-                          builder: (context, themeState) {
-                            return _ModernMenuItem(
-                              icon: Ionicons.moon_outline,
-                              iconBgColor: const Color(0xFFEDE7F6),
-                              iconColor: const Color(0xFF5E35B1),
-                              title: 'Chế độ tối',
-                              subtitle: themeState.isDarkMode
-                                  ? 'Đang bật'
-                                  : 'Đang tắt',
-                              onTap: () {
-                                context.read<ThemeCubit>().setDarkMode(
-                                  !themeState.isDarkMode,
+      body: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          children: [
+            // Guest Header
+            const _GuestProfileHeader(),
+      
+            const SizedBox(height: 24),
+      
+            // Basic Settings
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: ResponsiveLayout.horizontalPadding(context)),
+              child: Column(
+                children: [
+                  // Appearance section (local, no API needed)
+                  _ModernMenuSection(
+                    title: 'Giao diện',
+                    items: [
+                      BlocBuilder<ThemeCubit, ThemeState>(
+                        builder: (context, themeState) {
+                          return _ModernMenuItem(
+                            icon: Ionicons.moon_outline,
+                            iconBgColor: const Color(0xFFEDE7F6),
+                            iconColor: const Color(0xFF5E35B1),
+                            title: 'Chế độ tối',
+                            subtitle: themeState.isDarkMode
+                                ? 'Đang bật'
+                                : 'Đang tắt',
+                            onTap: () {
+                              context.read<ThemeCubit>().setDarkMode(
+                                !themeState.isDarkMode,
+                              );
+                            },
+                          );
+                        },
+                      ),
+                      BlocBuilder<ThemeCubit, ThemeState>(
+                        builder: (context, themeState) {
+                          return _ModernMenuItem(
+                            icon: Ionicons.phone_portrait_outline,
+                            iconBgColor: const Color(0xFFE3F2FD),
+                            iconColor: const Color(0xFF1976D2),
+                            title: 'Theo hệ thống',
+                            subtitle: themeState.isSystemMode
+                                ? 'Đang bật'
+                                : 'Đang tắt',
+                            onTap: () {
+                              if (themeState.isSystemMode) {
+                                context.read<ThemeCubit>().setThemeMode(
+                                  ThemeMode.light,
                                 );
-                              },
-                            );
-                          },
-                        ),
-                        BlocBuilder<ThemeCubit, ThemeState>(
-                          builder: (context, themeState) {
-                            return _ModernMenuItem(
-                              icon: Ionicons.phone_portrait_outline,
-                              iconBgColor: const Color(0xFFE3F2FD),
-                              iconColor: const Color(0xFF1976D2),
-                              title: 'Theo hệ thống',
-                              subtitle: themeState.isSystemMode
-                                  ? 'Đang bật'
-                                  : 'Đang tắt',
-                              onTap: () {
-                                if (themeState.isSystemMode) {
-                                  context.read<ThemeCubit>().setThemeMode(
-                                    ThemeMode.light,
-                                  );
-                                } else {
-                                  context.read<ThemeCubit>().setThemeMode(
-                                    ThemeMode.system,
-                                  );
-                                }
-                              },
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Support section
-                    _ModernMenuSection(
-                      title: 'Hỗ trợ',
-                      items: [
-                        _ModernMenuItem(
-                          icon: Ionicons.help_circle_outline,
-                          iconBgColor: const Color(0xFFE0F7FA),
-                          iconColor: const Color(0xFF00ACC1),
-                          title: 'Trung tâm trợ giúp',
-                          onTap: () => context.push(RouteNames.helpCenter),
-                        ),
-                        _ModernMenuItem(
-                          icon: Ionicons.document_text_outline,
-                          iconBgColor: const Color(0xFFE0F7FA),
-                          iconColor: const Color(0xFF616161),
-                          title: 'Điều khoản sử dụng',
-                          onTap: () => context.push(RouteNames.termsOfService),
-                        ),
-                        _ModernMenuItem(
-                          icon: Ionicons.shield_checkmark_outline,
-                          iconBgColor: const Color(0xFFE0F7FA),
-                          iconColor: const Color(0xFF616161),
-                          title: 'Chính sách bảo mật',
-                          onTap: () => context.push(RouteNames.privacyPolicy),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Data section
-                    _ModernMenuSection(
-                      title: 'Dữ liệu',
-                      items: [
-                        _ModernMenuItem(
-                          icon: Ionicons.trash_outline,
-                          iconBgColor: const Color(0xFFFFF3E0),
-                          iconColor: const Color(0xFFFF9800),
-                          title: 'Xóa bộ nhớ cache',
-                          subtitle: 'Giải phóng dung lượng',
-                          onTap: () => _showClearCacheDialog(context),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Login Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () => context.push(RouteNames.login),
-                        icon: const Icon(Ionicons.log_in_outline),
-                        label: const Text('Đăng nhập'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
+                              } else {
+                                context.read<ThemeCubit>().setThemeMode(
+                                  ThemeMode.system,
+                                );
+                              }
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+      
+                  const SizedBox(height: 16),
+      
+                  // Support section
+                  _ModernMenuSection(
+                    title: 'Hỗ trợ',
+                    items: [
+                      _ModernMenuItem(
+                        icon: Ionicons.help_circle_outline,
+                        iconBgColor: const Color(0xFFE0F7FA),
+                        iconColor: const Color(0xFF00ACC1),
+                        title: 'Trung tâm trợ giúp',
+                        onTap: () => context.push(RouteNames.helpCenter),
+                      ),
+                      _ModernMenuItem(
+                        icon: Ionicons.document_text_outline,
+                        iconBgColor: const Color(0xFFE0F7FA),
+                        iconColor: const Color(0xFF616161),
+                        title: 'Điều khoản sử dụng',
+                        onTap: () => context.push(RouteNames.termsOfService),
+                      ),
+                      _ModernMenuItem(
+                        icon: Ionicons.shield_checkmark_outline,
+                        iconBgColor: const Color(0xFFE0F7FA),
+                        iconColor: const Color(0xFF616161),
+                        title: 'Chính sách bảo mật',
+                        onTap: () => context.push(RouteNames.privacyPolicy),
+                      ),
+                    ],
+                  ),
+      
+                  const SizedBox(height: 16),
+      
+                  // Data section
+                  _ModernMenuSection(
+                    title: 'Dữ liệu',
+                    items: [
+                      _ModernMenuItem(
+                        icon: Ionicons.trash_outline,
+                        iconBgColor: const Color(0xFFFFF3E0),
+                        iconColor: const Color(0xFFFF9800),
+                        title: 'Xóa bộ nhớ cache',
+                        subtitle: 'Giải phóng dung lượng',
+                        onTap: () => _showClearCacheDialog(context),
+                      ),
+                    ],
+                  ),
+      
+                  const SizedBox(height: 24),
+      
+                  // Login Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => context.push(RouteNames.login),
+                      icon: const Icon(Ionicons.log_in_outline),
+                      label: const Text('Đăng nhập'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
                         ),
                       ),
                     ),
-
-                    const SizedBox(height: 12),
-
-                    // Register Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () => context.push(RouteNames.register),
-                        icon: const Icon(Ionicons.person_add_outline),
-                        label: const Text('Tạo tài khoản mới'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.primary,
-                          side: const BorderSide(
-                            color: AppColors.primary,
-                            width: 1.5,
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
+                  ),
+      
+                  const SizedBox(height: 12),
+      
+                  // Register Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => context.push(RouteNames.register),
+                      icon: const Icon(Ionicons.person_add_outline),
+                      label: const Text('Tạo tài khoản mới'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        side: const BorderSide(
+                          color: AppColors.primary,
+                          width: 1.5,
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
                         ),
                       ),
                     ),
-
-                    const SizedBox(height: 16),
-
-                    Text(
-                      'Mate Social v1.0.0',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: context.appColors.textHint,
-                      ),
+                  ),
+      
+                  const SizedBox(height: 16),
+      
+                  Text(
+                    'Mate Social v1.0.0',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: context.appColors.textHint,
                     ),
-
-                    const SizedBox(height: 100),
-                  ],
-                ),
+                  ),
+      
+                  const SizedBox(height: 100),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -1552,7 +1548,7 @@ class _GuestProfileHeader extends StatelessWidget {
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
       ),
       child: SafeArea(
-        bottom: false,
+         bottom: false,
         child: Padding(
           padding: EdgeInsets.fromLTRB(ResponsiveLayout.horizontalPadding(context), 16, ResponsiveLayout.horizontalPadding(context), 32),
           child: Column(

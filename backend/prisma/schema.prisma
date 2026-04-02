@@ -246,7 +246,9 @@ model Profile {
   languages     Json?    @default("[]") // ["Vietnamese", "English"]
   interests     Json?    @default("[]") // ["movies", "travel", "coffee"]
   talents       Json?    @default("[]") // ["singing", "dancing", "cooking"]
-  photos        Json?    @default("[]") // URLs của các ảnh trong profile
+  // Gallery: JSON array. Legacy: string URL. Rich: { url, width?, height?, aspectRatio? }
+  // aspectRatio = width/height; optional when width+height present (client may derive).
+  photos        Json?    @default("[]")
   
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")

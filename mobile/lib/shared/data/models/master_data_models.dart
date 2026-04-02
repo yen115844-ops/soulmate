@@ -395,6 +395,7 @@ class ServiceTypeModel {
   final String id;
   final String code;
   final String name;
+  final String? rawDisplayName;
   final String? nameVi;
   final String? description;
   final String? icon;
@@ -405,6 +406,7 @@ class ServiceTypeModel {
     required this.id,
     required this.code,
     required this.name,
+    this.rawDisplayName,
     this.nameVi,
     this.description,
     this.icon,
@@ -417,6 +419,7 @@ class ServiceTypeModel {
       id: json['id'] ?? '',
       code: json['code'] ?? '',
       name: json['name'] ?? '',
+      rawDisplayName: json['displayName'],
       nameVi: json['nameVi'],
       description: json['description'],
       icon: json['icon'],
@@ -426,7 +429,7 @@ class ServiceTypeModel {
   }
 
   /// Get display name (prefer Vietnamese name if available)
-  String get displayName => nameVi ?? name;
+  String get displayName => rawDisplayName ?? nameVi ?? name;
 
   @override
   String toString() => displayName;

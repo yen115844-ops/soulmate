@@ -54,12 +54,14 @@ export class UploadController {
 
     // Validate magic bytes
     this.uploadService.validateMagicBytes(file);
-    await this.uploadService.optimizeImage(file);
+    const meta = await this.uploadService.optimizeImage(file);
 
     const url = this.uploadService.getFileUrl(file.filename);
     return {
       success: true,
       url,
+      width: meta.width,
+      height: meta.height,
       filename: file.filename,
       originalName: file.originalname,
       size: file.size,
@@ -91,16 +93,21 @@ export class UploadController {
       throw new BadRequestException('No files uploaded');
     }
 
-    const urls = this.uploadService.processUploadedFiles(files);
-    await Promise.all(
+    for (const file of files) {
+      this.uploadService.validateMagicBytes(file);
+    }
+    const metaList = await Promise.all(
       files.map((file) => this.uploadService.optimizeImage(file)),
     );
+    const urls = files.map((file) => this.uploadService.getFileUrl(file.filename));
     return {
       success: true,
       count: files.length,
       urls,
       files: files.map((file, index) => ({
         url: urls[index],
+        width: metaList[index].width,
+        height: metaList[index].height,
         filename: file.filename,
         originalName: file.originalname,
         size: file.size,

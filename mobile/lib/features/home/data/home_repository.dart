@@ -200,26 +200,12 @@ class HomePartnersResponse {
     final user = data['user'] as Map<String, dynamic>?;
     final profile = user?['profile'] as Map<String, dynamic>?;
 
-    // Gallery: profile.photos (backend đã normalize thành string[])
-    final photos = <String>[];
-    if (profile?['photos'] is List) {
-      for (final e in profile!['photos'] as List) {
-        final url = e is Map
-            ? (e['url'] ?? e.toString()).toString()
-            : e.toString();
-        if (url.isNotEmpty) {
-          photos.add(
-            url.startsWith('http') ? url : ImageUtils.buildImageUrl(url),
-          );
-        }
-      }
-    }
-    final coverFromProfile = profile?['coverPhotoUrl']?.toString();
-    final coverUrl = (coverFromProfile != null && coverFromProfile.isNotEmpty)
-        ? (coverFromProfile.startsWith('http')
-              ? coverFromProfile
-              : ImageUtils.buildImageUrl(coverFromProfile))
-        : (photos.isNotEmpty ? photos.first : null);
+    // Gallery now supports both legacy string and rich object {url,width,height,aspectRatio}
+    final photos = _extractProfilePhotoUrls(profile?['photos']);
+    final bestCardPhotoUrl = _pickBestCardPhotoUrl(profile?['photos']);
+    final coverFromProfile = _normalizeImagePath(profile?['coverPhotoUrl']);
+    final coverUrl = coverFromProfile ?? bestCardPhotoUrl ?? (photos.isNotEmpty ? photos.first : null);
+    final cardImageAspectRatio = _aspectRatioForCoverUrl(coverUrl, profile?['photos']);
 
     final interests = <String>[];
     if (profile?['interests'] is List) {
@@ -311,12 +297,7 @@ class HomePartnersResponse {
       } catch (_) {}
     }
 
-    final avatarUrl = profile?['avatarUrl']?.toString();
-    final fullAvatarUrl = avatarUrl != null && avatarUrl.isNotEmpty
-        ? (avatarUrl.startsWith('http')
-              ? avatarUrl
-              : ImageUtils.buildImageUrl(avatarUrl))
-        : _kDefaultAvatarUrl;
+    final avatarUrl = _normalizeImagePath(profile?['avatarUrl']) ?? _kDefaultAvatarUrl;
 
     // introduction (API) ưu tiên hơn profile.bio
     final introduction = data['introduction']?.toString();
@@ -368,7 +349,7 @@ class HomePartnersResponse {
           user?['email']?.toString().split('@').first ??
           'Partner',
       age: age,
-      avatarUrl: fullAvatarUrl,
+      avatarUrl: avatarUrl,
       coverPhotoUrl: coverUrl,
       rating: _parseDouble(data['averageRating']),
       reviewCount: (data['totalReviews'] is int)
@@ -388,6 +369,7 @@ class HomePartnersResponse {
       talents: talents,
       languages: languages.isNotEmpty ? languages : ['Tiếng Việt'],
       gallery: photos,
+      cardImageAspectRatio: cardImageAspectRatio,
       serviceTypesDetail: serviceTypesDetail,
       interestsDetail: interestsDetail,
       talentsDetail: talentsDetail,
@@ -413,6 +395,112 @@ class HomePartnersResponse {
                 : null),
       currency: data['currency']?.toString(),
     );
+  }
+
+  static List<String> _extractProfilePhotoUrls(dynamic rawPhotos) {
+    if (rawPhotos is! List) return const [];
+    final out = <String>[];
+    final seen = <String>{};
+    for (final item in rawPhotos) {
+      final normalized = _normalizeImagePath(item is Map ? item['url'] : item);
+      if (normalized == null || normalized.isEmpty) continue;
+      if (seen.add(normalized)) {
+        out.add(normalized);
+      }
+    }
+    return out;
+  }
+
+  /// So khớp URL tương đối/absolute (buildImageUrl) khi tìm metadata ảnh.
+  static bool _sameImageUrlForAspect(String a, String b) {
+    if (a == b) return true;
+    final fa = ImageUtils.buildImageUrl(a);
+    final fb = ImageUtils.buildImageUrl(b);
+    if (fa == fb) return true;
+    final ua = Uri.tryParse(fa);
+    final ub = Uri.tryParse(fb);
+    if (ua == null || ub == null) return false;
+    if (ua.path.isNotEmpty && ua.path == ub.path) {
+      if (!ua.hasAuthority || !ub.hasAuthority) return true;
+      return ua.authority == ub.authority;
+    }
+    return false;
+  }
+
+  /// aspectRatio từ API = width/height; khớp URL cover/gallery để card home không bóp ảnh.
+  static double? _aspectRatioForCoverUrl(String? coverUrl, dynamic rawPhotos) {
+    if (coverUrl == null || rawPhotos is! List) return null;
+    final target = _normalizeImagePath(coverUrl);
+    if (target == null || target.isEmpty) return null;
+
+    for (final item in rawPhotos) {
+      final url = _normalizeImagePath(item is Map ? item['url'] : item);
+      if (url == null || url.isEmpty || !_sameImageUrlForAspect(target, url)) {
+        continue;
+      }
+
+      if (item is Map) {
+        final v = item['aspectRatio'];
+        if (v is num) {
+          final ar = v.toDouble();
+          if (ar > 0 && ar.isFinite) return ar;
+        }
+        if (item['width'] is num && item['height'] is num) {
+          final w = (item['width'] as num).toDouble();
+          final h = (item['height'] as num).toDouble();
+          if (h > 0) {
+            final ar = w / h;
+            if (ar > 0 && ar.isFinite) return ar;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  /// Picks the best photo URL for Home card (portrait-ish) using aspectRatio when available.
+  /// target AR ~ 4/5 (0.8). Lower score is better.
+  static String? _pickBestCardPhotoUrl(dynamic rawPhotos) {
+    if (rawPhotos is! List || rawPhotos.isEmpty) return null;
+
+    const targetAr = 4 / 5;
+    String? bestUrl;
+    double bestScore = double.infinity;
+
+    for (final item in rawPhotos) {
+      final url = _normalizeImagePath(item is Map ? item['url'] : item);
+      if (url == null || url.isEmpty) continue;
+
+      double? ar;
+      if (item is Map) {
+        final v = item['aspectRatio'];
+        if (v is num) ar = v.toDouble();
+        if (ar == null && item['width'] is num && item['height'] is num) {
+          final w = (item['width'] as num).toDouble();
+          final h = (item['height'] as num).toDouble();
+          if (h > 0) ar = w / h;
+        }
+      }
+
+      // Prefer items with known AR close to target; otherwise keep but deprioritize.
+      final score = (ar != null && ar.isFinite && ar > 0)
+          ? (ar - targetAr).abs()
+          : 10.0;
+
+      if (score < bestScore) {
+        bestScore = score;
+        bestUrl = url;
+      }
+    }
+
+    return bestUrl;
+  }
+
+  static String? _normalizeImagePath(dynamic value) {
+    if (value == null) return null;
+    final url = value.toString().trim();
+    if (url.isEmpty) return null;
+    return url;
   }
 
   static String? _buildLocation(Map<String, dynamic>? profile) {

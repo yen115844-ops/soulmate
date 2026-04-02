@@ -58,6 +58,7 @@ interface BookingSettings {
   autoConfirmBooking: boolean;
   allowInstantBooking: boolean;
   requirePremiumForBooking: boolean;
+  requirePremiumForChat: boolean;
 }
 
 interface NotificationSettings {
@@ -101,6 +102,7 @@ const DEFAULT_BOOKING: BookingSettings = {
   autoConfirmBooking: false,
   allowInstantBooking: true,
   requirePremiumForBooking: true,
+  requirePremiumForChat: true,
 };
 const DEFAULT_NOTIFICATION: NotificationSettings = {
   emailNotifications: true,
@@ -550,6 +552,20 @@ export default function SettingsPage() {
                     checked={bookingSettings.requirePremiumForBooking}
                     onCheckedChange={(checked) =>
                       setBookingSettings({ ...bookingSettings, requirePremiumForBooking: checked })
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Yêu cầu Premium để nhắn tin</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Nếu tắt, tất cả người dùng đều có thể bắt đầu cuộc trò chuyện mà không cần gói Premium
+                    </p>
+                  </div>
+                  <Switch
+                    checked={bookingSettings.requirePremiumForChat}
+                    onCheckedChange={(checked) =>
+                      setBookingSettings({ ...bookingSettings, requirePremiumForChat: checked })
                     }
                   />
                 </div>

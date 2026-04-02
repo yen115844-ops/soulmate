@@ -13,6 +13,7 @@ import {
   NotificationType,
 } from '../../generated/prisma/client';
 import { NotificationsService } from '../notifications';
+import { SettingsService } from '../settings/settings.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import {
   CreateConversationDto,
@@ -32,6 +33,7 @@ export class ChatService {
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
     private readonly subscriptionsService: SubscriptionsService,
+    private readonly settingsService: SettingsService,
   ) {}
 
   // ==================== Premium Validation ====================
@@ -40,6 +42,14 @@ export class ChatService {
    * Check if user has active premium subscription
    */
   private async requirePremium(userId: string): Promise<void> {
+    const requirePremiumForChat = await this.settingsService.getBool(
+      'require_premium_for_chat',
+      true,
+    );
+    if (!requirePremiumForChat) {
+      return;
+    }
+
     const status = await this.subscriptionsService.getStatus(userId);
     if (!status.isPremium) {
       throw new ForbiddenException(

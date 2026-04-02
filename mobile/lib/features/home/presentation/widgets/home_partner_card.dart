@@ -19,12 +19,51 @@ import '../../../partner/domain/entities/partner_entity.dart';
 class HomePartnerCard extends StatelessWidget {
   final PartnerEntity partner;
 
-  const HomePartnerCard({super.key, required this.partner});
+  /// Khi set (ví dụ feed masonry), giảm decode RAM theo độ rộng ô — mượt hơn khi lướt.
+  final int? feedImageMemCacheWidth;
+
+  const HomePartnerCard({
+    super.key,
+    required this.partner,
+    this.feedImageMemCacheWidth,
+  });
+
+  /// API: width/height. Fallback ~4:5 khi không có metadata (ảnh cũ).
+  static const double _kFallbackCardAspectRatio = 4 / 5;
+
+  double get _cardAspectRatio {
+    final ar = partner.cardImageAspectRatio;
+    if (ar != null && ar > 0 && ar.isFinite) {
+      return ar.clamp(0.42, 1.2);
+    }
+    return _kFallbackCardAspectRatio;
+  }
+
+  String get _preferredCardImage {
+    if (partner.coverPhotoUrl != null &&
+        partner.coverPhotoUrl!.trim().isNotEmpty) {
+      return partner.coverPhotoUrl!;
+    }
+    if (partner.gallery.isNotEmpty && partner.gallery.first.trim().isNotEmpty) {
+      return partner.gallery.first;
+    }
+    return partner.avatarUrl;
+  }
 
   List<String> get _displayServices {
-    if (partner.serviceTypesDetail != null && partner.serviceTypesDetail!.isNotEmpty) {
+    if (partner.serviceTypesDetail != null &&
+        partner.serviceTypesDetail!.isNotEmpty) {
       final fromDetail = partner.serviceTypesDetail!
-          .map((item) => (item['name'] ?? item['displayName'] ?? item['label'])?.toString().trim() ?? '')
+          .map(
+            (item) =>
+                (item['displayName'] ??
+                        item['nameVi'] ??
+                        item['name'] ??
+                        item['label'])
+                    ?.toString()
+                    .trim() ??
+                '',
+          )
           .where((name) => name.isNotEmpty)
           .toList();
       if (fromDetail.isNotEmpty) {
@@ -33,7 +72,7 @@ class HomePartnerCard extends StatelessWidget {
     }
 
     return partner.services
-      .map((service) => ServiceTypeDisplayResolver.resolveName(service))
+        .map((service) => ServiceTypeDisplayResolver.resolveName(service))
         .where((name) => name.trim().isNotEmpty)
         .toList();
   }
@@ -66,35 +105,43 @@ class HomePartnerCard extends StatelessWidget {
   }
 
   Widget _buildImageSection(BuildContext context) {
+    final aspect = _cardAspectRatio;
+    final decodeW = feedImageMemCacheWidth ?? 720;
+    final decodeH = (decodeW / aspect).round().clamp(400, 2200);
+
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       child: Stack(
         children: [
-          SizedBox(
-            width: double.infinity,
+          AspectRatio(
+            aspectRatio: aspect,
             child: Hero(
               tag: 'partner_${partner.id}',
               child: CachedNetworkImage(
-                imageUrl: ImageUtils.buildImageUrl(
-                  partner.gallery.isNotEmpty
-                      ? partner.gallery.first
-                      : partner.avatarUrl,
-                ),
+                imageUrl: ImageUtils.buildImageUrl(_preferredCardImage),
                 cacheManager: AppImageCacheManager.instance,
-              fit: BoxFit.cover,
-                memCacheWidth: 720,
-                memCacheHeight: 960,
-                maxWidthDiskCache: 1080,
-                maxHeightDiskCache: 1440,
+                fit: BoxFit.cover,
+                memCacheWidth: decodeW,
+                memCacheHeight: decodeH,
+                maxWidthDiskCache: feedImageMemCacheWidth != null
+                    ? (feedImageMemCacheWidth! * 2).clamp(720, 1080)
+                    : 1080,
+                maxHeightDiskCache: feedImageMemCacheWidth != null
+                    ? ((feedImageMemCacheWidth! * 2) / aspect).round().clamp(
+                        600,
+                        2000,
+                      )
+                    : (1080 / aspect).round().clamp(900, 2800),
                 fadeInDuration: Duration.zero,
                 placeholderFadeInDuration: Duration.zero,
                 useOldImageOnUrlChange: true,
                 placeholder: (_, __) =>
-                    Container(height: 200, color: context.appColors.border),
+                    Container(color: context.appColors.border),
                 errorWidget: (_, err, object) {
-                  debugPrint('Image load error for partner ${partner.id}: $object');
+                  debugPrint(
+                    'Image load error for partner ${partner.id}: $object',
+                  );
                   return Container(
-                    height: 200,
                     color: context.appColors.border,
                     child: Icon(
                       Icons.person,
@@ -122,10 +169,7 @@ class HomePartnerCard extends StatelessWidget {
                   ),
                 if (partner.isPremium) ...[
                   if (partner.isOnline) const SizedBox(width: 6),
-                  const _Badge(
-                    text: 'Premium',
-                    color: Color(0xFFFFD700),
-                  ),
+                  const _Badge(text: 'Premium', color: Color(0xFFFFD700)),
                 ],
                 const Spacer(),
                 // Favorite button
@@ -376,12 +420,7 @@ class _Badge extends StatelessWidget {
   final IconData? icon;
   final double? iconSize;
 
-  const _Badge({
-    required this.text,
-    this.color,
-    this.icon,
-    this.iconSize,
-  });
+  const _Badge({required this.text, this.color, this.icon, this.iconSize});
 
   @override
   Widget build(BuildContext context) {

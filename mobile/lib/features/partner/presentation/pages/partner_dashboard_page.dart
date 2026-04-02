@@ -605,6 +605,7 @@ class _EmptyBookings extends StatelessWidget {
       ),
       child: Column(
         children: [
+          SizedBox(height: 16),
           Icon(
             Ionicons.calendar_outline,
             size: 48,
@@ -617,6 +618,7 @@ class _EmptyBookings extends StatelessWidget {
               color: context.appColors.textSecondary,
             ),
           ),
+          SizedBox(height: 16),
         ],
       ),
     );

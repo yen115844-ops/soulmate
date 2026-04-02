@@ -7,6 +7,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { calculateDistance } from '../../common/utils/helpers.util';
+import {
+  coerceProfilePhotosToStored,
+  normalizeProfilePhotosForApi,
+  removeProfilePhotosByUrls,
+  stripPhotosForPersistence,
+  upsertProfilePhotos,
+  type ProfilePhotoApiItem,
+} from '../../common/utils/profile-photos.util';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import {
   SlotStatus,
@@ -24,6 +32,9 @@ import {
   UpdatePartnerStatusDto,
 } from './dto';
 
+/** @deprecated Use ProfilePhotoApiItem from common/utils/profile-photos.util */
+export type ProfilePhotoItem = ProfilePhotoApiItem;
+
 @Injectable()
 export class PartnersService {
   private readonly logger = new Logger(PartnersService.name);
@@ -32,6 +43,22 @@ export class PartnersService {
     private readonly prisma: PrismaService,
     private readonly settingsService: SettingsService,
   ) {}
+
+  /** Apply normalized photos on user.profile for list/detail payloads. */
+  private attachNormalizedProfilePhotos(partnerRow: any): any {
+    const prof = partnerRow?.user?.profile;
+    if (!prof) return partnerRow;
+    return {
+      ...partnerRow,
+      user: {
+        ...partnerRow.user,
+        profile: {
+          ...prof,
+          photos: normalizeProfilePhotosForApi(prof.photos),
+        },
+      },
+    };
+  }
 
   /**
    * Update lastActiveAt (presence) for current user's partner profile.
@@ -103,29 +130,36 @@ export class PartnersService {
         },
       });
 
-      // Add photos to user's photos if provided
-      if (dto.photoUrls && dto.photoUrls.length > 0) {
-        const existingPhotos = (user.profile?.photos as string[]) || [];
-        const newPhotos = [...existingPhotos];
+      const hasRegisterPhotos =
+        (dto.photoUrls && dto.photoUrls.length > 0) ||
+        (dto.photoItems && dto.photoItems.length > 0);
 
-        for (const url of dto.photoUrls) {
-          if (!newPhotos.includes(url)) {
-            newPhotos.push(url);
-          }
-        }
+      if (hasRegisterPhotos) {
+        const additions = [
+          ...(dto.photoUrls ?? [])
+            .map((u) => ({ url: u.trim() }))
+            .filter((p) => p.url),
+          ...(dto.photoItems ?? []).map((p) => ({
+            url: p.url.trim(),
+            width: p.width,
+            height: p.height,
+          })).filter((p) => p.url),
+        ];
+        const newPhotos = stripPhotosForPersistence(
+          upsertProfilePhotos(user.profile?.photos, additions),
+        );
 
         if (user.profile) {
           await tx.profile.update({
             where: { id: user.profile.id },
-            data: { photos: newPhotos },
+            data: { photos: newPhotos as object[] },
           });
         } else {
-          // Create profile if it doesn't exist
           await tx.profile.create({
             data: {
               userId,
               fullName: user.email?.split('@')[0] || 'Partner',
-              photos: newPhotos,
+              photos: newPhotos as object[],
             },
           });
           this.logger.log(
@@ -175,7 +209,7 @@ export class PartnersService {
       throw new NotFoundException('Partner profile not found');
     }
 
-    return profile;
+    return this.attachNormalizedProfilePhotos(profile);
   }
 
   /**
@@ -201,6 +235,7 @@ export class PartnersService {
       bankAccountNo,
       bankAccountName,
       photoUrls,
+      photoItems,
       removePhotoUrls,
       ...partnerData
     } = dto;
@@ -215,39 +250,39 @@ export class PartnersService {
         },
       });
 
-      // Update photos in user's profile
-      if (photoUrls || removePhotoUrls) {
+      if (photoUrls || photoItems || removePhotoUrls) {
         const userProfile = existing.user?.profile;
-        let currentPhotos = (userProfile?.photos as string[]) || [];
+        const additions = [
+          ...(photoUrls ?? [])
+            .map((u) => ({ url: u.trim() }))
+            .filter((p) => p.url),
+          ...(photoItems ?? []).map((p) => ({
+            url: p.url.trim(),
+            width: p.width,
+            height: p.height,
+          })).filter((p) => p.url),
+        ];
 
-        // Remove photos if specified
+        let next = coerceProfilePhotosToStored(userProfile?.photos);
         if (removePhotoUrls && removePhotoUrls.length > 0) {
-          currentPhotos = currentPhotos.filter(
-            (url) => !removePhotoUrls.includes(url),
-          );
+          next = removeProfilePhotosByUrls(next, removePhotoUrls);
         }
-
-        // Add new photos if specified
-        if (photoUrls && photoUrls.length > 0) {
-          for (const url of photoUrls) {
-            if (!currentPhotos.includes(url)) {
-              currentPhotos.push(url);
-            }
-          }
+        if (additions.length > 0) {
+          next = upsertProfilePhotos(next, additions);
         }
+        const newPhotos = stripPhotosForPersistence(next);
 
         if (userProfile) {
           await tx.profile.update({
             where: { id: userProfile.id },
-            data: { photos: currentPhotos },
+            data: { photos: newPhotos as object[] },
           });
         } else {
-          // Create profile if it doesn't exist
           await tx.profile.create({
             data: {
               userId,
               fullName: existing.user?.email?.split('@')[0] || 'Partner',
-              photos: currentPhotos,
+              photos: newPhotos as object[],
             },
           });
           this.logger.log(`Created new profile for user ${userId} with photos`);
@@ -589,7 +624,7 @@ export class PartnersService {
     const totalPages = Math.ceil(total / limit);
 
     return {
-      data: partners,
+      data: partners.map((row) => this.attachNormalizedProfilePhotos(row)),
       meta: {
         total,
         page,
@@ -723,7 +758,7 @@ export class PartnersService {
    * Transform partner detail for API response:
    * - Convert Decimal to number (hourlyRate, averageRating, responseRate)
    * - Expand serviceTypes, interests, talents with master data (name, icon)
-   * - Normalize photos to string[]
+   * - Normalize photos (width/height/aspectRatio) for API
    * - Format availabilitySlots
    */
   private async transformPartnerDetailResponse(partner: any) {
@@ -746,6 +781,7 @@ export class PartnersService {
             code: string;
             name: string;
             nameVi: string;
+            description: string | null;
             icon: string | null;
           }[]),
       interestCodes.length > 0
@@ -790,7 +826,13 @@ export class PartnersService {
 
     const serviceTypesMap = new Map<
       string,
-      { code: string; name: string; nameVi: string; icon: string | null }
+      {
+        code: string;
+        name: string;
+        nameVi: string;
+        description: string | null;
+        icon: string | null;
+      }
     >();
     for (const s of serviceTypesData) {
       serviceTypesMap.set(s.code, s);
@@ -815,8 +857,10 @@ export class PartnersService {
       .filter((s): s is NonNullable<typeof s> => !!s)
       .map((s) => ({
         code: s.code,
+        displayName: s.nameVi || s.name,
         name: s.name,
         nameVi: s.nameVi,
+        description: s.description,
         icon: s.icon,
       }));
 
@@ -825,6 +869,7 @@ export class PartnersService {
       .filter((i): i is NonNullable<typeof i> => !!i)
       .map((i) => ({
         code: i.code,
+        displayName: i.name,
         name: i.name,
         nameVi: i.name,
         icon: i.icon,
@@ -835,19 +880,16 @@ export class PartnersService {
       .filter((t): t is NonNullable<typeof t> => !!t)
       .map((t) => ({
         code: t.code,
+        displayName: t.name,
         name: t.name,
         nameVi: t.name,
         icon: t.icon,
       }));
 
     const profile = partner.user?.profile;
-    const photosRaw = profile?.photos;
-    let photos: string[] = [];
-    if (Array.isArray(photosRaw)) {
-      photos = photosRaw.map((p: any) =>
-        typeof p === 'string' ? p : (p?.url ?? String(p)),
-      );
-    }
+    const photos = profile
+      ? normalizeProfilePhotosForApi(profile.photos)
+      : [];
 
     const formatSlot = (slot: any) => ({
       id: slot.id,
@@ -1188,7 +1230,7 @@ export class PartnersService {
     const totalPages = Math.ceil(total / limit);
 
     return {
-      data: partners,
+      data: partners.map((row) => this.attachNormalizedProfilePhotos(row)),
       meta: {
         total,
         page,

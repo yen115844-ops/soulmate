@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/network/api_exceptions.dart';
 import '../../../../core/services/chat_socket_service.dart';
 import '../../data/chat_repository.dart';
 import 'chat_event.dart';
@@ -48,6 +49,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     // Socket events
     on<ChatConnectSocket>(_onConnectSocket);
     on<ChatDisconnectSocket>(_onDisconnectSocket);
+    on<ChatSocketConnectionChanged>(_onSocketConnectionChanged);
     on<ChatJoinRoom>(_onJoinRoom);
     on<ChatLeaveRoom>(_onLeaveRoom);
     on<ChatStartTyping>(_onStartTyping);
@@ -467,6 +469,18 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     emit(state.copyWith(isSocketConnected: false));
   }
 
+  void _onSocketConnectionChanged(
+    ChatSocketConnectionChanged event,
+    Emitter<ChatState> emit,
+  ) {
+    if (event.connected) {
+      _setupSocketListeners();
+      emit(state.copyWith(isSocketConnected: true));
+    } else {
+      emit(state.copyWith(isSocketConnected: false));
+    }
+  }
+
   void _onJoinRoom(ChatJoinRoom event, Emitter<ChatState> emit) {
     _socketService.joinConversation(event.conversationId);
   }
@@ -738,11 +752,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     _userBlockedSubscription?.cancel();
     _userUnblockedSubscription?.cancel();
 
-    // Connection status
+    // Connection status — do not dispatch [ChatConnectSocket] here (would re-enter connect).
     _connectionSubscription = _socketService.onConnectionChanged.listen((
       connected,
     ) {
-      add(connected ? const ChatConnectSocket() : const ChatDisconnectSocket());
+      add(ChatSocketConnectionChanged(connected));
     });
 
     // New messages
@@ -825,6 +839,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   String _getErrorMessage(dynamic error) {
+    if (error is ApiException) {
+      return error.message;
+    }
+
     // Handle Dio errors with server response
     if (error is DioException) {
       final response = error.response;

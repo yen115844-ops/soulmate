@@ -21,8 +21,8 @@ class AppImageCacheManagerImpl extends CacheManager with ImageCacheManager {
     : super(
         Config(
           _cacheKey,
-          stalePeriod: const Duration(days: 14),
-          maxNrOfCacheObjects: 400,
+          stalePeriod: const Duration(days: 30),
+          maxNrOfCacheObjects: 800,
         ),
       );
 }
