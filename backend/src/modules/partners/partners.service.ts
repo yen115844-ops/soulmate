@@ -105,7 +105,8 @@ export class PartnersService {
       } else {
         await tx.user.update({
           where: { id: userId },
-          data: { role: UserRole.PARTNER },
+          // Auto-approve: user should be ACTIVE so CMS doesn't show "Kích hoạt".
+          data: { role: UserRole.PARTNER, status: UserStatus.ACTIVE },
         });
       }
 
@@ -127,6 +128,13 @@ export class PartnersService {
           serviceTypes: dto.serviceTypes,
           introduction: dto.introduction,
           experienceYears: dto.experienceYears,
+          // Keep Mobile/CMS consistent:
+          // - Mobile "pending" is based on PartnerProfile.isVerified
+          // - CMS "activate/approve" button is based on user.status (ACTIVE/PENDING)
+          // When auto-approve, we must mark partner profile as verified immediately.
+          isVerified: !requireApproval,
+          // Pending partners should be unavailable for booking.
+          isAvailable: !requireApproval,
         },
       });
 
@@ -1277,8 +1285,12 @@ export class PartnersService {
       const updatedPartner = await tx.partnerProfile.update({
         where: { id: partnerId },
         data: {
-          isVerified: isActive ? true : partner.isVerified,
-          isAvailable: isActive ? partner.isAvailable : false,
+          // Keep the single source-of-truth aligned with user.status.
+          // Mobile uses partnerProfile.isVerified, CMS uses user.status.
+          isVerified: isActive,
+          isAvailable: isActive,
+          // Clear badge when not ACTIVE to avoid inconsistent UI.
+          verificationBadge: isActive ? partner.verificationBadge : null,
         },
         include: {
           user: {

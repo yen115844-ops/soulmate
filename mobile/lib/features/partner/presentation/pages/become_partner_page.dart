@@ -17,6 +17,8 @@ import '../../../../shared/data/models/master_data_models.dart';
 import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../../../shared/widgets/buttons/app_button.dart';
 import '../../../../shared/widgets/inputs/app_text_field.dart';
+import '../../../profile/presentation/bloc/profile_bloc.dart';
+import '../../../profile/presentation/bloc/profile_event.dart';
 import '../bloc/partner_registration_bloc.dart';
 
 class BecomePartnerPage extends StatefulWidget {
@@ -140,6 +142,18 @@ class _BecomePartnerPageState extends State<BecomePartnerPage> {
     );
   }
 
+  void _refreshProfileAfterPartnerRegistration() {
+    // ProfilePage is kept alive inside the home tab, so it won't necessarily
+    // rebuild when we come back. Force a refresh to show latest partner status.
+    final profileBloc = getIt<ProfileBloc>();
+    profileBloc.add(const ProfileRefreshRequested());
+
+    // Lightweight retry in case the backend transaction hasn't propagated yet.
+    Future.delayed(const Duration(seconds: 1), () {
+      profileBloc.add(const ProfileRefreshRequested());
+    });
+  }
+
   void _showSuccessDialog() {
     showDialog(
       context: context,
@@ -185,6 +199,7 @@ class _BecomePartnerPageState extends State<BecomePartnerPage> {
                   text: 'Hoàn tất',
                   onPressed: () {
                     Navigator.pop(context);
+                    _refreshProfileAfterPartnerRegistration();
                     context.go(RouteNames.home);
                   },
                 ),
@@ -244,6 +259,7 @@ class _BecomePartnerPageState extends State<BecomePartnerPage> {
                   onPressed: () {
                     Navigator.pop(context);
                     if (isAlreadyPartner) {
+                      _refreshProfileAfterPartnerRegistration();
                       context.go(RouteNames.home);
                     }
                   },

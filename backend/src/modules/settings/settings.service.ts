@@ -139,7 +139,7 @@ a) Thông tin bạn cung cấp:
 - Họ tên, ngày sinh, giới tính
 - Số điện thoại, email
 - Ảnh đại diện, ảnh xác minh danh tính
-- Thông tin thanh toán và giao dịch (qua Apple App Store / Google Play Store cho gói Premium và Xu)
+- Thông tin thanh toán và giao dịch (qua cửa hàng ứng dụng trên thiết bị của bạn cho gói Premium và Xu)
 - Nội dung tin nhắn, đánh giá
 
 b) Thông tin tự động thu thập:
@@ -281,16 +281,16 @@ Mate Social cung cấp gói Premium với các tùy chọn đăng ký tự độ
 | Premium 12 Tháng | 12 tháng | 699.000đ |
 
 **Điều khoản thanh toán và gia hạn:**
-- Thanh toán sẽ được tính vào tài khoản Apple ID / Google Play của bạn khi xác nhận mua.
+- Thanh toán sẽ được tính vào tài khoản cửa hàng ứng dụng trên thiết bị của bạn khi xác nhận mua.
 - Gói đăng ký sẽ **tự động gia hạn** trừ khi bạn tắt tự động gia hạn ít nhất **24 giờ** trước khi kết thúc chu kỳ hiện tại.
 - Tài khoản của bạn sẽ bị tính phí gia hạn trong vòng 24 giờ trước khi kết thúc chu kỳ hiện tại, với cùng mức giá đã chọn.
-- Bạn có thể quản lý và hủy đăng ký bất kỳ lúc nào trong phần **Cài đặt > Quản lý đăng ký** trên thiết bị của mình (Settings > Apple ID > Subscriptions trên iOS, hoặc Google Play Store > Subscriptions trên Android).
+- Bạn có thể quản lý và hủy đăng ký bất kỳ lúc nào trong phần **Cài đặt > Quản lý đăng ký** trên thiết bị của mình (ví dụ: iOS: Settings > Apple ID > Subscriptions).
 - Phần chưa sử dụng của bản dùng thử miễn phí (nếu có) sẽ bị mất khi bạn mua gói đăng ký.
 - Việc hủy đăng ký sẽ có hiệu lực vào cuối chu kỳ thanh toán hiện tại. Bạn vẫn được sử dụng Premium cho đến hết chu kỳ đã thanh toán.
 
 ## 6. Gói Xu (Credits) – Mua trong ứng dụng
 
-Mate Social cung cấp gói Xu (Credits) dùng để thanh toán các dịch vụ trong ứng dụng. Xu là sản phẩm mua một lần (consumable), không tự động gia hạn. Giá và số lượng Xu được hiển thị rõ ràng trước khi mua. Thanh toán được tính vào tài khoản Apple ID / Google Play của bạn.
+Mate Social cung cấp gói Xu (Credits) dùng để thanh toán các dịch vụ trong ứng dụng. Xu là sản phẩm mua một lần (consumable), không tự động gia hạn. Giá và số lượng Xu được hiển thị rõ ràng trước khi mua. Thanh toán được tính vào tài khoản cửa hàng ứng dụng trên thiết bị của bạn.
 
 ## 7. Quy tắc ứng xử
 Khi sử dụng Mate Social, bạn cam kết:

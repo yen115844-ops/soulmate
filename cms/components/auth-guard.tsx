@@ -5,8 +5,23 @@ import { Loader2 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
-const publicRoutes = ["/login", "/forgot-password", "/terms-of-service", "/terms-and-conditions", "/privacy-policy", "/support", "/partner"];
+const publicRoutes = [
+  "/",
+  "/login",
+  "/forgot-password",
+  "/terms-of-service",
+  "/terms-and-conditions",
+  "/privacy-policy",
+  "/support",
+  "/partner",
+];
 const redirectWhenAuth = ["/login", "/forgot-password"];
+
+function isPublicPath(pathname: string) {
+  return publicRoutes.some((route) =>
+    route === "/" ? pathname === "/" : pathname.startsWith(route)
+  );
+}
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
@@ -24,9 +39,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isLoading) {
-      const isPublicRoute = publicRoutes.some((route) =>
-        pathname.startsWith(route)
-      );
+      const isPublicRoute = isPublicPath(pathname);
 
       if (!isAuthenticated && !isPublicRoute) {
         router.push("/login");
@@ -44,9 +57,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const isPublicRoute = publicRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
+  const isPublicRoute = isPublicPath(pathname);
 
   if (!isAuthenticated && !isPublicRoute) {
     return null;
