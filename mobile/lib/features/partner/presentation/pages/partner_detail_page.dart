@@ -18,6 +18,7 @@ import '../../../favorites/presentation/bloc/favorites_event.dart';
 import '../../../favorites/presentation/bloc/favorites_state.dart';
 import '../../../settings/data/app_config_repository.dart';
 import '../../../subscription/presentation/widgets/premium_guard.dart';
+import '../../domain/entities/partner_entity.dart';
 import '../../data/partner_repository.dart';
 import '../bloc/partner_detail_bloc.dart';
 import '../bloc/partner_detail_event.dart';
@@ -29,14 +30,22 @@ import '../widgets/partner_info_sections.dart';
 import '../widgets/partner_stats_section.dart';
 
 class PartnerDetailPage extends StatelessWidget {
-  const PartnerDetailPage({super.key, required this.partnerId});
+  const PartnerDetailPage({
+    super.key,
+    required this.partnerId,
+    this.initialPartner,
+  });
   final String partnerId;
+  final PartnerEntity? initialPartner;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => PartnerDetailBloc(
         partnerRepository: getIt<PartnerRepository>(),
+        initialDetail: initialPartner != null
+            ? _createInitialPartnerDetail(initialPartner!)
+            : null,
       )..add(LoadPartnerDetail(partnerId: partnerId)),
       child: _PartnerDetailView(partnerId: partnerId),
     );
@@ -101,7 +110,10 @@ class _PartnerDetailView extends StatelessWidget {
           Align(
             alignment: Alignment.centerLeft,
             child: IconButton(
-              icon: const Icon(Ionicons.chevron_back),
+              icon: Icon(
+                Icons.arrow_back_ios_new,
+                color: context.appColors.textPrimary,
+              ),
               onPressed: () => Navigator.of(context).pop(),
             ),
           ),
@@ -544,4 +556,73 @@ class _PartnerDetailView extends StatelessWidget {
     );
   }
 
+}
+
+/// Create a minimal-but-useful `PartnerDetailResponse` from the "card" data
+/// already loaded on Home, so we can render instantly and fetch the rest
+/// in background.
+PartnerDetailResponse _createInitialPartnerDetail(PartnerEntity partner) {
+  final now = DateTime.now();
+
+  final dob = partner.age > 0
+      ? DateTime(now.year - partner.age, now.month, now.day).toIso8601String()
+      : null;
+
+  final photoUrls = <String>{};
+  if (partner.coverPhotoUrl != null &&
+      partner.coverPhotoUrl!.trim().isNotEmpty) {
+    photoUrls.add(partner.coverPhotoUrl!.trim());
+  }
+  for (final url in partner.gallery) {
+    final u = url.trim();
+    if (u.isNotEmpty) photoUrls.add(u);
+  }
+  final avatar = partner.avatarUrl.trim();
+  if (avatar.isNotEmpty) photoUrls.add(avatar);
+
+  final photoItems =
+      photoUrls.map((url) => PartnerProfilePhoto(url: url)).toList();
+
+  final location = partner.location?.trim();
+
+  return PartnerDetailResponse(
+    userId: partner.userId ?? partner.id,
+    profile: PartnerProfileResponse(
+      id: partner.id,
+      userId: partner.userId ?? partner.id,
+      hourlyRate: partner.hourlyRate.toDouble(),
+      minimumHours: partner.minimumHours ?? 3,
+      currency: partner.currency ?? 'VND',
+      serviceTypes: partner.services,
+      introduction: partner.bio,
+      experienceYears: partner.experienceYears,
+      isVerified: partner.isVerified,
+      verificationBadge: null,
+      isAvailable: partner.isOnline,
+      averageRating: partner.rating,
+      totalReviews: partner.reviewCount,
+      totalBookings: partner.completedBookings,
+      completedBookings: partner.completedBookings,
+      createdAt: partner.lastActive ?? now,
+    ),
+    userProfile: PartnerUserProfileInfo(
+      fullName: partner.name,
+      displayName: partner.name,
+      avatarUrl: partner.avatarUrl,
+      bio: partner.bio,
+      dateOfBirth: dob,
+      city: location,
+      district: null,
+      photoItems: photoItems,
+      languages:
+          partner.languages.isNotEmpty ? partner.languages : const ['Tiếng Việt'],
+      interests: partner.interests,
+      talents: partner.talents,
+      interestsDetail: partner.interestsDetail ?? const [],
+      talentsDetail: partner.talentsDetail ?? const [],
+    ),
+    serviceTypesDetail: partner.serviceTypesDetail ?? const [],
+    availabilitySlots: const [],
+    reviewStats: null,
+  );
 }

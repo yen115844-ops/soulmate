@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/auth_guard.dart';
 import '../../../booking/presentation/pages/bookings_page.dart';
 import '../../../chat/presentation/pages/chat_list_page.dart';
+import '../../../community/presentation/pages/community_feed_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import 'home_page.dart';
 
@@ -23,7 +24,7 @@ class _SwipeableHomePageState extends State<SwipeableHomePage> {
   late int _currentIndex;
   late PageController _pageController;
 
-  // ── Pages ──────────────────────────────────────────────────────────────────
+  // 0 Trang chủ, 1 Hoạt động, 2 Cộng đồng, 3 Tin nhắn, 4 Hồ sơ
 
   List<Widget> get _pages {
     final isGuest = !AuthGuard.isAuthenticated;
@@ -37,22 +38,25 @@ class _SwipeableHomePageState extends State<SwipeableHomePage> {
       _KeepAliveWrapper(
         child: isGuest
             ? const _AuthRequiredPlaceholder()
+            : const CommunityFeedPage(),
+      ),
+      _KeepAliveWrapper(
+        child: isGuest
+            ? const _AuthRequiredPlaceholder()
             : const ChatListPage(),
       ),
       const _KeepAliveWrapper(child: ProfilePage()),
     ];
   }
 
-  // ── Auth guards ────────────────────────────────────────────────────────────
+  /// Tabs that require đăng nhập
+  static const _authRequiredTabs = {1, 2, 3};
 
-  static const _authRequiredTabs = {1, 2};
-
-  static const _authTabMessages = {
+  static const _authTabMessages = <int, String>{
     1: 'Đăng nhập để xem và quản lý hoạt động.',
-    2: 'Đăng nhập để nhắn tin với mọi người.',
+    2: 'Đăng nhập để tham gia cộng đồng.',
+    3: 'Đăng nhập để nhắn tin với mọi người.',
   };
-
-  // ── Lifecycle ──────────────────────────────────────────────────────────────
 
   @override
   void initState() {
@@ -66,7 +70,10 @@ class _SwipeableHomePageState extends State<SwipeableHomePage> {
           _currentIndex = 1;
           break;
         case 2:
-          _currentIndex = 3;
+          _currentIndex = 4;
+          break;
+        case 3:
+          _currentIndex = 2;
           break;
         default:
           _currentIndex = 0;
@@ -83,8 +90,6 @@ class _SwipeableHomePageState extends State<SwipeableHomePage> {
   }
 
   void _onPageChanged(int index) {
-    // Guest swiped to auth-required tab: bounce back without showing modal.
-    // Modal only on explicit tab tap (_onTabTap) to avoid spurious popups on tablet.
     if (_authRequiredTabs.contains(index) && !AuthGuard.isAuthenticated) {
       _pageController.animateToPage(
         _currentIndex,
@@ -98,8 +103,6 @@ class _SwipeableHomePageState extends State<SwipeableHomePage> {
     setState(() => _currentIndex = index);
   }
 
-  // ── Tab tap ────────────────────────────────────────────────────────────────
-
   void _onTabTap(int index) {
     if (index == _currentIndex) return;
     if (_authRequiredTabs.contains(index) && !AuthGuard.isAuthenticated) {
@@ -107,7 +110,7 @@ class _SwipeableHomePageState extends State<SwipeableHomePage> {
       AuthGuard.requireAuth(
         context,
         onAuthenticated: () => _switchToTab(index),
-        message: _authTabMessages[index],
+        message: _authTabMessages[index] ?? 'Vui lòng đăng nhập.',
       );
       return;
     }
@@ -158,6 +161,11 @@ class _SwipeableHomePageState extends State<SwipeableHomePage> {
               label: 'Hoạt động',
             ),
             BottomNavigationBarItem(
+              icon: Icon(Ionicons.people_outline),
+              activeIcon: Icon(Ionicons.people),
+              label: 'Cộng đồng',
+            ),
+            BottomNavigationBarItem(
               icon: Icon(Ionicons.chatbubbles),
               activeIcon: Icon(Ionicons.chatbubble),
               label: 'Tin nhắn',
@@ -176,12 +184,6 @@ class _SwipeableHomePageState extends State<SwipeableHomePage> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Helper widgets
-// ─────────────────────────────────────────────────────────────────────────────
-
-/// Keeps a child alive inside [PageView] so scroll positions and other
-/// state are preserved when swiping away.
 class _KeepAliveWrapper extends StatefulWidget {
   final Widget child;
   const _KeepAliveWrapper({required this.child});
@@ -202,8 +204,6 @@ class _KeepAliveWrapperState extends State<_KeepAliveWrapper>
   }
 }
 
-/// Lightweight placeholder shown for guest users at auth-required tabs.
-/// This prevents auth-required pages from being built and firing API calls.
 class _AuthRequiredPlaceholder extends StatelessWidget {
   const _AuthRequiredPlaceholder();
 

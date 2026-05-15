@@ -132,6 +132,16 @@ enum ConversationStatus {
   BLOCKED
 }
 
+enum PostVisibility {
+  PUBLIC
+}
+
+enum PostModerationStatus {
+  ACTIVE
+  HIDDEN
+  DELETED
+}
+
 enum MessageStatus {
   SENT
   DELIVERED
@@ -145,6 +155,7 @@ enum NotificationType {
   SYSTEM
   SAFETY
   REVIEW
+  COMMUNITY
 }
 
 enum SubscriptionStatus {
@@ -207,6 +218,10 @@ model User {
   favoritedBy       Favorite[]     @relation("FavoritePartner")
   
   settings          UserSettings?
+  
+  posts             Post[]
+  postLikes         PostLike[]
+  postComments      PostComment[]
   
   @@map("users")
 }
@@ -1259,4 +1274,54 @@ model Language {
   
   @@index([isActive, sortOrder])
   @@map("languages")
+}
+
+// ==================== COMMUNITY (posts / likes / comments) ====================
+
+model Post {
+  id           String                @id @default(uuid())
+  authorId     String                @map("author_id")
+  author       User                  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  body         String                @db.Text
+  mediaUrls    Json                  @default("[]") @map("media_urls")
+  visibility   PostVisibility        @default(PUBLIC)
+  status       PostModerationStatus  @default(ACTIVE)
+  likeCount    Int                   @default(0) @map("like_count")
+  commentCount Int                   @default(0) @map("comment_count")
+  createdAt    DateTime              @default(now()) @map("created_at")
+  updatedAt    DateTime              @updatedAt @map("updated_at")
+
+  likes    PostLike[]
+  comments PostComment[]
+
+  @@index([status, createdAt(sort: Desc), id(sort: Desc)])
+  @@index([authorId, createdAt(sort: Desc)])
+  @@map("posts")
+}
+
+model PostLike {
+  postId    String   @map("post_id")
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([postId, userId])
+  @@index([userId])
+  @@map("post_likes")
+}
+
+model PostComment {
+  id        String               @id @default(uuid())
+  postId    String               @map("post_id")
+  post      Post                 @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String               @map("author_id")
+  author    User                 @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  body      String               @db.Text
+  status    PostModerationStatus @default(ACTIVE)
+  createdAt DateTime             @default(now()) @map("created_at")
+  updatedAt DateTime             @updatedAt @map("updated_at")
+
+  @@index([postId, createdAt(sort: Desc), id(sort: Desc)])
+  @@map("post_comments")
 }

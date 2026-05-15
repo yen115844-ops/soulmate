@@ -9,9 +9,16 @@ import 'partner_detail_state.dart';
 class PartnerDetailBloc extends Bloc<PartnerDetailEvent, PartnerDetailState> {
   final PartnerRepository _partnerRepository;
 
-  PartnerDetailBloc({required PartnerRepository partnerRepository})
+  PartnerDetailBloc({
+    required PartnerRepository partnerRepository,
+    PartnerDetailResponse? initialDetail,
+  })
       : _partnerRepository = partnerRepository,
-        super(PartnerDetailInitial()) {
+        super(
+          initialDetail != null
+              ? PartnerDetailLoaded(detail: initialDetail)
+              : PartnerDetailInitial(),
+        ) {
     on<LoadPartnerDetail>(_onLoadPartnerDetail);
     on<RefreshPartnerDetail>(_onRefreshPartnerDetail);
   }
@@ -20,7 +27,11 @@ class PartnerDetailBloc extends Bloc<PartnerDetailEvent, PartnerDetailState> {
     LoadPartnerDetail event,
     Emitter<PartnerDetailState> emit,
   ) async {
-    emit(PartnerDetailLoading());
+    // If we already have a "quick" detail (from Home card),
+    // keep showing it while fetching full detail in background.
+    if (state is! PartnerDetailLoaded) {
+      emit(PartnerDetailLoading());
+    }
     await _fetchPartnerDetail(event.partnerId, emit);
   }
 
@@ -41,9 +52,18 @@ class PartnerDetailBloc extends Bloc<PartnerDetailEvent, PartnerDetailState> {
     } catch (e, stackTrace) {
       debugPrint('PartnerDetailBloc error: $e');
       debugPrint('Stack trace: $stackTrace');
-      emit(PartnerDetailError(
-        message: 'Không thể tải thông tin partner. Vui lòng thử lại.',
-      ));
+      // If UI is already showing an initial detail, keep it and avoid
+      // replacing the screen with a blocking error widget.
+      final existing = state;
+      if (existing is PartnerDetailLoaded) {
+        return;
+      }
+
+      emit(
+        const PartnerDetailError(
+          message: 'Không thể tải thông tin partner. Vui lòng thử lại.',
+        ),
+      );
     }
   }
 }

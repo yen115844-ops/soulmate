@@ -5,7 +5,8 @@ enum NotificationType {
   payment,
   system,
   safety,
-  review;
+  review,
+  community;
 
   static NotificationType fromString(String value) {
     switch (value.toUpperCase()) {
@@ -21,6 +22,8 @@ enum NotificationType {
         return NotificationType.safety;
       case 'REVIEW':
         return NotificationType.review;
+      case 'COMMUNITY':
+        return NotificationType.community;
       default:
         return NotificationType.system;
     }

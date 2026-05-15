@@ -12,6 +12,52 @@
 
 ---
 
+## ✨ Chức năng chính của app (đã có trong code)
+
+Phần này tổng hợp từ code `mobile` + `backend` hiện tại để team dùng làm tài liệu social/growth, tập trung vào những gì đã triển khai thực tế.
+
+### 1) Discovery & Kết nối ban đầu
+- Tìm kiếm danh sách partner theo bộ lọc (khu vực, dịch vụ, điều kiện phù hợp).
+- Home có trải nghiệm duyệt nhanh theo kiểu swipe/tab để giảm friction khi khám phá.
+- Người dùng có thể lưu favorites để quay lại profile tiềm năng.
+
+### 2) Booking workflow end-to-end
+- Luồng booking đầy đủ: tạo yêu cầu -> xác nhận -> thanh toán -> bắt đầu -> hoàn thành/hủy.
+- Trạng thái booking rõ ràng giúp đồng bộ giữa user, partner và hệ thống.
+- Đây là trục chuyển đổi chính từ "xem profile" sang "hành động thật".
+
+### 3) Chat realtime sau khi có intent
+- Có conversation, gửi tin nhắn, unread count, trạng thái online.
+- Chat tạo cầu nối trước/sau booking và tăng tỷ lệ quay lại app mỗi ngày.
+- Realtime layer đã sẵn sàng để mở rộng thêm social hooks (gợi ý tương tác, prompts, v.v.).
+
+### 4) Notification & Re-engagement
+- Push notification (FCM), token management, unread/mark-read đã có.
+- Có thể dùng cho nhiều trigger tăng retention: booking updates, tin nhắn mới, admirers, ưu đãi premium.
+- Nền tảng notification hiện tại đủ để làm lifecycle campaigns cơ bản.
+
+### 5) Trust/Safety cho social ngoài đời thật
+- Verification (KYC/liveness flow) giúp tăng độ tin cậy profile.
+- Safety module có SOS/emergency contacts/location logs.
+- Reviews sau tương tác giúp tạo social proof và giảm rủi ro khi kết nối.
+
+### 6) Monetization hỗ trợ growth
+- Subscription premium + credit wallet/package/transaction đã triển khai.
+- Feature "admirers" tạo nhu cầu nâng cấp premium tự nhiên.
+- Credits có thể dùng để tối ưu ARPU mà không phá trải nghiệm core.
+
+### 7) Những điểm "hay" để đẩy social ngay
+- Engagement loop đã hình thành rõ: **Discovery -> Booking -> Chat -> Review/Favorite -> Notification -> Quay lại Discovery**.
+- Có đủ nền để triển khai growth experiments nhanh: nhắc quay lại theo sự kiện, ưu đãi theo hành vi, unlock social visibility bằng premium.
+- Ưu thế khác biệt là social có lớp an toàn/verification đi kèm, phù hợp các tương tác ngoài đời thực.
+
+### 8) Gợi ý roadmap social (ưu tiên gần)
+- **Ngắn hạn (1-2 sprint):** tăng trigger notification theo hành vi chat/booking/favorite, tối ưu onboarding để chạm "first chat" sớm hơn.
+- **Trung hạn:** thêm social graph nhẹ (mutual interest, gợi ý kết nối theo hành vi tương đồng), ranking discovery theo tín hiệu engagement.
+- **Dài hạn:** cân nhắc social feed/community layer nếu muốn mở use case ngoài booking.
+
+---
+
 ## 🛠️ Technology Stack
 
 ### Frontend - Flutter

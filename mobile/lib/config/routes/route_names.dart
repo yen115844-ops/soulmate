@@ -49,6 +49,7 @@ class RouteNames {
   static const String emergencyContacts = '/emergency-contacts';
   static const String favorites = '/favorites';
   static const String myReviews = '/my-reviews';
+  static const String myCommunityPosts = '/profile/community-posts';
   static const String changePassword = '/change-password';
   static const String helpCenter = '/help-center';
   static const String termsOfService = '/terms-of-service';

@@ -104,8 +104,9 @@ class _ProfilePageContentState extends State<_ProfilePageContent> {
             }
           },
           buildWhen: (previous, current) {
-            if (current is ProfileUpdating && _lastLoadedState != null)
+            if (current is ProfileUpdating && _lastLoadedState != null) {
               return true;
+            }
             return true;
           },
           builder: (context, state) {
@@ -312,7 +313,6 @@ class _ProfileContent extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       child: Column(
         children: [
-          // Profile Hero Header
           _ProfileHeroHeader(
             displayName: displayName,
             email: user.email,
@@ -322,9 +322,10 @@ class _ProfileContent extends StatelessWidget {
             onAvatarTap: onAvatarTap,
           ),
 
-          // Stats Cards
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: ResponsiveLayout.horizontalPadding(context)),
+            padding: EdgeInsets.symmetric(
+              horizontal: ResponsiveLayout.horizontalPadding(context),
+            ),
             child: _ModernStatsRow(
               totalBookings: stats.totalBookings,
               totalReviews: stats.totalReviews,
@@ -334,9 +335,10 @@ class _ProfileContent extends StatelessWidget {
 
           const SizedBox(height: 20),
 
-          // Quick Actions
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: ResponsiveLayout.horizontalPadding(context)),
+            padding: EdgeInsets.symmetric(
+              horizontal: ResponsiveLayout.horizontalPadding(context),
+            ),
             child: _QuickActions(
               isPartner: stats.isPartner,
               partnerStatus: stats.partnerStatus,
@@ -345,9 +347,10 @@ class _ProfileContent extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          // Menu Items
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: ResponsiveLayout.horizontalPadding(context)),
+            padding: EdgeInsets.symmetric(
+              horizontal: ResponsiveLayout.horizontalPadding(context),
+            ),
             child: Column(
               children: [
                 _ModernMenuSection(
@@ -367,6 +370,14 @@ class _ProfileContent extends StatelessWidget {
                       iconColor: const Color(0xFF43A047),
                       title: 'Chỉnh sửa hồ sơ',
                       onTap: () => context.push(RouteNames.editProfile),
+                    ),
+                    _ModernMenuItem(
+                      icon: Ionicons.chatbubbles_outline,
+                      iconBgColor: const Color(0xFFE3F2FD),
+                      iconColor: const Color(0xFF1565C0),
+                      title: 'Bài viết cộng đồng',
+                      subtitle: 'Bài bạn đã đăng, lọc và tìm kiếm',
+                      onTap: () => context.push(RouteNames.myCommunityPosts),
                     ),
                     _ModernMenuItem(
                       icon: Ionicons.heart_outline,
@@ -463,7 +474,6 @@ class _ProfileContent extends StatelessWidget {
 
                 const SizedBox(height: 24),
 
-                // Logout Button
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(

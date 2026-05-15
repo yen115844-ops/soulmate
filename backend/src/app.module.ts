@@ -25,6 +25,7 @@ import { PrismaModule } from './database/prisma';
 import { AuthModule } from './modules/auth';
 import { BookingsModule } from './modules/bookings';
 import { ChatModule } from './modules/chat';
+import { CommunityModule } from './modules/community';
 import { CreditsModule } from './modules/credits';
 import { MasterDataModule } from './modules/master-data/master-data.module';
 import { NotificationsModule } from './modules/notifications';
@@ -128,6 +129,7 @@ import { VerificationModule } from './modules/verification';
     VerificationModule,
     SubscriptionsModule,
     CreditsModule,
+    CommunityModule,
     // PaymentModule,
   ],
   controllers: [AppController],

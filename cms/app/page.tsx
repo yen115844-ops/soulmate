@@ -399,7 +399,7 @@ export default function HomePage() {
             kiểm soát an toàn rõ ràng.
           </p>
 
-          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row sm:flex-wrap">
             <a
               href={appStoreUrl}
               target="_blank"
@@ -414,6 +414,12 @@ export default function HomePage() {
               className="inline-flex h-14 w-full items-center justify-center rounded-xl border border-white/25 bg-white/5 px-7 text-base font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/10 sm:w-auto"
             >
               Điều khoản sử dụng
+            </a>
+            <a
+              href="/child-safety"
+              className="inline-flex h-14 w-full items-center justify-center rounded-xl border border-white/25 bg-white/5 px-7 text-base font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/10 sm:w-auto"
+            >
+              An toàn trẻ em (CSAE)
             </a>
           </div>
         </div>

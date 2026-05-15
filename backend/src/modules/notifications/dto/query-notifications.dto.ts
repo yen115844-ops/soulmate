@@ -8,6 +8,7 @@ export enum NotificationType {
   SYSTEM = 'SYSTEM',
   SAFETY = 'SAFETY',
   REVIEW = 'REVIEW',
+  COMMUNITY = 'COMMUNITY',
 }
 
 export class QueryNotificationsDto {

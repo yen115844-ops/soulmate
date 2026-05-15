@@ -124,6 +124,15 @@ export default function SupportPage() {
                   <ExternalLink className="h-3.5 w-3.5" />
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/child-safety"
+                  className="inline-flex items-center gap-1 text-primary hover:underline"
+                >
+                  Tiêu chuẩn an toàn trẻ em &amp; chống CSAE
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

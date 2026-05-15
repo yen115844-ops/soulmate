@@ -18,6 +18,8 @@ import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
 import 'features/auth/presentation/bloc/auth_state.dart' as auth_state;
 import 'features/favorites/presentation/bloc/favorites_bloc.dart';
+import 'features/community/presentation/bloc/community_bloc.dart';
+import 'features/community/presentation/bloc/community_event.dart';
 import 'features/partner/data/partner_repository.dart';
 import 'features/profile/presentation/bloc/profile_bloc.dart';
 import 'features/profile/presentation/bloc/profile_event.dart';
@@ -117,6 +119,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
             // avoid marking widgets dirty during _flushDirtyElements.
             WidgetsBinding.instance.addPostFrameCallback((_) {
               getIt<ProfileBloc>().add(const ProfileResetRequested());
+              getIt<CommunityBloc>().add(const CommunityLoggedOut());
               getIt<MasterDataBloc>().add(const MasterDataResetRequested());
               getIt<ChatSocketService>().disconnect();
             });
@@ -125,6 +128,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
             // but stay on browsable route (guest mode)
             WidgetsBinding.instance.addPostFrameCallback((_) {
               getIt<ProfileBloc>().add(const ProfileResetRequested());
+              getIt<CommunityBloc>().add(const CommunityLoggedOut());
               getIt<MasterDataBloc>().add(const MasterDataResetRequested());
               getIt<ChatSocketService>().disconnect();
             });

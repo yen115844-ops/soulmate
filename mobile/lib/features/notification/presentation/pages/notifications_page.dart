@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ionicons/ionicons.dart';
 
+import '../../../../config/routes/route_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -180,6 +181,15 @@ class _NotificationsPageContent extends StatelessWidget {
       case 'safety':
         context.push('/sos');
         break;
+      case 'community_post':
+        if (notification.actionId != null &&
+            notification.actionId!.isNotEmpty) {
+          context.go(
+            RouteNames.home,
+            extra: {'initialPage': 3},
+          );
+        }
+        break;
       default:
         // Do nothing
         break;
@@ -212,6 +222,8 @@ class _NotificationItem extends StatelessWidget {
         return Ionicons.shield_checkmark_outline;
       case NotificationType.review:
         return Ionicons.star_outline;
+      case NotificationType.community:
+        return Ionicons.people_outline;
     }
   }
 
@@ -229,6 +241,8 @@ class _NotificationItem extends StatelessWidget {
         return AppColors.error;
       case NotificationType.review:
         return AppColors.starFilled;
+      case NotificationType.community:
+        return AppColors.primary;
     }
   }
 

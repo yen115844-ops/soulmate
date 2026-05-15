@@ -7,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/image_utils.dart';
+import '../../../../shared/widgets/buttons/app_back_button.dart';
 import '../../data/models/partner_profile_model.dart';
 
 /// Hero header section with avatar, name, verification, and basic info
@@ -38,10 +39,8 @@ class PartnerDetailHeader extends StatelessWidget {
       pinned: true,
       stretch: true,
       backgroundColor: context.appColors.surface,
-      leading: _buildCircleButton(
-        context,
-        icon: Ionicons.chevron_back,
-        onTap: onBack ?? () => Navigator.of(context).pop(),
+      leading: AppBackButton(
+        onPressed: onBack ?? () => Navigator.of(context).pop(),
       ),
       actions: [
         _buildCircleButton(context, icon: Ionicons.share_outline, onTap: onShare),
@@ -79,9 +78,11 @@ class PartnerDetailHeader extends StatelessWidget {
     required IconData icon,
     VoidCallback? onTap,
     Color? iconColor,
+    double iconSize = 20,
+    EdgeInsets padding = const EdgeInsets.only(left: 8),
   }) {
     return Padding(
-      padding: const EdgeInsets.only(left: 8),
+      padding: padding,
       child: GestureDetector(
         onTap: onTap,
         child: Container(
@@ -91,7 +92,7 @@ class PartnerDetailHeader extends StatelessWidget {
             color: Colors.black.withOpacity(0.3),
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, color: iconColor ?? Colors.white, size: 20),
+          child: Icon(icon, color: iconColor ?? Colors.white, size: iconSize),
         ),
       ),
     );

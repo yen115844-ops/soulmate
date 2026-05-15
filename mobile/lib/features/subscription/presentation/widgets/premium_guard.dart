@@ -84,7 +84,7 @@ class PremiumUpgradeDialog extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [
+           children: [
             // Premium icon
             Container(
               width: 80,

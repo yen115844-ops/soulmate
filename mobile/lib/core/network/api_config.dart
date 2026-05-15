@@ -70,9 +70,16 @@ class ApiConfig {
     return _defaultReleaseWebUrl;
   }
 
+  /// Public CSAE / child safety standards (Play Console, App Store disclosures)
+  static String get childSafetyStandardsUrl => '$webUrl/child-safety';
+
   /// Generate a shareable partner profile URL
   static String partnerShareUrl(String partnerId) =>
       '$webUrl/partner/$partnerId';
+
+  /// Web link for sharing a community post (open in browser / deferred deep link)
+  static String postShareUrl(String postId) =>
+      '$webUrl/community/post/$postId';
 
   // Timeouts
   static const Duration connectTimeout = Duration(seconds: 30);
@@ -92,6 +99,7 @@ class ApiConfig {
   static const String reviews = '/reviews';
   static const String notifications = '/notifications';
   static const String safety = '/safety';
+  static const String community = '/community';
   static const String publicTerms = '/public/terms';
   static const String publicAppConfig = '/public/app-config';
 }
@@ -166,6 +174,18 @@ class BookingEndpoints {
 }
 
 /// Terms Endpoints (Public - no auth required)
+/// Community (posts / likes / comments)
+class CommunityEndpoints {
+  CommunityEndpoints._();
+
+  static const String posts = '${ApiConfig.community}/posts';
+  static String postDetail(String postId) => '${ApiConfig.community}/posts/$postId';
+  static String postLike(String postId) =>
+      '${ApiConfig.community}/posts/$postId/like';
+  static String postComments(String postId) =>
+      '${ApiConfig.community}/posts/$postId/comments';
+}
+
 class TermsEndpoints {
   TermsEndpoints._();
 

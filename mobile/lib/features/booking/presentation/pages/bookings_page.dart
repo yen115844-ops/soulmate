@@ -934,15 +934,31 @@ class _BookingsPageContentState extends State<_BookingsPageContent>
     required bool isSelected,
     required VoidCallback onSelected,
   }) {
+    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+    final borderColor = isSelected
+        ? scheme.primary
+        : scheme.outline.withValues(alpha: 0.55);
+
     return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) => onSelected(),
-      selectedColor: AppColors.primary.withValues(alpha: 0.2),
-      labelStyle: TextStyle(
-        color: isSelected ? AppColors.primary : context.appColors.textSecondary,
-        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+      label: Text(
+        label,
+        style: TextStyle(
+          fontSize: 13.5,
+          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+          color: isSelected ? scheme.onPrimary : colors.textPrimary,
+          letterSpacing: -0.1,
+        ),
       ),
+      selected: isSelected,
+      showCheckmark: false,
+      selectedColor: scheme.primary,
+      backgroundColor: scheme.surfaceContainerHighest,
+      disabledColor: scheme.surfaceContainerHighest,
+      side: BorderSide(color: borderColor, width: isSelected ? 2 : 1),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      onSelected: (_) => onSelected(),
     );
   }
 }
@@ -963,21 +979,25 @@ class _HistoryViewChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+    final borderColor =
+        selected ? scheme.primary : scheme.outline.withValues(alpha: 0.55);
+
     return Material(
-      color: selected
-          ? AppColors.primary.withValues(alpha: 0.15)
-          : context.appColors.surface,
+      color: selected ? scheme.primary : scheme.surfaceContainerHighest,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
+        splashColor: scheme.primary.withValues(alpha: 0.12),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: selected ? AppColors.primary : context.appColors.border,
-              width: selected ? 1.5 : 1,
+              color: borderColor,
+              width: selected ? 2 : 1,
             ),
           ),
           child: Row(
@@ -986,14 +1006,14 @@ class _HistoryViewChip extends StatelessWidget {
               Icon(
                 icon,
                 size: 20,
-                color: selected ? AppColors.primary : context.appColors.textSecondary,
+                color: selected ? scheme.onPrimary : colors.textPrimary,
               ),
               const SizedBox(width: 8),
               Text(
                 label,
                 style: AppTypography.labelLarge.copyWith(
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                  color: selected ? AppColors.primary : context.appColors.textSecondary,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                  color: selected ? scheme.onPrimary : colors.textPrimary,
                 ),
               ),
             ],

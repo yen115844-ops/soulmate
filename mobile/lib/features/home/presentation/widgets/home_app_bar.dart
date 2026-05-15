@@ -236,7 +236,7 @@ class HomeAppBar extends StatelessWidget {
                     fontSize: 18,
                     color: textColor,
                   ),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 1),

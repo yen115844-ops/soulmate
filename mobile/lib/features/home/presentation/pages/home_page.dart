@@ -24,7 +24,7 @@ import '../widgets/quick_filter_bar.dart';
 import '../widgets/service_categories_section.dart';
 import '../widgets/sort_bottom_sheet.dart';
 
-/// Trang Home - Modern Mioto-style UI
+/// Trang Home — chỉ luồng khám phá partner (Cộng đồng nằm bottom nav).
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
@@ -68,7 +68,6 @@ class _HomePageViewState extends State<_HomePageView> {
       });
     }
 
-    // Process pending URL-based deep links (App Links / Universal Links)
     Future.delayed(const Duration(milliseconds: 500), () {
       AppDeepLinkService().processPendingDeepLink();
     });
@@ -79,8 +78,6 @@ class _HomePageViewState extends State<_HomePageView> {
     _scrollController.dispose();
     super.dispose();
   }
-
-  // ───────────────────────── Callbacks ─────────────────────────
 
   void _onScroll() {
     if (_scrollController.position.pixels >=
@@ -95,14 +92,21 @@ class _HomePageViewState extends State<_HomePageView> {
   void _onPartnerTap(PartnerEntity partner) {
     HapticFeedback.mediumImpact();
 
-    // Preload partner gallery images during route transition (~300ms)
+    final warmupGalleryUrls = <String>[...partner.gallery];
+    if (partner.coverPhotoUrl != null &&
+        partner.coverPhotoUrl!.trim().isNotEmpty) {
+      warmupGalleryUrls.add(partner.coverPhotoUrl!.trim());
+    }
     ImageWarmupService.instance.warmupPartnerGallery(
       context: context,
-      galleryUrls: partner.gallery,
+      galleryUrls: warmupGalleryUrls,
       avatarUrl: partner.avatarUrl,
     );
 
-    context.push('/partner/${partner.id}');
+    context.push(
+      '/partner/${partner.id}',
+      extra: partner,
+    );
   }
 
   void _onServiceTap(String code) {
@@ -152,8 +156,6 @@ class _HomePageViewState extends State<_HomePageView> {
     context.read<HomeBloc>().add(const HomeResetFilter());
   }
 
-  // ───────────────────────── Build ─────────────────────────
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -184,10 +186,12 @@ class _HomePageViewState extends State<_HomePageView> {
           final imageUrls = state.partners
               .take(8)
               .map((p) {
-                if (p.coverPhotoUrl != null && p.coverPhotoUrl!.trim().isNotEmpty) {
+                if (p.coverPhotoUrl != null &&
+                    p.coverPhotoUrl!.trim().isNotEmpty) {
                   return p.coverPhotoUrl!;
                 }
-                if (p.gallery.isNotEmpty && p.gallery.first.trim().isNotEmpty) {
+                if (p.gallery.isNotEmpty &&
+                    p.gallery.first.trim().isNotEmpty) {
                   return p.gallery.first;
                 }
                 return p.avatarUrl;
@@ -195,7 +199,6 @@ class _HomePageViewState extends State<_HomePageView> {
               .where((url) => url.trim().isNotEmpty)
               .toList(growable: false);
 
-          // Tránh warmup + decode cùng lúc frame đầu (gây jank). Ảnh vẫn load lazy qua CachedNetworkImage.
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!context.mounted) return;
             Future<void>.delayed(const Duration(milliseconds: 350), () {
@@ -213,10 +216,7 @@ class _HomePageViewState extends State<_HomePageView> {
           return CustomScrollView(
             controller: _scrollController,
             slivers: [
-              // Modern App Bar with search
               HomeAppBar(onSearchTap: _showFilter),
-
-              // Service categories horizontal scroll
               SliverToBoxAdapter(
                 child: ServiceCategoriesSection(
                   selectedService: _selectedService,
@@ -224,11 +224,7 @@ class _HomePageViewState extends State<_HomePageView> {
                   serviceTypes: state.serviceTypes,
                 ),
               ),
-
-              // Premium banner - promotes Premium subscription
               const SliverToBoxAdapter(child: PremiumBanner()),
-
-              // Quick filter chips
               SliverToBoxAdapter(
                 child: QuickFilterBar(
                   state: state,
@@ -236,10 +232,7 @@ class _HomePageViewState extends State<_HomePageView> {
                   onSortTap: _showSortPicker,
                 ),
               ),
-
               const SliverToBoxAdapter(child: SizedBox(height: 15)),
-
-              // Partner list
               if (state.isLoading)
                 const SliverToBoxAdapter(child: HomeLoadingShimmer())
               else if (state.partners.isEmpty)
@@ -258,8 +251,6 @@ class _HomePageViewState extends State<_HomePageView> {
                     ),
                   ),
               ],
-
-              // Bottom padding
               const SliverToBoxAdapter(child: SizedBox(height: 100)),
             ],
           );

@@ -174,7 +174,7 @@ class _PremiumBannerContentState extends State<_PremiumBannerContent>
                                   style: AppTypography.bodySmall.copyWith(
                                     color: Colors.white.withValues(alpha: 0.7),
                                   ),
-                                  overflow: TextOverflow.ellipsis,
+                                   
                                 ),
                               ),
                             ],

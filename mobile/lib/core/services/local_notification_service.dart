@@ -192,7 +192,7 @@ class LocalNotificationService {
 
     // Initialize plugin
     await _notifications.initialize(
-      initSettings,
+      settings: initSettings,
       onDidReceiveNotificationResponse: _onNotificationTap,
       onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
     );
@@ -398,10 +398,10 @@ class LocalNotificationService {
     );
 
     await _notifications.show(
-      id,
-      title,
-      body,
-      notificationDetails,
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: notificationDetails,
       payload: payload,
     );
   }
@@ -451,10 +451,10 @@ class LocalNotificationService {
     );
 
     await _notifications.show(
-      id,
-      title,
-      body,
-      notificationDetails,
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: notificationDetails,
       payload: payload,
     );
   }
@@ -496,12 +496,12 @@ class LocalNotificationService {
     );
 
     await _notifications.zonedSchedule(
-      id,
-      title,
-      body,
-      tz.TZDateTime.from(scheduledDate, tz.local),
-      notificationDetails,
+      id: id,
+      scheduledDate: tz.TZDateTime.from(scheduledDate, tz.local),
+      notificationDetails: notificationDetails,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      title: title,
+      body: body,
       payload: payload,
       matchDateTimeComponents: null,
     );
@@ -543,13 +543,13 @@ class LocalNotificationService {
     );
 
     await _notifications.periodicallyShow(
-      id,
-      title,
-      body,
-      repeatInterval,
-      notificationDetails,
-      payload: payload,
+      id: id,
+      repeatInterval: repeatInterval,
+      notificationDetails: notificationDetails,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      title: title,
+      body: body,
+      payload: payload,
     );
   }
 
@@ -587,12 +587,12 @@ class LocalNotificationService {
     );
 
     await _notifications.zonedSchedule(
-      id,
-      title,
-      body,
-      _nextInstanceOfTime(time),
-      notificationDetails,
+      id: id,
+      scheduledDate: _nextInstanceOfTime(time),
+      notificationDetails: notificationDetails,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      title: title,
+      body: body,
       payload: payload,
       matchDateTimeComponents: DateTimeComponents.time,
     );
@@ -633,12 +633,12 @@ class LocalNotificationService {
     );
 
     await _notifications.zonedSchedule(
-      id,
-      title,
-      body,
-      _nextInstanceOfWeekday(dayOfWeek, time),
-      notificationDetails,
+      id: id,
+      scheduledDate: _nextInstanceOfWeekday(dayOfWeek, time),
+      notificationDetails: notificationDetails,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      title: title,
+      body: body,
       payload: payload,
       matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
     );
@@ -674,7 +674,7 @@ class LocalNotificationService {
 
   /// Hủy notification theo ID
   Future<void> cancelNotification(int id) async {
-    await _notifications.cancel(id);
+    await _notifications.cancel(id: id);
     debugPrint('Cancelled notification $id');
   }
 
@@ -779,10 +779,10 @@ class LocalNotificationService {
     );
 
     await _notifications.show(
-      id,
-      title,
-      body,
-      notificationDetails,
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: notificationDetails,
       payload: payload ?? 'chat:$senderId',
     );
   }
@@ -860,10 +860,10 @@ class LocalNotificationService {
     );
 
     await _notifications.show(
-      id,
-      title,
-      body,
-      notificationDetails,
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: notificationDetails,
       payload: payload ?? 'booking:$bookingId',
     );
   }
@@ -923,10 +923,10 @@ class LocalNotificationService {
     );
 
     await _notifications.show(
-      id,
-      title,
-      body,
-      notificationDetails,
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: notificationDetails,
       payload: payload ?? '$actionType:$targetId',
     );
   }
@@ -942,14 +942,14 @@ class LocalNotificationService {
       );
 
       await _notifications.show(
-        -1,
-        null,
-        null,
-        NotificationDetails(iOS: iosDetails),
+        id: -1,
+        title: null,
+        body: null,
+        notificationDetails: NotificationDetails(iOS: iosDetails),
       );
 
       // Then cancel it
-      await _notifications.cancel(-1);
+      await _notifications.cancel(id: -1);
     }
   }
 

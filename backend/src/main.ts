@@ -102,6 +102,7 @@ async function bootstrap() {
       .addTag('Safety', 'SOS & Safety endpoints')
       .addTag('Search', 'Search & Discovery endpoints')
       .addTag('Notifications', 'Notification endpoints')
+      .addTag('Community', 'Community posts, likes & comments')
       .build();
 
     const document = SwaggerModule.createDocument(app, config);

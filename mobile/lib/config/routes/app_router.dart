@@ -37,7 +37,9 @@ import '../../features/partner/presentation/pages/partner_profile_page.dart';
 import '../../features/partner/presentation/pages/partner_reviews_page.dart';
 import '../../features/partner/presentation/pages/partner_shell_page.dart';
 import '../../features/partner/presentation/pages/photo_manager_page.dart';
+import '../../features/partner/domain/entities/partner_entity.dart';
 import '../../features/profile/presentation/pages/edit_profile_page.dart';
+import '../../features/profile/presentation/pages/my_community_posts_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/rating/presentation/pages/my_reviews_page.dart';
 import '../../features/rating/presentation/pages/write_review_page.dart';
@@ -150,7 +152,8 @@ class AppRouter {
         },
       ),
 
-      // Main Home - Swipeable (Home - Hoạt động - Nhắn tin - Thông tin cá nhân)
+      // Main Home - Swipeable: Trang chủ, Hoạt động, Cộng đồng, Tin nhắn, Hồ sơ.
+      // extra.initialPage: 0→Hoạt động, 2→Hồ sơ, 3→Cộng đồng (vd. thông báo bài đăng).
       GoRoute(
         path: RouteNames.home,
         name: 'home',
@@ -261,7 +264,12 @@ class AppRouter {
         name: 'partner-detail',
         builder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
-          return PartnerDetailPage(partnerId: id);
+          final extra = state.extra;
+          final initialPartner = extra is PartnerEntity ? extra : null;
+          return PartnerDetailPage(
+            partnerId: id,
+            initialPartner: initialPartner,
+          );
         },
       ),
 
@@ -321,6 +329,11 @@ class AppRouter {
         path: RouteNames.myReviews,
         name: 'my-reviews',
         builder: (context, state) => const MyReviewsPage(),
+      ),
+      GoRoute(
+        path: RouteNames.myCommunityPosts,
+        name: 'my-community-posts',
+        builder: (context, state) => const MyCommunityPostsPage(),
       ),
       GoRoute(
         path: RouteNames.emergencyContacts,

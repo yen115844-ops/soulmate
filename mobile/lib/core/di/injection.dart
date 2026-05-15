@@ -7,6 +7,8 @@ import '../../features/auth/presentation/bloc/change_password_bloc.dart';
 import '../../features/booking/data/booking_repository.dart';
 import '../../features/booking/presentation/bloc/booking_bloc.dart';
 import '../../features/chat/data/chat_repository.dart';
+import '../../features/community/data/community_repository.dart';
+import '../../features/community/presentation/bloc/community_bloc.dart';
 import '../../features/chat/presentation/bloc/chat_bloc.dart';
 import '../../features/credits/data/credits_repository.dart';
 import '../../features/credits/presentation/bloc/credits_bloc.dart';
@@ -156,6 +158,10 @@ Future<void> setupDependencies() async {
     () => HomeRepository(apiClient: getIt<ApiClient>()),
   );
 
+  getIt.registerLazySingleton<CommunityRepository>(
+    () => CommunityRepository(getIt<ApiClient>()),
+  );
+
   // Chat Repository
   getIt.registerLazySingleton<ChatRepository>(
     () => ChatRepository(apiClient: getIt<ApiClient>()),
@@ -276,6 +282,10 @@ Future<void> setupDependencies() async {
       repository: getIt<HomeRepository>(),
       favoritesRepository: getIt<FavoritesRepository>(),
     ),
+  );
+
+  getIt.registerLazySingleton<CommunityBloc>(
+    () => CommunityBloc(getIt<CommunityRepository>()),
   );
 
   // Chat BLoC

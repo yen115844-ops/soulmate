@@ -112,6 +112,16 @@ class DeepLinkService {
     }
   }
 
+  void _goHomeWithTab(GoRouter router, int initialPage) {
+    try {
+      Future.microtask(() {
+        router.go('/home', extra: {'initialPage': initialPage});
+      });
+    } catch (e) {
+      debugPrint('DeepLinkService: go home tab failed: $e');
+    }
+  }
+
   void _performNavigation(Map<String, dynamic> data) {
     String? actionType = (data['actionType'] ?? data['type']) as String?;
     String? actionId = (data['actionId'] ?? data['object_id']) as String?;
@@ -151,6 +161,9 @@ class DeepLinkService {
         break;
       case 'safety':
         _goHomeThenPush(router, '/sos');
+        break;
+      case 'community_post':
+        _goHomeWithTab(router, 3);
         break;
       default:
         _goHomeThenPush(router, '/notifications');
