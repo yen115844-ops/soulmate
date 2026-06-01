@@ -14,6 +14,7 @@ const publicRoutes = [
   "/privacy-policy",
   "/child-safety",
   "/support",
+  "/account-deletion",
   "/partner",
 ];
 const redirectWhenAuth = ["/login", "/forgot-password"];
