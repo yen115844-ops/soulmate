@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ionicons/ionicons.dart';
 
+import '../../../../config/routes/route_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../core/utils/responsive.dart';
@@ -309,6 +311,19 @@ class ProfileMyCommunityPostsSectionState
                   post,
                   onCommentPosted: _bumpCommentCount,
                 ),
+                onViewAuthorProfile: post.authorId.trim().isEmpty
+                    ? null
+                    : () {
+                        final aid = post.authorId.trim();
+                        if (aid == widget.userId) {
+                          context.push(RouteNames.profile);
+                        } else {
+                          context.pushNamed(
+                            'partner-detail',
+                            pathParameters: {'id': aid},
+                          );
+                        }
+                      },
                 onDelete: () => _confirmDelete(post),
               );
             }

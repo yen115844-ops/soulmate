@@ -416,6 +416,7 @@ class _CommunityFeedBodyState extends State<_CommunityFeedBody> {
               if (index < posts.length) {
                 final post = posts[index];
                 final isMine = myId.isNotEmpty && post.authorId == myId;
+                final authorId = post.authorId.trim();
                 return CommunityPostCard(
                   post: post,
                   onLike: () => context.read<CommunityBloc>().add(
@@ -423,6 +424,18 @@ class _CommunityFeedBodyState extends State<_CommunityFeedBody> {
                   ),
                   onComment: () =>
                       showPostCommentsSheet(context, post),
+                  onViewAuthorProfile: authorId.isEmpty
+                      ? null
+                      : () {
+                          if (isMine) {
+                            context.push(RouteNames.profile);
+                          } else {
+                            context.pushNamed(
+                              'partner-detail',
+                              pathParameters: {'id': authorId},
+                            );
+                          }
+                        },
                   onDelete: isMine
                       ? () async {
                           final yes = await showDeleteCommunityPostDialog(

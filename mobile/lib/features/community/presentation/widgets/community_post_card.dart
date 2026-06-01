@@ -13,6 +13,8 @@ class CommunityPostCard extends StatelessWidget {
   final VoidCallback onLike;
   final VoidCallback onComment;
   final VoidCallback? onDelete;
+  /// Mở hồ sơ / chi tiết người đăng (vd. tab Cộng đồng).
+  final VoidCallback? onViewAuthorProfile;
 
   const CommunityPostCard({
     super.key,
@@ -20,6 +22,7 @@ class CommunityPostCard extends StatelessWidget {
     required this.onLike,
     required this.onComment,
     this.onDelete,
+    this.onViewAuthorProfile,
   });
 
   @override
@@ -28,6 +31,10 @@ class CommunityPostCard extends StatelessWidget {
     final colors = context.appColors;
     final scheme = theme.colorScheme;
     final muted = colors.textSecondary;
+    final authorId = post.authorId.trim();
+    final canOpenAuthor =
+        onViewAuthorProfile != null && authorId.isNotEmpty;
+    final showOverflowMenu = onDelete != null || canOpenAuthor;
 
     final surfaceElevated = scheme.brightness == Brightness.dark
         ? scheme.surfaceContainerHigh
@@ -53,50 +60,87 @@ class CommunityPostCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _AvatarRing(post: post, colors: colors, scheme: scheme),
-                  const SizedBox(width: 12),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            post.author.displayName,
-                            textAlign: TextAlign.left,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: -0.2,
+                    child: Builder(
+                      builder: (context) {
+                        final header = Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _AvatarRing(
+                              post: post,
+                              colors: colors,
+                              scheme: scheme,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: scheme.primary.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              _shortTime(post.createdAt),
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: scheme.primary.withValues(alpha: 0.9),
-                                fontWeight: FontWeight.w600,
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      post.author.displayName,
+                                      textAlign: TextAlign.left,
+                                      style: theme.textTheme.titleSmall
+                                          ?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: -0.2,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 3,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: scheme.primary
+                                            .withValues(alpha: 0.08),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        _shortTime(post.createdAt),
+                                        style: theme.textTheme.labelSmall
+                                            ?.copyWith(
+                                          color: scheme.primary
+                                              .withValues(alpha: 0.9),
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
+                          ],
+                        );
+                        if (!canOpenAuthor) return header;
+                        return Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: onViewAuthorProfile,
+                            borderRadius: BorderRadius.circular(14),
+                            splashColor:
+                                scheme.primary.withValues(alpha: 0.06),
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                right: 4,
+                                top: 2,
+                                bottom: 2,
+                              ),
+                              child: header,
+                            ),
                           ),
-                        ),
-                      ],
+                        );
+                      },
                     ),
                   ),
-                  if (onDelete != null)
+                  if (showOverflowMenu)
                     PopupMenuButton<String>(
                       icon: Icon(Icons.more_horiz_rounded, color: muted),
                       padding: EdgeInsets.zero,
@@ -105,24 +149,39 @@ class CommunityPostCard extends StatelessWidget {
                         minHeight: 40,
                       ),
                       onSelected: (v) {
+                        if (v == 'view_author') onViewAuthorProfile!();
                         if (v == 'delete') onDelete!();
                       },
                       itemBuilder: (ctx) => [
-                        PopupMenuItem(
-                          value: 'delete',
-                          child: ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: Icon(
-                              Ionicons.trash_outline,
-                              size: 22,
-                              color: scheme.error,
-                            ),
-                            title: Text(
-                              'Xóa bài',
-                              style: TextStyle(color: scheme.error),
+                        if (canOpenAuthor)
+                          PopupMenuItem(
+                            value: 'view_author',
+                            child: ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: Icon(
+                                Ionicons.person_circle_outline,
+                                size: 22,
+                                color: scheme.primary,
+                              ),
+                              title: const Text('Xem chi tiết người dùng'),
                             ),
                           ),
-                        ),
+                        if (onDelete != null)
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: Icon(
+                                Ionicons.trash_outline,
+                                size: 22,
+                                color: scheme.error,
+                              ),
+                              title: Text(
+                                'Xóa bài',
+                                style: TextStyle(color: scheme.error),
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                 ],

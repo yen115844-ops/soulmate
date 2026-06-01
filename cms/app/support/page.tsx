@@ -1,9 +1,9 @@
 "use client";
 
 import { supportApi } from "@/lib/api/support";
-import { Mail, Loader2, Phone, ExternalLink, HelpCircle } from "lucide-react";
-import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
+import { ExternalLink, HelpCircle, Loader2, Mail, Phone } from "lucide-react";
+import Link from "next/link";
 
 /** Fallback khi API lỗi hoặc trống – đáp ứng Guideline 1.5 (Support URL luôn có thông tin) */
 const FALLBACK_APP_NAME = "Mate Social";
@@ -130,6 +130,15 @@ export default function SupportPage() {
                   className="inline-flex items-center gap-1 text-primary hover:underline"
                 >
                   Tiêu chuẩn an toàn trẻ em &amp; chống CSAE
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/account-deletion"
+                  className="inline-flex items-center gap-1 text-primary hover:underline"
+                >
+                  Yêu cầu xóa tài khoản
                   <ExternalLink className="h-3.5 w-3.5" />
                 </Link>
               </li>
